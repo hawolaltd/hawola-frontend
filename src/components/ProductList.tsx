@@ -84,6 +84,7 @@ const ProductList = () => {
                             <span className={'absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white'}>-17%</span>
 
                             <div className={'w-full flex items-center justify-center'}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={product.image} alt={product.name} style={{
                                     width: "200px",
                                     height: "150px"
