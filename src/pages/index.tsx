@@ -20,7 +20,7 @@ export default function Home() {
             <ProductList/>
             <TrendingProducts/>
             <TopRateProducts/>
-        <TopSellingProducts/>
+            <TopSellingProducts/>
             <Footer/>
         </div>);
 }

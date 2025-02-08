@@ -80,7 +80,7 @@ const Footer = () => {
                     <div className="flex gap-6 items-center">
                         {/* Logo and Links */}
                         <div className="flex items-center space-x-2">
-                            <img src="/assets/logo_light.png" alt="Ecom" className="h-6"/>
+                            <img src="/assets/hawola.png" alt="Ecom" className="h-6"/>
                         </div>
                         <div className="flex space-x-4 mt-2 text-[#0E224D] text-[10px]">
                             <a href="#" className="text-[#0E224D] text-[10px]">EcomMarket.com</a>

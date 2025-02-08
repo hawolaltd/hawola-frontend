@@ -11,7 +11,7 @@ const Header = () => {
 
                         {/* Logo */}
                         <div className="flex items-center space-x-2">
-                            <img src="/assets/logo_light.png" alt="Logo" className="w-50 h-10"/>
+                            <img src="/assets/hawola.png" alt="Logo" className="w-50 h-10"/>
                         </div>
 
                         <div className="flex items-center gap-4">
