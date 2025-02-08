@@ -9,30 +9,33 @@ const Hero = () => {
     const settings = {
         dots: true,
         infinite: true,
+        autoplay: true,
         speed: 500,
         slidesToShow: 1,
         slidesToScroll: 1,
         customPaging: (i:any) => (
-            <div className="w-3 h-3 rounded-full bg-gray-300 mx-1"></div>
+            <div className="w-3 h-3 rounded-full mx-1" ></div>
         ),
         appendDots: (dots: any) => (
-            <div className="absolute left-0 flex" style={{
+            <div  style={{
                 display: "flex",
-                justifyContent: "start",
                 position: "absolute",
-                bottom: "120px",
-                left: "20px",
+                bottom: "1rem",
+                left: "2rem",
                 gap: 0
-            }}><span>{dots}</span></div>
+            }}>{dots}</div>
         ),
     };
 
     return (
         <section className="grid grid-cols-1 lg:grid-cols-6 gap-4 py-4 max-w-screen-xl mx-auto">
-        <div className={' col-span-3 '}>
-            <Slider {...settings} className={'relative rounded-xl h-full bg-[#b8f2ff] bg-custom-bg bg-cover bg-center'}>
-                <div className="relativew-full p-6">
-                    <h1 className="text-5xl font-bold text-gray-800 mb-6 text-left tracking-wide leading-snug">360
+        <div className={'col-span-3  rounded-xl'}>
+            <Slider {...settings} className={'relative hoome-sllider-dots rounded-xl w-full h-full  '}>
+                <div className="w-full py-14 bg-[#b8f2ff]  rounded-xl bg-custom-bg bg-cover bg-center px-10">
+                    <h1 className="text-5xl font-bold text-gray-800 mb-6 text-left tracking-wide leading-snug" style={{
+                        textShadow: '-2px -2px 0px #FFF500, 2px 2px 0px #FF6BC4',
+                        textTransform: "uppercase"
+                    }}>360
                         Degree <br/> Virtual Reality</h1>
                     <ul className="text-lg text-gray-600 mb-8">
                         <li>Free Shipping. Secure Payment</li>
@@ -47,23 +50,45 @@ const Hero = () => {
 
                 </div>
 
-                <div className="w-full p-6">
-                    <h1 className="text-5xl font-bold text-gray-800 mb-6 text-left tracking-wide leading-snug">Welcome to
-                        E-Shop</h1>
-                    <p className="text-lg text-gray-600 mb-8">Discover the best deals on your favorite products</p>
-                    <button className="bg-headerBg text-white py-3 px-6 rounded-lg text-sm">Shop Now</button>
+                <div className="w-full py-14 bg-[#b8f2ff]  rounded-xl bg-custom-bg5 bg-cover bg-center p-6">
+                    <h1 className="text-5xl font-bold text-gray-800 mb-6 text-left tracking-wide leading-snug" style={{
+                        textShadow: '-2px -2px 0px #FFF500, 2px 2px 0px #FF6BC4',
+                        textTransform: "uppercase"
+                    }}>Enjoy
+                        <br/> The SIgHT</h1>
+                    <ul className="text-lg text-gray-600 mb-8">
+                        <li>Free Shipping. Secure Payment</li>
+                        <li>Contact us 24hrs a day</li>
+                        <li>Support gift service</li>
+                    </ul>
+                    <div className={'flex items-center gap-1'}>
+                        <button className="bg-headerBg text-white py-3 px-6 rounded-lg text-sm">Shop Now</button>
+                        <button className="text-headerBg py-3 px-6 underline text-sm">Learn more</button>
+                    </div>
                 </div>
 
-                <div className="w-full p-6">
-                    <h1 className="text-5xl font-bold text-gray-800 mb-6 text-left tracking-wide leading-snug">Welcome to E-Shop</h1>
-                    <p className="text-lg text-gray-600 mb-8">Discover the best deals on your favorite products</p>
-                    <button className="bg-headerBg text-white py-3 px-6 rounded-lg text-sm">Shop Now</button>
+                <div className="w-full py-14 bg-[#b8f2ff]  rounded-xl bg-custom-bg6 bg-cover bg-center p-6">
+                    <h1 className="text-5xl font-bold text-gray-800 mb-6 text-left tracking-wide leading-snug" style={{
+                        textShadow: '-2px -2px 0px #FFF500, 2px 2px 0px #FF6BC4',
+                        textTransform: "uppercase"
+                    }}>Enjoy
+                        <br/> The Music</h1>
+                    <ul className="text-lg text-gray-600 mb-8">
+                        <li>Free Shipping. Secure Payment</li>
+                        <li>Contact us 24hrs a day</li>
+                        <li>Support gift service</li>
+                    </ul>
+                    <div className={'flex items-center gap-1'}>
+                        <button className="bg-headerBg text-white py-3 px-6 rounded-lg text-sm">Shop Now</button>
+                        <button className="text-headerBg py-3 px-6 underline text-sm">Learn more</button>
+                    </div>
                 </div>
             </Slider>
         </div>
 
             <div className={'flex flex-col gap-6 items-center max-w-screen-2xl col-span-6 lg:col-span-2'}>
-                <div className="w-full flex flex-row justify-between bg-[#fff4ea] bg-custom-bg2 bg-cover bg-center rounded">
+                <div
+                    className="w-full flex flex-row justify-between bg-[#fff4ea] bg-custom-bg2 bg-cover bg-center rounded">
                     <div className={'py-4 pl-4'}>
                         <h4 className="text-4xl font-bold text-[#0e234d]">Metaverse</h4>
                         <p className="text-lg text-[#0e234d] mb-6">The future of creativity</p>
@@ -91,7 +116,7 @@ const Hero = () => {
                     freeMode={true}
                     mousewheel={true}
                     modules={[Mousewheel]}
-                    className="h-[500px] w-full"
+                    className="h-[400px] w-full"
                 >
                     {["/imgs/page/homepage4/promotion1.png", "/imgs/page/homepage4/promotion2.png", "/imgs/page/homepage4/promotion3.png", "/imgs/page/homepage4/promotion4.png", "/imgs/page/homepage4/promotion5.png", "/imgs/page/homepage4/promotion6.png"].map((item, key) => (
                         <SwiperSlide key={key} className="w-full h-fit">

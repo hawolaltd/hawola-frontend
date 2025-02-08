@@ -8,3 +8,11 @@
     width: 150px !important;
     height: auto;
 }
+
+.hoome-sllider-dots .slick-dots .slick-active div  {
+    background-color: #FD9636;
+}
+
+.hoome-sllider-dots .slick-dots li div  {
+    background-color: #c6e0d7;
+}
