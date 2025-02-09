@@ -11,8 +11,16 @@
 
 .hoome-sllider-dots .slick-dots .slick-active div  {
     background-color: #FD9636;
+    width: 12px;
+    height: 12px;
 }
 
 .hoome-sllider-dots .slick-dots li div  {
     background-color: #c6e0d7;
+    width: 10px;
+    height: 10px;
+    margin: 0 2px;
+}
+.hoome-sllider-dots .slick-dots li   {
+    margin: 0 0px;
 }
