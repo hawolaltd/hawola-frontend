@@ -1,26 +1,30 @@
 import React, {useState} from 'react';
-import Image from "next/image";
 import Link from "next/link";
+import {useRouter} from "next/router";
 
 function MainHeader() {
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+
+    const [userInfo, setUserInfo] = useState(false)
 
     const toggleDropdown = (menu: string) => {
         setDropdownOpen(dropdownOpen === menu ? null : menu);
     };
 
+    const router = useRouter()
 
-    return (
-        <div>
-            <div className="bg-white border-b border-b-[#D5DFE4] pr-4">
-                <div className="max-w-screen-xl mx-auto px-0 py-4 flex items-center justify-between">
+    return (<div>
+            <div className="bg-white border-b border-b-[#D5DFE4] relative pr-4">
+                <div className="max-w-[1320px] mx-auto px-0 py-4 flex items-center justify-between">
 
                     <div className="flex items-center gap-3">
 
                         {/* Logo */}
-                        <div className="flex items-center ">
-                            <img src="/assets/hawola.png" alt="Logo" className="w-30 h-8"/>
-                        </div>
+                        <Link href={'/'}>
+                            <div className="flex items-center ">
+                                <img src="/assets/hawola.png" alt="Logo" className="w-30 h-8"/>
+                            </div>
+                        </Link>
 
                         <div className="flex items-center gap-4 text-primary">
                             {/* Categories Dropdown and Search Bar */}
@@ -83,8 +87,7 @@ function MainHeader() {
                                             <li><Link href="#"
                                                       className="block text-primary px-4 py-2 hover:text-deepOrange">Mouse
                                                 Keyboard</Link></li>
-                                        </ul>
-                                    )}
+                                        </ul>)}
                                 </div>
                                 <input
                                     type="text"
@@ -146,8 +149,7 @@ function MainHeader() {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
                             <li onMouseEnter={() => setDropdownOpen('shop')}
                                 onMouseLeave={() => setDropdownOpen(null)}
@@ -199,8 +201,7 @@ function MainHeader() {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
                             <li onMouseEnter={() => setDropdownOpen('vendor')}
                                 onMouseLeave={() => setDropdownOpen(null)}
@@ -236,8 +237,7 @@ function MainHeader() {
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Vendors
                                             Single</Link>
                                         </li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
                             <li onMouseEnter={() => setDropdownOpen('pages')}
                                 onMouseLeave={() => setDropdownOpen(null)}
@@ -288,8 +288,7 @@ function MainHeader() {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
 
 
@@ -342,8 +341,7 @@ function MainHeader() {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
 
 
@@ -354,11 +352,40 @@ function MainHeader() {
 
                     </div>
 
-                    {/* Icons (User, Wishlist, Cart, Settings) */}
-                    <div className="flex space-x-4 items-center">
-                        <div className="relative">
+
+                    <div className="flex relative space-x-4 items-center">
+                        <div className="cursor-pointer" onClick={() => {
+                            setUserInfo(!userInfo)
+                        }}>
                             <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
                         </div>
+                        {userInfo && (
+                            <ul className="absolute right-0 -bottom-[16.5rem]  z-10 mt-2 w-48 bg-white shadow-lg border rounded-md">
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Account</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Order Tracking</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Orders</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Wishlist</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Settings</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
+                                </li>
+                            </ul>
+                        )}
                         <div className="relative">
                             <span
                                 className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
@@ -377,8 +404,7 @@ function MainHeader() {
                 </div>
             </div>
 
-        </div>
-    );
+        </div>);
 }
 
 export default MainHeader;

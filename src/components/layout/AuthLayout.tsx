@@ -10,12 +10,12 @@ function AuthLayout({children}: { children: ReactNode }) {
     return (<>
             <Header/>
             <div className={'flex'}>
-                <div className={'w-[4%] h-screen border-r border-r-[#D5DFE4] overflow-x-hidden'}>
+                <div className={'w-[4%]  border-r border-r-[#D5DFE4] overflow-x-hidden'}>
                     <Sidebar/>
                 </div>
                 <div className={'w-[100%]'}>
                     <MainHeader/>
-                    <LoginForm/>
+                    {children}
                     <SubscribeSection/>
                     <Footer/>
                 </div>

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const Header = () => {
-
+    const [userInfo, setUserInfo] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
     const toggleDropdown = (menu: string) => {
@@ -104,10 +104,39 @@ const Header = () => {
                     </div>
 
                     {/* Icons (User, Wishlist, Cart, Settings) */}
-                    <div className="flex space-x-6 items-center">
-                        <div className="relative">
+                    <div className="flex relative space-x-6 items-center">
+                        <div onClick={() => {
+                            setUserInfo(!userInfo)
+                        }} className="cursor-pointer">
                             <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
                         </div>
+                        {userInfo && (
+                            <ul className="absolute right-0 -bottom-[16.5rem]  z-10 mt-2 w-48 bg-white shadow-lg border rounded-md">
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Account</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Order Tracking</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Orders</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Wishlist</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Settings</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="/auth/login" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
+                                </li>
+                            </ul>
+                        )}
                         <div className="relative">
                             <span
                                 className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>

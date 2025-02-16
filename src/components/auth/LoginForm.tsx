@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Link from "next/link";
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export default function LoginForm() {
                         <input
                             type="email"
                             placeholder="stevenjob@gmail.com"
-                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#435a8c] focus:outline-none"
+                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -32,7 +33,7 @@ export default function LoginForm() {
                         <input
                             type="password"
                             placeholder="****************"
-                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#435a8c] focus:outline-none"
+                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
@@ -54,10 +55,11 @@ export default function LoginForm() {
                     <button className="w-full mt-6 bg-[#435a8c] text-white py-3 rounded-md text-lg font-semibold">
                         Sign Up
                     </button>
-
+                    <Link href={'/auth/register'}>
                     <p className="text-left text-xs text-[#435a8c] mt-4">
-                        Have not an account? <a href="#" className="text-blue-900 font-semibold">Sign Up</a>
+                        Have not an account? <span className="text-blue-900 font-semibold">Sign Up</span>
                     </p>
+                    </Link>
                 </form>
             </div>
         </div>

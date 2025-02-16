@@ -68,7 +68,7 @@ const items = [
 
 function Sidebar() {
     return (
-        <ul className={'flex flex-col gap-7 h-screen overflow-x-hidden  px-4 pt-8 w-full'}>
+        <ul className={'flex flex-col gap-7 h-screen overflow-x-hidden px-4 pt-8 w-full'}>
             {
                 items.map((item, key) => (
                     <li key={key} className={'cursor-pointer'}>
