@@ -1,15 +1,18 @@
 import React from 'react';
 import MiniHeader from "@/components/header/MiniHeader";
 import MainHeader from "@/components/header/MainHeader";
-import Link from "next/link";
+import {useRouter} from "next/router";
 
 const Header = () => {
-    return (
-    <div>
-        <MiniHeader/>
-        <MainHeader/>
-    </div>
-    );
+    const router = useRouter()
+    console.log(router)
+    return (<div>
+            {router.pathname.includes('auth') ? <MiniHeader/> : <>
+                <MiniHeader/>
+                <MainHeader/>
+            </>}
+
+        </div>);
 }
 
 export default Header;

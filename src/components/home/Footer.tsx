@@ -1,10 +1,12 @@
 import SubscribeSection from "@/components/home/SubscribeSection";
 import React from "react";
+import {useRouter} from "next/router";
 
 const Footer = () => {
+    const router = useRouter()
     return (
         <>
-            <SubscribeSection/>
+            {!router.pathname.includes('auth') && <SubscribeSection/>}
             <footer className="bg-gray-100 py-10 text-gray-600 text-sm">
                 <div className="container mx-auto px-4 grid md:grid-cols-5 gap-4">
                     <div className={'flex flex-col gap-4'}>
@@ -120,8 +122,14 @@ const Footer = () => {
                 </div>
                 {/* Scroll to Top Button */}
                 <button
-                    className="fixed bottom-6 right-6 bg-gray-300 p-3 rounded-full shadow-md hover:bg-gray-400 transition-all">
-                    ⬆
+                    className="fixed bottom-6 right-6 bg-primary px-3 py-2 rounded-full shadow-md  transition-all">
+                  <svg  width="20" height="25"  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m0 0h24v24h-24z" fill="#fff" opacity="0" transform="matrix(-1 0 0 -1 24 24)"/>
+                        <path
+                            d="m5.23 10.64a1 1 0 0 0 1.41.13l4.36-3.63v11.86a1 1 0 0 0 2 0v-11.86l4.36 3.63a1 1 0 1 0 1.28-1.54l-6-5-.15-.09-.13-.07a1 1 0 0 0 -.72 0l-.13.07-.15.09-6 5a1 1 0 0 0 -.13 1.41z"
+                            fill="#fff"/>
+                    </svg>
+
                 </button>
             </div>
         </>

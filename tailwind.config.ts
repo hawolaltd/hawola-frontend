@@ -24,6 +24,7 @@ export default {
         'custom-bg4': "url('/imgs/page/homepage2/bg-slide-2.png')",
         'custom-bg5': "url('/imgs/page/homepage4/bg-banner.png')",
         'custom-bg6': "url('/imgs/page/homepage4/bg-banner-3.png')",
+        // 'custom-bg6': "url('/imgs/page/homepage4/bg-banner-3.png')",
       },
     },
   },
