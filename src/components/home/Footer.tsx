@@ -6,7 +6,7 @@ const Footer = () => {
     const router = useRouter()
     return (
         <>
-            {!router.pathname.includes('auth') && <SubscribeSection/>}
+            {router.pathname === '/' && <SubscribeSection/>}
             <footer className="bg-gray-100 py-10 text-gray-600 text-sm">
                 <div className="container mx-auto px-4 grid md:grid-cols-5 gap-4">
                     <div className={'flex flex-col gap-4'}>

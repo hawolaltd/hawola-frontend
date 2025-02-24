@@ -382,7 +382,7 @@ function MainHeader() {
                                 </li>
 
                                 <li>
-                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
+                                    <Link href="/auth/login" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
                                 </li>
                             </ul>
                         )}

@@ -15,7 +15,8 @@ export default {
         secondaryTextColor: "#5BC694",
         textPadded: "#8C9EC5",
         orange: "#FFB067",
-        deepOrange: "#FD9636"
+        deepOrange: "#FD9636",
+        detailsBorder: "#dde4f0"
       },
       backgroundImage: {
         'custom-bg': "url('/imgs/page/homepage4/bg-banner-2.png')",

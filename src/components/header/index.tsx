@@ -7,7 +7,7 @@ const Header = () => {
     const router = useRouter()
     console.log(router)
     return (<div>
-            {router.pathname.includes('auth') ? <MiniHeader/> : <>
+            {router.pathname !== ('/') ? <MiniHeader/> : <>
                 <MiniHeader/>
                 <MainHeader/>
             </>}
