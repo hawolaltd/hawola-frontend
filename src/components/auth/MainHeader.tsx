@@ -15,9 +15,9 @@ function MainHeader() {
 
     return (<div>
             <div className="bg-white border-b border-b-[#D5DFE4] relative pr-4">
-                <div className="max-w-[1320px] mx-auto px-0 py-4 flex items-center justify-between">
+                <div className="max-w-screen-md lg:max-w-screen-lg xl:max-w-[1320px] mx-auto px-4 md:px-0 py-4 flex items-center justify-between">
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex  justify-center items-center gap-3">
 
                         {/* Logo */}
                         <Link href={'/'}>
@@ -26,7 +26,7 @@ function MainHeader() {
                             </div>
                         </Link>
 
-                        <div className="flex items-center gap-4 text-primary">
+                        <div className="hidden md:flex items-center gap-4 text-primary">
                             {/* Categories Dropdown and Search Bar */}
                             <div className="flex items-center space-x-4 border rounded-md">
                                 {/*<select className="p-2 text-primary text-sm">*/}
@@ -98,7 +98,7 @@ function MainHeader() {
                         </div>
 
                         {/* Navigation Links */}
-                        <ul className="flex space-x-4 text-sm">
+                        <ul className="hidden xl:flex space-x-4 text-sm">
 
                             <li onMouseEnter={() => setDropdownOpen('home')}
                                 onMouseLeave={() => setDropdownOpen(null)}

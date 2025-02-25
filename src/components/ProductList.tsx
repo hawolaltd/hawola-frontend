@@ -31,9 +31,9 @@ const settings = {
         {
             breakpoint: 600,
             settings: {
-                slidesToShow: 2,
-                slidesToScroll: 2,
-                initialSlide: 2
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                initialSlide: 1
             }
         },
         {
@@ -49,15 +49,15 @@ const settings = {
 
 const ProductList = () => {
     return (
-        <section className="max-w-screen-xl  mx-auto py-4">
-            <div className="flex justify-between items-center mx-auto text-left mb-8 w-full border-b border-b-[#CAD6EC] pb-4">
+        <section className="max-w-screen-xl px-6 xl:px-0 mx-auto py-4">
+            <div className="flex flex-col xl:flex-row justify-between items-center mx-auto text-left mb-8 w-full border-b border-b-[#CAD6EC] pb-4">
                 <div className={'flex items-center gap-8'}>
-                    <h2 className="text-xl font-semibold text-[#425A8B]">Featured</h2>
-                    <h2 className="text-xl font-semibold text-[#8C9EC5]">Best Seller</h2>
-                    <h2 className="text-xl font-semibold text-[#8C9EC5]">Most Viewed</h2>
+                    <h2 className="text-xs md:text-xl font-semibold text-[#425A8B]">Featured</h2>
+                    <h2 className="text-xs md:text-xl font-semibold text-[#8C9EC5]">Best Seller</h2>
+                    <h2 className="text-xs md:text-xl font-semibold text-[#8C9EC5]">Most Viewed</h2>
                 </div>
 
-                <div className={'flex items-center gap-2'}>
+                <div className={'hidden md:flex items-center gap-2'}>
                     <div className={'p-1 border border-textPadded rounded flex items-center justify-center'}>
                         <svg className="w-2 h-2 text-textPadded" aria-hidden="true"
                              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 8 14">

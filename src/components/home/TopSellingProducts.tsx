@@ -18,7 +18,7 @@ interface ProductCardProps {
 
 function TopSellingProducts() {
     return (
-        <section className="max-w-screen-2xl flex flex-col gap-4 items-center justify-center py-4">
+        <section className="max-w-screen-2xl px-6 xl:px-0 flex flex-col gap-4 items-center justify-center py-4">
 
             <div className="max-w-screen-xl flex justify-center py-4">
                 <Ads2/>

@@ -2,7 +2,7 @@ import React from 'react';
 
 function Ads2() {
     return (
-        <svg width="1360" height="281" viewBox="0 0 1360 281" fill="none" xmlns="http://www.w3.org/2000/svg"
+        <svg className={'w-[150px] md:w-[400px] xl:w-[1360px] xl:h-[281px]'} viewBox="0 0 1360 281" fill="none" xmlns="http://www.w3.org/2000/svg"
              xmlnsXlink="http://www.w3.org/1999/xlink">
             <rect width="316" height="250" transform="translate(12 0.72998)" fill="#DBECE5"/>
             <rect width="316" height="250" transform="translate(12 0.72998)" fill="url(#pattern0_1_2535)"/>

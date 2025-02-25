@@ -23,7 +23,7 @@ const Header = () => {
                             <img src="/assets/hawola.png" alt="Logo" className="w-50 h-10"/>
                         </div>
 
-                        <div className="flex items-center gap-4 text-primary">
+                        <div className="hidden lg:flex items-center gap-4 text-primary">
                             {/* Categories Dropdown and Search Bar */}
                             <div className="flex items-center space-x-4 border rounded-md">
                                 {/*<select className="p-2 text-primary text-sm">*/}
@@ -95,7 +95,7 @@ const Header = () => {
                             </div>
 
                             {/* Navigation Links */}
-                            <div className="space-x-8 text-sm">
+                            <div className="hidden xl:block space-x-8 text-sm">
                                 <a href="#" className="text-primary hover:text-deepOrange text-[16px]">Flash Deals</a>
                                 <a href="#" className="text-primary hover:text-deepOrange text-[16px]">Special</a>
                                 <a href="#" className="text-primary hover:text-deepOrange text-[16px]">Top Sellers</a>
@@ -181,7 +181,7 @@ const Header = () => {
                         </div>
 
                         {/* Navigation Links */}
-                        <ul className="flex space-x-8 text-sm">
+                        <ul className="hidden xl:flex space-x-8 text-sm">
 
                             <li onMouseEnter={() => setDropdownOpen('home')}
                                 onMouseLeave={() => setDropdownOpen(null)}

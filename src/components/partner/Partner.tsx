@@ -15,13 +15,39 @@ const settings = {
     centerMode: true,
     centerPadding: "20px",
     arrows: false,
+    responsive: [
+        {
+            breakpoint: 1024,
+            settings: {
+                slidesToShow: 2,
+                slidesToScroll: 1,
+                infinite: true,
+                dots: false
+            }
+        },
+        {
+            breakpoint: 600,
+            settings: {
+                slidesToShow: 2,
+                slidesToScroll: 2,
+                initialSlide: 2
+            }
+        },
+        {
+            breakpoint: 480,
+            settings: {
+                slidesToShow: 1,
+                slidesToScroll: 1
+            }
+        }
+    ]
 };
 
 
 function Partner({}) {
     return (
         <div className={'w-full p-6 flex justify-center '}>
-            <Slider {...settings} className={'max-w-screen-xl '}>
+            <Slider {...settings} className={'w-full md:max-w-screen-md xl:max-w-screen-xl '}>
                 {partners.map(partner=> (
                     <img className={'partner-img'} key={partner.id} src={partner.path} alt={partner.name}   />
                 ))}

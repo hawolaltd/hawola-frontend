@@ -8,7 +8,7 @@ const Footer = () => {
         <>
             {router.pathname === '/' && <SubscribeSection/>}
             <footer className="bg-gray-100 py-10 text-gray-600 text-sm">
-                <div className="container mx-auto px-4 grid md:grid-cols-5 gap-4">
+                <div className="container mx-auto px-4 lg:grid-cols-2 grid xl:grid-cols-5 gap-4">
                     <div className={'flex flex-col gap-4'}>
                         <h4 className="font-bold text-primary">Contact</h4>
                         <p className={'text-primary font-bold'}>Address: <span
@@ -79,7 +79,7 @@ const Footer = () => {
 
             <div className="bg-white text-gray-700 text-sm border-t border-gray-200">
                 <div className="container mx-auto px-4 py-6">
-                    <div className="flex gap-6 items-center">
+                    <div className="flex flex-col lg:flex-row gap-6 items-center">
                         {/* Logo and Links */}
                         <div className="flex items-center space-x-2">
                             <img src="/assets/hawola.png" alt="Ecom" className="h-6"/>
@@ -111,7 +111,7 @@ const Footer = () => {
                     </div>
 
                     {/* Copyright and Legal Links */}
-                    <div className="mt-6 border-t border-[#CAD6EC] pt-4 flex items-center justify-between">
+                    <div className="mt-6 border-t border-[#CAD6EC] pt-4 flex flex-col lg:flex-row items-center justify-between">
                         <p className="text-primary text-[10px]">Copyright © 2022 Ecom Market. All rights reserved.</p>
                         <div className="flex space-x-4 mt-2 text-primary text-[10px]">
                             <a href="#">Conditions of Use</a>

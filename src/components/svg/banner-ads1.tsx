@@ -2,7 +2,7 @@ import React from 'react';
 
 function BannerAds1() {
     return (
-        <svg width="996" height="137" viewBox="0 0 996 137" fill="none" xmlns="http://www.w3.org/2000/svg"
+        <svg className={'w-[600px] xl:w-[996px] xl:h-[137px]'} viewBox="0 0 996 137" fill="none" xmlns="http://www.w3.org/2000/svg"
              xmlnsXlink="http://www.w3.org/1999/xlink">
             <rect width="996" height="136.27" transform="translate(0 0.469971)" fill="url(#pattern0_1_823)"/>
             <defs>

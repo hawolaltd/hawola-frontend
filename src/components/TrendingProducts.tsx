@@ -114,14 +114,14 @@ const TrendingProducts = () => {
         discountPercentage: 17,
     },]
 
-    return (<section className="max-w-screen-2xl flex gap-4 bg-[#f1f3f9] justify-center py-4">
-        <div className={'max-w-screen-xl w-full flex  flex-col lg:flex-row gap-4'}>
+    return (<section className="max-w-screen-2xl px-6 xl:px-0  flex gap-4 bg-[#f1f3f9] justify-center py-4">
+        <div className={'max-w-screen-xl w-full flex flex-col xl:flex-row gap-4'}>
             <div>
                 <div className="mx-auto text-left mb-8 w-fullsw">
                     <div className={'flex items-center justify-between border-b border-b-[#CAD6EC] gap-8 p-4'}>
                         <h2 className="text-xl font-semibold text-primary">Trending Products</h2>
 
-                        <div className={'flex items-center gap-2'}>
+                        <div className={'hidden lg:flex items-center gap-2'}>
                             <div
                                 className={'p-1 border border-textPadded rounded flex items-center justify-center'}>
                                 <svg className="w-2 h-2 text-textPadded" aria-hidden="true"
@@ -146,11 +146,11 @@ const TrendingProducts = () => {
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                     {products.map((product, key) => (<ProductCard key={key} product={product}/>))}
                 </div>
 
-               <div className={'w-full py-8'}>
+               <div className={'flex justify-center items-center w-full py-8'}>
                    <BannerAds1/>
                </div>
             </div>

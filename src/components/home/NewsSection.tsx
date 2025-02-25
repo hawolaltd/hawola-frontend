@@ -85,7 +85,7 @@ const NewsSection = () => {
                 <p className="text-xs text-textPadded">From our blog forum</p>
             </div>
 
-                <div className="grid md:grid-cols-1 gap-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-1 xl:gap-6 xl:mt-6">
                     <Slider {...settings} className={'w-full'}>
                             {news.map((item, index) => (
                                 <div key={index} className={'p-2'}>

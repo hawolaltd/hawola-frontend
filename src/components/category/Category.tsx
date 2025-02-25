@@ -27,7 +27,7 @@ const categories = [
 const Category: NextPage = () => {
     return (
         <div>
-            <div className="max-w-screen-xl mx-auto mt-8 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="max-w-screen-xl mx-auto mt-8 mb-8 px-6 xl:px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {categories.map((category, index) => (
                     <CategoryCard
                         key={index}

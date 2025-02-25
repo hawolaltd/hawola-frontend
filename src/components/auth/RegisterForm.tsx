@@ -12,10 +12,10 @@ function RegisterForm() {
 
     return (
 
-            <div className="flex  gap-12 w-full pt-16 mb-28 px-28 bg-white">
+            <div className="flex flex-col lg:flex-row gap-12 w-full pt-16 mb-28 md:px-28 bg-white">
                 <div className="w-full max-w-xl px-8 bg-white ">
-                    <h2 className="text-4xl font-bold text-[#435a8c]">Create an Account</h2>
-                    <p className="text-[#435a8c] mb-6 mt-2">Access to all features. No credit card required.</p>
+                    <h2 className="text-xl lg:text-4xl font-bold text-[#435a8c]">Create an Account</h2>
+                    <p className="text-sm lg:text-lg text-[#435a8c] mb-6 mt-2">Access to all features. No credit card required.</p>
 
                     <form className={'flex flex-col gap-4 mt-8'}>
                         <div>
@@ -106,7 +106,7 @@ function RegisterForm() {
                     </form>
                 </div>
 
-                <div className={'pt-16 flex flex-col gap-8 w-full'}>
+                <div className={'pt-16 px-8 md:px-0 flex flex-col gap-8 w-full'}>
                     <h2 className="text-xl text-center font-bold text-[#435a8c]">Use Social Network Account</h2>
                     <div className={'flex flex-col gap-4'}>
                         <button

@@ -9,12 +9,12 @@ function ProductInfo() {
     const [showMore, setShowMore] = useState(false)
     return (
         <div className="max-w-[1320px]  mt-8 border-b border-b-[#dde4f0] pb-10">
-            <div className="flex gap-6 items-center">
+            <div className="flex gap-6 flex-col md:flex-row md:items-center">
                 {productInfoHeaders.map((header, key) => (
                     <span onClick={()=>{
                         setTab(header.value)
                     }} key={key}
-                          className={`font-bold text-xl cursor-pointer hover:text-primary ${tab === header.value ? 'text-primary' : 'text-textPadded'}`}>{header?.title}</span>
+                          className={`font-bold text-sm lg:text-xl cursor-pointer hover:text-primary ${tab === header.value ? 'text-primary' : 'text-textPadded'}`}>{header?.title}</span>
                 ))}
             </div>
 
