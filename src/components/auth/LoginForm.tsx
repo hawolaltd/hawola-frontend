@@ -1,10 +1,32 @@
 import { useState } from 'react';
 import Link from "next/link";
+import ControlledInput from "@/components/shared/ControlledInput";
+import {useForm, useWatch} from "react-hook-form";
+import {LoginFormType, RegisterFormType} from "@/types/auth";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {login, register} from "@/redux/auth/authSlice";
 
 export default function LoginForm() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
+
+
+    const { control, handleSubmit,  formState: { errors }, } = useForm<LoginFormType>();
+
+    const dispatch = useAppDispatch()
+
+    const {isLoading} = useAppSelector(state => state.auth)
+
+
+
+    const onSubmit = async (data: LoginFormType) => {
+        console.log(data);
+
+        const  res = await dispatch(login(data))
+
+        console.log(res)
+    };
+
+
 
     return (
         <div className="flex  w-full pt-16 mb-28 md:px-28 bg-white">
@@ -12,32 +34,49 @@ export default function LoginForm() {
                 <h2 className="text-4xl font-bold text-[#435a8c]">Member Login</h2>
                 <p className="text-[#435a8c] mb-6 mt-2">Welcome back!</p>
 
-                <form className={'flex flex-col gap-4 mt-8'}>
-                    <div>
-                        <label className="block text-sm font-medium text-[#435a8c]">
-                            Email / Phone / Username *
-                        </label>
-                        <input
-                            type="email"
-                            placeholder="stevenjob@gmail.com"
-                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </div>
+                <form onSubmit={handleSubmit(onSubmit)} className={'flex flex-col gap-4 mt-8'}>
 
-                    <div>
-                        <label className="block text-sm font-medium text-[#435a8c] mt-4">
-                            Password *
-                        </label>
-                        <input
-                            type="password"
-                            placeholder="****************"
+                        <ControlledInput
+                            control={control}
+                            errors={errors}
+                            name="username"
+                            label="Username *"
+                            type="text"
+                            placeholder="stevenjob"
+                            rules={{
+                                required: 'Username is required',
+                            }}
                             className="w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
                         />
-                    </div>
+
+                        <ControlledInput
+                            control={control}
+                            errors={errors}
+                            name="email"
+                            label=" Email*"
+                            type="text"
+                            placeholder="stevenjob@gmail.com"
+                            rules={{
+                                required: 'Email is required',
+                            }}
+                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
+                        />
+                        <ControlledInput
+                            control={control}
+                            errors={errors}
+                            name="password"
+                            label="Password *"
+                            type="text"
+                            placeholder="****************"
+                            rules={{
+                                required: 'Username is required',
+                                minLength: {
+                                    value: 5,
+                                    message: 'Username must be at least 5 characters',
+                                },
+                            }}
+                            className="w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
+                        />
 
                     <div className="flex justify-between items-center mt-4">
                         <label className="flex items-center text-xs text-[#435a8c]">
@@ -52,8 +91,8 @@ export default function LoginForm() {
                         <a href="#" className="text-[#435a8c] text-xs">Forgot your password?</a>
                     </div>
 
-                    <button className="w-full mt-6 bg-[#435a8c] text-white py-3 rounded-md text-lg font-semibold">
-                        Sign Up
+                    <button disabled={isLoading} type={'submit'} className={`w-full mt-6 ${isLoading  ? 'bg-blue-300 cursor-not-allowed' : "bg-[#435a8c]"} text-white py-3 rounded-md text-lg font-semibold`}>
+                        Sign In
                     </button>
                     <Link href={'/auth/register'}>
                     <p className="text-left text-xs text-[#435a8c] mt-4">

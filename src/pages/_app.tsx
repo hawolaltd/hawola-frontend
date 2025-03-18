@@ -6,7 +6,17 @@ import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
 import 'swiper/css';
 import type { AppProps } from "next/app";
+import {PersistGate} from "redux-persist/integration/react";
+import {persistor, store} from "@/store/store";
+import {Provider} from "react-redux";
+import {ToastContainer} from "react-toastify";
 
 export default function App({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+  return <PersistGate persistor={persistor}>
+    <Provider store={store}>
+        <Component {...pageProps} />
+        <ToastContainer/>
+    </Provider>
+  </PersistGate>
+
 }

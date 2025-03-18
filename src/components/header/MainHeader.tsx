@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import Image from "next/image";
 import Link from "next/link";
+import {logout} from "@/redux/auth/authSlice";
 
 const Header = () => {
     const [userInfo, setUserInfo] = useState(false)
@@ -132,7 +133,9 @@ const Header = () => {
                                     <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Settings</Link>
                                 </li>
 
-                                <li>
+                                <li onClick={()=>{
+                                    logout()
+                                }}>
                                     <Link href="/auth/login" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
                                 </li>
                             </ul>
