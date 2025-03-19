@@ -40,14 +40,15 @@ const refreshTokenRequest = async (): Promise<boolean> => {
     if (!refreshToken) return false;
 
     try {
-        const response = await axios.post(`${API}/auth/auth/refresh-token`, { token: refreshToken });
+        const response = await axios.post(`${API}/authy/api/token/refresh`, { token: refreshToken });
         if (response.data && response.data?.success) {
+            console.log("refresh:", response)
             // console.log(response)
-            const { access_token, refresh_token } = response.data.data;
+            const { access, refresh } = response.data;
 
             // Store new tokens
-            Cookies.set(authTokenStorageKeyName as string, access_token);
-            Cookies.set(authRefreshTokenStorageKeyName as string, refresh_token);
+            Cookies.set(authTokenStorageKeyName as string, access);
+            Cookies.set(authRefreshTokenStorageKeyName as string, refresh);
 
             return true;
         }
@@ -59,7 +60,10 @@ const refreshTokenRequest = async (): Promise<boolean> => {
 
 // Response Interceptor
 axiosInstance.interceptors.response.use(
-    (response: AxiosResponse) => response.data,
+    (response: AxiosResponse) => {
+        console.log("AxiosResponse:", response)
+       return  response
+    },
     async (error: AxiosError) => {
         // Ensure error.config is defined
         if (!error.config) return Promise.reject(error);

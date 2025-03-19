@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import {logout} from "@/redux/auth/authSlice";
+import {useAppDispatch} from "@/hook/useReduxTypes";
 
 const Header = () => {
     const [userInfo, setUserInfo] = useState(false)
@@ -10,6 +11,8 @@ const Header = () => {
     const toggleDropdown = (menu: string) => {
         setDropdownOpen(dropdownOpen === menu ? null : menu);
     };
+
+    const dispatch = useAppDispatch()
 
 
     return (
@@ -134,9 +137,9 @@ const Header = () => {
                                 </li>
 
                                 <li onClick={()=>{
-                                    logout()
+                                    dispatch(logout())
                                 }}>
-                                    <Link href="/auth/login" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
+                                    <Link  href="/auth/login" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
                                 </li>
                             </ul>
                         )}

@@ -1,29 +1,36 @@
 import React from 'react';
-import { Controller, useFormContext, FieldError } from 'react-hook-form';
+import {
+    Controller,
+    Control,
+    FieldErrors,
+    FieldValues,
+    FieldPath,
+    RegisterOptions, PathValue,
+} from 'react-hook-form';
 
-type ControlledInputProps = {
-    name: string;
+type ControlledInputProps<TFieldValues extends FieldValues = FieldValues> = {
+    name: FieldPath<TFieldValues>;
     label: string;
     type?: string;
-    rules?: any;
+    rules?: RegisterOptions<TFieldValues>;
     className?: string;
     placeholder?: string;
-    control: any;
-    errors: any;
+    control: Control<TFieldValues>;
+    errors: FieldErrors<TFieldValues>;
+    defaultValue?: PathValue<TFieldValues, FieldPath<TFieldValues>>;
 };
 
-const ControlledInput: React.FC<ControlledInputProps> = ({
-                                                             name,
-                                                             label,
-                                                             type = 'text',
-                                                             rules,
-                                                             className = '',
-                                                             errors,
-                                                             control,
-                                                             placeholder
-                                                         }) => {
-
-
+const ControlledInput = <TFieldValues extends FieldValues = FieldValues>({
+                                                                             name,
+                                                                             label,
+                                                                             type = 'text',
+                                                                             rules,
+                                                                             className = '',
+                                                                             errors,
+                                                                             control,
+                                                                             placeholder,
+                                                                             defaultValue,
+                                                                         }: ControlledInputProps<TFieldValues>) => {
     // Default Tailwind classes
     const defaultClasses = `w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none ${
         errors[name] ? 'border-red-500' : ''
@@ -44,13 +51,14 @@ const ControlledInput: React.FC<ControlledInputProps> = ({
                 name={name}
                 control={control}
                 rules={rules}
+                defaultValue={defaultValue}
                 render={({ field }) => (
                     <input
                         {...field}
                         id={name}
                         type={type}
                         placeholder={placeholder}
-                        className={inputClasses} // Use combined classes
+                        className={inputClasses}
                     />
                 )}
             />

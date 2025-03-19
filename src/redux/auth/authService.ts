@@ -3,11 +3,11 @@ import axiosInstance from "@/libs/api/axiosInstance";
 import Cookies from 'js-cookie';
 import {API, authRefreshTokenStorageKeyName, authTokenStorageKeyName} from "@/constant";
 import {ChangePasswordType, LoginFormType, RegisterFormType} from "@/types/auth";
-const API_URL = "auth/authy";
+const API_URL = "authy";
 
 //Register user
 const register = async (userData: RegisterFormType) => {
-    const response = await axios.post(API + API_URL, userData);
+    const response = await axios.post(API + API_URL + "/registration/", userData);
 
     return response.data;
 };
@@ -27,10 +27,10 @@ const login = async (userData: LoginFormType) => {
     const response = await axiosInstance.post(API + API_URL + "/login/", userData);
     console.log("Loginresponse:", response)
     if (response.data) {
-        Cookies.set(authTokenStorageKeyName as string, response.data.token.access_token)
-        Cookies.set(authRefreshTokenStorageKeyName as string, response.data.token.access_token)
-        localStorage.setItem(authTokenStorageKeyName as string, response.data.token.refresh_token)
-        localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.token.refresh_token)
+        Cookies.set(authTokenStorageKeyName as string, response.data.access)
+        Cookies.set(authRefreshTokenStorageKeyName as string, response.data.refresh)
+        localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
+        localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
     }
 
     return response.data;

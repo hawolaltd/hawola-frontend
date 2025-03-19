@@ -1,12 +1,15 @@
 import React from 'react';
 import {Controller, useForm, useWatch} from "react-hook-form";
-import {RegisterFormType} from "@/types/auth";
+import {LoginFormType, RegisterFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {register} from "@/redux/auth/authSlice";
+import ControlledInput from "@/components/shared/ControlledInput";
+import {toast} from "react-toastify";
+import {useRouter} from "next/router";
 
 function RegisterForm() {
 
-    const { control, handleSubmit } = useForm<RegisterFormType>();
+    const { control, handleSubmit, formState: {errors}, reset } = useForm<RegisterFormType>();
 
     const dispatch = useAppDispatch()
 
@@ -19,6 +22,7 @@ function RegisterForm() {
 
     console.log('terms:', terms)
 
+    const router = useRouter()
 
     const onSubmit = async (data: RegisterFormType) => {
         console.log(data);
@@ -30,6 +34,14 @@ function RegisterForm() {
             password2: data.password2,
         }
         const  res = await dispatch(register(finalData))
+
+        console.log(res)
+
+        if (res?.type.includes('fulfilled')){
+            toast.success("Welcome to HAWOLA")
+            reset()
+            router.push('/auth/login')
+        }
 
         console.log(res)
     };
@@ -45,22 +57,15 @@ function RegisterForm() {
                         required.</p>
 
                     <form className={'flex flex-col gap-4 mt-8'} onSubmit={handleSubmit(onSubmit)}>
-                        {/*<div>*/}
-                        {/*    <label className="block text-sm font-medium text-[#435a8c]">Full Name*</label>*/}
-                        {/*    <Controller*/}
-                        {/*        name="fullname"*/}
-                        {/*        control={control}*/}
-                        {/*        defaultValue=""*/}
-                        {/*        render={({field}) => <input {...field} type="text" placeholder="Steven Job"*/}
-                        {/*                                    className="w-full mt-1 p-4 border rounded-md bg-white border-[#dde4f0] focus:outline-none"/>}*/}
-                        {/*    />*/}
-                        {/*</div>*/}
                         <div>
-                            <label className="block text-sm font-medium text-[#435a8c]">Email*</label>
-                            <Controller
-                                name="email"
+                            <ControlledInput<RegisterFormType>
                                 control={control}
-                                defaultValue=""
+                                errors={errors}
+                                name="email"
+                                label=" Email*"
+                                type="text"
+                                placeholder="stevenjob@gmail.com"
+                                defaultValue={''}
                                 rules={{
                                     required: 'Email is required',
                                     pattern: {
@@ -69,32 +74,19 @@ function RegisterForm() {
                                     },
 
                                 }}
-                                render={({field, fieldState}) => {
-
-                                    console.log("fieldState:", fieldState)
-                                    console.log("fieldState.error:", fieldState.error)
-                                    console.log("fieldState.error.message:", fieldState.error?.message)
-
-                                    return(
-
-                                        <><input  value={field.value}
-                                                  onChange={field.onChange} type="email" placeholder="stevenjob@gmail.com"
-                                                  className="w-full mt-1 p-4 border rounded-md bg-white border-[#dde4f0] focus:outline-none"/>
-
-                                            {fieldState.error && (
-                                                <span className="text-red-500">{fieldState.error.message}</span>
-                                            )}
-                                        </>
-                                )}}
+                                className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                             />
 
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-[#435a8c]">Username*</label>
-                            <Controller
-                                name="username"
+                            <ControlledInput<RegisterFormType>
                                 control={control}
-                                defaultValue=""
+                                errors={errors}
+                                name="username"
+                                label=" Username*"
+                                type="text"
+                                placeholder="stevenjob"
+                                defaultValue={''}
                                 rules={{
                                     required: 'Username is required',
                                     minLength: {
@@ -102,26 +94,18 @@ function RegisterForm() {
                                         message: 'Username must be at least 5 characters',
                                     },
                                 }}
-                                render={({field, fieldState}) => <>
-                                    <input value={field.value}
-                                           onChange={field.onChange} type="text" placeholder="stevenjob"
-                                           className="w-full mt-1 p-4 border rounded-md bg-white border-[#dde4f0] focus:outline-none"/>
-
-                                    {fieldState.error && (
-                                        <span className="text-red-500">{fieldState.error.message}</span>
-                                    )}
-                                </>
-                                }
-
+                                className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                             />
-
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-[#435a8c] mt-4">Password *</label>
-                            <Controller
+                            <ControlledInput<RegisterFormType>
+                                control={control}
+                                errors={errors}
                                 name="password1"
-                                control={control}
-                                defaultValue=""
+                                label=" Password*"
+                                type="password"
+                                placeholder="*********"
+                                defaultValue={''}
                                 rules={{
                                     required: 'Password is required',
                                     minLength: {
@@ -129,25 +113,19 @@ function RegisterForm() {
                                         message: 'Password must be at least 8 characters',
                                     },
                                 }}
-                                render={({field, fieldState}) => (
-                                    <>
-                                        <input value={field.value}
-                                               onChange={field.onChange} type="password" placeholder="****************"
-                                               className="w-full mt-1 p-4 border rounded-md bg-white border-[#dde4f0] focus:outline-none"/>
-                                        {fieldState.error && (
-                                            <span className="text-red-500">{fieldState.error.message}</span>
-                                        )}
-                                    </>
-                                )}
+                                className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                             />
 
                         </div>
                         <div>
-                        <label className="block text-sm font-medium text-[#435a8c] mt-4">Re-Password *</label>
-                            <Controller
-                                name="password2"
+                            <ControlledInput<RegisterFormType>
                                 control={control}
-                                defaultValue=""
+                                errors={errors}
+                                name="password2"
+                                label=" Re-Password*"
+                                type="password"
+                                placeholder="*********"
+                                defaultValue={''}
                                 rules={{
                                     required: 'Password is required',
                                     minLength: {
@@ -155,17 +133,7 @@ function RegisterForm() {
                                         message: 'Password must be at least 8 characters',
                                     },
                                 }}
-                                render={({field, fieldState}) => (
-                                    <>
-                                        <input value={field.value}
-                                               onChange={field.onChange} type="password" placeholder="****************"
-                                               className="w-full mt-1 p-4 border rounded-md bg-white border-[#dde4f0] focus:outline-none"/>
-                                        {fieldState.error && (
-                                            <span className="text-red-500">{fieldState.error.message}</span>
-                                        )}
-                                    </>
-
-                                )}
+                                className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                             />
                         </div>
                         <div className="flex justify-between items-center mt-4">
