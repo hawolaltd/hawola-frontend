@@ -1,39 +1,30 @@
 import type { NextPage } from 'next';
 import CategoryCard from "@/components/category/CategoryCard";
+import {useEffect} from "react";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {getAllCategories} from "@/redux/product/productSlice";
 
-const categories = [
-    {
-        title: "Smart Phone",
-        image: "/imgs/page/homepage1/smartphone.png",
-        items: ["Phone Accessories", "Phone Cases", "Postpaid Phones", "Refurbished Phones"]
-    },
-    {
-        title: "Television",
-        image: "/imgs/page/homepage1/television.png",
-        items: ["HD DVD Players", "Projection Screens", "Television Accessories", "TV-DVD Combos"]
-    },
-    {
-        title: "Computers",
-        image: "/imgs/page/homepage1/computer.png",
-        items: ["Computer Components", "Computer Accessories", "Desktops", "Monitors"]
-    },
-    {
-        title: "Electronics",
-        image: "/imgs/page/homepage1/electric.png",
-        items: ["Office Electronics", "Portable Audio & Video", "Washing Machine", "Accessories & Supplies"]
-    }
-];
 
 const Category: NextPage = () => {
+    const {categories} = useAppSelector(state => state.products)
+
+    console.log("categories:", categories)
+
+    const dispatch = useAppDispatch()
+
+
+    useEffect(() => {
+        dispatch(getAllCategories())
+    }, [dispatch]);
     return (
         <div>
             <div className="max-w-screen-xl mx-auto mt-8 mb-8 px-6 xl:px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {categories.map((category, index) => (
+                {categories?.categories?.slice(0,4)?.map((category, index) => (
                     <CategoryCard
                         key={index}
-                        title={category.title}
-                        image={category.image}
-                        items={category.items}
+                        title={category.name}
+                        image={category.icon}
+                        items={[]}
                     />
                 ))}
             </div>

@@ -1,26 +1,27 @@
 import React from 'react';
 import {useRouter} from "next/router";
+import {Product, ProductResponse} from "@/types/product";
 
-function ProductCard2({product, key, item}: {product: any, key: number, item: any}) {
+function ProductCard2({product, key, item}: {product: ProductResponse['results'], key: number, item: Product}) {
    const router = useRouter()
     return (
         <div key={key}
              onClick={() => {
-                 router.push(`product/${item?.id}`)
+                 router.push(`product/${item?.slug}`)
              }}
              className={`bg-white cursor-pointer relative flex ${key + 1 !== product.length ? "border-b-[#dde4f0] border-b" : " "} pb-1 pt-4 pl-4 pr-4 overflow-hidden`}>
             <div className="relative">
-                {item.discountPercentage && (<span
+                {item.discount_price && (<span
                     className="absolute -top-2 left-0 bg-orange-500 text-white text-xs font-semibold py-1 px-1 rounded">
-                                     -{item.discountPercentage}% </span>)}
-                <img src={item.image} alt={item.title}
+                                     -{(((+item.price - +item.discount_price)/ +item.price)*100).toFixed()}% </span>)}
+                <img src={item.featured_image?.[0]?.image_url} alt={item.name}
                      className="w-full h-16 object-cover"/>
             </div>
             <div className="p-4">
-                <h3 className="text-sm font-semibold text-primary">{item.title}</h3>
+                <h3 className="text-sm font-semibold text-primary">{item.name}</h3>
                 <div className={'flex items-center gap-1'}>
-                    {[1, 2, 3, 4, 5].map(star => (
-                        <svg className={'w-4 h-4'} key={star} viewBox="0 0 24 24"
+                    {Array.from((item?.rating ?? 0)).map((star, key) => (
+                        <svg className={'w-4 h-4'} key={key} viewBox="0 0 24 24"
                              xmlns="http://www.w3.org/2000/svg">
                             <path d="m0 0h24v24h-24z" fill="#fff" opacity="0"
                                   transform="matrix(0 1 -1 0 24 0)"/>
@@ -30,12 +31,12 @@ function ProductCard2({product, key, item}: {product: any, key: number, item: an
                         </svg>))}<span
                     className={'text-[10px] text-textPadded font-normal'}>(65)</span>
                 </div>
-                <p className="text-sm text-primary">{item.reviews} reviews</p>
+                <p className="text-sm text-primary">{item.numReviews} reviews</p>
                 <div className="flex gap-2 items-center">
                                         <span
-                                            className="text-sm font-semibold text-gray-800">{item.discountedPrice}</span>
+                                            className="text-sm font-semibold text-gray-800">{item.discount_price}</span>
                     <span
-                        className="text-sm line-through text-textPadded">{item.originalPrice}</span>
+                        className="text-sm line-through text-textPadded">{item.price}</span>
                 </div>
             </div>
 

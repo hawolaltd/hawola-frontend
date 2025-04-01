@@ -3,8 +3,9 @@ import Specification from "@/components/product/Specification";
 import Description from "@/components/product/Description";
 import AdditionalInformation from "@/components/product/AdditionalInformation";
 import CustomerReviews from "@/components/product/CustomerReviews";
+import {Product, ProductByIdResponse} from "@/types/product";
 
-function ProductInfo() {
+function ProductInfo({product}:{product: ProductByIdResponse}) {
     const [tab, setTab] = useState('description')
     const [showMore, setShowMore] = useState(false)
     return (
@@ -19,7 +20,7 @@ function ProductInfo() {
             </div>
 
             {tab === "description" && (
-                <Description showMore={showMore} setShowMore={setShowMore}/>
+                <Description product={product} showMore={showMore} setShowMore={setShowMore}/>
             )}
 
 

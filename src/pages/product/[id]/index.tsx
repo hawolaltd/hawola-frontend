@@ -1,9 +1,13 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import AuthLayout from "@/components/layout/AuthLayout";
 import {FaFacebookF, FaInstagram, FaPinterestP, FaTwitter} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
-import Specification from "@/components/product/Specification";
 import RelatedProduct from "@/components/product/RelatedProduct";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {getProductBySlug} from "@/redux/product/productSlice";
+import {useRouter} from "next/router";
+import {amountFormatter} from "@/util";
+import {Product} from "@/types/product";
 
 const products = [
     {
@@ -33,7 +37,13 @@ const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
     // const [quantity, setQuantity] = useState<number>(1);
 
+    const {query} = useRouter()
 
+    const dispatch = useAppDispatch()
+
+    const {product} = useAppSelector(state => state.products)
+
+    console.log('product:', product)
 
     const handleQuantityChange = (value: number) => {
         setQuantity((prev) => Math.max(1, prev + value));
@@ -66,16 +76,20 @@ const ProductPage = () => {
         0
     );
 
+    useEffect(() => {
+        dispatch(getProductBySlug(query.id as string))
+    }, [dispatch, query.id]);
+
     return (<AuthLayout>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
             {/* Product Image */}
             <div className="flex flex-col md:flex-row gap-4 border-b border-b-[#dde4f0] pb-16">
                 <div style={{flex: 3}} className="flex gap-4 h-4/5">
                     <div className={'hidden lg:flex flex-col gap-4 h-[75vh] w-fit'}>
-                        {[1, 2, 3, 4, 5].map((item, key) => (
+                        {product?.product_images?.map((item, key) => (
                             <div key={key}
                                  className={'border border-[#dde4f0] hover:border-orange px-2 flex items-center justify-center rounded-lg h-full'}>
-                                <img src="/imgs/page/product/img-gallery-1.jpg" alt="Product Image"
+                                <img src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"} alt="Product Image"
                                      className="w-[100px] h-auto"/>
                             </div>))}
                     </div>
@@ -89,7 +103,7 @@ const ProductPage = () => {
                             onMouseMove={handleMouseMove}
                         >
                             <img
-                                src="/imgs/page/product/img-gallery-1.jpg"
+                                src={product?.product?.featured_image?.[0]?.image_url ?? "/imgs/page/product/img-gallery-1.jpg"}
                                 alt="Product"
                                 className={`w-full h-full object-cover transition-transform duration-300 ${
                                     isHovered ? "scale-[2]" : "scale-100"
@@ -106,18 +120,15 @@ const ProductPage = () => {
                 </div>
                 <div style={{flex: 4}} className=" p-1 flex flex-col mt-8 lg:mt-0">
                     {/* Product Details */}
-                    <h1 className="text-xl lg:text-3xl font-bold text-primary mb-6">Samsung Galaxy S22 Ultra, 8K Camera &
-                        Video,
-                        Brightest Display
-                        Screen, S Pen Pro</h1>
+                    <h1 className="text-xl lg:text-3xl font-bold text-primary mb-6 capitalize">{(product?.product?.name)}</h1>
 
                     <div
                         className={'flex flex-col lg:flex-row lg:items-center mb-4  lg:justify-between w-full border-b border-b-[#dde4f0] pb-4'}>
                         <div>
                             <p className={'text-primary text-sm font-bold'}><span
-                                className={'text-[#8c9ec5] text-xs font-bold'}>by</span> Ecom Tech</p>
+                                className={'text-[#8c9ec5] text-xs font-bold'}>by</span> {product?.product.merchant?.store_name}</p>
                             <div className="flex items-center text-xs text-[#8c9ec5] font-bold">
-                                <span>⭐⭐⭐⭐⭐ (65 reviews)</span>
+                                <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
                             </div>
 
                         </div>
@@ -140,8 +151,8 @@ const ProductPage = () => {
                     </div>
 
 
-                    <p className="text-xl lg:text-3xl font-bold text-primary">$2856.3 <span
-                        className="line-through text-xl lg:text-3xl font-medium text-[#8c9ec5]">$3225.6</span>
+                    <p className="text-xl lg:text-3xl font-bold text-primary">${amountFormatter(product.product?.discount_price)}<span
+                        className="line-through text-xl lg:text-3xl font-medium text-[#8c9ec5]">${amountFormatter(product?.product?.price)}</span>
                     </p>
 
                     <ul className={'grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1 text-sm mt-6 mb-6 px-5 font-medium'}>
@@ -220,10 +231,10 @@ const ProductPage = () => {
                         {/* Additional info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-12">
                             <div>
+                                {product?.product?.sku && <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
+                                    className="font-bold text-primary text-xs">SKU:</span> {product?.product?.sku}</p>}
                                 <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
-                                    className="font-bold text-primary text-xs">SKU:</span> iphone12pro128</p>
-                                <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
-                                    className="font-bold text-primary text-xs">Category:</span> Smartphones</p>
+                                    className="font-bold text-primary text-xs">Category:</span> {product?.product?.category?.name}</p>
                                 <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
                                     className="font-bold text-primary text-xs">Tags:</span> Blue, Smartphone</p>
                             </div>
@@ -314,9 +325,9 @@ const ProductPage = () => {
                 {
 
                 }
-             <ProductInfo/>
+             <ProductInfo product={product}/>
 
-                <RelatedProduct/>
+                <RelatedProduct product={product}/>
 
 
             </div>

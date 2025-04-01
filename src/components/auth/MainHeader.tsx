@@ -1,17 +1,50 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Link from "next/link";
 import {useRouter} from "next/router";
+import CartModal from "@/components/shared/CartModal";
+import {CartResponse} from "@/types/product";
+import {logout} from "@/redux/auth/authSlice";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 
 function MainHeader() {
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+    const [cart, setCart] = useState(false)
+
+    const {carts} = useAppSelector(state => state.products)
+
+    const [userCart, setUserCart] = useState<CartResponse>(carts)
+
+    const { isAuthenticated } = useAppSelector(state => state.auth)
 
     const [userInfo, setUserInfo] = useState(false)
+    const [items, setItems] = useState([])
 
     const toggleDropdown = (menu: string) => {
         setDropdownOpen(dropdownOpen === menu ? null : menu);
     };
 
     const router = useRouter()
+
+    const dispatch = useAppDispatch()
+
+
+    useEffect(() => {
+        const getCartCount = () => {
+            const cartItems = JSON.parse(localStorage.getItem('cartItems') as string)
+            setItems(cartItems)
+        };
+
+
+        getCartCount();
+
+
+        window.addEventListener("storage", getCartCount);
+
+        return () => window.removeEventListener("storage", getCartCount);
+
+    }, []);
+
+    console.log("authitems:", items)
 
     return (<div>
             <div className="bg-white border-b border-b-[#D5DFE4] relative pr-4">
@@ -386,14 +419,17 @@ function MainHeader() {
                                 </li>
                             </ul>
                         )}
-                        <div className="relative">
+                        <div className="relative cursor-pointer">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
                             <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
                         </div>
-                        <div className="relative">
+                        <div onClick={()=>{
+                            setUserCart({} as CartResponse)
+                            dispatch(logout())
+                        }} className="relative">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{isAuthenticated ? items ? items.length : userCart.cart_count  ?? 0 : 0}</span>
                             <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
                         </div>
                         <div className="relative flex items-center gap-2 text-primary text-[16px]">
@@ -401,6 +437,9 @@ function MainHeader() {
                         </div>
 
                     </div>
+                    {
+                        cart && <CartModal/>
+                    }
                 </div>
             </div>
 

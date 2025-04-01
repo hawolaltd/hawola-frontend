@@ -1,36 +1,99 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {useRouter} from "next/router";
+import {amountFormatter} from "@/util";
+import {LocalCart, Product} from "@/types/product";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
+import {toast} from "react-toastify";
 
-function ProductCard({product}:{product: any}) {
+function ProductCard({product}:{product: Product}) {
     const router = useRouter()
+
+    const { isAuthenticated } = useAppSelector(state => state.auth)
+
+    const [selectedProduct, setSelectedProduct] = useState<LocalCart | null>(null)
+
+    const [loading, setLoading] = useState(false)
+
+const dispatch = useAppDispatch()
+    const handleAddToCart = async (product: LocalCart) =>{
+                try {
+                   if(isAuthenticated) {
+                     const res = await dispatch( addToCarts({
+                          items: [product]
+                      }))
+                       if (res?.type.includes('fulfilled')){
+                           dispatch(getCarts())
+                           toast.success('Cart Added')
+                       }
+
+                   } else {
+                     const cartItems = JSON.parse(localStorage.getItem("cartItems") as unknown  as string)
+
+                       console.log('cartItems', cartItems)
+
+                       if (cartItems){
+                           const existingItem = cartItems.find((item: { product: number; }) => item.product === product.product);
+                           if (existingItem){
+                               existingItem.qty = (existingItem.qty || 1) + (product.qty || 1);
+                           }else {
+                               cartItems.push(product)
+                               dispatch(addToCartsLocal(cartItems))
+                               localStorage.setItem("cartItems",  JSON.stringify(cartItems))
+
+                               console.log('cartItems2:', cartItems)
+
+                               toast.success('Cart Added')
+                           }
+                           return
+                       }else {
+                           localStorage.setItem("cartItems",  JSON.stringify([product]))
+                           dispatch(addToCartsLocal({items: [product]}))
+
+                           console.log('cartItems2:', cartItems)
+
+                           toast.success('Cart Added')
+                       }
+                   }
+                }catch (e) {
+
+                }
+    }
+
     return (
-        <div onClick={() => {
-            router.push(`product/${product?.id}`)
-        }} className={`relative bg-white border cursor-pointer border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}>
+        <div  className={`relative bg-white border cursor-pointer border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}>
                         <span
                             className={'absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white'}>-17%</span>
             <div className={'w-full flex items-center justify-center'}>
-                <img src={product.image} alt={product.name} style={{
+                <img src={product.featured_image?.[0]?.image_url } alt={product.name} style={{
                     width: "200px", height: "150px"
                 }}/>
             </div>
             <div className="flex flex-col gap-2">
-                <h3 className="text-[10px] text-textPadded font-semibold">{product.manufacturer}</h3>
-                <h3 className="text-xs font-semibold text-primary">{product.name}</h3>
+                <h3 className="text-[10px] text-textPadded font-semibold">{product.merchant?.store_name}</h3>
+                <h3 className="text-xs font-semibold text-primary" onClick={() => {
+                    router.push(`product/${product?.slug}`)
+                }}>{product.name}</h3>
                 <div className={'flex items-center gap-1'}>
-                    {[1, 2, 3, 4, 5].map(star => (<svg className={'w-4 h-4'} key={star} viewBox="0 0 24 24"
+                    {Array.from((product?.rating ?? 0)).map((star, key) => (<svg className={'w-4 h-4'} key={key} viewBox="0 0 24 24"
                                                        xmlns="http://www.w3.org/2000/svg">
                         <path d="m0 0h24v24h-24z" fill="#fff" opacity="0"
                               transform="matrix(0 1 -1 0 24 0)"/>
                         <path
                             d="m17.56 21a1 1 0 0 1 -.46-.11l-5.1-2.67-5.1 2.67a1 1 0 0 1 -1.45-1.06l1-5.63-4.12-4a1 1 0 0 1 -.25-1 1 1 0 0 1 .81-.68l5.7-.83 2.51-5.13a1 1 0 0 1 1.8 0l2.54 5.12 5.7.83a1 1 0 0 1 .81.68 1 1 0 0 1 -.25 1l-4.12 4 1 5.63a1 1 0 0 1 -.4 1 1 1 0 0 1 -.62.18z"
                             fill="#FFB067"/>
-                    </svg>))}<span className={'text-[10px] text-textPadded font-normal'}>(65)</span>
+                    </svg>))}<span className={'text-[10px] text-textPadded font-normal'}>{(product?.numReviews)}</span>
                 </div>
-                <p className="text-lg font-bold text-primary">{product.price} <span
-                    className={'line-through text-xs text-textPadded'}> $3225.6</span></p>
+                <p className="text-lg font-bold text-primary">${amountFormatter(product.discount_price)} <span
+                    className={'line-through text-xs text-textPadded'}> ${amountFormatter(product?.price)}</span></p>
                 <button
-                    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full">Add
+                    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full" onClick={()=>{
+                    console.log('card added')
+                    handleAddToCart({
+                        qty: 1,
+                        product: product?.id
+                    })
+                }}>Add
                     to Cart
                 </button>
             </div>

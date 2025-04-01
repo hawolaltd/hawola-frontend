@@ -81,7 +81,7 @@ axiosInstance.interceptors.response.use(
                 return axiosInstance(originalRequest);
             } else {
                 handleLogout();
-                window.location.href = `/login`;
+                window.location.href = `/auth/login`;
                 return Promise.reject(error);
             }
         }

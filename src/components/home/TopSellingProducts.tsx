@@ -4,6 +4,7 @@ import Ads3 from "@/components/svg/ads3";
 import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import SubscribeSection from "@/components/home/SubscribeSection";
+import {ProductResponse} from "@/types/product";
 
 interface ProductCardProps {
     image: string;
@@ -15,8 +16,11 @@ interface ProductCardProps {
     discountPercentage: number;
 }
 
+interface TopSellingProductsProps {
+    products: ProductResponse
+}
 
-function TopSellingProducts() {
+function TopSellingProducts({products}: TopSellingProductsProps) {
     return (
         <section className="max-w-screen-2xl px-6 xl:px-0 flex flex-col gap-4 items-center justify-center py-4">
 
@@ -34,19 +38,19 @@ function TopSellingProducts() {
 
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                    {product.map((item, key) => {
+                    {products?.results?.slice(0,8)?.map((item, key) => {
 
                         return (<div key={key}
                                      className={`bg-white relative flex border-[#dde4f0] border pb-1 pt-4 pl-4 pr-4 overflow-hidden`}>
                             <div className="relative">
-                                {item.discountPercentage && (<span
+                                {item.discount_price && (<span
                                     className="absolute -top-2 left-0 bg-orange-500 text-white text-xs font-semibold py-1 px-1 rounded">
-                                     -{item.discountPercentage}% </span>)}
-                                <img src={item.image} alt={item.title}
+                                    -{(((+item.price - +item.discount_price)/ +item.price)*100).toFixed()}%</span>)}
+                                <img src={item.featured_image?.[0]?.image_url} alt={item.name}
                                      className="w-full h-16 object-cover"/>
                             </div>
                             <div className="p-4">
-                                <h3 className="text-sm font-semibold text-primary">{item.title}</h3>
+                                <h3 className="text-sm font-semibold text-primary">{item.name}</h3>
                                 <div className={'flex items-center gap-1'}>
                                     {[1, 2, 3, 4, 5].map(star => (
                                         <svg className={'w-4 h-4'} key={star} viewBox="0 0 24 24"
@@ -59,12 +63,12 @@ function TopSellingProducts() {
                                         </svg>))}<span
                                     className={'text-[10px] text-textPadded font-normal'}>(65)</span>
                                 </div>
-                                <p className="text-sm text-primary">{item.reviews} reviews</p>
+                                <p className="text-sm text-primary">{item.numReviews} reviews</p>
                                 <div className="flex gap-2 items-center">
                                         <span
-                                            className="text-sm font-semibold text-gray-800">{item.discountedPrice}</span>
+                                            className="text-sm font-semibold text-gray-800">{item.discount_price}</span>
                                     <span
-                                        className="text-sm line-through text-textPadded">{item.originalPrice}</span>
+                                        className="text-sm line-through text-textPadded">{item.price}</span>
                                 </div>
                             </div>
 

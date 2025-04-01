@@ -1,16 +1,11 @@
 import React from 'react';
 import Slider from "react-slick";
 import ProductCard from "@/components/product/ProductCard";
+import {ProductResponse} from "@/types/product";
 
-const products = [
-    { id: 1, manufacturer: "HP", name: 'HP 22 All-in-One PC, Intel Pentium Silver J5040, 4GB RAM', price: '$2856.3', image: '/imgs/page/homepage1/imgsp1.png' },
-    { id: 1, manufacturer: "Gateway", name: 'HP 22 All-in-One PC, Intel Pentium Silver J5040, 4GB RAM', price: '$2856.3', image: '/imgs/page/homepage1/imgsp2.png' },
-    { id: 1, manufacturer: "Dell", name: 'Dell Optiplex 9020 Small Form Business Desktop Tower PC', price: '$2856.3', image: '/imgs/page/homepage1/imgsp3.png' },
-    { id: 2,  manufacturer: "SAMSUNG", name: 'HP 24 All-in-One PC, Intel Core i3-1115G4, 4GB RAM', price: '$2856.3', image: '/imgs/page/homepage1/imgsp4.png' },
-    { id: 3,  manufacturer: "HP", name: 'Gateway 23.8" All-in-one Desktop, Fully Adjustable Stand', price: '$2856.3', image: '/imgs/page/homepage1/imgsp5.png' },
-    { id: 4,  manufacturer: "Gateway", name: 'HP 22 All-in-One PC, Intel Pentium Silver J5040, 4GB RAM', price: '$2856.3', image: '/imgs/page/homepage1/imgsp6.png' },
-    { id: 4,  manufacturer: "HP", name: 'HP Slim Desktop, Intel Celeron J4025, 4GB RAM, 256GB SSD', price: '$2856.3', image: '/imgs/page/homepage1/imgsp7.png' },
-];
+interface ProductListProps {
+    products: ProductResponse
+}
 
 const settings = {
     dots: false,
@@ -47,7 +42,7 @@ const settings = {
 };
 
 
-const ProductList = () => {
+const ProductList = ({products}: ProductListProps) => {
     return (
         <section className="max-w-screen-xl px-6 xl:px-0 mx-auto py-4">
             <div className="flex flex-col xl:flex-row justify-between items-center mx-auto text-left mb-8 w-full border-b border-b-[#CAD6EC] pb-4">
@@ -79,7 +74,7 @@ const ProductList = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-8 w-full">
                 <Slider {...settings} className={'w-full'}>
-                {products.map((product) => (
+                {products?.results?.map((product) => (
                     <ProductCard key={product?.id} product={product}/>
                 ))}
                 </Slider>

@@ -1,5 +1,11 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
-import {LoginResponse, RegisterFormType} from "@/types/auth";
+import {
+    ForgotPasswordConfirmFormType,
+    ForgotPasswordFormType,
+    LoginResponse,
+    RegisterFormType, UpdateProfileDataType,
+    UserProfileResponse
+} from "@/types/auth";
 import authService from "@/redux/auth/authService";
 import {toast} from "react-toastify";
 import {ChangePasswordType} from "@/types/auth";
@@ -8,6 +14,7 @@ interface AuthState {
     isAuthenticated: boolean;
     hasPermission: boolean;
     user: LoginResponse['user'] | null;
+    profile: UserProfileResponse | null;
     isLoading: boolean;
     error: string | null | unknown;
     message: string | null | unknown;
@@ -17,6 +24,7 @@ const initialState: AuthState = {
     isAuthenticated: false,
     hasPermission: false,
     user: null,
+    profile: null,
     isLoading: false,
     error: null,
     message: "",
@@ -80,6 +88,95 @@ export const changePassword= createAsyncThunk(
 );
 
 
+// forgot Password
+export const forgotPassword= createAsyncThunk(
+    "auth/forgotPassword",
+    async (data: ForgotPasswordFormType, thunkAPI) => {
+        try {
+            return await authService.forgotPassword(data);
+        } catch (error: any) {
+            console.log("error from slice", error)
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message || error.error ||
+                error.toString();
+            toast.error(message)
+
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+
+// reset Password
+export const resetPassword= createAsyncThunk(
+    "auth/reset-Password",
+    async (data: ForgotPasswordConfirmFormType, thunkAPI) => {
+        try {
+            return await authService.resetPassword(data);
+        } catch (error: any) {
+            console.log("error from slice", error)
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message || error.error ||
+                error.toString();
+            toast.error(message)
+
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+
+
+// get User Profile
+export const getUserProfile= createAsyncThunk(
+    "auth/profile",
+    async (_, thunkAPI) => {
+        try {
+            return await authService.getUserProfile();
+        } catch (error: any) {
+            console.log("error from slice", error)
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message || error.error ||
+                error.toString();
+            toast.error(message)
+
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+
+// update Profile
+export const updateProfile= createAsyncThunk(
+    "auth/update-profile",
+    async (data: UpdateProfileDataType, thunkAPI) => {
+        try {
+            return await authService.updateProfile(data);
+        } catch (error: any) {
+            console.log("error from slice", error)
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message || error.error ||
+                error.toString();
+            toast.error(message)
+
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+
 export const logout = createAsyncThunk("auth/logout", async () => {
     await authService.logout();
 });
@@ -110,6 +207,20 @@ const authSlice = createSlice({
                 state.user = null;
                 state.error = true;
                 state.message = action.payload;
+            })
+            .addCase(getUserProfile.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getUserProfile.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isAuthenticated = true;
+                state.profile = action.payload;
+            })
+            .addCase(getUserProfile.rejected, (state, action) => {
+                state.isLoading = false;
+                state.user = null;
+                state.error = true;
+                state.message = action.payload;
             }).addCase(register.pending, (state) => {
                 state.isLoading = true;
             })
@@ -132,10 +243,46 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;
-            }).addCase(logout.fulfilled, (state) => {
+            }).addCase(forgotPassword.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(forgotPassword.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(forgotPassword.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(resetPassword.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(resetPassword.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(resetPassword.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(updateProfile.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(updateProfile.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(updateProfile.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(logout.pending, (state) => {
+            state.isLoading = true;
+        }).addCase(logout.fulfilled, (state) => {
             state.user = null;
             state.isAuthenticated = false;
             state.isLoading = false;
+        }).addCase(logout.rejected, (state, action) => {
+            state.isLoading = false;
+            state.error = true;
+            state.message = action.payload;
         })
     }
 });

@@ -1,69 +1,66 @@
 import React from 'react';
+import {Product, ProductByIdResponse} from "@/types/product";
 
 interface DescriptionProps {
     showMore: boolean;
-    setShowMore: React.Dispatch<React.SetStateAction<boolean>>
+    setShowMore: React.Dispatch<React.SetStateAction<boolean>>;
+    product:  ProductByIdResponse
 }
 
-function Description({showMore, setShowMore}:DescriptionProps) {
+function Description({showMore, setShowMore,product}:DescriptionProps) {
     return (
         <div>
             <p className="mt-4 text-textPadded text-xs">
-                It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the
-                all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day
-                however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of
-                Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild
-                Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven
-                versalia, put her initial into the belt and made herself on the way.
+                {product?.product.description}
             </p>
 
 
-            <p className="mt-4 text-textPadded text-xs">
-                When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her
-                hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line
-                Lane. Pityful a rethoric question ran over her cheek, then she continued her way. On her way she met a
-                copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a
-                thousand times and everything that was left from its origin would be the word “and” and the Little Blind
-                Text should turn around and return to its own, safe country. It is a paradisematic country, in which
-                roasted parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about the
-                blind texts it is an almost unorthographic life One day however a small line of blind text by the name
-                of Lorem Ipsum decided to leave for the far World of Grammar.
+            {/*<p className="mt-4 text-textPadded text-xs">*/}
+            {/*    When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her*/}
+            {/*    hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line*/}
+            {/*    Lane. Pityful a rethoric question ran over her cheek, then she continued her way. On her way she met a*/}
+            {/*    copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a*/}
+            {/*    thousand times and everything that was left from its origin would be the word “and” and the Little Blind*/}
+            {/*    Text should turn around and return to its own, safe country. It is a paradisematic country, in which*/}
+            {/*    roasted parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about the*/}
+            {/*    blind texts it is an almost unorthographic life One day however a small line of blind text by the name*/}
+            {/*    of Lorem Ipsum decided to leave for the far World of Grammar.*/}
 
-            </p>
+            {/*</p>*/}
 
-            {
-                showMore && <>
-                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 mt-6">
-                        <img src="/assets/product-banner.jpg" alt="Phone 1" className="w-full"/>
-                    </div>
+            {/*{*/}
+            {/*    showMore && <>*/}
+            {/*        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 mt-6">*/}
+            {/*            <img src="/assets/product-banner.jpg" alt="Phone 1" className="w-full"/>*/}
+            {/*        </div>*/}
 
-                    <p className="mt-4 text-textPadded text-xs">
-                        It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the
-                        all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One
-                        day
-                        however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of
-                        Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild
-                        Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven
-                        versalia, put her initial into the belt and made herself on the way.
-                    </p>
+            {/*        <p className="mt-4 text-textPadded text-xs">*/}
+            {/*            It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the*/}
+            {/*            all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One*/}
+            {/*            day*/}
+            {/*            however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of*/}
+            {/*            Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild*/}
+            {/*            Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven*/}
+            {/*            versalia, put her initial into the belt and made herself on the way.*/}
+            {/*        </p>*/}
 
-                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 mt-6">
-                        <img src="/assets/product-banner-2.jpg" alt="Phone 1" className="w-full"/>
-                    </div>
+            {/*        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 mt-6">*/}
+            {/*            <img src="/assets/product-banner-2.jpg" alt="Phone 1" className="w-full"/>*/}
+            {/*        </div>*/}
 
-                    <p className="mt-4 text-textPadded text-xs">
-                        When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of
-                        her
-                        hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line
-                        Lane. Pityful a rethoric question ran over her cheek, then she continued her way. On her way she met
-                        a
-                        copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a
-                        thousand times and everything that was left from its origin would be the word “and” and the Little
-                        Blind
-                        Text should turn around and return to its own, safe country.
-                    </p>
-                </>
-            }
+            {/*        <p className="mt-4 text-textPadded text-xs">*/}
+            {/*            When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of*/}
+            {/*            her*/}
+            {/*            hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line*/}
+            {/*            Lane. Pityful a rethoric question ran over her cheek, then she continued her way. On her way she met*/}
+            {/*            a*/}
+            {/*            copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a*/}
+            {/*            thousand times and everything that was left from its origin would be the word “and” and the Little*/}
+            {/*            Blind*/}
+            {/*            Text should turn around and return to its own, safe country.*/}
+            {/*        </p>*/}
+            {/*    </>*/}
+            {/*}*/}
 
             <div onClick={() => {
                 setShowMore(!showMore)

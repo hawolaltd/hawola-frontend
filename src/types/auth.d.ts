@@ -29,3 +29,32 @@ export interface LoginResponse {
         first_name: string;
     }
 }
+
+export interface ForgotPasswordFormType {
+    email: string;
+}
+
+export interface ForgotPasswordConfirmFormType {
+    new_password1: string;
+    new_password2: string;
+    uid: string;
+    token: string;
+}
+
+export interface UserProfileResponse {
+    pk: number;
+    email: string;
+    phone_number: string;
+    gender: string;
+    username: string;
+    last_name: string;
+    first_name: string;
+}
+
+export interface UpdateProfileDataType {
+   phone_number: string;
+   gender: string;
+   username: string;
+   last_name: string;
+   first_name: string;
+}

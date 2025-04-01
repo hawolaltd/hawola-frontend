@@ -4,45 +4,17 @@ import ProductCard from "@/components/product/ProductCard";
 import ProductCard2 from "@/components/product/ProductCard2";
 import RecentlyViewedItems from "@/components/product/RecentlyViewedItems";
 import FeaturesSection from "@/components/home/FeaturesSection";
-
-const products = [{
-    id: 1,
-    manufacturer: "HP",
-    name: 'HP 22 All-in-One PC, Intel Pentium Silver J5040, 4GB RAM',
-    price: '$2856.3',
-    image: '/imgs/page/homepage1/imgsp1.png'
-}, {
-    id: 2,
-    manufacturer: "Gateway",
-    name: 'HP 22 All-in-One PC, Intel Pentium Silver J5040, 4GB RAM',
-    price: '$2856.3',
-    image: '/imgs/page/homepage1/imgsp2.png'
-}, {
-    id: 3,
-    manufacturer: "Dell",
-    name: 'Dell Optiplex 9020 Small Form Business Desktop Tower PC',
-    price: '$2856.3',
-    image: '/imgs/page/homepage1/imgsp3.png'
-}, {
-    id: 4,
-    manufacturer: "SAMSUNG",
-    name: 'HP 24 All-in-One PC, Intel Core i3-1115G4, 4GB RAM',
-    price: '$2856.3',
-    image: '/imgs/page/homepage1/imgsp4.png'
-}
-];
+import {ProductByIdResponse} from "@/types/product";
+import MerchantOtherItemsCard from "@/components/product/MerchantOtherItemsCard";
+import {useAppSelector} from "@/hook/useReduxTypes";
 
 interface ProductCardProps {
-    image: string;
-    title: string;
-    rating: number;
-    reviews: number;
-    originalPrice: string;
-    discountedPrice: string;
-    discountPercentage: number;
+    product: ProductByIdResponse;
 }
 
-const RelatedProduct = () => {
+
+const RelatedProduct = ({product}: ProductCardProps) => {
+    const {products} = useAppSelector(state => state.products)
 
     return (<section className="max-w-screen-2xl flex gap-4 justify-center py-4">
         <div className={'max-w-screen-xl w-full flex  flex-col gap-4'}>
@@ -51,11 +23,10 @@ const RelatedProduct = () => {
                     <div className={'flex items-center justify-between gap-8 pt-4'}>
                         <h2 className="text-2xl font-semibold text-primary">Related Products</h2>
 
-
                     </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                    {products.map((product, key) => (<ProductCard key={key} product={product}/>))}
+                    {product?.merchant_other_products?.map((product, key) => (<MerchantOtherItemsCard  key={key} product={product}/>))}
                 </div>
             </div>
 
@@ -68,7 +39,7 @@ const RelatedProduct = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                    {products.map((product, key) => (<ProductCard key={key} product={product}/>))}
+                    {product?.merchant_other_products.map((product, key) => (<MerchantOtherItemsCard key={key} product={product}/>))}
                 </div>
             </div>
 
@@ -85,7 +56,7 @@ const RelatedProduct = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                    {products.map((product, key) => (<ProductCard key={key} product={product}/>))}
+                    {products?.results?.slice(0, 5)?.map((product, key) => (<ProductCard key={key} product={product}/>))}
                 </div>
             </div>
 
