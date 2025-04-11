@@ -16,7 +16,7 @@ interface ProductsState {
     categories: ProductCategoriesResponse;
     carts: CartResponse;
     orders: OrderDetailsResponse;
-    localCart: [];
+    localCart: AddToCartType;
     addresses: AddressResponse;
     isLoading: boolean;
     error: string | null | unknown;
@@ -29,7 +29,7 @@ const initialState: ProductsState = {
     categories: {} as ProductCategoriesResponse,
     carts: {} as CartResponse,
     orders: {} as OrderDetailsResponse,
-    localCart: [],
+    localCart: {} as AddToCartType,
     addresses: {} as AddressResponse,
     isLoading: false,
     error: null,
@@ -327,8 +327,6 @@ const productSlice = createSlice({
             })
             .addCase(addToCartsLocal.fulfilled, (state, action) => {
                 state.isLoading = false;
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
                 state.localCart = action.payload;
             })
             .addCase(addToCartsLocal.rejected, (state, action) => {

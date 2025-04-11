@@ -32,9 +32,9 @@ export default function LoginForm() {
 
         if (res?.type.includes('fulfilled')){
             toast.success("Welcome Back to HAWOLA")
-            if (localCart?.length > 0){
+            if (localCart?.items?.length > 0){
                 dispatch( addToCarts({
-                    items: localCart
+                    items: localCart?.items
                 }))
             }
             router.push('/')

@@ -428,4 +428,12 @@ export interface OrderDetailsResponse {
     createdAt: string;
     order_number: string;
     dump_data: null | any;
-};
+}
+
+export interface LocalCartType {
+    items: {
+        qty: number;
+        product: number;
+    }
+
+}
