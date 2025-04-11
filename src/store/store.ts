@@ -1,6 +1,7 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import authReducer from '@/redux/auth/authSlice';
 import productsReducer from '@/redux/product/productSlice';
+import generalReducer from '@/redux/general/generalSlice';
 import {FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE} from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
@@ -13,7 +14,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
     auth: authReducer,
     products: productsReducer,
-
+    general: generalReducer,
 });
 
 // Create persisted reducer

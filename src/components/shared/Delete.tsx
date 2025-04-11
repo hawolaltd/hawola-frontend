@@ -4,10 +4,11 @@ interface DeleteModalProps {
     onClose: () => void;
     open: boolean;
     loading: boolean;
-    handleDelete: () => void
+    handleDelete: () => void;
+    warningText: any
 }
 
-function DeleteModal({onClose, open, loading, handleDelete}: DeleteModalProps) {
+function DeleteModal({onClose, open, loading, handleDelete, warningText}: DeleteModalProps) {
 
     if (!open){
         return
@@ -25,10 +26,10 @@ function DeleteModal({onClose, open, loading, handleDelete}: DeleteModalProps) {
                             fill="#231f20"/>
                     </svg>
                 </div>
-                <h2 className="text-2xl font-semibold mb-6 text-center">Delete</h2>
+                <h2 className="text-2xl font-semibold text-red-800 mb-6 text-center">Delete</h2>
 
                 <div className="flex justify-center px-8">
-                    <p className={'text-center text-primaryTextColor font-medium'}> You are about to delete from your cart<br/> Are you really sure about this? This action <br/> cannot be undone.</p>
+                    <p className={'text-center text-primaryTextColor font-medium'}> {warningText} </p>
 
                 </div>
 

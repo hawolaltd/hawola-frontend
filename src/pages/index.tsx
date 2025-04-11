@@ -17,6 +17,7 @@ export default function Home() {
 
     console.log("products:", products)
     console.log("carts:", carts)
+    console.log("isAuthenticated:", isAuthenticated)
 
     const dispatch = useAppDispatch()
 

@@ -94,6 +94,47 @@ const updateCart = async (id: string, data: {qty: number}) => {
 };
 
 
+
+// add Order
+const addOrder = async (data: any) => {
+    const response = await axiosInstance.post(API + `orders/add/`, data);
+    console.log("addOrder:", response)
+    return response.data;
+};
+
+
+
+// update payment
+const updatePayment = async (data: any) => {
+    const response = await axiosInstance.post(API + `orders/update/payment/`, data);
+    console.log("updateOrder:", response)
+    return response.data;
+};
+
+
+// get all address
+const getAddress = async () => {
+    const response = await axiosInstance.get(API + `orders/get/addresses/`);
+    console.log("getAddress:", response)
+    return response.data;
+};
+
+
+// add address
+const addAddress = async (data: any) => {
+    const response = await axiosInstance.post(API + `orders/add/address/`, data);
+    console.log("addAddress:", response)
+    return response.data;
+};
+
+// delete address
+const deleteAddress = async (data: any) => {
+    const response = await axiosInstance.post(API + `orders/delete/addresses/`, data);
+    console.log("deleteAddress:", response)
+    return response.data;
+};
+
+
 const authService = {
     getProducts,
     getProductById,
@@ -105,7 +146,12 @@ const authService = {
     addToCarts,
     addToCartsLocal,
     deleteCart,
-    updateCart
+    updateCart,
+    getAddress,
+    addAddress,
+    deleteAddress,
+    addOrder,
+    updatePayment
 };
 
 export default authService;

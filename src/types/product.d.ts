@@ -283,3 +283,149 @@ export interface CartResponse {
     cart_count: number;
     cart_items: CartItem[];
 }
+
+export interface AddressData {
+    id: number;
+    state: {
+        name: string;
+    },
+    city: {
+        name: string;
+    },
+    first_name: string;
+    last_name: string;
+    address: string;
+    postalCode: null;
+    phone: string;
+    phone2: string;
+    user: number;
+    country: string;
+}
+
+export interface AddressResponse {
+    addresses: AddressData[]
+}
+
+export interface OrderDetailsResponse {
+    id: number;
+    orderItems: Array<{
+        id: number;
+        product: {
+            id: number;
+            merchant: {
+                id: number;
+                store_name: string;
+                slug: string;
+                support_phone_number: string;
+                support_email: string;
+            };
+            name: string;
+            is_digital: boolean;
+            featured_image: Array<{
+                image: {
+                    thumbnail_100: string;
+                    full_size: string;
+                    thumbnail: string;
+                };
+                image_url: string;
+                image_ppoi: string;
+            }>;
+            rating: string;
+            numReviews: number;
+            price: string;
+            discount_price: string;
+            slug: string;
+        };
+        shipping_address: null | any;
+        shipping_info: Array<{
+            id: number;
+            shipping_status: Array<{
+                id: number;
+                created_at: string;
+                updated_at: string;
+                status: string;
+                note: string;
+                shipping: number;
+            }>;
+            created_at: string;
+            updated_at: string;
+            tracking_number: string;
+            expected_date_of_arrival: null | string;
+            logistics_company_name: string;
+            tracking_url: null | string;
+            additional_notes: null | string;
+            user_confirm_delivery: boolean;
+            unique: string;
+            merchant: number;
+            order_item: number;
+        }>;
+        orderitem_variant: any[];
+        createdAt: string;
+        deliveredAt: null | string;
+        name: string;
+        qty: number;
+        order_price: string;
+        shipping_price: string;
+        order_price_subtotal: string;
+        orderitem_number: string;
+        additional_info: null | any;
+        isShipped: boolean;
+        shippedAt: null | string;
+        tracking_number: null | string;
+        tracking_website: null | string;
+        isPaid: boolean;
+        payment_method: null | string;
+        payment_reference: null | string;
+        payment_confirmed: boolean;
+        is_offline_payment: boolean;
+        paidAt: null | string;
+        isDelivered: boolean;
+        user_confirm_order: boolean;
+        user_open_dispute: boolean;
+        image: string;
+        is_reviewed: boolean;
+        is_merchant_reviewed: boolean;
+        order: number;
+        user: number;
+        shipping: null | any;
+        merchant: number;
+        variant: null | any;
+        variant_value: null | any;
+    }>;
+    shipping_address: {
+        id: number;
+        state: {
+            name: string;
+        };
+        city: {
+            name: string;
+        };
+        first_name: string;
+        last_name: string;
+        address: string;
+        postalCode: null | string;
+        phone: string;
+        phone2: string;
+        user: number;
+        country: null | any;
+    };
+    user: {
+        id: number;
+        _id: number;
+    };
+    taxPrice: null | string;
+    shippingPrice: string;
+    totalPrice: string;
+    paidAmount: null | string;
+    isPaid: boolean;
+    paymentMethod: null | string;
+    payment_reference: null | string;
+    payment_confirmed: boolean;
+    is_offline_payment: boolean;
+    paidAt: null | string;
+    isDelivered: boolean;
+    deliveredAt: null | string;
+    createdAt: string;
+    order_number: string;
+    dump_data: null | any;
+};

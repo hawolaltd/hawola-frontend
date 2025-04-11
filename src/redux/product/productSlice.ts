@@ -1,8 +1,9 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import productService from "@/redux/product/productService";
 import {
+    AddressResponse,
     AddToCartType,
-    CartResponse,
+    CartResponse, OrderDetailsResponse,
     Product,
     ProductByIdResponse,
     ProductCategoriesResponse,
@@ -14,7 +15,9 @@ interface ProductsState {
     product: ProductByIdResponse;
     categories: ProductCategoriesResponse;
     carts: CartResponse;
+    orders: OrderDetailsResponse;
     localCart: [];
+    addresses: AddressResponse;
     isLoading: boolean;
     error: string | null | unknown;
     message: string | null | unknown;
@@ -25,7 +28,9 @@ const initialState: ProductsState = {
     product: {} as ProductByIdResponse,
     categories: {} as ProductCategoriesResponse,
     carts: {} as CartResponse,
+    orders: {} as OrderDetailsResponse,
     localCart: [],
+    addresses: {} as AddressResponse,
     isLoading: false,
     error: null,
     message: "",
@@ -157,6 +162,83 @@ export const updateCart = createAsyncThunk("products/update-cart", async (formDa
     }
 });
 
+// get all Address
+export const getAddress = createAsyncThunk("products/address", async (_, thunkAPI) => {
+    try {
+        return await productService.getAddress();
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+// add Order
+export const addOrder = createAsyncThunk("products/add-order", async (data: any, thunkAPI) => {
+    try {
+        return await productService.addOrder(data);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+// update Payment
+export const updatePayment = createAsyncThunk("products/update-payment", async (data: any, thunkAPI) => {
+    try {
+        return await productService.updatePayment(data);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+// add Address
+export const addAddress = createAsyncThunk("products/add-address", async (data: any, thunkAPI) => {
+    try {
+        return await productService.addAddress(data);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
+// delete Address
+export const deleteAddress = createAsyncThunk("products/delete-address", async (data: any, thunkAPI) => {
+    try {
+        return await productService.deleteAddress(data);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
 
 const productSlice = createSlice({
     name: 'products',
@@ -270,6 +352,64 @@ const productSlice = createSlice({
                 state.isLoading = false;
             })
             .addCase(updateCart.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(getAddress.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getAddress.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.addresses = action.payload;
+            })
+            .addCase(getAddress.rejected, (state, action) => {
+                state.isLoading = false;
+                state.products = {} as ProductResponse;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(addAddress.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(addAddress.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(addAddress.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(deleteAddress.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(deleteAddress.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(deleteAddress.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(addOrder.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(addOrder.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.orders = action.payload
+            })
+            .addCase(addOrder.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(updatePayment.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(updatePayment.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(updatePayment.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;

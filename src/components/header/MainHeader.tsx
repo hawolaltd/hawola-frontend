@@ -26,11 +26,11 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
 
     const dispatch = useAppDispatch()
 
-
+    console.log("localCart:", localCart)
     useEffect(() => {
         const getCartCount = () => {
             const cartItems = JSON.parse(localStorage.getItem('cartItems') as string)
-            console.log("mmmmcartItems:", cartItems)
+
             setItems(cartItems)
         };
 
@@ -44,8 +44,6 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
 
     }, []);
 
-    console.log("mooooitems:", items)
-    console.log(" localCart:", localCart)
     return (
         <div className={'  relative '}>
 
@@ -199,7 +197,7 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
 
                             }} className="relative cursor-pointer">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated ? localCart?.length !== 0 && localCart !== null ? localCart?.length : 0 : userCart?.cart_count}</span>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated ? localCart?.items?.length !== 0 && localCart !== null ? localCart?.items?.length : 0 : userCart?.cart_count ?? 0}</span>
                                 <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
 
                             </div>
