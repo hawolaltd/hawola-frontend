@@ -18,6 +18,8 @@ interface ProductsState {
     orders: OrderDetailsResponse;
     localCart: AddToCartType;
     addresses: AddressResponse;
+    ordersHistory: OrderHistory;
+    singleOrder: null;
     isLoading: boolean;
     error: string | null | unknown;
     message: string | null | unknown;
@@ -31,6 +33,8 @@ const initialState: ProductsState = {
     orders: {} as OrderDetailsResponse,
     localCart: {} as AddToCartType,
     addresses: {} as AddressResponse,
+    ordersHistory: {} as OrderHistory,
+    singleOrder: null,
     isLoading: false,
     error: null,
     message: "",
@@ -181,6 +185,38 @@ export const getAddress = createAsyncThunk("products/address", async (_, thunkAP
 export const addOrder = createAsyncThunk("products/add-order", async (data: any, thunkAPI) => {
     try {
         return await productService.addOrder(data);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
+// get Order History
+export const getOrderHistory = createAsyncThunk("products/order-history", async (_, thunkAPI) => {
+    try {
+        return await productService.getOrderHistory();
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
+// get Single Order
+export const getSingleOrder = createAsyncThunk("products/single-order", async (id: string, thunkAPI) => {
+    try {
+        return await productService.getSingleOrder(id);
     } catch (error: any) {
         const message =
             (error.response && error.response.data && error.response.data.message) ||
@@ -397,6 +433,31 @@ const productSlice = createSlice({
                 state.orders = action.payload
             })
             .addCase(addOrder.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(getOrderHistory.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getOrderHistory.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.error = false;
+                state.ordersHistory = action.payload
+            })
+            .addCase(getOrderHistory.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            })
+            .addCase(getSingleOrder.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getSingleOrder.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.singleOrder = action.payload
+            })
+            .addCase(getSingleOrder.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;

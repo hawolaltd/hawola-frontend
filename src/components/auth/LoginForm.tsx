@@ -41,8 +41,6 @@ export default function LoginForm() {
         }
     };
 
-
-
     return (
         <div className="flex  w-full pt-16 mb-28 md:px-28 bg-white">
             <div className="w-full max-w-xl px-8 bg-white ">

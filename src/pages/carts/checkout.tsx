@@ -5,16 +5,33 @@ import AuthLayout from '@/components/layout/AuthLayout';
 import { amountFormatter } from '@/util';
 import { toast } from 'react-toastify';
 import {updatePayment} from "@/redux/product/productSlice";
+import {usePaystackPayment} from "react-paystack";
+import {PaystackProps} from "react-paystack/libs/types";
+import {getUserProfile} from "@/redux/auth/authSlice";
 
 const CheckoutPage = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const { orders, isLoading: loading, error } = useAppSelector(state => state.products);
+    const { profile } = useAppSelector(state => state.auth);
     const [paymentMethod, setPaymentMethod] = useState<string>('card');
     const [processingPayment, setProcessingPayment] = useState(false);
 
     console.log("orders:",orders)
-    console.log("error:",error)
+    console.log("profile:",profile)
+
+
+    const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string
+
+    // const [config, setConfig]  = useState<PaystackProps | null>(null);
+      const config = {
+        reference: orders?.payment_reference,
+        email: profile?.email,
+        amount: +orders?.totalPrice,
+        publicKey: publicKey as string,
+    };
+
+    const initializePayment = usePaystackPayment(config as PaystackProps);
 
     const handlePayment = async () => {
         setProcessingPayment(true);
@@ -25,7 +42,16 @@ const CheckoutPage = () => {
                payment_method: 'paystack',
                is_offline_payment: orders?.is_offline_payment
            }
-            await dispatch(updatePayment(params));
+          const res = await dispatch(updatePayment(params));
+            console.log("ressss:", res)
+            // console.log("window.location.href:", window.location.href)
+           if (res.type.includes('fulfilled')){
+               initializePayment({
+                   onSuccess: response => {
+                       router.push('/order/order-confirmation')
+                   }
+               })
+           }
 
         } catch (error) {
             toast.error('Payment failed. Please try again.');
@@ -44,6 +70,10 @@ const CheckoutPage = () => {
     //     );
     // }
 
+    useEffect(() => {
+        dispatch(getUserProfile())
+    }, [dispatch]);
+
     if (!orders) {
         return (
             <AuthLayout>
@@ -59,6 +89,8 @@ const CheckoutPage = () => {
             </AuthLayout>
         );
     }
+
+
 
     return (
         <AuthLayout>

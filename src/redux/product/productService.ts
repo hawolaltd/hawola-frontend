@@ -103,6 +103,23 @@ const addOrder = async (data: any) => {
 };
 
 
+// get Order History
+const getOrderHistory = async () => {
+    const response = await axiosInstance.get(API + `orders/all/user/items/`);
+    console.log("getOrderHistory:", response)
+    return response.data;
+};
+
+
+// get Single Order
+
+const getSingleOrder = async (id: string) => {
+    const response = await axiosInstance.get(API + `orders/single/${id}/`);
+    console.log("getSingleOrder:", response)
+    return response.data;
+};
+
+
 
 // update payment
 const updatePayment = async (data: any) => {
@@ -151,7 +168,9 @@ const authService = {
     addAddress,
     deleteAddress,
     addOrder,
-    updatePayment
+    updatePayment,
+    getOrderHistory,
+    getSingleOrder
 };
 
 export default authService;
