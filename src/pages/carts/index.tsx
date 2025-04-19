@@ -12,6 +12,11 @@ import {getAllStates} from "@/redux/general/generalSlice";
 import CartItemRow from "@/components/cart/CartItemRow";
 import OrderSummary from "@/components/cart/OrderSummary";
 import {useRouter} from "next/router";
+// import dynamic from "next/dynamic";
+//
+// const CheckoutPage = dynamic(() => import('./checkout'), {
+//     ssr: false
+// });
 
 interface OrderItem {
     product: number;
@@ -42,12 +47,10 @@ const CartPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState(false);
 
-    // Calculate totals based on selected items and pending updates
-    const { subtotal: selectedSubtotal, shippingCost, total } = useMemo(() => {
+   const { subtotal: selectedSubtotal, shippingCost, total } = useMemo(() => {
         const subtotal = carts?.cart_items?.reduce((sum, product) => {
             if (!selectedItems.includes(product?.id)) return sum;
 
-            // Get the effective quantity (current + pending updates)
             const effectiveQty = product?.qty + (pendingUpdates[product?.id] || 0);
             return sum + (+(product?.product?.price) * effectiveQty);
         }, 0);
@@ -59,23 +62,27 @@ const CartPage = () => {
         return { subtotal, shippingCost, total };
     }, [carts, selectedItems, pendingUpdates]);
 
-    // Check if all items are selected
+
     const allSelected = cartItems?.length > 0 && selectedItems.length === cartItems.length;
 
-    // Debounced API sync
-    const syncWithServer = useCallback(debounce(async () => {
-        try {
-            await dispatch(updateCart({
-                id: Object.keys(pendingUpdates).join(),
-                data: {qty: +(Object.values(pendingUpdates).join())}
-            }));
-            setPendingUpdates({});
-        } catch (error) {
-            console.error('Sync failed', error);
-        }
-    }, 1000), [dispatch, pendingUpdates]);
 
-    // Handle quantity changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const syncWithServer = useCallback(
+        debounce(async (updates: typeof pendingUpdates) => {
+            try {
+                await dispatch(updateCart({
+                    id: Object.keys(updates).join(),
+                    data: { qty: +(Object.values(updates).join()) }
+                }));
+                setPendingUpdates({});
+            } catch (error) {
+                console.error('Sync failed', error);
+            }
+        }, 1000),
+        [dispatch]
+    );
+
+
     const updateQuantity = (id: number, change: number) => {
         setCartItems(prev => prev?.map(item =>
             item.id === id ? {...item, qty: Math.max(1, item.qty + change)} : item
@@ -146,19 +153,10 @@ const CartPage = () => {
         return price * shippingRate;
     };
 
-// Function to check merchant shipping restrictions
-    const checkMerchantShipping = async (items: OrderItem[]) => {
-        // This would be an API call in a real app
-        // For demo, we'll simulate the check
+ const checkMerchantShipping = async (items: OrderItem[]) => {
 
-        // Get unique merchants from items
         const merchantIds = [...new Set(items.map(item => item.merchant))];
 
-        // Simulate API call to check shipping restrictions
-        // In a real app, this would be:
-        // const response = await api.checkMerchantShippingRestrictions(merchantIds, userLocation);
-
-        // Mock response - some merchants don't ship outside their region
         const problematicMerchants = [2, 5]; // Example merchant IDs with restrictions
 
         // Find problematic items
@@ -201,7 +199,6 @@ const CartPage = () => {
                     // }))
                 }));
 
-            // Check merchant shipping restrictions
             const shippingIssues = await checkMerchantShipping(orderItems);
             if (shippingIssues) {
                 setShippingError(shippingIssues);
@@ -236,7 +233,7 @@ const CartPage = () => {
     // Sync when pending updates exist
     useEffect(() => {
         if (Object.keys(pendingUpdates).length > 0) {
-            syncWithServer();
+            syncWithServer(pendingUpdates);
         }
     }, [pendingUpdates, syncWithServer]);
 
@@ -314,15 +311,17 @@ const CartPage = () => {
 
                         {/* Cart Actions */}
                         <div className="flex flex-col sm:flex-row justify-between mt-6 gap-4">
-                            <button className="px-6 py-2 border-none text-white rounded-md bg-primary transition">
+                            <button onClick={()=>{
+                                router.push('/')
+                            }} className="px-6 py-2 border-none text-white rounded-md bg-primary transition">
                                 Continue Shopping
                             </button>
-                            <button
-                                className="px-6 py-2 bg-primary rounded-md text-white transition"
-                                onClick={() => dispatch(getCarts())} // Refresh cart data
-                            >
-                                Update Cart
-                            </button>
+                            {/*<button*/}
+                            {/*    className="px-6 py-2 bg-primary rounded-md text-white transition"*/}
+                            {/*    onClick={() => dispatch(getCarts())} // Refresh cart data*/}
+                            {/*>*/}
+                            {/*    Update Cart*/}
+                            {/*</button>*/}
                         </div>
                     </div>
 

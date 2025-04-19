@@ -11,7 +11,7 @@ function Description({showMore, setShowMore,product}:DescriptionProps) {
     return (
         <div>
             <p className="mt-4 text-textPadded text-xs">
-                {product?.product.description}
+                {product?.product?.description}
             </p>
 
 

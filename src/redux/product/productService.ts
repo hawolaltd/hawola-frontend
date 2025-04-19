@@ -1,7 +1,7 @@
 import axios from "axios";
 import {API} from "@/constant";
 import axiosInstance from "@/libs/api/axiosInstance";
-import { AddToCartType} from "@/types/product";
+import {AddToCartType, LocalCart} from "@/types/product";
 const API_URL = "products/";
 
 // get products
@@ -71,7 +71,7 @@ const addToCarts = async (data: AddToCartType) => {
 
 
 // add to carts
-const addToCartsLocal = async (data: AddToCartType) => {
+const addToCartsLocal = async (data: LocalCart) => {
     console.log(data)
    return data
 };
@@ -151,6 +151,24 @@ const deleteAddress = async (data: any) => {
     return response.data;
 };
 
+// get reviews
+
+const getReviews = async () => {
+    const response = await axiosInstance.get(API + `reviews/`);
+    console.log("getReviews:", response)
+    return response.data;
+};
+
+
+// get merchant reviews
+
+const getMerchantReviews = async (slug: string) => {
+    const response = await axiosInstance.get(API + `reviews/product/${slug}/`);
+    console.log("getMerchantReviews:", response)
+    return response.data;
+};
+
+
 
 const authService = {
     getProducts,
@@ -170,7 +188,9 @@ const authService = {
     addOrder,
     updatePayment,
     getOrderHistory,
-    getSingleOrder
+    getSingleOrder,
+    getReviews,
+    getMerchantReviews
 };
 
 export default authService;

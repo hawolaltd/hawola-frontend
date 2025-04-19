@@ -10,6 +10,7 @@ import {
     RegisterFormType, UpdateProfileDataType, UserProfileResponse
 } from "@/types/auth";
 import {AddToCartType} from "@/types/product";
+import storage from "redux-persist/lib/storage";
 const API_URL = "authy";
 
 //Register user
@@ -24,6 +25,7 @@ const logout = async () => {
     // const response = await axiosInstance.post(API + API_URL + "/logout/");
     // console.log("logout:", response)
     localStorage.clear()
+    storage.removeItem('persist:root');
     localStorage.removeItem(authRefreshTokenStorageKeyName as string);
     localStorage.removeItem(authTokenStorageKeyName as string);
     Cookies.remove(authRefreshTokenStorageKeyName as string);

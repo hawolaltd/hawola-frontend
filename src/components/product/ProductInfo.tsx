@@ -4,6 +4,7 @@ import Description from "@/components/product/Description";
 import AdditionalInformation from "@/components/product/AdditionalInformation";
 import CustomerReviews from "@/components/product/CustomerReviews";
 import {Product, ProductByIdResponse} from "@/types/product";
+import MerchantAbout from "@/components/product/MerchantAbout";
 
 function ProductInfo({product}:{product: ProductByIdResponse}) {
     const [tab, setTab] = useState('description')
@@ -54,6 +55,10 @@ function ProductInfo({product}:{product: ProductByIdResponse}) {
                 <CustomerReviews />
             )}
 
+            {tab === "merchant" && (
+                <MerchantAbout product={product} />
+            )}
+
 
         </div>
     );
@@ -65,15 +70,15 @@ const productInfoHeaders = [
         value: "description"
     },
 
-    {
-        title: "Specification",
-        value: "specification",
-    },
+    // {
+    //     title: "Specification",
+    //     value: "specification",
+    // },
 
-    {
-        title: "Additional information",
-        value: "additionalInfo"
-    },
+    // {
+    //     title: "Additional information",
+    //     value: "additionalInfo"
+    // },
 
     {
         title: "Reviews (2)",
@@ -81,11 +86,10 @@ const productInfoHeaders = [
     },
 
     {
-        title: "Vendor",
-        value: "vendor",
+        title: "Merchant",
+        value: "merchant",
     },
 
 ]
-
 
 export default ProductInfo;

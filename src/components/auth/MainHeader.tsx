@@ -5,13 +5,14 @@ import CartModal from "@/components/shared/CartModal";
 import {CartResponse} from "@/types/product";
 import {logout} from "@/redux/auth/authSlice";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {addToCartsLocal} from "@/redux/product/productSlice";
 
 function MainHeader() {
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
     const [cart, setCart] = useState(false)
 
-    const {carts} = useAppSelector(state => state.products)
-
+    const {carts, localCart} = useAppSelector(state => state.products)
+    console.log('localCartAuth:', localCart)
     const [userCart, setUserCart] = useState<CartResponse>(carts)
 
     const { isAuthenticated } = useAppSelector(state => state.auth)
@@ -44,7 +45,7 @@ function MainHeader() {
 
     }, []);
 
-    console.log("authitems:", items)
+    // console.log("authitems:", items)
 
     return (<div>
             <div className="bg-white border-b border-b-[#D5DFE4] relative pr-4">
@@ -426,10 +427,11 @@ function MainHeader() {
                         </div>
                         <div onClick={()=>{
                             setUserCart({} as CartResponse)
+                            dispatch(addToCartsLocal({items: []}))
                             dispatch(logout())
                         }} className="relative">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{isAuthenticated ? items ? items.length : userCart.cart_count  ?? 0 : 0}</span>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated  && localCart !== null  ? localCart?.items?.length : carts?.cart_count  ?? 0}</span>
                             <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
                         </div>
                         <div className="relative flex items-center gap-2 text-primary text-[16px]">

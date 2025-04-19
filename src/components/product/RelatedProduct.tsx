@@ -39,7 +39,7 @@ const RelatedProduct = ({product}: ProductCardProps) => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                    {product?.merchant_other_products.map((product, key) => (<MerchantOtherItemsCard key={key} product={product}/>))}
+                    {product?.merchant_other_products?.map((product, key) => (<MerchantOtherItemsCard key={key} product={product}/>))}
                 </div>
             </div>
 

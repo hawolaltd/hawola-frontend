@@ -271,12 +271,17 @@ export interface CartItem  {
 }
 
 export interface LocalCart {
-      qty: number;
-      product:number;
+    items:{
+        qty: number;
+        product: Product;
+    }[]
 }
 
 export interface AddToCartType {
-    items: LocalCart[]
+    items: {
+        qty: number;
+        product: number;
+    }[]
 }
 
 export interface CartResponse {

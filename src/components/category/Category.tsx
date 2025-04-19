@@ -8,14 +8,14 @@ import {getAllCategories} from "@/redux/product/productSlice";
 const Category: NextPage = () => {
     const {categories} = useAppSelector(state => state.products)
 
-    console.log("categories:", categories)
-
     const dispatch = useAppDispatch()
 
 
     useEffect(() => {
         dispatch(getAllCategories())
     }, [dispatch]);
+
+
     return (
         <div>
             <div className="max-w-screen-xl mx-auto mt-8 mb-8 px-6 xl:px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -4,12 +4,10 @@ import {amountFormatter} from "@/util";
 import {MerchantOtherProduct} from "@/types/product";
 
 function MerchantOtherItemsCard({product}:{product: MerchantOtherProduct}) {
-    console.log("MerchantOtherProduct:", product)
-    console.log("MerchantOtherProduct:", product?.featured_image?.[0]?.image_url)
     const router = useRouter()
     return (
         <div onClick={() => {
-            router.push(`product/${product?.slug}`)
+            router.push(`${product?.slug}`)
         }} className={`relative bg-white border cursor-pointer border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}>
                         <span
                             className={'absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white'}>-17%</span>

@@ -1,123 +1,242 @@
 import React, {useEffect, useState} from 'react';
 import AuthLayout from "@/components/layout/AuthLayout";
-import {FaFacebookF, FaInstagram, FaPinterestP, FaTwitter} from 'react-icons/fa';
+import {FaFacebookF, FaInstagram, FaLinkedinIn, FaPinterestP, FaTwitter} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getProductBySlug} from "@/redux/product/productSlice";
+import {
+    addToCarts,
+    addToCartsLocal,
+    getCarts,
+    getMerchantReviews,
+    getProductBySlug
+} from "@/redux/product/productSlice";
 import {useRouter} from "next/router";
 import {amountFormatter} from "@/util";
-import {Product} from "@/types/product";
+import Link from "next/link";
+import {Product, ProductByIdResponse, ProductResponse} from "@/types/product";
+import {toast} from "react-toastify";
 
-const products = [
-    {
-        id: 1,
-        name: 'iPhone 12 Pro Max 128GB Pacific Blue',
-        price: 1099,
-        isMain: true,
-        img: '/imgs/page/product/sp1.png'
-    },
-    {
-        id: 2,
-        name: 'Apple AirPods Pro, Active Noise Cancellation, Custom Fit',
-        price: 197,
-        img: '/imgs/page/product/sp2.png'
-    },
-    {
-
-        id: 3,
-        name: 'Apple iMac 24\" All-In-One Computer, Apple M1, 8GB RAM, 512GB SSD, macOS Big Sur, Green',
-        price: 1599,
-        img: '/imgs/page/product/sp3.png'
-    }
-];
 
 
 const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
     // const [quantity, setQuantity] = useState<number>(1);
-
+    const [currentImage, setCurrentImage] = useState<string | null>(null);
+    const [position, setPosition] = useState({x: "50%", y: "50%"});
+    const [isHovered, setIsHovered] = useState(false);
     const {query} = useRouter()
 
     const dispatch = useAppDispatch()
 
-    const {product} = useAppSelector(state => state.products)
+    const {product, merchantReviews, isLoading} = useAppSelector(state => state.products)
+    const {isAuthenticated} = useAppSelector(state => state.auth)
 
-    console.log('product:', product)
+    const [mainImage, setMainImage] = useState(product?.product?.featured_image?.[0]?.image_url || "");
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const LoadingSpinner = () => (
+        <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
+            <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+                <p className="mt-4 text-primary font-medium">Loading product details...</p>
+            </div>
+        </div>
+    );
+
+
+    const handleNextImage = () => {
+        if (product?.product_images?.length) {
+            const nextIndex = (currentImageIndex + 1) % product.product_images.length;
+            setCurrentImageIndex(nextIndex);
+            setMainImage(product.product_images[nextIndex].image_url);
+        }
+    };
+
+    const handlePrevImage = () => {
+        if (product?.product_images?.length) {
+            const prevIndex = (currentImageIndex - 1 + product.product_images.length) % product.product_images.length;
+            setCurrentImageIndex(prevIndex);
+            setMainImage(product.product_images[prevIndex].image_url);
+        }
+    };
+
+
+    // console.log('product:', product)
+    console.log('merchantReviews:', merchantReviews)
 
     const handleQuantityChange = (value: number) => {
         setQuantity((prev) => Math.max(1, prev + value));
     };
-    const [position, setPosition] = useState({x: "50%", y: "50%"});
-    const [isHovered, setIsHovered] = useState(false);
 
 
-    const handleMouseMove = (e: any) => {
-        const {left, top, width, height} = e.target.getBoundingClientRect();
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - left) / width) * 100;
         const y = ((e.clientY - top) / height) * 100;
-        setPosition({x: `${x}%`, y: `${y}%`});
+        setPosition({
+            x: `${Math.max(0, Math.min(100, x))}%`,
+            y: `${Math.max(0, Math.min(100, y))}%`
+        });
     };
 
+    const handleAddToCart = async (product: ProductByIdResponse) => {
+        try {
+            if (isAuthenticated) {
+                const res = await dispatch(addToCarts({
+                    items: [{
+                        qty: 1,
+                        product: product?.product?.id
+                    }]
+                }))
+                if (res?.type.includes('fulfilled')) {
+                    dispatch(getCarts())
+                    toast.success('Cart Added')
+                }
+            } else {
+                // Get current cart from localStorage or initialize empty array
+                const cartItems = JSON.parse(localStorage.getItem("cartItems") || "[]")
 
-    const [selectedProducts, setSelectedProducts] = useState(products.map(product => product.id));
+                // Check if item already exists in cart
+                const existingItemIndex = cartItems.findIndex((item: any) => item.product?.id === product?.product?.id)
 
-    const toggleProduct = (id: number) => {
-        setSelectedProducts((prev) =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
+                if (existingItemIndex >= 0) {
+                    // Item exists - increment quantity
+                    cartItems[existingItemIndex].qty += 1
+                } else {
+                    // Item doesn't exist - add new item
+                    cartItems.push({
+                        qty: 1,
+                        product: product
+                    })
+                }
+
+                // Update localStorage
+                localStorage.setItem("cartItems", JSON.stringify(cartItems))
+
+                // Update Redux state to match localStorage
+                dispatch(addToCartsLocal({
+                    items: cartItems.map((item: any) => ({
+                        qty: item.qty,
+                        product: item.product
+                    }))
+                }))
+
+                toast.success('Cart Added')
+            }
+        } catch (e) {
+            console.error("Error adding to cart:", e)
+            toast.error("Failed to add to cart")
+        }
+    }
 
 
-    const totalPrice = selectedProducts.reduce(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        (acc, id) => acc + (products ?? [])?.find(product => product?.id === id)?.price,
-        0
-    );
 
     useEffect(() => {
         dispatch(getProductBySlug(query.id as string))
-    }, [dispatch, query.id]);
+        dispatch(getMerchantReviews(query.id as string))
+        if (product?.product?.featured_image?.[0]?.image_url) {
+            setCurrentImage(product.product.featured_image[0].image_url);
+        }
+        if (product?.product_images?.length) {
+            setMainImage(product.product_images[0].image_url);
+        }
+    }, [dispatch, product.product.featured_image, product.product_images, query.id]);
+
+    if (isLoading) {
+        return <LoadingSpinner />;
+    }
 
     return (<AuthLayout>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
-            {/* Product Image */}
+            {/* Product Image start*/}
             <div className="flex flex-col md:flex-row gap-4 border-b border-b-[#dde4f0] pb-16">
+                {/* Image Display */}
+
                 <div style={{flex: 3}} className="flex gap-4 h-4/5">
-                    <div className={'hidden lg:flex flex-col gap-4 h-[75vh] w-fit'}>
+
+                    {/* Thumbnail Gallery */}
+                    <div className={'hidden lg:flex flex-col gap-4 h-[75vh] w-fit overflow-y-auto'}>
                         {product?.product_images?.map((item, key) => (
-                            <div key={key}
-                                 className={'border border-[#dde4f0] hover:border-orange px-2 flex items-center justify-center rounded-lg h-full'}>
-                                <img src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"} alt="Product Image"
-                                     className="w-[100px] h-auto"/>
-                            </div>))}
+                            <div
+                                key={key}
+                                onClick={() => setMainImage(item?.image_url)}
+                                className={`border cursor-pointer transition-all duration-300 ${mainImage === item?.image_url ? 'border-orange' : 'border-[#dde4f0]'} px-2 py-2 flex items-center justify-center rounded-lg h-[100px]`}
+                            >
+                                <img
+                                    src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
+                                    alt="Product Thumbnail"
+                                    className="w-[100px] h-full object-contain"
+                                />
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="flex items-center justify-center border-4 border-[#dde4f0] h-[75vh] rounded-md">
+                    {/* Main Image Display */}
+                    <div className="flex-1 flex flex-col items-center justify-center border-4 border-[#dde4f0] h-[75vh] rounded-md relative">
+                        {/* Navigation Arrows */}
+                        {/*{product?.product_images?.length > 1 && (*/}
+                        {/*    <>*/}
+                        {/*        /!*<button*!/*/}
+                        {/*        /!*    onClick={handlePrevImage}*!/*/}
+                        {/*        /!*    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md z-10 hover:bg-gray-100"*!/*/}
+                        {/*        /!*>*!/*/}
+                        {/*        /!*    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">*!/*/}
+                        {/*        /!*        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />*!/*/}
+                        {/*        /!*    </svg>*!/*/}
+                        {/*        /!*</button>*!/*/}
+                        {/*        /!*<button*!/*/}
+                        {/*        /!*    onClick={handleNextImage}*!/*/}
+                        {/*        /!*    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md z-10 hover:bg-gray-100"*!/*/}
+                        {/*        /!*>*!/*/}
+                        {/*        /!*    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">*!/*/}
+                        {/*        /!*        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />*!/*/}
+                        {/*        /!*    </svg>*!/*/}
+                        {/*        /!*</button>*!/*/}
+                        {/*    </>*/}
+                        {/*)}*/}
 
+                        {/* Mobile Thumbnail Navigation */}
+                        <div className="lg:hidden flex gap-2 overflow-x-auto py-2 w-full justify-center absolute bottom-2 left-0 right-0">
+                            {product?.product_images?.map((item, key) => (
+                                <div
+                                    key={key}
+                                    onClick={() => setMainImage(item?.image_url)}
+                                    className={`w-12 h-12 rounded border cursor-pointer ${mainImage === item?.image_url ? 'border-orange' : 'border-[#dde4f0]'}`}
+                                >
+                                    <img
+                                        src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
+                                        alt="Product Thumbnail"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Zoomable Main Image */}
                         <div
-                            className={'relative w-full lg:w-[400px] h-[400px] overflow-hidden cursor-crosshair'}
+                            className="relative w-full h-full overflow-hidden cursor-crosshair"
                             onMouseEnter={() => setIsHovered(true)}
                             onMouseLeave={() => setIsHovered(false)}
                             onMouseMove={handleMouseMove}
                         >
                             <img
-                                src={product?.product?.featured_image?.[0]?.image_url ?? "/imgs/page/product/img-gallery-1.jpg"}
+                                src={mainImage || product?.product?.featured_image?.[0]?.image_url || "/imgs/page/product/img-gallery-1.jpg"}
                                 alt="Product"
-                                className={`w-full h-full object-cover transition-transform duration-300 ${
-                                    isHovered ? "scale-[2]" : "scale-100"
+                                className={`absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 ${
+                                    isHovered ? "scale-150" : "scale-100"
                                 }`}
                                 style={{
-                                    objectPosition: isHovered ? `${position.x} ${position.y}` : "center",
+                                    transformOrigin: `${position.x} ${position.y}`,
+                                    maxWidth: 'none',
+                                    maxHeight: 'none'
                                 }}
                             />
-
                         </div>
-
                     </div>
-
                 </div>
+
+                {/* Product Image ends */}
                 <div style={{flex: 4}} className=" p-1 flex flex-col mt-8 lg:mt-0">
                     {/* Product Details */}
                     <h1 className="text-xl lg:text-3xl font-bold text-primary mb-6 capitalize">{(product?.product?.name)}</h1>
@@ -126,7 +245,8 @@ const ProductPage = () => {
                         className={'flex flex-col lg:flex-row lg:items-center mb-4  lg:justify-between w-full border-b border-b-[#dde4f0] pb-4'}>
                         <div>
                             <p className={'text-primary text-sm font-bold'}><span
-                                className={'text-[#8c9ec5] text-xs font-bold'}>by</span> {product?.product.merchant?.store_name}</p>
+                                className={'text-[#8c9ec5] text-xs font-bold'}>by</span> {product?.product?.merchant?.store_name}
+                            </p>
                             <div className="flex items-center text-xs text-[#8c9ec5] font-bold">
                                 <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
                             </div>
@@ -155,53 +275,211 @@ const ProductPage = () => {
                         className="line-through text-xl lg:text-3xl font-medium text-[#8c9ec5]">${amountFormatter(product?.product?.price)}</span>
                     </p>
 
-                    <ul className={'grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1 text-sm mt-6 mb-6 px-5 font-medium'}>
-                        {['8k super steady video', "Adaptive color contrast", "Nightography plus portrait mode", "Premium design & craftsmanship", "50mp photo resolution plus bright display", "Long lasting battery plus fast charging"].map((item, key) => (
-                            <li key={key} className={'list-disc text-sm text-primary'}>{item}</li>))}
+                    <ul className={'flex flex-col gap-2 text-sm mt-6 mb-6 px-5 font-medium'}>
+
+                        <li className={'flex items-center gap-2 text-sm text-primary'}>
+                            <svg className={'w-4 h-4'} width="8" height="8" viewBox="0 0 16 17" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip0)">
+                                    <path
+                                        d="M8.00001 16.7564L7.53334 16.3564C6.89001 15.8178 1.27267 10.9664 1.27267 7.41776C1.27267 5.63356 1.98145 3.92244 3.24306 2.66082C4.50468 1.3992 6.21581 0.69043 8.00001 0.69043C9.78421 0.69043 11.4953 1.3992 12.757 2.66082C14.0186 3.92244 14.7273 5.63356 14.7273 7.41776C14.7273 10.9664 9.11001 15.8178 8.46934 16.3591L8.00001 16.7564ZM8.00001 2.1451C6.6021 2.14668 5.2619 2.70271 4.27342 3.69118C3.28495 4.67965 2.72893 6.01985 2.72734 7.41776C2.72734 9.6471 6.18334 13.2084 8.00001 14.8384C9.81667 13.2078 13.2727 9.64443 13.2727 7.41776C13.2711 6.01985 12.7151 4.67965 11.7266 3.69118C10.7381 2.70271 9.39792 2.14668 8.00001 2.1451Z"
+                                        fill="#425A8B"/>
+                                    <path
+                                        d="M8.00001 10.0843C7.47259 10.0843 6.95702 9.92791 6.51849 9.6349C6.07996 9.34188 5.73817 8.9254 5.53633 8.43813C5.3345 7.95086 5.28169 7.41469 5.38458 6.8974C5.48748 6.38012 5.74145 5.90497 6.11439 5.53203C6.48733 5.15909 6.96249 4.90511 7.47977 4.80222C7.99705 4.69932 8.53323 4.75213 9.0205 4.95397C9.50777 5.1558 9.92425 5.49759 10.2173 5.93612C10.5103 6.37465 10.6667 6.89023 10.6667 7.41764C10.6667 8.12489 10.3857 8.80317 9.88563 9.30326C9.38553 9.80336 8.70726 10.0843 8.00001 10.0843ZM8.00001 6.08431C7.7363 6.08431 7.47852 6.16251 7.25925 6.30902C7.03999 6.45553 6.86909 6.66377 6.76817 6.9074C6.66726 7.15103 6.64085 7.41912 6.6923 7.67776C6.74374 7.93641 6.87073 8.17398 7.0572 8.36045C7.24367 8.54692 7.48125 8.67391 7.73989 8.72536C7.99853 8.77681 8.26662 8.7504 8.51026 8.64948C8.75389 8.54857 8.96213 8.37767 9.10864 8.1584C9.25515 7.93914 9.33335 7.68135 9.33335 7.41764C9.33335 7.06402 9.19287 6.72488 8.94282 6.47484C8.69277 6.22479 8.35363 6.08431 8.00001 6.08431Z"
+                                        fill="#425A8B"/>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0">
+                                        <rect width="16" height="16" fill="white" transform="translate(0 0.750977)"/>
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                            Seller's
+                            Location: {product?.product?.merchant?.location?.name} {product?.product?.merchant?.state?.name}
+                        </li>
+
+                        <li className={'flex items-center gap-2 text-sm text-primary'}>
+                            <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
+                                 xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
+                                <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
+                                                y2="101.26">
+                                    <stop offset=".0074201" stop-color="#fff8e1"/>
+                                    <stop offset=".1774" stop-color="#fff6da"/>
+                                    <stop offset=".4164" stop-color="#fff2c8"/>
+                                    <stop offset=".6962" stop-color="#ffeaaa"/>
+                                    <stop offset=".9948" stop-color="#ffe082"/>
+                                </linearGradient>
+                                <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
+                                                y1="29.333" y2="90.334">
+                                    <stop offset=".0048889" stop-color="#bcaaa4"/>
+                                    <stop offset=".3916" stop-color="#ac958e"/>
+                                    <stop offset=".9986" stop-color="#8d6e63"/>
+                                </linearGradient>
+                                <path
+                                    d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
+                                    fill="url(#a)"/>
+                                <path
+                                    d="m3.88 91.5v11.22c0 5.11 4.18 9.28 9.28 9.28h101.74c5.11 0 9.28-4.18 9.28-9.28v-11.22z"
+                                    fill="#66bb6a"/>
+                                <path
+                                    d="m18.41 47 97.5.5c3.45 0 5.49 2.12 5.49 5.51l-.4 38.49v10.79c0 3.84-3.32 6.64-5.1 6.64l-101.74.11c-6.05 0-7.3-3.81-7.3-6.99l.04-10.63 4.13-38.09.02-.1c.37-5.15 4.21-6.23 7.36-6.23m.01-3c-5.62 0-9.92 2.92-10.36 9l-4.15 38.25-.03 10.79c0 5.11 2.82 10 10.32 10l101.69-.11c3.58 0 8.1-4.27 8.1-9.64v-10.79l.4-38.47c0-5.11-3.44-8.53-8.54-8.53z"
+                                    fill="#424242" opacity=".2"/>
+                                <path
+                                    d="m29.9 75.34h-14.59c-1.65 0-2.85-1.31-2.67-2.92l1.75-15.51c.18-1.61 1.67-2.92 3.33-2.92h12.93c1.65 0 2.85 1.31 2.67 2.92l-.1 15.51c-.18 1.62-1.67 2.92-3.32 2.92z"
+                                    fill="#546e7a"/>
+                                <path d="m124.19 91.65h-88.19v-59.3c0-2.21 1.79-4 4-4h80.19c2.21 0 4 1.79 4 4z"
+                                      fill="url(#b)"/>
+                                <path
+                                    d="m30.65 56c.24 0 .43.07.55.21.11.12.15.28.13.48-.01.07-.01.14-.01.21l-.1 15.38c-.11.57-.72 1.06-1.33 1.06h-14.58c-.24 0-.43-.07-.55-.21-.11-.12-.15-.28-.13-.48l1.75-15.51c.07-.6.71-1.14 1.34-1.14zm0-2h-12.93c-1.65 0-3.14 1.31-3.33 2.92l-1.75 15.51c-.18 1.61 1.01 2.92 2.67 2.92h14.59c1.65 0 3.14-1.31 3.33-2.92l.1-15.51c.17-1.61-1.02-2.92-2.68-2.92z"
+                                    fill="#424242" opacity=".2"/>
+                                <path d="m76.33 28.35h11.29v23.65h-11.29z" fill="#6d4c41"/>
+                                <path d="m76.33 68.84h11.29v22.81h-11.29z" fill="#6d4c41"/>
+                                <path
+                                    d="m120.19 31.35c.55 0 1 .45 1 1v56.3h-82.19v-56.3c0-.55.45-1 1-1zm0-3h-80.19c-2.21 0-4 1.79-4 4v59.3h88.19v-59.3c0-2.21-1.79-4-4-4z"
+                                    fill="#424242" opacity=".2"/>
+                                <circle cx="30" cy="110" fill="#4e342e" r="14"/>
+                                <path
+                                    d="m30 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                    fill="#eee" opacity=".2"/>
+                                <circle cx="30" cy="110" fill="#bdbdbd" r="6"/>
+                                <circle cx="102" cy="110" fill="#4e342e" r="14"/>
+                                <path
+                                    d="m102 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                    fill="#eee" opacity=".2"/>
+                                <circle cx="102" cy="110" fill="#bdbdbd" r="6"/>
+                            </svg>
+                            {product?.product?.ship_outside_vicinity ? `This Seller ships outside ${product?.product?.merchant?.location?.name}` : `This Seller does not ship outside ${product?.product?.merchant?.location?.name}`}
+                        </li>
+
+
+                        {product?.product?.ship_outside_vicinity &&
+                            <li className={'flex items-center gap-2 text-sm text-primary'}>
+                                <svg className={'w-6 h-6'} height="8" viewBox="0 0 100 100" width="8"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="51.25" fill="#9d5025" r="30.43"/>
+                                    <circle cx="50" cy="48.75" fill="#f58536" r="30.43"/>
+                                    <path
+                                        d="m58.16 48.61v-6.14a8.16 8.16 0 0 0 -16.2 0v6.14h-4.19v13.61h24.46v-13.61zm-4 0h-8.3v-6.14a3.81 3.81 0 0 1 4.17-3.75 4 4 0 0 1 4.17 3.75z"
+                                        fill="#fff"/>
+                                </svg>
+                                Shipping
+                                outside {product?.product?.merchant?.location?.name} cost {amountFormatter(product?.product?.shipping_cost_outside?.shipping_cost)}
+                            </li>
+                        }
+
+
+                        <li className={'flex items-center gap-2 text-sm text-primary'}>
+                            <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
+                                 xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
+                                <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
+                                                y2="101.26">
+                                    <stop offset=".0074201" stop-color="#fff8e1"/>
+                                    <stop offset=".1774" stop-color="#fff6da"/>
+                                    <stop offset=".4164" stop-color="#fff2c8"/>
+                                    <stop offset=".6962" stop-color="#ffeaaa"/>
+                                    <stop offset=".9948" stop-color="#ffe082"/>
+                                </linearGradient>
+                                <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
+                                                y1="29.333" y2="90.334">
+                                    <stop offset=".0048889" stop-color="#bcaaa4"/>
+                                    <stop offset=".3916" stop-color="#ac958e"/>
+                                    <stop offset=".9986" stop-color="#8d6e63"/>
+                                </linearGradient>
+                                <path
+                                    d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
+                                    fill="url(#a)"/>
+                                <path
+                                    d="m3.88 91.5v11.22c0 5.11 4.18 9.28 9.28 9.28h101.74c5.11 0 9.28-4.18 9.28-9.28v-11.22z"
+                                    fill="#66bb6a"/>
+                                <path
+                                    d="m18.41 47 97.5.5c3.45 0 5.49 2.12 5.49 5.51l-.4 38.49v10.79c0 3.84-3.32 6.64-5.1 6.64l-101.74.11c-6.05 0-7.3-3.81-7.3-6.99l.04-10.63 4.13-38.09.02-.1c.37-5.15 4.21-6.23 7.36-6.23m.01-3c-5.62 0-9.92 2.92-10.36 9l-4.15 38.25-.03 10.79c0 5.11 2.82 10 10.32 10l101.69-.11c3.58 0 8.1-4.27 8.1-9.64v-10.79l.4-38.47c0-5.11-3.44-8.53-8.54-8.53z"
+                                    fill="#424242" opacity=".2"/>
+                                <path
+                                    d="m29.9 75.34h-14.59c-1.65 0-2.85-1.31-2.67-2.92l1.75-15.51c.18-1.61 1.67-2.92 3.33-2.92h12.93c1.65 0 2.85 1.31 2.67 2.92l-.1 15.51c-.18 1.62-1.67 2.92-3.32 2.92z"
+                                    fill="#546e7a"/>
+                                <path d="m124.19 91.65h-88.19v-59.3c0-2.21 1.79-4 4-4h80.19c2.21 0 4 1.79 4 4z"
+                                      fill="url(#b)"/>
+                                <path
+                                    d="m30.65 56c.24 0 .43.07.55.21.11.12.15.28.13.48-.01.07-.01.14-.01.21l-.1 15.38c-.11.57-.72 1.06-1.33 1.06h-14.58c-.24 0-.43-.07-.55-.21-.11-.12-.15-.28-.13-.48l1.75-15.51c.07-.6.71-1.14 1.34-1.14zm0-2h-12.93c-1.65 0-3.14 1.31-3.33 2.92l-1.75 15.51c-.18 1.61 1.01 2.92 2.67 2.92h14.59c1.65 0 3.14-1.31 3.33-2.92l.1-15.51c.17-1.61-1.02-2.92-2.68-2.92z"
+                                    fill="#424242" opacity=".2"/>
+                                <path d="m76.33 28.35h11.29v23.65h-11.29z" fill="#6d4c41"/>
+                                <path d="m76.33 68.84h11.29v22.81h-11.29z" fill="#6d4c41"/>
+                                <path
+                                    d="m120.19 31.35c.55 0 1 .45 1 1v56.3h-82.19v-56.3c0-.55.45-1 1-1zm0-3h-80.19c-2.21 0-4 1.79-4 4v59.3h88.19v-59.3c0-2.21-1.79-4-4-4z"
+                                    fill="#424242" opacity=".2"/>
+                                <circle cx="30" cy="110" fill="#4e342e" r="14"/>
+                                <path
+                                    d="m30 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                    fill="#eee" opacity=".2"/>
+                                <circle cx="30" cy="110" fill="#bdbdbd" r="6"/>
+                                <circle cx="102" cy="110" fill="#4e342e" r="14"/>
+                                <path
+                                    d="m102 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                    fill="#eee" opacity=".2"/>
+                                <circle cx="102" cy="110" fill="#bdbdbd" r="6"/>
+                            </svg>
+                            {product?.product?.ship_outside_state ? `This Seller ship outside ${product?.product?.merchant?.state?.name}` : `This Seller does not ship outside ${product?.product?.merchant?.state?.name}`}
+                        </li>
+
+                        {product?.product?.ship_outside_state &&
+                            <li className={'flex items-center text-sm text-primary'}>
+                                <svg className={'w-6 h-6'} height="6" viewBox="0 0 100 100" width="6"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="51.25" fill="#9d5025" r="30.43"/>
+                                    <circle cx="50" cy="48.75" fill="#f58536" r="30.43"/>
+                                    <path
+                                        d="m58.16 48.61v-6.14a8.16 8.16 0 0 0 -16.2 0v6.14h-4.19v13.61h24.46v-13.61zm-4 0h-8.3v-6.14a3.81 3.81 0 0 1 4.17-3.75 4 4 0 0 1 4.17 3.75z"
+                                        fill="#fff"/>
+                                </svg>
+                                Shipping
+                                outside {product?.product?.merchant?.state?.name} cost {amountFormatter(product?.product?.shipping_cost_outside_state?.shipping_cost)}
+                            </li>
+                        }
+
                     </ul>
 
                     <div className="mb-6">
                         {/* Color options */}
-                        <div className={'flex flex-col gap-2'}>
-                            <p className="font-medium text-sm text-primary">
-                                Color: <span className="text-sm font-bold text-deepOrange">Pink Gold</span>
-                            </p>
-                            <div className="flex space-x-3">
-                                {[...Array(6)].map((_, index) => (<div key={index}
-                                                                       className={`w-10 h-10 border-2 border-dashed rounded cursor-pointer ${index === 3 ? 'border-orange' : 'border-[#dde4f0]'}`}/>))}
-                            </div>
-                        </div>
-                        <div className={'flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0 mt-4 w-full'}>
-                            {/* Style options */}
-                            <div className={'flex flex-col gap-2'}>
-                                <p className="font-medium text-sm text-primary">
-                                    Style: <span className="text-sm font-bold text-deepOrange">S22</span>
-                                </p>
-                                <div className="flex space-x-3">
-                                    {['S22 Ultra', 'S22', 'S22 + Standing Cover'].map((style, index) => (<button
-                                        key={index}
-                                        className={`border rounded text-xs px-3 py-1 ${style === 'S22' ? 'border-orange text-deepOrange' : 'border-textPadded text-textPadded'}`}
-                                    >
-                                        {style}
-                                    </button>))}
-                                </div>
-                            </div>
+                        {/*<div className={'flex flex-col gap-2'}>*/}
+                        {/*    <p className="font-medium text-sm text-primary">*/}
+                        {/*        Color: <span className="text-sm font-bold text-deepOrange">Pink Gold</span>*/}
+                        {/*    </p>*/}
+                        {/*    <div className="flex space-x-3">*/}
+                        {/*        {[...Array(6)].map((_, index) => (<div key={index}*/}
+                        {/*                                               className={`w-10 h-10 border-2 border-dashed rounded cursor-pointer ${index === 3 ? 'border-orange' : 'border-[#dde4f0]'}`}/>))}*/}
+                        {/*    </div>*/}
+                        {/*</div>*/}
+                        {/*<div className={'flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0 mt-4 w-full'}>*/}
+                        {/*    /!* Style options *!/*/}
+                        {/*    /!*<div className={'flex flex-col gap-2'}>*!/*/}
+                        {/*    /!*    <p className="font-medium text-sm text-primary">*!/*/}
+                        {/*    /!*        Style: <span className="text-sm font-bold text-deepOrange">S22</span>*!/*/}
+                        {/*    /!*    </p>*!/*/}
+                        {/*    /!*    <div className="flex space-x-3">*!/*/}
+                        {/*    /!*        {['S22 Ultra', 'S22', 'S22 + Standing Cover'].map((style, index) => (<button*!/*/}
+                        {/*    /!*            key={index}*!/*/}
+                        {/*    /!*            className={`border rounded text-xs px-3 py-1 ${style === 'S22' ? 'border-orange text-deepOrange' : 'border-textPadded text-textPadded'}`}*!/*/}
+                        {/*    /!*        >*!/*/}
+                        {/*    /!*            {style}*!/*/}
+                        {/*    /!*        </button>))}*!/*/}
+                        {/*    /!*    </div>*!/*/}
+                        {/*    /!*</div>*!/*/}
 
-                            {/* Size options */}
-                            <div className={'flex flex-col gap-2'}>
-                                <p className="font-medium text-sm text-primary">
-                                    Size: <span className="text-sm font-bold text-deepOrange">512GB</span>
-                                </p>
-                                <div className="flex space-x-3">
-                                    {['1GB', '512 GB', '256 GB', '128 GB', '64GB'].map((size, index) => (<button
-                                        key={index}
-                                        className={`border text-xs rounded px-3 py-1 ${size === '512 GB' ? 'border-orange text-deepOrange' : 'border-textPadded text-textPadded'}`}
-                                    >
-                                        {size}
-                                    </button>))}
-                                </div>
-                            </div>
-                        </div>
+                        {/*    /!* Size options *!/*/}
+                        {/*    /!*<div className={'flex flex-col gap-2'}>*!/*/}
+                        {/*    /!*    <p className="font-medium text-sm text-primary">*!/*/}
+                        {/*    /!*        Size: <span className="text-sm font-bold text-deepOrange">512GB</span>*!/*/}
+                        {/*    /!*    </p>*!/*/}
+                        {/*    /!*    <div className="flex space-x-3">*!/*/}
+                        {/*    /!*        {['1GB', '512 GB', '256 GB', '128 GB', '64GB'].map((size, index) => (<button*!/*/}
+                        {/*    /!*            key={index}*!/*/}
+                        {/*    /!*            className={`border text-xs rounded px-3 py-1 ${size === '512 GB' ? 'border-orange text-deepOrange' : 'border-textPadded text-textPadded'}`}*!/*/}
+                        {/*    /!*        >*!/*/}
+                        {/*    /!*            {size}*!/*/}
+                        {/*    /!*        </button>))}*!/*/}
+                        {/*    /!*    </div>*!/*/}
+                        {/*    /!*</div>*!/*/}
+                        {/*</div>*/}
 
                         {/* Quantity */}
                         <div className={'mt-6'}>
@@ -217,7 +495,9 @@ const ProductPage = () => {
                                     </button>
                                 </div>
                                 {/* Buttons */}
-                                <div className="flex flex-col sm:flex-row lg:items-center gap-4">
+                                <div onClick={()=>{
+                                    handleAddToCart(product as ProductByIdResponse)
+                                }} className="flex flex-col sm:flex-row lg:items-center gap-4">
                                     <button className="border border-primary rounded px-16 py-1 text-primary">Add to
                                         cart
                                     </button>
@@ -230,14 +510,14 @@ const ProductPage = () => {
 
                         {/* Additional info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-12">
-                            <div>
-                                {product?.product?.sku && <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
-                                    className="font-bold text-primary text-xs">SKU:</span> {product?.product?.sku}</p>}
-                                <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
-                                    className="font-bold text-primary text-xs">Category:</span> {product?.product?.category?.name}</p>
-                                <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span
-                                    className="font-bold text-primary text-xs">Tags:</span> Blue, Smartphone</p>
-                            </div>
+                            {/*<div>*/}
+                            {/*    {product?.product?.sku && <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span*/}
+                            {/*        className="font-bold text-primary text-xs">SKU:</span> {product?.product?.sku}</p>}*/}
+                            {/*    <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span*/}
+                            {/*        className="font-bold text-primary text-xs">Category:</span> {product?.product?.category?.name}</p>*/}
+                            {/*    <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span*/}
+                            {/*        className="font-bold text-primary text-xs">Tags:</span> Blue, Smartphone</p>*/}
+                            {/*</div>*/}
                             <div>
                                 <p className="font-bold text-primary flex items-center gap-0 text-sm">Free
                                     Delivery</p>
@@ -250,18 +530,26 @@ const ProductPage = () => {
                             {/* Social icons */}
                             <div className="flex gap-4 items-end ">
                                 <span className="text-primary font-bold">Share</span>
-                                <div className={'pt-1 pl-1 bg-primary'}>
-                                    <FaFacebookF className="text-white cursor-pointer"/>
-                                </div>
-                                <div className={'p-[0.2rem] rounded-full bg-primary'}>
-                                    <FaPinterestP className="text-white cursor-pointer"/>
-                                </div>
-                                <div className={''}>
-                                    <FaTwitter className="text-primary cursor-pointer"/>
-                                </div>
-                                <div className={'p-[0.1rem] rounded-[4px] bg-primary'}>
-                                    <FaInstagram className="text-white cursor-pointer"/>
-                                </div>
+                                <Link href={product?.product?.merchant?.facebook}>
+                                    <div className={'pt-1 pl-1 bg-primary'}>
+                                        <FaFacebookF className="text-white cursor-pointer"/>
+                                    </div>
+                                </Link>
+                                <Link href={product?.product?.merchant?.linkedin ?? ''}>
+                                    <div className={'p-[0.2rem] rounded-full bg-primary'}>
+                                        <FaLinkedinIn className="text-white cursor-pointer"/>
+                                    </div>
+                                </Link>
+                                <Link href={product?.product?.merchant?.twitter}>
+                                    <div className={''}>
+                                        <FaTwitter className="text-primary cursor-pointer"/>
+                                    </div>
+                                </Link>
+                                <Link href={product?.product?.merchant?.instagram}>
+                                    <div className={'p-[0.1rem] rounded-[4px] bg-primary'}>
+                                        <FaInstagram className="text-white cursor-pointer"/>
+                                    </div>
+                                </Link>
                             </div>
                         </div>
 
@@ -272,62 +560,63 @@ const ProductPage = () => {
                 </div>
             </div>
 
+
             {/* Frequently Bought Together */}
 
             <div className="p-6">
-                <h2 className="text-xl lg:text-2xl font-bold mb-6">Frequently Bought Together</h2>
-                <div className={'flex flex-col lg:flex-row lg:items-center gap-8'}>
-                    <div className="flex items-center lg:gap-6 mb-6 w-full lg:w-[60%]">
-                        {products.map((product, index) => (
-                            <>
-                                <div key={product.id}
-                                     className="w-full h-full px-2 py-8 flex items-center justify-center rounded-[4px] border-4 border-[#dde4f0]">
+                {/*<h2 className="text-xl lg:text-2xl font-bold mb-6">Frequently Bought Together</h2>*/}
+                {/*<div className={'flex flex-col lg:flex-row lg:items-center gap-8'}>*/}
+                {/*    <div className="flex items-center lg:gap-6 mb-6 w-full lg:w-[60%]">*/}
+                {/*        {products.map((product, index) => (*/}
+                {/*            <>*/}
+                {/*                <div key={product.id}*/}
+                {/*                     className="w-full h-full px-2 py-8 flex items-center justify-center rounded-[4px] border-4 border-[#dde4f0]">*/}
 
-                                    <img src={product.img} alt={'product image'} className={'w-full lg:w-4/5 h-auto'}/>
+                {/*                    <img src={product.img} alt={'product image'} className={'w-full lg:w-4/5 h-auto'}/>*/}
 
-                                </div>
+                {/*                </div>*/}
 
-                                {
-                                    products?.length !== index + 1 && (
-                                        <span className={'text-primary text-4xl'}>+</span>
-                                    )
-                                }
-                            </>
-                        ))}
-                    </div>
+                {/*                {*/}
+                {/*                    products?.length !== index + 1 && (*/}
+                {/*                        <span className={'text-primary text-4xl'}>+</span>*/}
+                {/*                    )*/}
+                {/*                }*/}
+                {/*            </>*/}
+                {/*        ))}*/}
+                {/*    </div>*/}
 
-                    <div className="flex flex-col gap-2">
-                        <p className="text-3xl text-primary font-bold">${totalPrice.toFixed(2)} <span
-                            className={'text-xl font-medium'}>({selectedProducts.length} items)</span></p>
-                        <button
-                            className="bg-inherit rounded-md px-16 py-1 border border-detailsBorder font-bold hover:bg-primary hover:border-none text-primary hover:text-white">Add
-                            To Cart
-                        </button>
-                    </div>
+                {/*    <div className="flex flex-col gap-2">*/}
+                {/*        <p className="text-3xl text-primary font-bold">${totalPrice.toFixed(2)} <span*/}
+                {/*            className={'text-xl font-medium'}>({selectedProducts.length} items)</span></p>*/}
+                {/*        <button*/}
+                {/*            className="bg-inherit rounded-md px-16 py-1 border border-detailsBorder font-bold hover:bg-primary hover:border-none text-primary hover:text-white">Add*/}
+                {/*            To Cart*/}
+                {/*        </button>*/}
+                {/*    </div>*/}
 
-                </div>
-                <ul className="mt-4 space-y-2">
-                    {products.map(product => (
-                        <li key={product.id} className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={selectedProducts.includes(product.id)}
-                                onChange={() => toggleProduct(product.id)}
-                                className="w-4 h-4"
-                            />
-                            <span
-                                className={'font-medium text-primary text-sm'}> {product?.isMain && <span
-                                className={"font-bold"}>This Item:</span>} {product.name} - ${product.price.toFixed(2)}</span>
-                        </li>
-                    ))}
-                </ul>
+                {/*</div>*/}
+                {/*<ul className="mt-4 space-y-2">*/}
+                {/*    {products.map(product => (*/}
+                {/*        <li key={product.id} className="flex items-center gap-2">*/}
+                {/*            <input*/}
+                {/*                type="checkbox"*/}
+                {/*                checked={selectedProducts.includes(product.id)}*/}
+                {/*                onChange={() => toggleProduct(product.id)}*/}
+                {/*                className="w-4 h-4"*/}
+                {/*            />*/}
+                {/*            <span*/}
+                {/*                className={'font-medium text-primary text-sm'}> {product?.isMain && <span*/}
+                {/*                className={"font-bold"}>This Item:</span>} {product.name} - ${product.price.toFixed(2)}</span>*/}
+                {/*        </li>*/}
+                {/*    ))}*/}
+                {/*</ul>*/}
 
                 {
 
                 }
              <ProductInfo product={product}/>
 
-                <RelatedProduct product={product}/>
+             <RelatedProduct product={product}/>
 
 
             </div>

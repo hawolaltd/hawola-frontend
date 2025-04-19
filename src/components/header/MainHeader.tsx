@@ -6,6 +6,7 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import CartModal from "@/components/shared/CartModal";
 import {useRouter} from "next/router";
 import {CartResponse} from "@/types/product";
+import {addToCartsLocal} from "@/redux/product/productSlice";
 
 const Header = ({isScrolled}: {isScrolled?: any}) => {
     const [userInfo, setUserInfo] = useState(false)
@@ -33,7 +34,6 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
 
             setItems(cartItems)
         };
-
 
         getCartCount();
 
@@ -175,7 +175,8 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
                                     </li>
 
                                     <li onClick={() => {
-                                        setUserCart({} as CartResponse)
+                                        // setUserCart({} as CartResponse)
+                                        dispatch(addToCartsLocal({items: []}))
                                         dispatch(logout())
                                     }}>
                                         <span
@@ -192,12 +193,13 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
                                 if (isAuthenticated) {
                                     setCart(!cart)
                                 } else {
-                                    router.push('/auth/login')
+                                    // router.push('/auth/login')
+                                    setCart(!cart)
                                 }
 
                             }} className="relative cursor-pointer">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated ? localCart?.items?.length !== 0 && localCart !== null ? localCart?.items?.length : 0 : userCart?.cart_count ?? 0}</span>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated && localCart !== null ? localCart?.items?.length ?? 0  : carts?.cart_count ?? 0}</span>
                                 <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
 
                             </div>

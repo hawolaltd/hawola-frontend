@@ -7,7 +7,7 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {login, register} from "@/redux/auth/authSlice";
 import {toast} from "react-toastify";
 import {useRouter} from "next/router";
-import {addToCarts} from "@/redux/product/productSlice";
+import {addToCarts, addToCartsLocal} from "@/redux/product/productSlice";
 
 export default function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
@@ -34,8 +34,12 @@ export default function LoginForm() {
             toast.success("Welcome Back to HAWOLA")
             if (localCart?.items?.length > 0){
                 dispatch( addToCarts({
-                    items: localCart?.items
+                    items: localCart?.items.map(cart => ({
+                        qty: cart.qty,
+                        product: cart?.product?.id
+                    }))
                 }))
+                dispatch(addToCartsLocal({items: []}))
             }
             router.push('/')
         }

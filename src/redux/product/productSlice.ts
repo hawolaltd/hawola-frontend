@@ -3,7 +3,7 @@ import productService from "@/redux/product/productService";
 import {
     AddressResponse,
     AddToCartType,
-    CartResponse, OrderDetailsResponse,
+    CartResponse, LocalCart, OrderDetailsResponse,
     Product,
     ProductByIdResponse,
     ProductCategoriesResponse,
@@ -16,10 +16,12 @@ interface ProductsState {
     categories: ProductCategoriesResponse;
     carts: CartResponse;
     orders: OrderDetailsResponse;
-    localCart: AddToCartType;
+    localCart: LocalCart;
     addresses: AddressResponse;
     ordersHistory: OrderHistory;
     singleOrder: null;
+    reviews: null;
+    merchantReviews: MerchantReviewResponse;
     isLoading: boolean;
     error: string | null | unknown;
     message: string | null | unknown;
@@ -31,10 +33,12 @@ const initialState: ProductsState = {
     categories: {} as ProductCategoriesResponse,
     carts: {} as CartResponse,
     orders: {} as OrderDetailsResponse,
-    localCart: {} as AddToCartType,
+    localCart: {} as LocalCart,
     addresses: {} as AddressResponse,
     ordersHistory: {} as OrderHistory,
     singleOrder: null,
+    merchantReviews: {} as MerchantReviewResponse,
+    reviews: null,
     isLoading: false,
     error: null,
     message: "",
@@ -124,7 +128,7 @@ export const addToCarts = createAsyncThunk("products/add-cart", async (data: Add
 });
 
 
-export const addToCartsLocal = createAsyncThunk("products/add-local-cart", async (data: AddToCartType, thunkAPI) => {
+export const addToCartsLocal = createAsyncThunk("products/add-local-cart", async (data: LocalCart, thunkAPI) => {
     try {
         return await productService.addToCartsLocal(data);
     } catch (error: any) {
@@ -263,6 +267,40 @@ export const addAddress = createAsyncThunk("products/add-address", async (data: 
 export const deleteAddress = createAsyncThunk("products/delete-address", async (data: any, thunkAPI) => {
     try {
         return await productService.deleteAddress(data);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
+
+// getReviews
+export const getReviews = createAsyncThunk("products/reviews", async (_, thunkAPI) => {
+    try {
+        return await productService.getReviews();
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
+
+// get merchant reviews
+export const getMerchantReviews = createAsyncThunk("products/merchant-reviews", async (slug: string, thunkAPI) => {
+    try {
+        return await productService.getMerchantReviews(slug);
     } catch (error: any) {
         const message =
             (error.response && error.response.data && error.response.data.message) ||
@@ -469,6 +507,28 @@ const productSlice = createSlice({
                 state.isLoading = false;
             })
             .addCase(updatePayment.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(getReviews.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(getReviews.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.reviews = action.payload
+            })
+            .addCase(getReviews.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(getMerchantReviews.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(getMerchantReviews.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.merchantReviews = action.payload
+            })
+            .addCase(getMerchantReviews.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;
