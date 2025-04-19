@@ -17,10 +17,6 @@ const CheckoutPage = () => {
     const [paymentMethod, setPaymentMethod] = useState<string>('card');
     const [processingPayment, setProcessingPayment] = useState(false);
 
-    console.log("orders:",orders)
-    console.log("profile:",profile)
-
-
     const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string
 
     // const [config, setConfig]  = useState<PaystackProps | null>(null);
