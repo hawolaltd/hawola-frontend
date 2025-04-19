@@ -31,13 +31,9 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
     useEffect(() => {
         const getCartCount = () => {
             const cartItems = JSON.parse(localStorage.getItem('cartItems') as string)
-
             setItems(cartItems)
         };
-
         getCartCount();
-
-
         window.addEventListener("storage", getCartCount);
 
         return () => window.removeEventListener("storage", getCartCount);
