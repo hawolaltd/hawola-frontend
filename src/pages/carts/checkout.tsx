@@ -4,51 +4,61 @@ import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { amountFormatter } from '@/util';
 import { toast } from 'react-toastify';
-import {updatePayment} from "@/redux/product/productSlice";
-import {usePaystackPayment} from "react-paystack";
+import { updatePayment } from "@/redux/product/productSlice";
+import dynamic from 'next/dynamic';
+import { getUserProfile } from "@/redux/auth/authSlice";
+import {wrapper} from "@/store/store";
 import {PaystackProps} from "react-paystack/libs/types";
-import {getUserProfile} from "@/redux/auth/authSlice";
+
+const PaystackCheckout = dynamic(
+    () => import('react-paystack').then((mod) => {
+        return (props: { config: PaystackProps, onSuccess: () => void }) => {
+            const initializePayment = mod.usePaystackPayment(props.config);
+
+            useEffect(() => {
+                initializePayment({
+                    onSuccess: () => props.onSuccess()
+                });
+            }, []);
+
+            return null;
+        };
+    }),
+    { ssr: false }
+);
+
 
 const CheckoutPage = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { orders, isLoading: loading, error } = useAppSelector(state => state.products);
+    const { orders, isLoading: loading } = useAppSelector(state => state.products);
     const { profile } = useAppSelector(state => state.auth);
     const [paymentMethod, setPaymentMethod] = useState<string>('card');
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [showPaystack, setShowPaystack] = useState(false);
 
-    const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string
-
-    // const [config, setConfig]  = useState<PaystackProps | null>(null);
-      const config = {
-        reference: orders?.payment_reference,
-        email: profile?.email,
-        amount: +orders?.totalPrice,
-        publicKey: publicKey as string,
+    const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string;
+    const config = {
+        reference: orders?.payment_reference as string,
+        email: profile?.email as string,
+        amount: +orders?.totalPrice * 100,
+        publicKey,
     };
-
-    const initializePayment = usePaystackPayment(config as PaystackProps);
-
     const handlePayment = async () => {
         setProcessingPayment(true);
         try {
-           const params = {
-               payment_reference: orders?.payment_reference ?? '4yrg0exv8o',
-               order_id: orders?.order_number,
-               payment_method: 'paystack',
-               is_offline_payment: orders?.is_offline_payment
-           }
-          const res = await dispatch(updatePayment(params));
-            console.log("ressss:", res)
-            // console.log("window.location.href:", window.location.href)
-           if (res.type.includes('fulfilled')){
-               initializePayment({
-                   onSuccess: response => {
-                       router.push('/order/order-confirmation')
-                   }
-               })
-           }
+            const params = {
+                payment_reference: orders?.payment_reference ?? '4yrg0exv8o',
+                order_id: orders?.order_number,
+                payment_method: 'paystack',
+                is_offline_payment: orders?.is_offline_payment
+            };
 
+            const res = await dispatch(updatePayment(params));
+
+            if (res.type.includes('fulfilled')) {
+                setShowPaystack(true);
+            }
         } catch (error) {
             toast.error('Payment failed. Please try again.');
         } finally {
@@ -56,19 +66,21 @@ const CheckoutPage = () => {
         }
     };
 
-    // if (loading) {
-    //     return (
-    //         <AuthLayout>
-    //             <div className="container mx-auto px-4 py-8 flex justify-center">
-    //                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    //             </div>
-    //         </AuthLayout>
-    //     );
-    // }
+
 
     useEffect(() => {
         dispatch(getUserProfile())
     }, [dispatch]);
+
+    if (loading) {
+        return (
+            <AuthLayout>
+                <div className="container mx-auto px-4 py-8 flex justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+            </AuthLayout>
+        );
+    }
 
     if (!orders) {
         return (
@@ -95,6 +107,15 @@ const CheckoutPage = () => {
                 {loading && <div  className="container absolute w-full h-full z-50 backdrop-blur-md items-center px-4 py-8 flex justify-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                 </div>}
+
+                {showPaystack && (
+                    <PaystackCheckout
+                        config={config}
+                        onSuccess={() => router.push('/order/order-confirmation')}
+                    />
+                )}
+
+
                 <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
                 <div className="flex flex-col lg:flex-row gap-8">
@@ -244,5 +265,12 @@ const CheckoutPage = () => {
         </AuthLayout>
     );
 };
+export const getServerSideProps = wrapper.getServerSideProps((store) => async (context) => {
+    await store.dispatch(getUserProfile());
+    // Add other necessary dispatches here if needed
 
+    return {
+        props: {},
+    };
+});
 export default CheckoutPage;

@@ -4,6 +4,7 @@ import productsReducer from '@/redux/product/productSlice';
 import generalReducer from '@/redux/general/generalSlice';
 import {FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE} from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import {createWrapper} from "next-redux-wrapper";
 
 const persistConfig = {
     key: 'root',
@@ -48,3 +49,4 @@ export const persistor = persistStore(store);
 // Types for RootState and AppDispatch
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export const wrapper = createWrapper(() => store);
