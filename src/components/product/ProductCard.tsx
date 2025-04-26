@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {useRouter} from "next/router";
 import {amountFormatter} from "@/util";
-import {Product} from "@/types/product";
+import {LocalCartItem, Product, ProductByIdResponse} from "@/types/product";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
 import {toast} from "react-toastify";
@@ -9,60 +9,98 @@ import {toast} from "react-toastify";
 function ProductCard({product}:{product: Product}) {
     const router = useRouter()
 
+    const [quantity, setQuantity] = useState(1);
+
+    // State for selected variants
+    const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
+
     const { isAuthenticated } = useAppSelector(state => state.auth)
     const {localCart} = useAppSelector(state => state.products)
 
 
     const dispatch = useAppDispatch()
+
+
     const handleAddToCart = async (product: Product) => {
         try {
+            // Convert selected variants to the format expected by backend
+            const variants = product?.product_variant?.length > 0
+                ? Object.entries(selectedVariants).map(([variantId, variantValueId]) => ({
+                    variant: Number(variantId),
+                    variant_value: variantValueId
+                }))
+                : undefined;
+
             if (isAuthenticated) {
                 const res = await dispatch(addToCarts({
                     items: [{
-                        qty: 1,
-                        product: product?.id
+                        qty: quantity,
+                        product: product?.id,
+                        ...(variants && { variant: variants })
                     }]
-                }))
+                }));
+
                 if (res?.type.includes('fulfilled')) {
-                    dispatch(getCarts())
-                    toast.success('Cart Added')
+                    dispatch(getCarts());
+                    toast.success('Added to cart');
                 }
             } else {
                 // Get current cart from localStorage or initialize empty array
-                const cartItems = JSON.parse(localStorage.getItem("cartItems") || "[]")
+                const cartItems: LocalCartItem[] = JSON.parse(localStorage.getItem("cartItems") || "[]");
 
-                // Check if item already exists in cart
-                const existingItemIndex = cartItems.findIndex((item: any) => item.product?.id === product?.id)
+                // Check if item already exists in cart with the same variants
+                const existingItemIndex = cartItems.findIndex(item => {
+                    if (item.product?.id !== product?.id) return false;
+
+                    // If no variants, match on product only
+                    if (!variants && !item.variant) return true;
+
+                    // Compare variants
+                    if (variants?.length !== item.variant?.length) return false;
+
+                    // Check each variant matches
+                    return variants?.every(v =>
+                        item.variant?.some(iv =>
+                            iv.variant === v.variant &&
+                            iv.variant_value === v.variant_value
+                        )
+                    );
+                });
 
                 if (existingItemIndex >= 0) {
                     // Item exists - increment quantity
-                    cartItems[existingItemIndex].qty += 1
+                    cartItems[existingItemIndex].qty += quantity;
                 } else {
                     // Item doesn't exist - add new item
                     cartItems.push({
-                        qty: 1,
-                        product: product
-                    })
+                        qty: quantity,
+                        product: product,
+                        ...(variants && { variant: variants })
+                    });
                 }
 
                 // Update localStorage
-                localStorage.setItem("cartItems", JSON.stringify(cartItems))
+                localStorage.setItem("cartItems", JSON.stringify(cartItems));
 
                 // Update Redux state to match localStorage
                 dispatch(addToCartsLocal({
-                    items: cartItems.map((item: any) => ({
+                    items: cartItems.map(item => ({
                         qty: item.qty,
-                        product: item.product
+                        product: item.product,
+                        ...(item.variant && { variant: item.variant })
                     }))
-                }))
+                }));
 
-                toast.success('Cart Added')
+                toast.success('Added to cart');
             }
         } catch (e) {
-            console.error("Error adding to cart:", e)
-            toast.error("Failed to add to cart")
+            console.error("Error adding to cart:", e);
+            toast.error("Failed to add to cart");
         }
     }
+
+
+
     return (
         <div  className={`relative bg-white border cursor-pointer border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}>
                         <span

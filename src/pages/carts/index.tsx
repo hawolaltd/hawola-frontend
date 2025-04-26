@@ -12,11 +12,7 @@ import {getAllStates} from "@/redux/general/generalSlice";
 import CartItemRow from "@/components/cart/CartItemRow";
 import OrderSummary from "@/components/cart/OrderSummary";
 import {useRouter} from "next/router";
-// import dynamic from "next/dynamic";
-//
-// const CheckoutPage = dynamic(() => import('./checkout'), {
-//     ssr: false
-// });
+
 
 interface OrderItem {
     product: number;
@@ -157,16 +153,16 @@ const CartPage = () => {
 
         const merchantIds = [...new Set(items.map(item => item.merchant))];
 
-        const problematicMerchants = [2, 5]; // Example merchant IDs with restrictions
+        const problematicMerchants = cartItems?.filter(pro => !pro?.product?.ship_outside_state)
+        // const problematicMerchants = cartItems?.filter(pro => !pro?.product?.ship_outside_state  || !pro?.product?.ship_outside_vicinity)
 
         // Find problematic items
-        const problematicItems = items.filter(item =>
-            problematicMerchants.includes(item.merchant)
-        );
+        const problematicItems = problematicMerchants.filter(item => selectedItems.includes(item.id))
+
 
         if (problematicItems.length > 0) {
             const productNames = problematicItems.map(item =>
-                cartItems.find(ci => ci.product.id === item.product)?.product.name
+                cartItems.find(ci => ci.product.id === item?.product?.id)?.product.name
             ).filter(Boolean);
 
             return `The following items cannot be shipped to your location: ${productNames.join(', ')}. Please remove them to proceed.`;
@@ -193,10 +189,10 @@ const CartPage = () => {
                     shipping_cost: calculateShippingCost(+item.product.price),
                     merchant: item.product.merchant.id,
                     // Add variants if they exist
-                    // variant: item.variants?.map(v => ({
-                    //     variant: v.variant.id,
-                    //     variant_value: v.variant_value.id
-                    // }))
+                    variant: item?.cart_variant?.map(v => ({
+                        variant: v.variant.id,
+                        variant_value: v.variant_value.id
+                    }))
                 }));
 
             const shippingIssues = await checkMerchantShipping(orderItems);
@@ -213,11 +209,9 @@ const CartPage = () => {
                     product_id: item.product
                 }))
             };
-            console.log("orderPayload:", orderPayload)
             // Dispatch order creation
             const result = await dispatch(addOrder(orderPayload));
-            console.log('result.payload.id:', result.payload.id)
-            console.log('result.:', result)
+
             if (result?.type.includes('fulfilled')) {
                 router.push(`/carts/checkout`);
             }

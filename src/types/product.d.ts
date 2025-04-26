@@ -86,6 +86,7 @@ export interface Product  {
     is_odinwo_special: boolean;
     slug: string;
     search_vector: string | null;
+    product_variant: any[];
 }
 
 export interface ProductResponse  {
@@ -270,18 +271,29 @@ export interface CartItem  {
     user: number;
 }
 
+export interface CartVariant {
+    variant: number;
+    variant_value: number;
+}
+
+export interface LocalCartItem {
+    qty: number;
+    product: Product;
+    variant?: CartVariant[];
+}
+
 export interface LocalCart {
-    items:{
-        qty: number;
-        product: Product;
-    }[]
+    items: LocalCartItem[];
+}
+
+export interface AddToCartItem {
+    qty: number;
+    product: number;
+    variant?: CartVariant[];
 }
 
 export interface AddToCartType {
-    items: {
-        qty: number;
-        product: number;
-    }[]
+    items: AddToCartItem[];
 }
 
 export interface CartResponse {

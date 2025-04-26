@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import AuthLayout from "@/components/layout/AuthLayout";
-import {FaFacebookF, FaInstagram, FaLinkedinIn, FaPinterestP, FaTwitter} from 'react-icons/fa';
+import {FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
@@ -14,26 +14,24 @@ import {
 import {useRouter} from "next/router";
 import {amountFormatter} from "@/util";
 import Link from "next/link";
-import {Product, ProductByIdResponse, ProductResponse} from "@/types/product";
+import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "react-toastify";
-
-
 
 const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
-    // const [quantity, setQuantity] = useState<number>(1);
     const [currentImage, setCurrentImage] = useState<string | null>(null);
     const [position, setPosition] = useState({x: "50%", y: "50%"});
     const [isHovered, setIsHovered] = useState(false);
+    const [loadingProduct, setLoadingProduct] = useState(false);
+    const [loadingReview, setLoadingReview] = useState(false);
     const {query} = useRouter()
 
     const dispatch = useAppDispatch()
 
-    const {product, merchantReviews, isLoading} = useAppSelector(state => state.products)
+    const {product, isLoading} = useAppSelector(state => state.products)
     const {isAuthenticated} = useAppSelector(state => state.auth)
 
     const [mainImage, setMainImage] = useState(product?.product?.featured_image?.[0]?.image_url || "");
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const LoadingSpinner = () => (
         <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
@@ -44,26 +42,16 @@ const ProductPage = () => {
         </div>
     );
 
+    // State for selected variants
+    const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
 
-    const handleNextImage = () => {
-        if (product?.product_images?.length) {
-            const nextIndex = (currentImageIndex + 1) % product.product_images.length;
-            setCurrentImageIndex(nextIndex);
-            setMainImage(product.product_images[nextIndex].image_url);
-        }
+    // Handle variant selection
+    const handleVariantSelect = (variantId: number, valueId: number) => {
+        setSelectedVariants(prev => ({
+            ...prev,
+            [variantId]: valueId
+        }));
     };
-
-    const handlePrevImage = () => {
-        if (product?.product_images?.length) {
-            const prevIndex = (currentImageIndex - 1 + product.product_images.length) % product.product_images.length;
-            setCurrentImageIndex(prevIndex);
-            setMainImage(product.product_images[prevIndex].image_url);
-        }
-    };
-
-
-    // console.log('product:', product)
-    console.log('merchantReviews:', merchantReviews)
 
     const handleQuantityChange = (value: number) => {
         setQuantity((prev) => Math.max(1, prev + value));
@@ -82,68 +70,117 @@ const ProductPage = () => {
 
     const handleAddToCart = async (product: ProductByIdResponse) => {
         try {
+            // Convert selected variants to the format expected by backend
+            const variants = product?.product_variant?.length > 0
+                ? Object.entries(selectedVariants).map(([variantId, variantValueId]) => ({
+                    variant: Number(variantId),
+                    variant_value: variantValueId
+                }))
+                : undefined;
+
             if (isAuthenticated) {
                 const res = await dispatch(addToCarts({
                     items: [{
-                        qty: 1,
-                        product: product?.product?.id
+                        qty: quantity,
+                        product: product?.product?.id,
+                        ...(variants && { variant: variants })
                     }]
-                }))
+                }));
+
                 if (res?.type.includes('fulfilled')) {
-                    dispatch(getCarts())
-                    toast.success('Cart Added')
+                    dispatch(getCarts());
+                    toast.success('Added to cart');
                 }
             } else {
                 // Get current cart from localStorage or initialize empty array
-                const cartItems = JSON.parse(localStorage.getItem("cartItems") || "[]")
+                const cartItems: LocalCartItem[] = JSON.parse(localStorage.getItem("cartItems") || "[]");
 
-                // Check if item already exists in cart
-                const existingItemIndex = cartItems.findIndex((item: any) => item.product?.id === product?.product?.id)
+                // Check if item already exists in cart with the same variants
+                const existingItemIndex = cartItems.findIndex(item => {
+                    if (item.product?.id !== product?.product?.id) return false;
+
+                    // If no variants, match on product only
+                    if (!variants && !item.variant) return true;
+
+                    // Compare variants
+                    if (variants?.length !== item.variant?.length) return false;
+
+                    // Check each variant matches
+                    return variants?.every(v =>
+                        item.variant?.some(iv =>
+                            iv.variant === v.variant &&
+                            iv.variant_value === v.variant_value
+                        )
+                    );
+                });
 
                 if (existingItemIndex >= 0) {
                     // Item exists - increment quantity
-                    cartItems[existingItemIndex].qty += 1
+                    cartItems[existingItemIndex].qty += quantity;
                 } else {
                     // Item doesn't exist - add new item
                     cartItems.push({
-                        qty: 1,
-                        product: product
-                    })
+                        qty: quantity,
+                        product: product?.product,
+                        ...(variants && { variant: variants })
+                    });
                 }
 
                 // Update localStorage
-                localStorage.setItem("cartItems", JSON.stringify(cartItems))
+                localStorage.setItem("cartItems", JSON.stringify(cartItems));
 
                 // Update Redux state to match localStorage
                 dispatch(addToCartsLocal({
-                    items: cartItems.map((item: any) => ({
+                    items: cartItems.map(item => ({
                         qty: item.qty,
-                        product: item.product
+                        product: item.product,
+                        ...(item.variant && { variant: item.variant })
                     }))
-                }))
+                }));
 
-                toast.success('Cart Added')
+                toast.success('Added to cart');
             }
         } catch (e) {
-            console.error("Error adding to cart:", e)
-            toast.error("Failed to add to cart")
+            console.error("Error adding to cart:", e);
+            toast.error("Failed to add to cart");
         }
     }
 
-
+    const init = useCallback( async ()=>{
+        setLoadingProduct(true)
+        setLoadingReview(true)
+        try {
+          const res = await  dispatch(getProductBySlug(query.id as string))
+            if(!res.type.includes('rejected')){
+                setLoadingProduct(false)
+                const response = await dispatch(getMerchantReviews(query.id as string))
+                if(!response.type.includes('rejected')){
+                    setLoadingReview(false)
+                }
+            }
+        }catch (e) {
+            setLoadingProduct(false)
+            setLoadingReview(false)
+        }finally {
+            setLoadingProduct(false)
+            setLoadingReview(false)
+        }
+    },[dispatch, query.id])
 
     useEffect(() => {
-        dispatch(getProductBySlug(query.id as string))
-        dispatch(getMerchantReviews(query.id as string))
+       init()
+    }, [init]);
+
+    useEffect(() => {
         if (product?.product?.featured_image?.[0]?.image_url) {
             setCurrentImage(product.product.featured_image[0].image_url);
         }
         if (product?.product_images?.length) {
             setMainImage(product.product_images[0].image_url);
         }
-    }, [dispatch, product.product.featured_image, product.product_images, query.id]);
+    }, [product.product.featured_image, product.product_images]);
 
-    if (isLoading) {
+    if (loadingProduct) {
         return <LoadingSpinner />;
     }
 
@@ -174,27 +211,6 @@ const ProductPage = () => {
 
                     {/* Main Image Display */}
                     <div className="flex-1 flex flex-col items-center justify-center border-4 border-[#dde4f0] h-[75vh] rounded-md relative">
-                        {/* Navigation Arrows */}
-                        {/*{product?.product_images?.length > 1 && (*/}
-                        {/*    <>*/}
-                        {/*        /!*<button*!/*/}
-                        {/*        /!*    onClick={handlePrevImage}*!/*/}
-                        {/*        /!*    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md z-10 hover:bg-gray-100"*!/*/}
-                        {/*        /!*>*!/*/}
-                        {/*        /!*    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">*!/*/}
-                        {/*        /!*        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />*!/*/}
-                        {/*        /!*    </svg>*!/*/}
-                        {/*        /!*</button>*!/*/}
-                        {/*        /!*<button*!/*/}
-                        {/*        /!*    onClick={handleNextImage}*!/*/}
-                        {/*        /!*    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md z-10 hover:bg-gray-100"*!/*/}
-                        {/*        /!*>*!/*/}
-                        {/*        /!*    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">*!/*/}
-                        {/*        /!*        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />*!/*/}
-                        {/*        /!*    </svg>*!/*/}
-                        {/*        /!*</button>*!/*/}
-                        {/*    </>*/}
-                        {/*)}*/}
 
                         {/* Mobile Thumbnail Navigation */}
                         <div className="lg:hidden flex gap-2 overflow-x-auto py-2 w-full justify-center absolute bottom-2 left-0 right-0">
@@ -439,47 +455,41 @@ const ProductPage = () => {
                     </ul>
 
                     <div className="mb-6">
-                        {/* Color options */}
-                        {/*<div className={'flex flex-col gap-2'}>*/}
-                        {/*    <p className="font-medium text-sm text-primary">*/}
-                        {/*        Color: <span className="text-sm font-bold text-deepOrange">Pink Gold</span>*/}
-                        {/*    </p>*/}
-                        {/*    <div className="flex space-x-3">*/}
-                        {/*        {[...Array(6)].map((_, index) => (<div key={index}*/}
-                        {/*                                               className={`w-10 h-10 border-2 border-dashed rounded cursor-pointer ${index === 3 ? 'border-orange' : 'border-[#dde4f0]'}`}/>))}*/}
-                        {/*    </div>*/}
-                        {/*</div>*/}
-                        {/*<div className={'flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0 mt-4 w-full'}>*/}
-                        {/*    /!* Style options *!/*/}
-                        {/*    /!*<div className={'flex flex-col gap-2'}>*!/*/}
-                        {/*    /!*    <p className="font-medium text-sm text-primary">*!/*/}
-                        {/*    /!*        Style: <span className="text-sm font-bold text-deepOrange">S22</span>*!/*/}
-                        {/*    /!*    </p>*!/*/}
-                        {/*    /!*    <div className="flex space-x-3">*!/*/}
-                        {/*    /!*        {['S22 Ultra', 'S22', 'S22 + Standing Cover'].map((style, index) => (<button*!/*/}
-                        {/*    /!*            key={index}*!/*/}
-                        {/*    /!*            className={`border rounded text-xs px-3 py-1 ${style === 'S22' ? 'border-orange text-deepOrange' : 'border-textPadded text-textPadded'}`}*!/*/}
-                        {/*    /!*        >*!/*/}
-                        {/*    /!*            {style}*!/*/}
-                        {/*    /!*        </button>))}*!/*/}
-                        {/*    /!*    </div>*!/*/}
-                        {/*    /!*</div>*!/*/}
-
-                        {/*    /!* Size options *!/*/}
-                        {/*    /!*<div className={'flex flex-col gap-2'}>*!/*/}
-                        {/*    /!*    <p className="font-medium text-sm text-primary">*!/*/}
-                        {/*    /!*        Size: <span className="text-sm font-bold text-deepOrange">512GB</span>*!/*/}
-                        {/*    /!*    </p>*!/*/}
-                        {/*    /!*    <div className="flex space-x-3">*!/*/}
-                        {/*    /!*        {['1GB', '512 GB', '256 GB', '128 GB', '64GB'].map((size, index) => (<button*!/*/}
-                        {/*    /!*            key={index}*!/*/}
-                        {/*    /!*            className={`border text-xs rounded px-3 py-1 ${size === '512 GB' ? 'border-orange text-deepOrange' : 'border-textPadded text-textPadded'}`}*!/*/}
-                        {/*    /!*        >*!/*/}
-                        {/*    /!*            {size}*!/*/}
-                        {/*    /!*        </button>))}*!/*/}
-                        {/*    /!*    </div>*!/*/}
-                        {/*    /!*</div>*!/*/}
-                        {/*</div>*/}
+                        {/* Variant Selection */}
+                        {product?.product_variant?.length > 0 && (
+                            <div className="mb-6">
+                                {product.product_variant.map((variantGroup) => (
+                                    <div key={variantGroup.variant.id} className="mb-4">
+                                        <p className="font-medium text-sm text-primary mb-2">
+                                            {variantGroup.variant.name}:
+                                            <span className="text-sm font-bold text-deepOrange ml-1">
+                                                {variantGroup.value.find((v: { id: number; }) => v.id === selectedVariants[variantGroup.variant.id])?.value ||
+                                                    `Select ${variantGroup.variant.name}`}
+                                             </span>
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {variantGroup.value.map((variantValue: { id: any; countInStock: number; value: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }) => (
+                                                <button
+                                                    key={variantValue.id}
+                                                    onClick={() => handleVariantSelect(variantGroup.variant.id, variantValue.id)}
+                                                    className={`border rounded text-xs px-3 py-1 ${
+                                                        selectedVariants[variantGroup.variant.id] === variantValue.id
+                                                            ? 'border-orange text-deepOrange bg-orange-50'
+                                                            : 'border-[#dde4f0] text-textPadded hover:border-orange'
+                                                    } ${
+                                                        variantValue.countInStock <= 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                                    }`}
+                                                    disabled={variantValue.countInStock <= 0}
+                                                >
+                                                    {variantValue.value}
+                                                    {variantValue.countInStock <= 0 && ' (Out of stock)'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Quantity */}
                         <div className={'mt-6'}>
@@ -510,14 +520,6 @@ const ProductPage = () => {
 
                         {/* Additional info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-12">
-                            {/*<div>*/}
-                            {/*    {product?.product?.sku && <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span*/}
-                            {/*        className="font-bold text-primary text-xs">SKU:</span> {product?.product?.sku}</p>}*/}
-                            {/*    <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span*/}
-                            {/*        className="font-bold text-primary text-xs">Category:</span> {product?.product?.category?.name}</p>*/}
-                            {/*    <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}><span*/}
-                            {/*        className="font-bold text-primary text-xs">Tags:</span> Blue, Smartphone</p>*/}
-                            {/*</div>*/}
                             <div>
                                 <p className="font-bold text-primary flex items-center gap-0 text-sm">Free
                                     Delivery</p>
@@ -564,60 +566,9 @@ const ProductPage = () => {
             {/* Frequently Bought Together */}
 
             <div className="p-6">
-                {/*<h2 className="text-xl lg:text-2xl font-bold mb-6">Frequently Bought Together</h2>*/}
-                {/*<div className={'flex flex-col lg:flex-row lg:items-center gap-8'}>*/}
-                {/*    <div className="flex items-center lg:gap-6 mb-6 w-full lg:w-[60%]">*/}
-                {/*        {products.map((product, index) => (*/}
-                {/*            <>*/}
-                {/*                <div key={product.id}*/}
-                {/*                     className="w-full h-full px-2 py-8 flex items-center justify-center rounded-[4px] border-4 border-[#dde4f0]">*/}
-
-                {/*                    <img src={product.img} alt={'product image'} className={'w-full lg:w-4/5 h-auto'}/>*/}
-
-                {/*                </div>*/}
-
-                {/*                {*/}
-                {/*                    products?.length !== index + 1 && (*/}
-                {/*                        <span className={'text-primary text-4xl'}>+</span>*/}
-                {/*                    )*/}
-                {/*                }*/}
-                {/*            </>*/}
-                {/*        ))}*/}
-                {/*    </div>*/}
-
-                {/*    <div className="flex flex-col gap-2">*/}
-                {/*        <p className="text-3xl text-primary font-bold">${totalPrice.toFixed(2)} <span*/}
-                {/*            className={'text-xl font-medium'}>({selectedProducts.length} items)</span></p>*/}
-                {/*        <button*/}
-                {/*            className="bg-inherit rounded-md px-16 py-1 border border-detailsBorder font-bold hover:bg-primary hover:border-none text-primary hover:text-white">Add*/}
-                {/*            To Cart*/}
-                {/*        </button>*/}
-                {/*    </div>*/}
-
-                {/*</div>*/}
-                {/*<ul className="mt-4 space-y-2">*/}
-                {/*    {products.map(product => (*/}
-                {/*        <li key={product.id} className="flex items-center gap-2">*/}
-                {/*            <input*/}
-                {/*                type="checkbox"*/}
-                {/*                checked={selectedProducts.includes(product.id)}*/}
-                {/*                onChange={() => toggleProduct(product.id)}*/}
-                {/*                className="w-4 h-4"*/}
-                {/*            />*/}
-                {/*            <span*/}
-                {/*                className={'font-medium text-primary text-sm'}> {product?.isMain && <span*/}
-                {/*                className={"font-bold"}>This Item:</span>} {product.name} - ${product.price.toFixed(2)}</span>*/}
-                {/*        </li>*/}
-                {/*    ))}*/}
-                {/*</ul>*/}
-
-                {
-
-                }
              <ProductInfo product={product}/>
 
              <RelatedProduct product={product}/>
-
 
             </div>
         </div>

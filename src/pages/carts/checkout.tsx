@@ -19,7 +19,7 @@ const PaystackCheckout = dynamic(
                 initializePayment({
                     onSuccess: () => props.onSuccess()
                 });
-            }, []);
+            }, [initializePayment, props]);
 
             return null;
         };
@@ -267,8 +267,6 @@ const CheckoutPage = () => {
 };
 export const getServerSideProps = wrapper.getServerSideProps((store) => async (context) => {
     await store.dispatch(getUserProfile());
-    // Add other necessary dispatches here if needed
-
     return {
         props: {},
     };

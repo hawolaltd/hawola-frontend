@@ -15,10 +15,6 @@ export default function Home() {
     const {products, carts} = useAppSelector(state => state.products)
     const { isAuthenticated } = useAppSelector(state => state.auth)
 
-    console.log("products:", products)
-    console.log("carts:", carts)
-    console.log("isAuthenticated:", isAuthenticated)
-
     const dispatch = useAppDispatch()
 
     useEffect(() => {
