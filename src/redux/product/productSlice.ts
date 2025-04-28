@@ -2,8 +2,8 @@ import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import productService from "@/redux/product/productService";
 import {
     AddressResponse,
-    AddToCartType,
-    CartResponse, LocalCart, OrderDetailsResponse,
+    AddToCartType, addWishListType,
+    CartResponse, deleteWishListType, LocalCart, OrderDetailsResponse,
     Product,
     ProductByIdResponse,
     ProductCategoriesResponse,
@@ -21,6 +21,9 @@ interface ProductsState {
     ordersHistory: OrderHistory;
     singleOrder: null;
     reviews: null;
+    wishLists: [];
+    wishList: null;
+    merchants: null;
     merchantReviews: MerchantReviewResponse;
     isLoading: boolean;
     error: string | null | unknown;
@@ -39,6 +42,9 @@ const initialState: ProductsState = {
     singleOrder: null,
     merchantReviews: {} as MerchantReviewResponse,
     reviews: null,
+    wishLists: [],
+    wishList: null,
+    merchants: null,
     isLoading: false,
     error: null,
     message: "",
@@ -324,8 +330,78 @@ export const getMerchantReviews = createAsyncThunk("products/merchant-reviews", 
     }
 });
 
+// get WishList
+export const getWishList = createAsyncThunk("products/get-wishList", async (_, thunkAPI) => {
+    try {
+        return await productService.getWishList();
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+// get WishList
+export const getWishListById = createAsyncThunk("products/get-wishList-id", async (slug: string, thunkAPI) => {
+    try {
+        return await productService.getWishListById(slug);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
 
 
+// add WishList
+export const addWishList = createAsyncThunk("products/add-wishList", async (payload: addWishListType, thunkAPI) => {
+    try {
+        return await productService.addWishList(payload);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+// delete WishList
+export const deleteWishList = createAsyncThunk("products/delete-wishList", async (payload: deleteWishListType, thunkAPI) => {
+    try {
+        return await productService.deleteWishList(payload);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+
+
+// get merchants
+export const getMerchants = createAsyncThunk("products/get-merchants", async (slug: string, thunkAPI) => {
+    try {
+        return await productService.getMerchants(slug);
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
 
 const productSlice = createSlice({
     name: 'products',
@@ -552,6 +628,49 @@ const productSlice = createSlice({
                 state.merchantReviews = action.payload
             })
             .addCase(getMerchantReviews.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(getWishList.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(getWishList.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.wishLists = action.payload
+            })
+            .addCase(getWishList.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(getWishListById.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(getWishListById.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.wishList = action.payload
+            })
+            .addCase(getWishListById.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(addWishList.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(addWishList.fulfilled, (state, action) => {
+                state.isLoading = false;
+            })
+            .addCase(addWishList.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(getMerchants.pending, (state) => {
+            state.isLoading = true;
+        })
+            .addCase(getMerchants.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.merchants = action.payload;
+            })
+            .addCase(getMerchants.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;

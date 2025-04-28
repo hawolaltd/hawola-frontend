@@ -6,7 +6,7 @@ import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {
     addToCarts,
-    addToCartsLocal, clearProductById,
+    addToCartsLocal, addWishList, clearProductById,
     getCarts,
     getMerchantReviews,
     getProductBySlug
@@ -17,6 +17,8 @@ import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "react-toastify";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
+import {router} from "next/client";
+import Swal from "sweetalert2";
 
 const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
@@ -29,7 +31,7 @@ const ProductPage = () => {
 
     const dispatch = useAppDispatch()
 
-    const {product, isLoading,} = useAppSelector(state => state.products)
+    const {product, isLoading, reviews, merchantReviews} = useAppSelector(state => state.products)
     const {isAuthenticated} = useAppSelector(state => state.auth)
 
     const [mainImage, setMainImage] = useState("");
@@ -68,6 +70,39 @@ const ProductPage = () => {
             y: `${Math.max(0, Math.min(100, y))}%`
         });
     };
+
+    const handleWishList = async () => {
+        try {
+            const res = await dispatch(addWishList({
+                items: product?.product?.id
+            }));
+            console.log('ghjgjkd', res)
+            if (res?.type.includes('fulfilled')) {
+                Swal.fire({
+                    title: "Added to wishlist!",
+                    icon: "success",
+                    draggable: true,
+                    showClass: {
+                        popup: `
+                              animate__animated
+                              animate__fadeInUp
+                              animate__faster
+                            `
+                    },
+                    hideClass: {
+                        popup: `
+                              animate__animated
+                              animate__fadeOutDown
+                              animate__faster
+                            `
+                    }
+
+                });
+            }
+        }catch (e) {
+
+        }
+    }
 
     const handleAddToCart = async (product: ProductByIdResponse) => {
         try {
@@ -292,20 +327,32 @@ const ProductPage = () => {
                             </div>
                         </div>
                         <div className={'flex items-center gap-4 lg:justify-end'}>
-                            <div className={'flex items-center gap-2'}>
-                                    <span
-                                        className={'flex items-center justify-center border border-[#dde4f0] p-1 rounded-[4px]'}>
-                                     <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
+
+                            <div onClick={handleWishList} className={'flex items-center gap-2'}>
+                                <span className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
+                                     <img src="/assets/love2.svg" alt="Wishlist" className="w-4 h-4"/>
                                 </span>
-                                <p className={'text-primary font-[500]'}>Add to Wish List</p>
+                                <p className={'text-primary font-[500] text-xs cursor-pointer'}>Add to Wish List</p>
                             </div>
-                            <div className={'flex items-center gap-2'}>
+
+                            {/*<div className={'flex items-center gap-2'}>*/}
+                            {/*<span*/}
+                            {/*    className={'flex items-center justify-center border border-[#dde4f0] p-1 rounded-[4px]'}>*/}
+                            {/*     <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/>*/}
+                            {/*</span>*/}
+                            {/*    <p className={'text-primary font-[500]'}>Add to Compare</p>*/}
+                            {/*</div>*/}
+
+                            <div onClick={()=>{
+                                router.push(`/merchants/${product?.product?.merchant?.slug}`)
+                            }} className={'flex items-center gap-2'}>
                             <span
-                                className={'flex items-center justify-center border border-[#dde4f0] p-1 rounded-[4px]'}>
-                                 <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/>
+                                className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
+                                 <img src={product?.product?.merchant?.logo}
+                                      className={'w-4 h-4 rounded-full'}/>
                             </span>
-                                <p className={'text-primary font-[500]'}>Add to Compare</p>
-                            </div>
+                            <p className={'text-primary font-[500] text-xs cursor-pointer'}>View Merchant Profile</p>
+                        </div>
                         </div>
                     </div>
 

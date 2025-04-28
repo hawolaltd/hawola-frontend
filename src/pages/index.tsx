@@ -9,7 +9,7 @@ import Partner from "@/components/partner/Partner";
 import TopRateProducts from "@/components/home/TopRateProducts";
 import TopSellingProducts from "@/components/home/TopSellingProducts";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getCarts, getProducts} from "@/redux/product/productSlice";
+import {getCarts, getProducts, getWishList} from "@/redux/product/productSlice";
 
 export default function Home() {
     const {products, carts} = useAppSelector(state => state.products)
@@ -19,6 +19,7 @@ export default function Home() {
 
     useEffect(() => {
         dispatch(getProducts())
+        dispatch(getWishList())
         if (isAuthenticated){
             dispatch(getCarts())
         }

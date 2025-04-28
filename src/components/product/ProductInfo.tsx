@@ -5,10 +5,42 @@ import AdditionalInformation from "@/components/product/AdditionalInformation";
 import CustomerReviews from "@/components/product/CustomerReviews";
 import {Product, ProductByIdResponse} from "@/types/product";
 import MerchantAbout from "@/components/product/MerchantAbout";
+import {useAppSelector} from "@/hook/useReduxTypes";
 
 function ProductInfo({product}:{product: ProductByIdResponse}) {
     const [tab, setTab] = useState('description')
     const [showMore, setShowMore] = useState(false)
+
+    const { merchantReviews } = useAppSelector(state => state.products);
+    const reviews = merchantReviews?.results || [];
+
+    const productInfoHeaders = [
+        {
+            title: "Description",
+            value: "description"
+        },
+
+        // {
+        //     title: "Specification",
+        //     value: "specification",
+        // },
+
+        // {
+        //     title: "Additional information",
+        //     value: "additionalInfo"
+        // },
+
+        {
+            title: `Reviews (${reviews.length})`,
+            value: "reviews",
+        },
+
+        {
+            title: "Merchant",
+            value: "merchant",
+        },
+]
+
     return (
         <div className="max-w-[1320px]  mt-8 border-b border-b-[#dde4f0] pb-10">
             <div className="flex gap-6 flex-col md:flex-row md:items-center">
@@ -64,32 +96,5 @@ function ProductInfo({product}:{product: ProductByIdResponse}) {
     );
 }
 
-const productInfoHeaders = [
-    {
-        title: "Description",
-        value: "description"
-    },
-
-    // {
-    //     title: "Specification",
-    //     value: "specification",
-    // },
-
-    // {
-    //     title: "Additional information",
-    //     value: "additionalInfo"
-    // },
-
-    {
-        title: "Reviews (2)",
-        value: "reviews",
-    },
-
-    {
-        title: "Merchant",
-        value: "merchant",
-    },
-
-]
 
 export default ProductInfo;

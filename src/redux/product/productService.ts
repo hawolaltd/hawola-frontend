@@ -1,7 +1,7 @@
 import axios from "axios";
 import {API} from "@/constant";
 import axiosInstance from "@/libs/api/axiosInstance";
-import {AddToCartType, LocalCart} from "@/types/product";
+import {AddToCartType, addWishListType, deleteWishListType, LocalCart} from "@/types/product";
 const API_URL = "products/";
 
 // get products
@@ -175,6 +175,50 @@ const getMerchantReviews = async (slug: string) => {
 };
 
 
+// get wishlist
+
+const getWishList = async () => {
+    const response = await axiosInstance.get(API + `wishlist/`);
+    console.log("getWishList:", response)
+    return response.data;
+};
+
+
+// get wishlist
+
+const getWishListById = async (slug: string) => {
+    const response = await axiosInstance.get(API + `wishlist/${slug}/`);
+    console.log("getWishListById:", response)
+    return response.data;
+};
+
+
+// add wishlist
+
+const addWishList = async (paylod: addWishListType) => {
+    const response = await axiosInstance.post(API + `wishlist/add/`, paylod);
+    console.log("addWishList:", response)
+    return response.data;
+};
+
+
+// delete wishlist
+const deleteWishList = async (paylod: deleteWishListType) => {
+    const response = await axiosInstance.post(API + `wishlist/delete/`, paylod);
+    console.log("deleteWishList:", response)
+    return response.data;
+};
+
+
+
+// get Merchants
+
+const getMerchants = async (slug: string) => {
+    const response = await axiosInstance.get(API + `merchant/${slug}/`);
+    console.log("getMerchants:", response)
+    return response.data;
+};
+
 
 const productService = {
     getProducts,
@@ -197,7 +241,12 @@ const productService = {
     getSingleOrder,
     getReviews,
     getMerchantReviews,
-    clearProductById
+    clearProductById,
+    getWishList,
+    addWishList,
+    deleteWishList,
+    getWishListById,
+    getMerchants
 };
 
 export default productService;

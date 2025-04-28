@@ -12,7 +12,7 @@ function MainHeader() {
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
     const [cart, setCart] = useState(false)
 
-    const {carts, localCart} = useAppSelector(state => state.products)
+    const {carts, localCart, wishLists} = useAppSelector(state => state.products)
     console.log('localCartAuth:', localCart)
     const [userCart, setUserCart] = useState<CartResponse>(carts)
 
@@ -395,9 +395,15 @@ function MainHeader() {
                             <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
                         </div>
                         {userInfo && ( <UserInfoDropdown/>  )}
-                        <div className="relative cursor-pointer">
+                        <div onClick={() => {
+                            if (isAuthenticated) {
+                                router.push('/wishlist')
+                            } else {
+                                router.push('/auth/login')
+                            }
+                        }}  className="relative cursor-pointer">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{wishLists?.length ?? 0}</span>
                             <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
                         </div>
                         <div onClick={()=>{
