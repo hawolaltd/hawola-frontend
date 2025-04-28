@@ -455,9 +455,6 @@ export interface LocalCartType {
 
 }
 
-export interface WishListResponse {
-
-}
 
 export interface addWishListType{
     items: number;
