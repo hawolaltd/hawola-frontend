@@ -30,7 +30,7 @@ const logout = async () => {
     localStorage.removeItem(authTokenStorageKeyName as string);
     Cookies.remove(authRefreshTokenStorageKeyName as string);
     Cookies.remove(authTokenStorageKeyName as string);
-    window.location.href = '/auth/login'
+    window.location.href = '/'
 
 };
 

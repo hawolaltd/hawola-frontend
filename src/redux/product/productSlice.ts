@@ -71,6 +71,19 @@ export const getProductById = createAsyncThunk("products/product", async (id: st
     }
 });
 
+export const clearProductById = createAsyncThunk("products/clear-product", async (_, thunkAPI) => {
+    try {
+        return await productService.clearProductById();
+    } catch (error: any) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
 
 export const getProductBySlug = createAsyncThunk("products/product-slug", async (slug: string, thunkAPI) => {
     try {
@@ -335,7 +348,7 @@ const productSlice = createSlice({
             })
             .addCase(getProducts.rejected, (state, action) => {
                 state.isLoading = false;
-                state.products = {} as ProductResponse;
+                // state.products = {} as ProductResponse;
                 state.error = true;
                 state.message = action.payload;
             }).addCase(getProductById.pending, (state) => {
@@ -347,7 +360,19 @@ const productSlice = createSlice({
             })
             .addCase(getProductById.rejected, (state, action) => {
                 state.isLoading = false;
-                state.products = {} as ProductResponse;
+                state.product = {} as ProductByIdResponse;
+                state.error = true;
+                state.message = action.payload;
+            }).addCase(clearProductById.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(clearProductById.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.product = action.payload as ProductByIdResponse;
+            })
+            .addCase(clearProductById.rejected, (state, action) => {
+                state.isLoading = false;
+                state.product = {} as ProductByIdResponse;
                 state.error = true;
                 state.message = action.payload;
             }).addCase(getProductBySlug.pending, (state) => {
@@ -359,7 +384,6 @@ const productSlice = createSlice({
             })
             .addCase(getProductBySlug.rejected, (state, action) => {
                 state.isLoading = false;
-                state.products = {} as ProductResponse;
                 state.error = true;
                 state.message = action.payload;
             }).addCase(getAllCategories.pending, (state) => {
@@ -437,7 +461,6 @@ const productSlice = createSlice({
             })
             .addCase(getAddress.rejected, (state, action) => {
                 state.isLoading = false;
-                state.products = {} as ProductResponse;
                 state.error = true;
                 state.message = action.payload;
             })

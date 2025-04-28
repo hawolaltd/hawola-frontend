@@ -12,7 +12,7 @@ interface TrendingProductsProps {
 const TrendingProducts = ({products}: TrendingProductsProps) => {
 
 
-    return (<section className="max-w-screen-2xl px-6 xl:px-0  flex gap-4 bg-[#f1f3f9] justify-center py-4">
+    return (<section className="max-w-screen-2xl px-6 xl:px-0 mx-auto  flex gap-4 bg-[#f1f3f9] justify-center py-4">
         <div className={'max-w-screen-xl w-full flex flex-col xl:flex-row gap-4'}>
             <div>
                 <div className="mx-auto text-left mb-8 w-fullsw">

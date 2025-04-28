@@ -7,6 +7,7 @@ import CartModal from "@/components/shared/CartModal";
 import {useRouter} from "next/router";
 import {CartResponse} from "@/types/product";
 import {addToCartsLocal} from "@/redux/product/productSlice";
+import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 
 const Header = ({isScrolled}: {isScrolled?: any}) => {
     const [userInfo, setUserInfo] = useState(false)
@@ -138,82 +139,50 @@ const Header = ({isScrolled}: {isScrolled?: any}) => {
 
                         {/* Icons (User, Wishlist, Cart, Settings) */}
                         <div className="flex relative space-x-6 items-center">
-                            <div onClick={() => {
-                                setUserInfo(!userInfo)
-                            }} className="cursor-pointer">
-                                <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
-                            </div>
-                            {userInfo && (
-                                <ul className="absolute right-0 -bottom-[16.5rem]  z-10 mt-2 w-48 bg-white shadow-lg border rounded-md">
-                                    <li>
-                                        <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My
-                                            Account</Link>
-                                    </li>
-
-                                    <li>
-                                        <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Order
-                                            Tracking</Link>
-                                    </li>
-
-                                    <li>
-                                        <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My
-                                            Orders</Link>
-                                    </li>
-
-                                    <li>
-                                        <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My
-                                            Wishlist</Link>
-                                    </li>
-
-                                    <li>
-                                        <Link href="#"
-                                              className="block text-primary px-4 py-2 hover:text-deepOrange">Settings</Link>
-                                    </li>
-
-                                    <li onClick={() => {
-                                        // setUserCart({} as CartResponse)
-                                        dispatch(addToCartsLocal({items: []}))
-                                        dispatch(logout())
-                                    }}>
-                                        <span
-                                            className="cursor-pointer block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</span>
-                                    </li>
-                                </ul>
-                            )}
                             <div className="relative">
+                                <div onClick={() => {
+                                    setUserInfo(!userInfo)
+                                }} className="cursor-pointer">
+                                    <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
+                                </div>
+                                {userInfo && (
+                                    <UserInfoDropdown/>
+                                     )}
+                            </div>
+                                <div className="relative">
                             <span
                                 className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
-                                <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
-                            </div>
-                            <div onClick={() => {
-                                if (isAuthenticated) {
-                                    setCart(!cart)
-                                } else {
-                                    // router.push('/auth/login')
-                                    setCart(!cart)
-                                }
+                                    <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
+                                </div>
+                                <div onClick={() => {
+                                    if (isAuthenticated) {
+                                        setCart(!cart)
+                                    } else {
+                                        // router.push('/auth/login')
+                                        setCart(!cart)
+                                    }
 
-                            }} className="relative cursor-pointer">
+                                }} className="relative cursor-pointer">
                             <span
-                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated && localCart !== null ? localCart?.items?.length ?? 0  : carts?.cart_count ?? 0}</span>
-                                <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
+                                className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated && localCart !== null ? localCart?.items?.length ?? 0 : carts?.cart_count ?? 0}</span>
+                                    <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
+
+                                </div>
+
+
+                                <div className="relative flex items-center gap-2 text-primary text-[16px]">
+                                    <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/> Compare
+                                </div>
 
                             </div>
-
-
-                            <div className="relative flex items-center gap-2 text-primary text-[16px]">
-                                <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/> Compare
-                            </div>
-
+                            {
+                                cart && <CartModal/>
+                            }
                         </div>
-                        {
-                            cart && <CartModal/>
-                        }
                     </div>
-                </div>
 
 
-                {/* Top Component End */}
+                    {/* Top Component End */}
 
                 {/* Bottom Component Start*/}
                 <div className={`bg-white border ${isScrolled ? 'hidden' : 'block'}`}>

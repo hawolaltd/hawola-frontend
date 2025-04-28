@@ -5,6 +5,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
 import 'swiper/css';
+import 'sweetalert2/src/sweetalert2.scss'
 import type { AppProps } from "next/app";
 import {PersistGate} from "redux-persist/integration/react";
 import {persistor, store} from "@/store/store";

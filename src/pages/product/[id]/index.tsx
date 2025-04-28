@@ -6,7 +6,7 @@ import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {
     addToCarts,
-    addToCartsLocal,
+    addToCartsLocal, clearProductById,
     getCarts,
     getMerchantReviews,
     getProductBySlug
@@ -16,6 +16,7 @@ import {amountFormatter} from "@/util";
 import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "react-toastify";
+import ProductSkeleton from "@/components/product/ProductSkeleton";
 
 const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
@@ -28,10 +29,10 @@ const ProductPage = () => {
 
     const dispatch = useAppDispatch()
 
-    const {product, isLoading} = useAppSelector(state => state.products)
+    const {product, isLoading,} = useAppSelector(state => state.products)
     const {isAuthenticated} = useAppSelector(state => state.auth)
 
-    const [mainImage, setMainImage] = useState(product?.product?.featured_image?.[0]?.image_url || "");
+    const [mainImage, setMainImage] = useState("");
 
     const LoadingSpinner = () => (
         <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
@@ -146,26 +147,28 @@ const ProductPage = () => {
         }
     }
 
-    const init = useCallback( async ()=>{
-        setLoadingProduct(true)
-        setLoadingReview(true)
+// Update your init function to clear previous product data:
+    const init = useCallback(async () => {
+        setLoadingProduct(true);
+        setLoadingReview(true);
         try {
-          const res = await  dispatch(getProductBySlug(query.id as string))
-            if(!res.type.includes('rejected')){
-                setLoadingProduct(false)
-                const response = await dispatch(getMerchantReviews(query.id as string))
-                if(!response.type.includes('rejected')){
-                    setLoadingReview(false)
+            // Clear previous product data before loading new one
+            dispatch(clearProductById());
+
+
+            const res = await dispatch(getProductBySlug(query.id as string));
+            if (!res.type.includes('rejected')) {
+                setLoadingProduct(false);
+                const response = await dispatch(getMerchantReviews(query.id as string));
+                if (!response.type.includes('rejected')) {
+                    setLoadingReview(false);
                 }
             }
-        }catch (e) {
-            setLoadingProduct(false)
-            setLoadingReview(false)
-        }finally {
-            setLoadingProduct(false)
-            setLoadingReview(false)
+        } catch (e) {
+            setLoadingProduct(false);
+            setLoadingReview(false);
         }
-    },[dispatch, query.id])
+    }, [dispatch, query.id]);
 
     useEffect(() => {
        init()
@@ -173,16 +176,18 @@ const ProductPage = () => {
 
     useEffect(() => {
         if (product?.product?.featured_image?.[0]?.image_url) {
-            setCurrentImage(product.product.featured_image[0].image_url);
+            setCurrentImage(product.product?.featured_image?.[0]?.image_url);
         }
         if (product?.product_images?.length) {
-            setMainImage(product.product_images[0].image_url);
+            setMainImage(product?.product_images?.[0]?.image_url);
         }
-    }, [product.product.featured_image, product.product_images]);
+    }, [product?.product?.featured_image, product?.product_images]);
+
 
     if (loadingProduct) {
-        return <LoadingSpinner />;
+        return <AuthLayout><ProductSkeleton /></AuthLayout>;
     }
+
 
     return (<AuthLayout>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
@@ -237,7 +242,7 @@ const ProductPage = () => {
                             onMouseMove={handleMouseMove}
                         >
                             <img
-                                src={mainImage || product?.product?.featured_image?.[0]?.image_url || "/imgs/page/product/img-gallery-1.jpg"}
+                                src={mainImage || product?.product?.featured_image?.[0]?.image_url}
                                 alt="Product"
                                 className={`absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 ${
                                     isHovered ? "scale-150" : "scale-100"
@@ -255,18 +260,36 @@ const ProductPage = () => {
                 {/* Product Image ends */}
                 <div style={{flex: 4}} className=" p-1 flex flex-col mt-8 lg:mt-0">
                     {/* Product Details */}
-                    <h1 className="text-xl lg:text-3xl font-bold text-primary mb-6 capitalize">{(product?.product?.name)}</h1>
+                    <h1 className="text-xl lg:text-3xl font-bold text-primary mb-6 capitalize">
+                        {/*{ product?.product?.name}*/}
+                        {loadingProduct ? (
+                        <div className="h-8 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                    ) : (
+                        product?.product?.name
+                    )}
+                    </h1>
 
                     <div
                         className={'flex flex-col lg:flex-row lg:items-center mb-4  lg:justify-between w-full border-b border-b-[#dde4f0] pb-4'}>
                         <div>
-                            <p className={'text-primary text-sm font-bold'}><span
-                                className={'text-[#8c9ec5] text-xs font-bold'}>by</span> {product?.product?.merchant?.store_name}
+                            <p className="text-primary text-sm font-bold">
+                                <span className="text-[#8c9ec5] text-xs font-bold">by</span>{" "}
+                                {loadingProduct ? (
+                                    <span className="inline-block h-4 w-32 bg-gray-200 rounded animate-pulse"></span>
+                                ) : (
+                                    product?.product?.merchant?.store_name
+                                )}
+
+                                {/*{product?.product?.merchant?.store_name}*/}
                             </p>
                             <div className="flex items-center text-xs text-[#8c9ec5] font-bold">
-                                <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
+                                {loadingProduct ? (
+                                    <span className="inline-block h-4 w-24 bg-gray-200 rounded animate-pulse"></span>
+                                ) : (
+                                    <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
+                                )}
+                                {/*{<span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>}*/}
                             </div>
-
                         </div>
                         <div className={'flex items-center gap-4 lg:justify-end'}>
                             <div className={'flex items-center gap-2'}>
@@ -532,7 +555,7 @@ const ProductPage = () => {
                             {/* Social icons */}
                             <div className="flex gap-4 items-end ">
                                 <span className="text-primary font-bold">Share</span>
-                                <Link href={product?.product?.merchant?.facebook}>
+                                <Link href={product?.product?.merchant?.facebook ?? ''}>
                                     <div className={'pt-1 pl-1 bg-primary'}>
                                         <FaFacebookF className="text-white cursor-pointer"/>
                                     </div>
@@ -542,12 +565,12 @@ const ProductPage = () => {
                                         <FaLinkedinIn className="text-white cursor-pointer"/>
                                     </div>
                                 </Link>
-                                <Link href={product?.product?.merchant?.twitter}>
+                                <Link href={product?.product?.merchant?.twitter ?? ''}>
                                     <div className={''}>
                                         <FaTwitter className="text-primary cursor-pointer"/>
                                     </div>
                                 </Link>
-                                <Link href={product?.product?.merchant?.instagram}>
+                                <Link href={product?.product?.merchant?.instagram ?? ''}>
                                     <div className={'p-[0.1rem] rounded-[4px] bg-primary'}>
                                         <FaInstagram className="text-white cursor-pointer"/>
                                     </div>

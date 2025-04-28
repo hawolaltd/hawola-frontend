@@ -5,6 +5,7 @@ import {LocalCartItem, Product, ProductByIdResponse} from "@/types/product";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
 import {toast} from "react-toastify";
+import Swal from 'sweetalert2'
 
 function ProductCard({product}:{product: Product}) {
     const router = useRouter()
@@ -42,7 +43,47 @@ function ProductCard({product}:{product: Product}) {
 
                 if (res?.type.includes('fulfilled')) {
                     dispatch(getCarts());
-                    toast.success('Added to cart');
+                    // toast.success('Added to cart');
+                    Swal.fire({
+                        title: "Added to cart!",
+                        icon: "success",
+                        draggable: true,
+                        showClass: {
+                            popup: `
+                              animate__animated
+                              animate__fadeInUp
+                              animate__faster
+                            `
+                        },
+                        hideClass: {
+                            popup: `
+                              animate__animated
+                              animate__fadeOutDown
+                              animate__faster
+                            `
+                        }
+
+                    });
+                }else {
+                    Swal.fire({
+                        title: "Failed to add to cart",
+                        icon: "error",
+                        draggable: true,
+                        showClass: {
+                            popup: `
+                              animate__animated
+                              animate__fadeInUp
+                              animate__faster
+                            `
+                        },
+                        hideClass: {
+                            popup: `
+                              animate__animated
+                              animate__fadeOutDown
+                              animate__faster
+                            `
+                        }
+                    });
                 }
             } else {
                 // Get current cart from localStorage or initialize empty array
@@ -91,11 +132,49 @@ function ProductCard({product}:{product: Product}) {
                     }))
                 }));
 
-                toast.success('Added to cart');
+                // toast.success('Added to cart');
+                Swal.fire({
+                    title: "Added to cart!",
+                    icon: "success",
+                    draggable: true,
+                    showClass: {
+                        popup: `
+                              animate__animated
+                              animate__fadeInUp
+                              animate__faster
+                            `
+                    },
+                    hideClass: {
+                        popup: `
+                              animate__animated
+                              animate__fadeOutDown
+                              animate__faster
+                            `
+                    }
+                });
             }
         } catch (e) {
             console.error("Error adding to cart:", e);
-            toast.error("Failed to add to cart");
+            // toast.error("Failed to add to cart");
+            Swal.fire({
+                title: "Failed to add to cart",
+                icon: "error",
+                draggable: true,
+                showClass: {
+                    popup: `
+                              animate__animated
+                              animate__fadeInUp
+                              animate__faster
+                            `
+                },
+                hideClass: {
+                    popup: `
+                              animate__animated
+                              animate__fadeOutDown
+                              animate__faster
+                            `
+                }
+            });
         }
     }
 

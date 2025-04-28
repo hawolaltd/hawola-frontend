@@ -20,6 +20,12 @@ const getProductById = async (id: string) => {
     return response.data;
 };
 
+// clear ProductById
+const clearProductById = async () => {
+
+    return {};
+};
+
 
 // get ProductBy slug
 const getProductBySlug = async (slug: string) => {
@@ -170,7 +176,7 @@ const getMerchantReviews = async (slug: string) => {
 
 
 
-const authService = {
+const productService = {
     getProducts,
     getProductById,
     getAllCategories,
@@ -190,7 +196,8 @@ const authService = {
     getOrderHistory,
     getSingleOrder,
     getReviews,
-    getMerchantReviews
+    getMerchantReviews,
+    clearProductById
 };
 
-export default authService;
+export default productService;

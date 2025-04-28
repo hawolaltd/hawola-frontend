@@ -7,7 +7,7 @@ const Footer = () => {
     return (
         <>
             {router.pathname === '/' && <SubscribeSection/>}
-            <footer className="bg-gray-100 py-10 text-gray-600 text-sm">
+            <footer className="bg-gray-100 py-10  text-gray-600 text-sm">
                 <div className="container mx-auto px-4 lg:grid-cols-2 grid xl:grid-cols-5 gap-4">
                     <div className={'flex flex-col gap-4'}>
                         <h4 className="font-bold text-primary">Contact</h4>

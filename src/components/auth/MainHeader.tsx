@@ -6,6 +6,7 @@ import {CartResponse} from "@/types/product";
 import {logout} from "@/redux/auth/authSlice";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCartsLocal} from "@/redux/product/productSlice";
+import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 
 function MainHeader() {
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
@@ -393,33 +394,7 @@ function MainHeader() {
                         }}>
                             <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
                         </div>
-                        {userInfo && (
-                            <ul className="absolute right-0 -bottom-[16.5rem]  z-10 mt-2 w-48 bg-white shadow-lg border rounded-md">
-                                <li>
-                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Account</Link>
-                                </li>
-
-                                <li>
-                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Order Tracking</Link>
-                                </li>
-
-                                <li>
-                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Orders</Link>
-                                </li>
-
-                                <li>
-                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">My Wishlist</Link>
-                                </li>
-
-                                <li>
-                                    <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">Settings</Link>
-                                </li>
-
-                                <li>
-                                    <Link href="/auth/login" className="block text-primary px-4 py-2 hover:text-deepOrange">Sign Out</Link>
-                                </li>
-                            </ul>
-                        )}
+                        {userInfo && ( <UserInfoDropdown/>  )}
                         <div className="relative cursor-pointer">
                             <span
                                 className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
