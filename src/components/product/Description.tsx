@@ -62,13 +62,13 @@ function Description({showMore, setShowMore,product}:DescriptionProps) {
             {/*    </>*/}
             {/*}*/}
 
-            <div onClick={() => {
-                setShowMore(!showMore)
-            }} className={'flex items-center justify-center'}>
-                <button
-                    className="mt-8 font-bold block bg-inherit text-primary border border-textPadded hover:bg-textPadded hover:border-none hover:text-white px-[5rem] py-1 rounded-lg">{showMore ? "Less" : "More Details"}
-                </button>
-            </div>
+            {/*<div onClick={() => {*/}
+            {/*    setShowMore(!showMore)*/}
+            {/*}} className={'flex items-center justify-center'}>*/}
+            {/*    <button*/}
+            {/*        className="mt-8 font-bold block bg-inherit text-primary border border-textPadded hover:bg-textPadded hover:border-none hover:text-white px-[5rem] py-1 rounded-lg">{showMore ? "Less" : "More Details"}*/}
+            {/*    </button>*/}
+            {/*</div>*/}
 
         </div>
     );
