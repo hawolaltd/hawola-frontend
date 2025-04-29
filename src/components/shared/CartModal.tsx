@@ -10,12 +10,10 @@ const CartModal = () => {
     const { isAuthenticated } = useAppSelector(state => state.auth)
 
     const {carts, localCart} = useAppSelector(state => state.products)
-    console.log("cartscartscartscarts:", carts)
-    console.log("localCartlocalCartlocalCartlocalCart:", localCart)
 
     const totalPrice = (carts?.cart_items)?.reduce((sum, item) => sum + +(item?.product?.price) * item?.qty, 0);
     const totalLocalPrice = (localCart?.items)?.reduce((sum, item) => sum + +(item?.product?.price) * item?.qty, 0);
-    console.log("totalLocalPrice:", totalLocalPrice)
+
     return (
         <div className="bg-white rounded-br-md rounded-bl-md p-4 w-96 border border-detailsBorder" style={{
             position: "absolute",
@@ -29,7 +27,7 @@ const CartModal = () => {
                         <Image src={item?.product?.featured_image?.[0]?.image?.thumbnail} alt={"product"} width={60} height={60} className="rounded-md" />
                         <div className="flex-1">
                             <p className="font-bold text-primary text-sm">{item?.product?.name}</p>
-                            <p className="text-deepOrange font-bold text-sm">{item?.qty} x ${amountFormatter((+(item?.product?.price)).toFixed(2))}</p>
+                            <p className="text-deepOrange font-bold text-sm">{item?.qty} x N{amountFormatter((+(item?.product?.price)).toFixed(2))}</p>
                         </div>
                     </div>
                 )) : localCart?.items?.map((item) => (
@@ -37,7 +35,7 @@ const CartModal = () => {
                         <Image src={item?.product?.featured_image?.[0]?.image?.thumbnail} alt={"product"} width={60} height={60} className="rounded-md" />
                         <div className="flex-1">
                             <p className="font-bold text-primary text-sm">{item?.product?.name}</p>
-                            <p className="text-deepOrange font-bold text-sm">{item?.qty} x ${amountFormatter((+(item?.product?.price)).toFixed(2))}</p>
+                            <p className="text-deepOrange font-bold text-sm">{item?.qty} x N{amountFormatter((+(item?.product?.price)).toFixed(2))}</p>
                         </div>
                     </div>
                 ))}
@@ -47,7 +45,7 @@ const CartModal = () => {
 
             <div className="flex justify-between font-semibold text-lg">
                 <p>Total</p>
-                <p className="text-blue-500">${amountFormatter((carts?.cart_items ? totalPrice : totalLocalPrice)?.toFixed(1))}</p>
+                <p className="text-blue-500">N{amountFormatter((carts?.cart_items ? totalPrice : totalLocalPrice)?.toFixed(1))}</p>
             </div>
 
             <div className="mt-4 flex space-x-3 justify-between">

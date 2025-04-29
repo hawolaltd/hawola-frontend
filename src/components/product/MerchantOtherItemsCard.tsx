@@ -29,8 +29,8 @@ function MerchantOtherItemsCard({product}:{product: MerchantOtherProduct}) {
                             fill="#FFB067"/>
                     </svg>))}<span className={'text-[10px] text-textPadded font-normal'}>{(product?.numReviews)}</span>
                 </div>
-                <p className="text-lg font-bold text-primary">${amountFormatter(product.discount_price)} <span
-                    className={'line-through text-xs text-textPadded'}> ${amountFormatter(product?.price)}</span></p>
+                <p className="text-lg font-bold text-primary">N{amountFormatter(product.discount_price)} <span
+                    className={'line-through text-xs text-textPadded'}>N{amountFormatter(product?.price)}</span></p>
                 <button
                     className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full">Add
                     to Cart

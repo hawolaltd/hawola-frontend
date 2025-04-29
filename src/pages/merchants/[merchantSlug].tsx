@@ -139,23 +139,25 @@ export default function MerchantPage() {
             <Head>
                 <title>{merchant.store_name} | Merchant</title>
                 <meta name="description" content={merchant.about.substring(0, 160)} />
-                <style>{`
-          .merchant-primary {
-            background-color: ${primaryColor};
-          }
-          .merchant-primary-text {
-            color: ${primaryColor};
-          }
-          .merchant-primary-border {
-            border-color: ${primaryColor};
-          }
-          .merchant-primary-hover:hover {
-            background-color: ${hexToRgba(primaryColor, 0.9)};
-          }
-          .merchant-light-bg {
-            background-color: ${lighterBg};
-          }
-        `}</style>
+                <style>
+                    {`
+                          .merchant-primary {
+                            background-color: ${primaryColor};
+                          }
+                          .merchant-primary-text {
+                            color: ${primaryColor};
+                          }
+                          .merchant-primary-border {
+                            border-color: ${primaryColor};
+                          }
+                          .merchant-primary-hover:hover {
+                            background-color: ${hexToRgba(primaryColor, 0.9)};
+                          }
+                          .merchant-light-bg {
+                            background-color: ${lighterBg};
+                          }
+                    `}
+                </style>
             </Head>
 
             {/* Banner Section */}
@@ -288,7 +290,7 @@ export default function MerchantPage() {
                                 </div>
 
                                 <div className="flex items-center mt-4">
-                                    {!merchant.is_verified && (
+                                    {/*{!merchant.is_verified && (*/}
                                         <span className="merchant-light-bg merchant-primary-text text-xs font-semibold mr-2 px-2.5 py-0.5 rounded flex items-center">
                                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd"
@@ -297,7 +299,7 @@ export default function MerchantPage() {
                                           </svg>
                                                 Verified
                                         </span>
-                                    )}
+                                    {/*)}*/}
                                     {/*{merchant.is_allowed_to_stream && (*/}
                                     {/*    <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center">*/}
                                     {/*      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">*/}
@@ -374,7 +376,7 @@ export default function MerchantPage() {
                                                     <h3 className="font-medium text-lg mb-1">Sample Product</h3>
                                                     <p className="text-gray-600 text-sm mb-2">Sample description</p>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="font-bold">$99.99</span>
+                                                        <span className="font-bold">N99.99</span>
                                                         <button
                                                             className="px-3 py-1 rounded merchant-primary merchant-primary-hover text-white text-sm">
                                                             Add to Cart

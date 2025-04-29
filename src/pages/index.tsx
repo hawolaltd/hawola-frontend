@@ -14,14 +14,15 @@ import {getCarts, getProducts, getWishList} from "@/redux/product/productSlice";
 export default function Home() {
     const {products, carts} = useAppSelector(state => state.products)
     const { isAuthenticated } = useAppSelector(state => state.auth)
-
+    console.log("isAuthenticated:", isAuthenticated)
     const dispatch = useAppDispatch()
 
     useEffect(() => {
         dispatch(getProducts())
-        dispatch(getWishList())
+
         if (isAuthenticated){
             dispatch(getCarts())
+            dispatch(getWishList())
         }
     }, [dispatch, isAuthenticated]);
 

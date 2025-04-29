@@ -41,8 +41,8 @@ const login = async (userData: LoginFormType) => {
     if (response.data) {
         Cookies.set(authTokenStorageKeyName as string, response.data.access)
         Cookies.set(authRefreshTokenStorageKeyName as string, response.data.refresh)
-        localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
-        localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
+        // localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
+        // localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
     }
 
     return response.data;
