@@ -52,9 +52,10 @@ export interface UserProfileResponse {
 }
 
 export interface UpdateProfileDataType {
-   phone_number: string;
-   gender: string;
-   username: string;
-   last_name: string;
-   first_name: string;
+   phone_number?: string;
+   gender?: string;
+   username?: string;
+   last_name?: string;
+   first_name?: string;
+   email?: string;
 }

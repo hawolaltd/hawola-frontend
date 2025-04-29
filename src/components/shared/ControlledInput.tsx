@@ -31,15 +31,11 @@ const ControlledInput = <TFieldValues extends FieldValues = FieldValues>({
                                                                              placeholder,
                                                                              defaultValue,
                                                                          }: ControlledInputProps<TFieldValues>) => {
-    // Default Tailwind classes
     const defaultClasses = `w-full mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none ${
         errors[name] ? 'border-red-500' : ''
-    }`;
+    } ${type === 'file' ? 'cursor-pointer' : ''}`;
 
-    // Combine default classes with user-provided classes
     const inputClasses = `${defaultClasses} ${className}`;
-
-    // Safely get the error message as a string
     const errorMessage = errors[name]?.message as string | undefined;
 
     return (
@@ -53,13 +49,26 @@ const ControlledInput = <TFieldValues extends FieldValues = FieldValues>({
                 rules={rules}
                 defaultValue={defaultValue}
                 render={({ field }) => (
-                    <input
-                        {...field}
-                        id={name}
-                        type={type}
-                        placeholder={placeholder}
-                        className={inputClasses}
-                    />
+                    type === 'file' ? (
+                        <input
+                            {...field}
+                            id={name}
+                            type="file"
+                            onChange={(e) => {
+                                field.onChange(e.target.files);
+                            }}
+                            className={inputClasses}
+                            value={undefined} // Clear the value prop for file inputs
+                        />
+                    ) : (
+                        <input
+                            {...field}
+                            id={name}
+                            type={type}
+                            placeholder={placeholder}
+                            className={inputClasses}
+                        />
+                    )
                 )}
             />
             {errorMessage && (
@@ -68,5 +77,4 @@ const ControlledInput = <TFieldValues extends FieldValues = FieldValues>({
         </div>
     );
 };
-
 export default ControlledInput;

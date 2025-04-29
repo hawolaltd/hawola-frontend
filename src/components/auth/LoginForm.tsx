@@ -8,6 +8,7 @@ import {login, register} from "@/redux/auth/authSlice";
 import {toast} from "react-toastify";
 import {useRouter} from "next/router";
 import {addToCarts, addToCartsLocal} from "@/redux/product/productSlice";
+import Swal from "sweetalert2";
 
 export default function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
@@ -31,7 +32,26 @@ export default function LoginForm() {
         console.log(res)
 
         if (res?.type.includes('fulfilled')){
-            toast.success("Welcome Back to HAWOLA")
+            // toast.success("Welcome Back to HAWOLA")
+            Swal.fire({
+                title: "Welcome Back to HAWOLA!",
+                icon: "success",
+                draggable: true,
+                showClass: {
+                    popup: `
+                              animate__animated
+                              animate__fadeInUp
+                              animate__faster
+                            `
+                },
+                hideClass: {
+                    popup: `
+                              animate__animated
+                              animate__fadeOutDown
+                              animate__faster
+                            `
+                }
+            });
             if (localCart?.items?.length > 0){
                 dispatch( addToCarts({
                     items: localCart?.items.map(cart => ({

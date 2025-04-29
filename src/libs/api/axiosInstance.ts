@@ -61,7 +61,6 @@ const refreshTokenRequest = async (): Promise<boolean> => {
 // Response Interceptor
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
-        console.log("AxiosResponse:", response)
        return  response
     },
     async (error: AxiosError) => {

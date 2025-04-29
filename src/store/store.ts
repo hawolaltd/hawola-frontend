@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import authReducer from '@/redux/auth/authSlice';
 import productsReducer from '@/redux/product/productSlice';
 import generalReducer from '@/redux/general/generalSlice';
+import disputesReducer from '@/redux/disputes/disputeSlice';
 import {FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE} from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import {createWrapper} from "next-redux-wrapper";
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
     auth: authReducer,
     products: productsReducer,
     general: generalReducer,
+    disputes: disputesReducer,
 });
 
 

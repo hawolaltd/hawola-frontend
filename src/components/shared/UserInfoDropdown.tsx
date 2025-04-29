@@ -15,7 +15,7 @@ function UserInfoDropdown() {
                 isAuthenticated ?
                     <ul className={`absolute -right-20 ${isAuthenticated ? '-bottom-[17.2rem]' : 'bottom-0'} z-10 mt-2 w-48 bg-white shadow-lg border rounded-md`}>
                         <li>
-                            <Link href="#"
+                            <Link href="/account"
                                   className="block text-primary px-4 py-2 hover:text-deepOrange">My
                                 Account</Link>
                         </li>
@@ -27,13 +27,13 @@ function UserInfoDropdown() {
                         </li>
 
                         <li>
-                            <Link href="#"
+                            <Link href="/order/order-history"
                                   className="block text-primary px-4 py-2 hover:text-deepOrange">My
                                 Orders</Link>
                         </li>
 
                         <li>
-                            <Link href="#"
+                            <Link href="/wishlist"
                                   className="block text-primary px-4 py-2 hover:text-deepOrange">My
                                 Wishlist</Link>
                         </li>

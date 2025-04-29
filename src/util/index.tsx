@@ -120,3 +120,7 @@ export const copyToClipboard = async (text: string) => {
         console.error('Failed to copy text:', err);
     }
 };
+
+
+export const capitalize = (s: any) => (s && String(s[0]).toUpperCase() + String(s).slice(1)) || ""
+
