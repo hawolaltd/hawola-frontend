@@ -11,12 +11,14 @@ import {PersistGate} from "redux-persist/integration/react";
 import {persistor, store} from "@/store/store";
 import {Provider} from "react-redux";
 import {ToastContainer} from "react-toastify";
+import { Toaster } from 'sonner'
 
 export default function App({ Component, pageProps }: AppProps) {
   return <PersistGate persistor={persistor}>
     <Provider store={store}>
         <Component {...pageProps} />
         <ToastContainer/>
+        <Toaster/>
     </Provider>
   </PersistGate>
 

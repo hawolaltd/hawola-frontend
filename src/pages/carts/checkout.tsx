@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { amountFormatter } from '@/util';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { updatePayment } from "@/redux/product/productSlice";
 import dynamic from 'next/dynamic';
 import { getUserProfile } from "@/redux/auth/authSlice";

@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import {AxiosRequestConfig} from "axios";
 import {authRefreshTokenStorageKeyName, authTokenStorageKeyName} from "@/constant";
 import Cookies from "js-cookie";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 
 export const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 

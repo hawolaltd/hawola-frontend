@@ -7,7 +7,7 @@ import {
     UserProfileResponse
 } from "@/types/auth";
 import authService from "@/redux/auth/authService";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 import {ChangePasswordType} from "@/types/auth";
 
 interface AuthState {

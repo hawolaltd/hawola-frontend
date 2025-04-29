@@ -15,7 +15,7 @@ import {useRouter} from "next/router";
 import {amountFormatter} from "@/util";
 import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import {router} from "next/client";
 import Swal from "sweetalert2";

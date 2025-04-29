@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useAppSelector, useAppDispatch } from "@/hook/useReduxTypes";
 import {getStateLocations} from "@/redux/general/generalSlice";
 import {addAddress, getAddress} from "@/redux/product/productSlice";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 import {AddressData} from "@/types/product";
 
 type ShippingFormValues = {

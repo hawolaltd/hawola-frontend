@@ -6,7 +6,7 @@ import React, {useState} from "react";
 import DeleteModal from "@/components/shared/Delete";
 import {useAppDispatch} from "@/hook/useReduxTypes";
 import {addToCarts, deleteAddress, getAddress, getCarts} from "@/redux/product/productSlice";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 
 const OrderSummary = ({
                           subtotal,

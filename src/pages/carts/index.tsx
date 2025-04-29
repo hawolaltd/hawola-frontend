@@ -3,7 +3,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import ProductCard from "@/components/product/ProductCard";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 import {addOrder, deleteCart, getAddress, getCarts, updateCart} from "@/redux/product/productSlice";
 import DeleteModal from "@/components/shared/Delete";
 import {AddressData, CartItem} from "@/types/product";

@@ -4,7 +4,7 @@ import {useForm} from "react-hook-form";
 import {ForgotPasswordConfirmFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {resetPassword} from "@/redux/auth/authSlice";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 import {useRouter} from "next/router";
 
 export default function ResetPasswordForm() {

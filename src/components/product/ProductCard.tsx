@@ -4,9 +4,8 @@ import {amountFormatter} from "@/util";
 import {LocalCartItem, Product, ProductByIdResponse} from "@/types/product";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
-import {toast} from "react-toastify";
-import Swal from 'sweetalert2'
 import Link from "next/link";
+import {toast} from "sonner";
 
 function ProductCard({product}:{product: Product}) {
     const router = useRouter()
@@ -44,47 +43,10 @@ function ProductCard({product}:{product: Product}) {
 
                 if (res?.type.includes('fulfilled')) {
                     dispatch(getCarts());
-                    // toast.success('Added to cart');
-                    Swal.fire({
-                        title: "Added to cart!",
-                        icon: "success",
-                        draggable: true,
-                        showClass: {
-                            popup: `
-                              animate__animated
-                              animate__fadeInUp
-                              animate__faster
-                            `
-                        },
-                        hideClass: {
-                            popup: `
-                              animate__animated
-                              animate__fadeOutDown
-                              animate__faster
-                            `
-                        }
+                    toast.success('Added to cart');
 
-                    });
                 }else {
-                    Swal.fire({
-                        title: "Failed to add to cart",
-                        icon: "error",
-                        draggable: true,
-                        showClass: {
-                            popup: `
-                              animate__animated
-                              animate__fadeInUp
-                              animate__faster
-                            `
-                        },
-                        hideClass: {
-                            popup: `
-                              animate__animated
-                              animate__fadeOutDown
-                              animate__faster
-                            `
-                        }
-                    });
+                    toast('error')
                 }
             } else {
                 // Get current cart from localStorage or initialize empty array
@@ -133,49 +95,13 @@ function ProductCard({product}:{product: Product}) {
                     }))
                 }));
 
-                // toast.success('Added to cart');
-                Swal.fire({
-                    title: "Added to cart!",
-                    icon: "success",
-                    draggable: true,
-                    showClass: {
-                        popup: `
-                              animate__animated
-                              animate__fadeInUp
-                              animate__faster
-                            `
-                    },
-                    hideClass: {
-                        popup: `
-                              animate__animated
-                              animate__fadeOutDown
-                              animate__faster
-                            `
-                    }
-                });
+                toast.success('Added to cart');
+
             }
         } catch (e) {
             console.error("Error adding to cart:", e);
-            // toast.error("Failed to add to cart");
-            Swal.fire({
-                title: "Failed to add to cart",
-                icon: "error",
-                draggable: true,
-                showClass: {
-                    popup: `
-                              animate__animated
-                              animate__fadeInUp
-                              animate__faster
-                            `
-                },
-                hideClass: {
-                    popup: `
-                              animate__animated
-                              animate__fadeOutDown
-                              animate__faster
-                            `
-                }
-            });
+            toast.error("Failed to add to cart");
+
         }
     }
 

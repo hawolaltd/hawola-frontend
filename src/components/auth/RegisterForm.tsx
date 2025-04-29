@@ -4,7 +4,7 @@ import {RegisterFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {register} from "@/redux/auth/authSlice";
 import ControlledInput from "@/components/shared/ControlledInput";
-import {toast} from "react-toastify";
+import {toast} from "sonner";
 import {useRouter} from "next/router";
 
 function RegisterForm() {
