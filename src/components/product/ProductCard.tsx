@@ -6,6 +6,7 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
 import {toast} from "react-toastify";
 import Swal from 'sweetalert2'
+import Link from "next/link";
 
 function ProductCard({product}:{product: Product}) {
     const router = useRouter()
@@ -191,11 +192,14 @@ function ProductCard({product}:{product: Product}) {
             </div>
             <div className="flex flex-col gap-2">
                 <h3 className="text-[10px] text-textPadded font-semibold">{product.merchant?.store_name}</h3>
-                <h3 className="text-xs font-semibold text-primary" onClick={() => {
-                    router.push(`product/${product?.slug}`)
-                }}>{product.name}</h3>
+                <Link href={`product/${product?.slug}`}>
+                    <h3 className="text-xs font-semibold text-primary" onClick={() => {
+                        // router.push(`product/${product?.slug}`)
+                    }}>{product.name}</h3>
+                </Link>
                 <div className={'flex items-center gap-1'}>
-                    {Array.from((product?.rating ?? 0)).map((star, key) => (<svg className={'w-4 h-4'} key={key} viewBox="0 0 24 24"
+                    {Array.from((product?.rating ?? 0)).map((star, key) => (
+                        <svg className={'w-4 h-4'} key={key} viewBox="0 0 24 24"
                                                        xmlns="http://www.w3.org/2000/svg">
                         <path d="m0 0h24v24h-24z" fill="#fff" opacity="0"
                               transform="matrix(0 1 -1 0 24 0)"/>

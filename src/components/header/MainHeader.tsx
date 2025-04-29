@@ -148,16 +148,19 @@ const Header = ({isScrolled}: { isScrolled?: any }) => {
                         </div>
 
                         {/* Wishlist */}
-                        <div onClick={() => {
-                            if (isAuthenticated) {
-                                router.push('/wishlist')
-                            } else {
-                                router.push('/auth/login')
-                            }
-                        }} className="relative cursor-pointer">
-                            <span className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{wishLists?.length ?? 0}</span>
-                            <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
-                        </div>
+                        <Link href={isAuthenticated ? `/wishlist` : `/auth/login`}>
+                            <div onClick={() => {
+                                // if (isAuthenticated) {
+                                //     router.push('/wishlist')
+                                // } else {
+                                //     router.push('/auth/login')
+                                // }
+                            }} className="relative cursor-pointer">
+                                <span
+                                    className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{wishLists?.length ?? 0}</span>
+                                <img src="/assets/love2.svg" alt="Wishlist" className="w-6 h-6"/>
+                            </div>
+                        </Link>
 
                         {/* Cart */}
                         <div onClick={() => {
