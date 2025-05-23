@@ -60,7 +60,7 @@ const InventoryManagement = () => {
           <input
             type="number"
             value={threshold}
-            onChange={(e) => setThreshold(Number(e.target.value))}
+            onChange={(e) => setThreshold((e.target.value as unknown) as number)}
             className="w-20 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
             min="1"
           />
@@ -161,11 +161,12 @@ const InventoryManagement = () => {
                     {editingProduct?.id === product.id ? (
                       <input
                         type="number"
-                        value={editingProduct.quantity}
+                        value={editingProduct?.quantity}
                         onChange={(e) =>
                           setEditingProduct({
+                            id: 0,
                             ...editingProduct,
-                            quantity: Number(e.target.value),
+                            quantity: (e.target.value) as unknown as number
                           })
                         }
                         className="w-20 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
@@ -202,7 +203,7 @@ const InventoryManagement = () => {
                           onClick={() =>
                             handleUpdateStock(
                               product.id,
-                              editingProduct.quantity
+                              editingProduct?.quantity as number
                             )
                           }
                           className="text-green-600 hover:text-green-900"
