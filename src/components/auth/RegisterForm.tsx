@@ -6,6 +6,7 @@ import {register} from "@/redux/auth/authSlice";
 import ControlledInput from "@/components/shared/ControlledInput";
 import {toast} from "sonner";
 import {useRouter} from "next/router";
+import {normalizeErrors} from "@/util";
 
 function RegisterForm() {
 
@@ -17,7 +18,7 @@ function RegisterForm() {
 
     const dispatch = useAppDispatch()
 
-    const {isLoading} = useAppSelector(state => state.auth)
+    const {isLoading, message} = useAppSelector(state => state.auth)
 
     const terms = useWatch({
         control, name: 'terms',
@@ -42,6 +43,13 @@ function RegisterForm() {
             reset()
             setRegSuccess(true)
             // router.push('/auth/login')
+        }else {
+            const errorMessage = normalizeErrors(message)
+            toast.error(errorMessage, {style: {
+                    background: "#ef4444",
+                    color: "white",
+                },}
+            )
         }
 
         console.log(res)

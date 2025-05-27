@@ -56,15 +56,11 @@ export const register = createAsyncThunk(
     try {
       return await authService.register(data);
     } catch (error: any) {
-      console.log("error from slice", error);
       const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.error ||
-        error.toString();
-      toast.error(message);
+          error.response.data ||
+          error.response.data.message ||
+          error.message ||
+          error.toString();
 
       return thunkAPI.rejectWithValue(message);
     }
