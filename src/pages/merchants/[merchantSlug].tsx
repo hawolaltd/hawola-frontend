@@ -2,6 +2,9 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import AuthLayout from "@/components/layout/AuthLayout";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {getMerchants} from "@/redux/product/productSlice";
+import {capitalize, formatCurrency} from "@/util";
 
 type Merchant = {
     is_verified: boolean;
@@ -49,64 +52,17 @@ type Merchant = {
 export default function MerchantPage() {
     const router = useRouter();
     const { merchantSlug } = router.query;
-    const [merchant, setMerchant] = useState<Merchant | null>(null);
-    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('products');
+    const dispatch = useAppDispatch()
+    const { merchants, isLoading } = useAppSelector(state => state.products);
+
+    console.log("merchants", merchants)
 
     useEffect(() => {
-        // In a real app, you would fetch merchant data based on the slug
-        // For this example, we'll use the sample data you provided
-        if (merchantSlug) {
-            // Simulate API fetch
-            setTimeout(() => {
-                setMerchant({
-                    is_verified: true,
-                    id: 2,
-                    state: {
-                        name: "Abuja"
-                    },
-                    location: {
-                        name: "Wuse"
-                    },
-                    market: {
-                        name: "Wuse ii",
-                        help_text: "Merchant of"
-                    },
-                    merchant_level: {
-                        name: "Starter"
-                    },
-                    store_name: "Macky Electronics",
-                    store_page_title: "Products in our store",
-                    store_page_subtitle: "Exclusive products in our store",
-                    logo: "https://odinwo-static.s3.amazonaws.com/merchantlogo/renewable-energy_bIjykAa.png",
-                    default_banner: "https://odinwo-static.s3.amazonaws.com/merchantbanners/banner5_v1s1ch2_s4IDlmO.jpg",
-                    image_ppoi: "(0.5, 0.5)",
-                    primary_color: "#88AA17",
-                    refund_policy: "Thank you for shopping with Macky Electronics. We strive to provide you with the best shopping experience. If you are not satisfied with your purchase, we are here to help.\r\n\r\n**1. Eligibility for Refunds**  \r\nRefunds are issued under the following conditions:\r\n- The item is defective, damaged, or incorrect.\r\n- The item does not match the description provided by the seller.\r\n- The order was not delivered within the specified timeframe.\r\n- The return request is made within [X] days of receiving the item.\r\n\r\n**2. Non-Refundable Items**  \r\nCertain items are non-refundable, including:\r\n- Perishable goods (e.g., food, flowers, etc.).\r\n- Digital products and downloadable software.\r\n- Personalized or custom-made items.\r\n- Items marked as \"Final Sale\" or \"Non-Returnable.\"\r\n\r\n**3. Refund Process**  \r\nTo initiate a refund, please follow these steps:\r\n1. Contact our support team at [support email] within [X] days of receiving the item.\r\n2. Provide your order number and a clear explanation of the issue.\r\n3. If required, ship the item back to the seller following the return instructions.\r\n4. Once we receive and inspect the item, we will process your refund within [X] business days.\r\n\r\n**4. Refund Method**  \r\nRefunds will be issued via the original payment method. Depending on your payment provider, it may take [X] business days for the refund to reflect in your account.\r\n\r\n**5. Seller-Specific Policies**  \r\nSince **Hawola** is a multi-vendor marketplace, individual sellers may have their own return and refund policies. We encourage customers to review the seller's policy before making a purchase.\r\n\r\n**6. Disputes and Escalation**  \r\nIf a refund request is disputed, our team will mediate between the buyer and seller to reach a fair resolution. Final decisions on refunds will be made at our discretion.\r\n\r\nFor any questions regarding our refund policy, please contact us at [support email].",
-                    about_title: "About Macky Electronis",
-                    about: "Welcome to Macky Electronics, your trusted destination for high-quality electronics and cutting-edge technology. We specialize in providing a wide range of consumer electronics, including smartphones, laptops, home appliances, accessories, and more, all at competitive prices.",
-                    store_address: "No 6 Wuse Zone 10, Abuja FCT",
-                    shipping_number_of_days: 4,
-                    support_phone_number: "8083464682",
-                    support_email: "info@mackyelec.com",
-                    is_allowed_to_stream: true,
-                    facebook: "http://facebook.com/macky",
-                    twitter: "http://twitter.com/macky",
-                    instagram: "http://instagram.com/macky",
-                    tiktok: "http://tiktok.com/macky",
-                    linkedin: null,
-                    youtube: null,
-                    date_added: "2025-03-05T17:02:24.628582+01:00",
-                    is_active: true,
-                    slug: "macky-electronics",
-                    merchant_user: 1
-                });
-                setLoading(false);
-            }, 500);
-        }
-    }, [merchantSlug]);
+        dispatch(getMerchants(merchantSlug as string))
+    }, [dispatch, merchantSlug]);
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
@@ -114,7 +70,7 @@ export default function MerchantPage() {
         );
     }
 
-    if (!merchant) {
+    if (!merchants) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <p className="text-xl">Merchant not found</p>
@@ -130,15 +86,15 @@ export default function MerchantPage() {
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     };
 
-    const primaryColor = merchant.primary_color || '#88AA17';
+    const primaryColor = merchants?.merchant_details?.primary_color || '#88AA17';
     const lighterBg = hexToRgba(primaryColor, 0.1);
 
     return (
         <AuthLayout>
         <div className="min-h-screen bg-gray-50">
             <Head>
-                <title>{merchant.store_name} | Merchant</title>
-                <meta name="description" content={merchant.about.substring(0, 160)} />
+                <title>{merchants?.merchant_details?.store_name} | Merchant</title>
+                <meta name="description" content={merchants?.merchant_details?.about.substring(0, 160)} />
                 <style>
                     {`
                           .merchant-primary {
@@ -163,14 +119,14 @@ export default function MerchantPage() {
             {/* Banner Section */}
             <div className="relative h-64 w-full overflow-hidden">
                 <img
-                    src={merchant.default_banner}
-                    alt={merchant.store_name}
+                    src={merchants?.merchant_details?.default_banner?.thumbnail}
+                    alt={merchants?.merchant_details?.store_name}
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
                     <div className="text-center">
-                        <h1 className="text-4xl font-bold text-white">{merchant.store_name}</h1>
-                        <p className="text-xl text-white mt-2">{merchant.store_page_subtitle}</p>
+                        <h1 className="text-4xl font-bold text-white">{merchants?.merchant_details.store_name}</h1>
+                        <p className="text-xl text-white mt-2">{merchants?.merchant_details.store_page_subtitle}</p>
                     </div>
                 </div>
             </div>
@@ -184,16 +140,16 @@ export default function MerchantPage() {
                             {/* Merchant Logo */}
                             <div className="p-4 flex justify-center">
                                 <img
-                                    src={merchant.logo}
-                                    alt={merchant.store_name}
+                                    src={merchants?.merchant_details.logo}
+                                    alt={merchants?.merchant_details.store_name}
                                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
                                 />
                             </div>
 
                             {/* Merchant Details */}
                             <div className="p-4 border-t">
-                                <h2 className="text-xl font-bold merchant-primary-text">{merchant.store_name}</h2>
-                                <p className="text-gray-600 mt-1">{merchant.market.help_text} {merchant.market.name}</p>
+                                <h2 className="text-xl font-bold merchant-primary-text">{merchants?.merchant_details?.store_name}</h2>
+                                <p className="text-gray-600 mt-1">{merchants?.merchant_details?.market.help_text} {merchants?.merchant_details?.market.name}</p>
 
                                 <div className="mt-4 space-y-2">
                                     <div className="flex items-center">
@@ -205,7 +161,7 @@ export default function MerchantPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         </svg>
-                                        <span>{merchant.store_address}</span>
+                                        <span>{merchants?.merchant_details?.store_address}</span>
                                     </div>
                                     <div className="flex items-center">
                                         <svg className="w-5 h-5 merchant-primary-text mr-2" fill="none"
@@ -214,7 +170,7 @@ export default function MerchantPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                         </svg>
-                                        <span>{merchant.support_phone_number}</span>
+                                        <span>{merchants?.merchant_details.support_phone_number}</span>
                                     </div>
                                     <div className="flex items-center">
                                         <svg className="w-5 h-5 merchant-primary-text mr-2" fill="none"
@@ -223,7 +179,7 @@ export default function MerchantPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                         </svg>
-                                        <span>{merchant.support_email}</span>
+                                        <span>{merchants?.merchant_details?.support_email}</span>
                                     </div>
                                 </div>
 
@@ -231,8 +187,8 @@ export default function MerchantPage() {
                                 <div className="mt-6">
                                     <h3 className="font-medium merchant-primary-text mb-2">Follow Us</h3>
                                     <div className="flex space-x-3">
-                                        {merchant.facebook && (
-                                            <a href={merchant.facebook} target="_blank" rel="noopener noreferrer"
+                                        {merchants?.merchant_details?.facebook && (
+                                            <a href={merchants?.merchant_details?.facebook} target="_blank" rel="noopener noreferrer"
                                                className="p-2 rounded-full merchant-light-bg transition">
                                                 <svg className="w-5 h-5 merchant-primary-text" fill="currentColor"
                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -241,8 +197,8 @@ export default function MerchantPage() {
                                                 </svg>
                                             </a>
                                         )}
-                                        {merchant.twitter && (
-                                            <a href={merchant.twitter} target="_blank" rel="noopener noreferrer"
+                                        {merchants?.merchant_details?.twitter && (
+                                            <a href={merchants?.merchant_details?.twitter} target="_blank" rel="noopener noreferrer"
                                                className="p-2 rounded-full merchant-light-bg transition">
                                                 <svg className="w-5 h-5 merchant-primary-text" fill="currentColor"
                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -251,8 +207,8 @@ export default function MerchantPage() {
                                                 </svg>
                                             </a>
                                         )}
-                                        {merchant.instagram && (
-                                            <a href={merchant.instagram} target="_blank" rel="noopener noreferrer"
+                                        {merchants?.merchant_details?.instagram && (
+                                            <a href={merchants?.merchant_details?.instagram} target="_blank" rel="noopener noreferrer"
                                                className="p-2 rounded-full merchant-light-bg transition">
                                                 <svg className="w-5 h-5 merchant-primary-text" fill="currentColor"
                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -261,8 +217,8 @@ export default function MerchantPage() {
                                                 </svg>
                                             </a>
                                         )}
-                                        {merchant.tiktok && (
-                                            <a href={merchant.tiktok} target="_blank" rel="noopener noreferrer"
+                                        {merchants?.merchant_details?.tiktok && (
+                                            <a href={merchants?.merchant_details?.tiktok} target="_blank" rel="noopener noreferrer"
                                                className="p-2 rounded-full merchant-light-bg transition">
                                                 <svg className="w-5 h-5 merchant-primary-text" fill="currentColor"
                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -279,12 +235,12 @@ export default function MerchantPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-medium text-gray-500">Merchant Level</span>
                                         <span
-                                            className="text-sm font-medium merchant-primary-text">{merchant.merchant_level.name}</span>
+                                            className="text-sm font-medium merchant-primary-text">{merchants?.merchant_details?.merchant_level.name}</span>
                                     </div>
                                     <div className="mt-1 w-full bg-gray-200 rounded-full h-2.5">
                                         <div
                                             className="h-2.5 rounded-full merchant-primary"
-                                            style={{width: merchant.merchant_level.name === 'Starter' ? '33%' : merchant.merchant_level.name === 'Intermediate' ? '66%' : '100%'}}
+                                            style={{width: merchants?.merchant_details?.merchant_level.name === 'Starter' ? '33%' : merchants?.merchant_details?.merchant_level.name === 'Intermediate' ? '66%' : '100%'}}
                                         ></div>
                                     </div>
                                 </div>
@@ -315,8 +271,8 @@ export default function MerchantPage() {
 
                         {/* About Section */}
                         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
-                            <h3 className="text-lg font-bold merchant-primary-text mb-3">{merchant.about_title}</h3>
-                            <p className="text-gray-700">{merchant.about}</p>
+                            <h3 className="text-lg font-bold merchant-primary-text mb-3">{merchants?.merchant_details?.about_title}</h3>
+                            <p className="text-gray-700">{merchants?.merchant_details?.about}</p>
                         </div>
                     </div>
 
@@ -343,7 +299,7 @@ export default function MerchantPage() {
                                 >
                                     Reviews
                                 </button>
-                                {merchant.is_allowed_to_stream && <button
+                                {merchants?.merchant_details?.is_allowed_to_stream && <button
                                     onClick={() => setActiveTab('live')}
                                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'live' ? 'merchant-primary-text merchant-primary-border' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                                 >
@@ -364,19 +320,19 @@ export default function MerchantPage() {
                         <div className="mt-6 h-[900px] overflow-x-hidden">
                             {activeTab === 'products' && (
                                 <div>
-                                    <h2 className="text-2xl font-bold merchant-primary-text mb-6">{merchant.store_page_title}</h2>
+                                    <h2 className="text-2xl font-bold merchant-primary-text mb-6">{merchants?.merchant_details?.store_page_title}</h2>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {/* Product cards would go here */}
-                                        {[...Array(9)].map((item, index) => (
+
+                                        {merchants?.recent_products?.map((item, index) => (
                                             <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
                                                 <div className="h-48 bg-gray-200 flex items-center justify-center">
                                                     <span className="text-gray-500">Product Image</span>
                                                 </div>
                                                 <div className="p-4">
-                                                    <h3 className="font-medium text-lg mb-1">Sample Product</h3>
-                                                    <p className="text-gray-600 text-sm mb-2">Sample description</p>
+                                                    <h3 className="font-medium text-lg mb-1">{capitalize(item.name)}</h3>
+                                                    {/*<p className="text-gray-600 text-sm mb-2">Description</p>*/}
                                                     <div className="flex justify-between items-center">
-                                                        <span className="font-bold">N99.99</span>
+                                                        <span className="font-bold">{formatCurrency(item.discount_price ? item?.discount_price : item?.price)}</span>
                                                         <button
                                                             className="px-3 py-1 rounded merchant-primary merchant-primary-hover text-white text-sm">
                                                             Add to Cart
@@ -393,7 +349,7 @@ export default function MerchantPage() {
                                 <div className="bg-white rounded-lg shadow-md p-6">
                                     <h2 className="text-2xl font-bold merchant-primary-text mb-4">Refund Policy</h2>
                                     <div className="prose max-w-none"
-                                         dangerouslySetInnerHTML={{__html: merchant.refund_policy.replace(/\r\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}}/>
+                                         dangerouslySetInnerHTML={{__html: merchants?.merchant_details?.refund_policy.replace(/\r\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}}/>
                                 </div>
                             )}
 
@@ -430,7 +386,7 @@ export default function MerchantPage() {
                             )}
 
                             {activeTab === 'live' &&
-                                merchant.is_allowed_to_stream && (
+                                merchants?.merchant_details?.is_allowed_to_stream && (
                                         <div className="mt-8 bg-black rounded-lg overflow-hidden">
                                             <div className="relative pt-[56.25%]">
                                                 <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
@@ -463,7 +419,7 @@ export default function MerchantPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
-                                        <span>Usually ships within {merchant.shipping_number_of_days} business days</span>
+                                        <span>Usually ships within {merchants?.merchant_details?.shipping_number_of_days} business days</span>
                                     </div>
                                     <div className="flex items-center mt-2">
                                         <svg className="w-5 h-5 merchant-primary-text mr-2" fill="none"

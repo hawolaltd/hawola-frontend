@@ -28,7 +28,7 @@ interface ProductsState {
   reviews: null;
   wishLists: [];
   wishList: null;
-  merchants: null;
+  merchants: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
   isLoading: boolean;
   error: string | null | unknown;
@@ -49,7 +49,7 @@ const initialState: ProductsState = {
   reviews: null,
   wishLists: [],
   wishList: null,
-  merchants: null,
+  merchants: {} as MerchantDetailsResponse,
   isLoading: false,
   error: null,
   message: "",
