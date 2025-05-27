@@ -5,6 +5,7 @@ import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import SubscribeSection from "@/components/home/SubscribeSection";
 import {ProductResponse} from "@/types/product";
+import {formatCurrency} from "@/util";
 
 interface ProductCardProps {
     image: string;
@@ -66,9 +67,9 @@ function TopSellingProducts({products}: TopSellingProductsProps) {
                                 <p className="text-sm text-primary">{item.numReviews} reviews</p>
                                 <div className="flex gap-2 items-center">
                                         <span
-                                            className="text-sm font-semibold text-gray-800">{item.discount_price}</span>
+                                            className="text-sm font-semibold text-gray-800">{formatCurrency(item.discount_price)}</span>
                                     <span
-                                        className="text-sm line-through text-textPadded">{item.price}</span>
+                                        className="text-sm line-through text-textPadded">{formatCurrency(item.price)}</span>
                                 </div>
                             </div>
 

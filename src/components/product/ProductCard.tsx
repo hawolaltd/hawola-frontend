@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {useRouter} from "next/router";
-import {amountFormatter} from "@/util";
+import {amountFormatter, formatCurrency} from "@/util";
 import {LocalCartItem, Product, ProductByIdResponse} from "@/types/product";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
@@ -134,8 +134,8 @@ function ProductCard({product}:{product: Product}) {
                             fill="#FFB067"/>
                     </svg>))}<span className={'text-[10px] text-textPadded font-normal'}>{(product?.numReviews)}</span>
                 </div>
-                <p className="text-lg font-bold text-primary">N{amountFormatter(product.discount_price)} <span
-                    className={'line-through text-xs text-textPadded'}>N{amountFormatter(product?.price)}</span></p>
+                <p className="text-lg font-bold text-primary">{formatCurrency(product.discount_price)} <span
+                    className={'line-through text-xs text-textPadded'}>{formatCurrency(product?.price)}</span></p>
                 <button
                     className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full" onClick={()=>{
                     handleAddToCart(product)

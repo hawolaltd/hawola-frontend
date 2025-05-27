@@ -1,6 +1,7 @@
 import React from 'react';
 import {useRouter} from "next/router";
 import {Product, ProductResponse} from "@/types/product";
+import {formatCurrency} from "@/util";
 
 function ProductCard2({product, key, item}: {product: ProductResponse['results'], key: number, item: Product}) {
    const router = useRouter()
@@ -34,9 +35,9 @@ function ProductCard2({product, key, item}: {product: ProductResponse['results']
                 <p className="text-sm text-primary">{item.numReviews} reviews</p>
                 <div className="flex gap-2 items-center">
                                         <span
-                                            className="text-sm font-semibold text-gray-800">N{item.discount_price}</span>
+                                            className="text-sm font-semibold text-gray-800">{formatCurrency(item.discount_price)}</span>
                     <span
-                        className="text-sm line-through text-textPadded">N{item.price}</span>
+                        className="text-sm line-through text-textPadded">{formatCurrency(item.price)}</span>
                 </div>
             </div>
 

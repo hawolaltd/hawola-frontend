@@ -124,3 +124,35 @@ export const copyToClipboard = async (text: string) => {
 
 export const capitalize = (s: any) => (s && String(s[0]).toUpperCase() + String(s).slice(1)) || ""
 
+/**
+ * formatCurrency:
+ * Formats a number or string as currency with proper formatting and symbol
+ *
+ * @param {number | string} amount - The amount to format
+ * @param {string} [currencyCode='NGN'] - ISO 4217 currency code
+ * @param {string} [locale='en-NG'] - The locale to use for formatting
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (
+    amount: number | string,
+    currencyCode: string = 'NGN',
+    locale: string = 'en-NG'
+): string => {
+    // Convert string to number if needed
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+    // Check if the amount is a valid number
+    if (isNaN(numericAmount)) {
+        return '';
+    }
+
+    try {
+        return new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: currencyCode,
+        }).format(numericAmount);
+    } catch (error) {
+        // Fallback formatting if Intl.NumberFormat fails
+        return `${currencyCode} ${amountFormatter(numericAmount.toString())}`;
+    }
+};

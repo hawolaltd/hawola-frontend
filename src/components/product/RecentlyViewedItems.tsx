@@ -4,6 +4,7 @@ import Ads3 from "@/components/svg/ads3";
 import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import SubscribeSection from "@/components/home/SubscribeSection";
+import {formatCurrency} from "@/util";
 
 interface ProductCardProps {
     image: string;
@@ -57,9 +58,9 @@ function RecentlyViewedItems() {
                                 <p className="text-sm text-primary">{item.reviews} reviews</p>
                                 <div className="flex gap-2 items-center">
                                         <span
-                                            className="text-sm font-bold text-primary ">{item.discountedPrice}</span>
+                                            className="text-sm font-bold text-primary ">{formatCurrency(item.discountedPrice)}</span>
                                     <span
-                                        className="text-sm line-through text-textPadded">{item.originalPrice}</span>
+                                        className="text-sm line-through text-textPadded">{formatCurrency(item.originalPrice)}</span>
                                 </div>
                             </div>
 

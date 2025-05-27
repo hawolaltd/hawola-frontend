@@ -12,7 +12,7 @@ import {
     getProductBySlug
 } from "@/redux/product/productSlice";
 import {useRouter} from "next/router";
-import {amountFormatter} from "@/util";
+import {amountFormatter, formatCurrency} from "@/util";
 import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
@@ -348,8 +348,7 @@ const ProductPage = () => {
                             }} className={'flex items-center gap-2'}>
                             <span
                                 className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
-                                 <img src={product?.product?.merchant?.logo}
-                                      className={'w-4 h-4 rounded-full'}/>
+                                 <img src={product?.product?.merchant?.logo} alt={'Merchant Logo'} className={'w-4 h-4 rounded-full'}/>
                             </span>
                             <p className={'text-primary font-[500] text-xs cursor-pointer'}>View Merchant Profile</p>
                         </div>
@@ -357,8 +356,8 @@ const ProductPage = () => {
                     </div>
 
 
-                    <p className="text-xl lg:text-3xl font-bold text-primary">${amountFormatter(product.product?.discount_price)}<span
-                        className="line-through text-xl lg:text-3xl font-medium text-[#8c9ec5]">${amountFormatter(product?.product?.price)}</span>
+                    <p className="text-xl lg:text-3xl font-bold text-primary">{formatCurrency(product.product?.discount_price)}<span
+                        className="line-through text-xl lg:text-3xl font-medium text-[#8c9ec5]">{formatCurrency(product?.product?.price)}</span>
                     </p>
 
                     <ul className={'flex flex-col gap-2 text-sm mt-6 mb-6 px-5 font-medium'}>

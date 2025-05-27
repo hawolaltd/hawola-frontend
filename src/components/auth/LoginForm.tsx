@@ -26,7 +26,10 @@ export default function LoginForm() {
     const onSubmit = async (data: LoginFormType) => {
         console.log(data);
 
-        const  res = await dispatch(login(data))
+        const  res = await dispatch(login({
+            ...data,
+            username: data.email
+        }))
 
         console.log(res)
 

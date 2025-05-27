@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from "next/link";
 import {useRouter} from "next/router";
+import {formatCurrency} from "@/util";
 
 function MiniHeader() {
     const router = useRouter()
@@ -18,7 +19,7 @@ function MiniHeader() {
                 {/* Middle section: Promo Text */}
                 <div className="text-xs font-medium hidden lg:flex items-center">
                     <span className={`${router.pathname !== ('/') ? 'text-primary text-xs' : 'text-white text-xs font-medium'}`}>Free shipping for all orders over </span>
-                    <span className={`ml-1 ${router.pathname !== ('/') ? 'font-bold' : 'font-bold'} text-secondaryTextColor text-sm`}>N75.00</span>
+                    <span className={`ml-1 ${router.pathname !== ('/') ? 'font-bold' : 'font-bold'} text-secondaryTextColor text-sm`}>{formatCurrency(75.00)}</span>
                 </div>
 
                 {/* Right section: Contact & Language/Currency Selector */}
