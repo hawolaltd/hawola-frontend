@@ -156,3 +156,28 @@ export const formatCurrency = (
         return `${currencyCode} ${amountFormatter(numericAmount.toString())}`;
     }
 };
+
+export function normalizeErrors(errors: any): string {
+    if (!errors) return '';
+
+    // Case 1: Object with array values
+    if (typeof errors === 'object' && !Array.isArray(errors)) {
+        const values = Object.values(errors);
+        console.log("values", values)
+        // Ensure all values are arrays of strings
+        return values.flat().map(error => String(error)).join(', ');
+    }
+
+    // Case 2: Direct array of strings
+    if (Array.isArray(errors)) {
+        return errors.map(error => String(error)).join(', ');
+    }
+
+    // Case 3: Single string error
+    if (typeof errors === 'string') {
+        return errors;
+    }
+
+    // Case 4: Unexpected format - return generic error
+    return 'An unexpected error occurred';
+}

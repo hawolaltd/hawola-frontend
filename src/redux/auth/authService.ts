@@ -37,7 +37,7 @@ const logout = async () => {
 //login user
 const login = async (userData: LoginFormType) => {
     const response = await axiosInstance.post(API + API_URL + "/login/", userData);
-    console.log("Loginresponse:", response)
+
     if (response.data) {
         Cookies.set(authTokenStorageKeyName as string, response.data.access)
         Cookies.set(authRefreshTokenStorageKeyName as string, response.data.refresh)

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Link from "next/link";
 import ControlledInput from "@/components/shared/ControlledInput";
-import {useForm, useWatch} from "react-hook-form";
-import {LoginFormType, RegisterFormType} from "@/types/auth";
+import {useForm} from "react-hook-form";
+import {LoginFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {login, register} from "@/redux/auth/authSlice";
+import {login} from "@/redux/auth/authSlice";
 import {toast} from "sonner";
 import {useRouter} from "next/router";
 import {addToCarts, addToCartsLocal} from "@/redux/product/productSlice";
+import {normalizeErrors} from "@/util";
 
 export default function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
@@ -18,20 +19,16 @@ export default function LoginForm() {
 
     const dispatch = useAppDispatch()
 
-    const {isLoading} = useAppSelector(state => state.auth)
+    const {isLoading, error, message } = useAppSelector(state => state.auth)
     const {localCart} = useAppSelector(state => state.products)
 
 
 
     const onSubmit = async (data: LoginFormType) => {
-        console.log(data);
-
         const  res = await dispatch(login({
             ...data,
             username: data.email
         }))
-
-        console.log(res)
 
         if (res?.type.includes('fulfilled')){
             toast.success("Welcome Back to HAWOLA")
@@ -46,7 +43,15 @@ export default function LoginForm() {
                 dispatch(addToCartsLocal({items: []}))
             }
             router.push('/')
+        }else {
+                const errorMessage = normalizeErrors(message)
+                toast.error(errorMessage, {style: {
+                        background: "#ef4444",
+                        color: "white",
+                    },}
+                )
         }
+
     };
 
     return (
