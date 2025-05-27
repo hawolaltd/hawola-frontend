@@ -2,7 +2,7 @@ import Hero from "@/components/Hero";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import Category from "@/components/category/Category";
 import TrendingProducts from "@/components/TrendingProducts";
 import Partner from "@/components/partner/Partner";
@@ -10,10 +10,15 @@ import TopRateProducts from "@/components/home/TopRateProducts";
 import TopSellingProducts from "@/components/home/TopSellingProducts";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {getCarts, getProducts, getWishList} from "@/redux/product/productSlice";
+import Drawer from "@/components/header/MobileMenuDrawer";
+import {setDrawerOpen} from "@/redux/ui/uiSlice";
 
 export default function Home() {
     const {products, carts} = useAppSelector(state => state.products)
     const { isAuthenticated } = useAppSelector(state => state.auth)
+    const isDrawerOpen = useAppSelector(state => state.ui.isDrawerOpen);
+
+
     console.log("isAuthenticated:", isAuthenticated)
     const dispatch = useAppDispatch()
 
@@ -27,6 +32,12 @@ export default function Home() {
     }, [dispatch, isAuthenticated]);
 
     return (<div>
+        <Drawer
+            isOpen={isDrawerOpen}
+            onClose={() => dispatch(setDrawerOpen(false))}
+            userName="Steven"
+            messageCount={3}
+        />
             <div className={'mb-4'}>
                 <Header/>
             </div>

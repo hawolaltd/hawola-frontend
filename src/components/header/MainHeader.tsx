@@ -6,8 +6,9 @@ import CartModal from "@/components/shared/CartModal";
 import {useRouter} from "next/router";
 import {CartResponse} from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
+import {setDrawerOpen} from "@/redux/ui/uiSlice";
 
-const Header = ({isScrolled}: { isScrolled?: any }) => {
+const Header = ({isScrolled}: { isScrolled?: any;}) => {
     const [userInfo, setUserInfo] = useState(false)
     const [cart, setCart] = useState(false)
     const [items, setItems] = useState([])
@@ -179,7 +180,15 @@ const Header = ({isScrolled}: { isScrolled?: any }) => {
 
                         {/* Compare */}
                         <div className="relative flex items-center gap-2 text-primary text-[16px]">
-                            <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/> Compare
+                            <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/> <span className={'hidden lg:flex'}>Compare</span>
+                        </div>
+
+                        <div onClick={()=>{
+                            dispatch(setDrawerOpen(true))
+                        }} className={'lg:hidden'}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 7H7M20 7H11M20 17H17M4 17H13M4 12H20" stroke="#64748B" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
                         </div>
 
                     </div>

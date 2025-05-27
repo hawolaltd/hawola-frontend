@@ -7,9 +7,12 @@ import {logout} from "@/redux/auth/authSlice";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {addToCartsLocal} from "@/redux/product/productSlice";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
+import {setDrawerOpen} from "@/redux/ui/uiSlice";
+import Drawer from "@/components/header/MobileMenuDrawer";
 
 function MainHeader() {
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+    const isDrawerOpen = useAppSelector(state => state.ui.isDrawerOpen);
     const [cart, setCart] = useState(false)
 
     const {carts, localCart, wishLists} = useAppSelector(state => state.products)
@@ -49,6 +52,12 @@ function MainHeader() {
     // console.log("authitems:", items)
 
     return (<div>
+        <Drawer
+            isOpen={isDrawerOpen}
+            onClose={() => dispatch(setDrawerOpen(false))}
+            userName="Steven"
+            messageCount={3}
+        />
             <div className="bg-white border-b border-b-[#D5DFE4] relative pr-4">
                 <div className="max-w-screen-md lg:max-w-screen-lg xl:max-w-[1320px] mx-auto px-4 md:px-0 py-4 flex items-center justify-between">
 
@@ -419,6 +428,13 @@ function MainHeader() {
                         </div>
                         <div className="relative flex items-center gap-2 text-primary text-[16px]">
                             <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/>
+                        </div>
+                        <div onClick={()=>{
+                            dispatch(setDrawerOpen(true))
+                        }} className={'lg:hidden'}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 7H7M20 7H11M20 17H17M4 17H13M4 12H20" stroke="#64748B" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
                         </div>
 
                     </div>

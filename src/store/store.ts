@@ -5,6 +5,7 @@ import customerServiceReducer from "@/redux/product/customerServiceSlice";
 import inventoryReducer from "@/redux/product/inventorySlice";
 import productReducer from "@/redux/product/productSlice";
 import disputeReducer from "@/redux/disputes/disputeSlice";
+import uiReducer from "@/redux/ui/uiSlice";
 import {
   FLUSH,
   PAUSE,
@@ -40,6 +41,7 @@ const rootReducer = combineReducers({
   inventory: inventoryReducer,
   products: productReducer,
   disputes: disputeReducer,
+  ui: uiReducer,
 });
 
 const appReducer = (state: any, action: any) => {
