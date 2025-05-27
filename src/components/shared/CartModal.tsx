@@ -14,6 +14,9 @@ const CartModal = () => {
     const totalPrice = (carts?.cart_items)?.reduce((sum, item) => sum + +(item?.product?.price) * item?.qty, 0);
     const totalLocalPrice = (localCart?.items)?.reduce((sum, item) => sum + +(item?.product?.price) * item?.qty, 0);
 
+    console.log("localCart:", localCart)
+    console.log("carts:", carts)
+
     return (
         <div className="bg-white rounded-br-md rounded-bl-md p-4 w-96 border border-detailsBorder" style={{
             position: "absolute",
@@ -22,7 +25,7 @@ const CartModal = () => {
             top: '100%',
         }}>
             <div className={'h-[250px] overflow-x-hidden'}>
-                {carts?.cart_items ? carts?.cart_items?.map((item) => (
+                {carts?.cart_items.length > 0 ? carts?.cart_items?.map((item) => (
                     <div key={item.id} className="flex items-start space-x-4 mb-4">
                         <Image src={item?.product?.featured_image?.[0]?.image?.thumbnail} alt={"product"} width={60} height={60} className="rounded-md" />
                         <div className="flex-1">
@@ -45,7 +48,7 @@ const CartModal = () => {
 
             <div className="flex justify-between font-semibold text-lg">
                 <p>Total</p>
-                <p className="text-blue-500">N{amountFormatter((carts?.cart_items ? totalPrice : totalLocalPrice)?.toFixed(1))}</p>
+                <p className="text-blue-500">N{amountFormatter((carts?.cart_items?.length > 0 ? totalPrice : totalLocalPrice)?.toFixed(1))}</p>
             </div>
 
             <div className="mt-4 flex space-x-3 justify-between">

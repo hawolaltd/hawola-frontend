@@ -418,10 +418,13 @@ function MainHeader() {
                             </div>
                         </Link>
                         <div onClick={()=>{
-                            setUserCart({} as CartResponse)
-                            dispatch(addToCartsLocal({items: []}))
-                            dispatch(logout())
-                        }} className="relative">
+                            if (isAuthenticated) {
+                                setCart(!cart)
+                            } else {
+                                // router.push('/auth/login')
+                                setCart(!cart)
+                            }
+                        }} className="relative cursor-pointer">
                             <span
                                 className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{!isAuthenticated  && localCart !== null  ? localCart?.items?.length : carts?.cart_count  ?? 0}</span>
                             <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6"/>
