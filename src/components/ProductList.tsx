@@ -73,9 +73,9 @@ const ProductList = ({products}: ProductListProps) => {
                 </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-8 w-full">
-                <Slider {...settings} className={'w-full'}>
+                <Slider {...settings} >
                 {products?.results?.map((product) => (
-                    <ProductCard key={product?.id} product={product}/>
+                        <ProductCard key={product?.id} product={product} margin={'mx-2'}/>
                 ))}
                 </Slider>
             </div>

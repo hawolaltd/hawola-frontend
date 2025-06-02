@@ -31,10 +31,10 @@ function MerchantOtherItemsCard({product}:{product: MerchantOtherProduct}) {
                 </div>
                 <p className="text-lg font-bold text-primary">{formatCurrency(product.discount_price)} <span
                     className={'line-through text-xs text-textPadded'}>{formatCurrency(product?.price)}</span></p>
-                <button
-                    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full">Add
-                    to Cart
-                </button>
+                {/*<button*/}
+                {/*    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full">Add*/}
+                {/*    to Cart*/}
+                {/*</button>*/}
             </div>
             <ul className={"p-4 max-w-screen-xl text-primary"}>
                 <li className={'text-[10px] list-disc'}>

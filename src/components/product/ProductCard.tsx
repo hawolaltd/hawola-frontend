@@ -7,7 +7,7 @@ import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlic
 import Link from "next/link";
 import {toast} from "sonner";
 
-function ProductCard({product}:{product: Product}) {
+function ProductCard({product, margin}:{product: Product; margin?: string}) {
     const router = useRouter()
 
     const [quantity, setQuantity] = useState(1);
@@ -108,7 +108,7 @@ function ProductCard({product}:{product: Product}) {
 
 
     return (
-        <div  className={`relative bg-white border cursor-pointer border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}>
+        <div className={`relative bg-white border cursor-pointer ${margin ? margin  : ""} border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}>
                         <span
                             className={'absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white'}>-17%</span>
             <div className={'w-full flex items-center justify-center'}>
@@ -136,11 +136,11 @@ function ProductCard({product}:{product: Product}) {
                 </div>
                 <p className="text-lg font-bold text-primary">{formatCurrency(product.discount_price)} <span
                     className={'line-through text-xs text-textPadded'}>{formatCurrency(product?.price)}</span></p>
-                <button
-                    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full" onClick={()=>{
-                    handleAddToCart(product)
-                }}>Add to Cart
-                </button>
+                {/*<button*/}
+                {/*    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full" onClick={()=>{*/}
+                {/*    handleAddToCart(product)*/}
+                {/*}}>Add to Cart*/}
+                {/*</button>*/}
             </div>
             <ul className={"p-4 max-w-screen-xl text-primary"}>
                 <li className={'text-[10px] list-disc'}>
