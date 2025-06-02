@@ -8,25 +8,25 @@ const Notifications: NextPage = () => {
     const notifications = [
         {
             id: '1',
-            image: '/washing-machine.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             title: 'COD payment confirmed',
             message: 'Order 220914QR92BXNH has been confirmed. Please check the estimated delivery time in the order details section!',
         },
         {
             id: '2',
-            image: '/laptop.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             title: 'COD payment confirmed',
             message: 'Order 220914QR92BXNH has been confirmed. Please check the estimated delivery time in the order details section!',
         },
         {
             id: '3',
-            image: '/game-controller.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             title: 'COD payment confirmed',
             message: 'Order 220914QR92BXNH has been confirmed. Please check the estimated delivery time in the order details section!',
         },
         {
             id: '4',
-            image: '/smartphone.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             title: 'COD payment confirmed',
             message: `Order 220914QR92BXNH has been confirmed. Please check the estimated delivery time in the order details section!`,
         },

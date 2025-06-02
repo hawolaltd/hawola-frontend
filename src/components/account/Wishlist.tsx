@@ -6,7 +6,7 @@ const Wishlist: NextPage = () => {
     const [wishlistItems, setWishlistItems] = useState([
         {
             id: '1',
-            image: '/refrigerator.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             name: "Samsung 36' French door 28 cu. ft. Smart Energy Star Refrigerator",
             rating: 4.5,
             reviews: 65,
@@ -15,7 +15,7 @@ const Wishlist: NextPage = () => {
         },
         {
             id: '2',
-            image: '/laptop.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             name: "Samsung 36' French door 28 cu. ft. Smart Energy Star Refrigerator",
             rating: 4.5,
             reviews: 65,
@@ -24,7 +24,7 @@ const Wishlist: NextPage = () => {
         },
         {
             id: '3',
-            image: '/game-controller.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             name: "Samsung 36' French door 28 cu. ft. Smart Energy Star Refrigerator",
             rating: 4.5,
             reviews: 65,
@@ -33,7 +33,7 @@ const Wishlist: NextPage = () => {
         },
         {
             id: '4',
-            image: '/monitor.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             name: "Samsung 36' French door 28 cu. ft. Smart Energy Star Refrigerator",
             rating: 4.5,
             reviews: 65,
@@ -42,7 +42,7 @@ const Wishlist: NextPage = () => {
         },
         {
             id: '5',
-            image: '/camera.jpg',
+            image: '/imgs/page/homepage1/electric.png',
             name: "Samsung 36' French door 28 cu. ft. Smart Energy Star Refrigerator",
             rating: 4.5,
             reviews: 65,

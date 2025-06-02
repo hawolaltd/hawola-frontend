@@ -7,6 +7,8 @@ import {getUserProfile, updateProfile} from "@/redux/auth/authSlice";
 import OrderTracking from "@/components/account/OrderTracking";
 import Notifications from "@/components/account/Notifications";
 import Wishlist from "@/components/account/Wishlist";
+import Orders from "@/components/account/Orders";
+import Settings from "@/components/account/Settings";
 
 export default function AccountPage() {
     const {profile: user} = useAppSelector(state => state.auth);
@@ -83,6 +85,10 @@ export default function AccountPage() {
                     {tab === 'tracking' && <OrderTracking orderId={orderId} setOrderId={setOrderId}/>}
 
                     {tab === 'wish' && <Wishlist />}
+
+                    {tab === 'orders' && <Orders />}
+
+                    {tab === 'setting' && <Settings />}
                 </main>
             </div>
         </AuthLayout>
