@@ -6,7 +6,7 @@ const API_URL = "products/";
 
 // get products
 const getProducts = async () => {
-    const response = await axios.get(API + API_URL);
+    const response = await axios.get(API + API_URL + 'list');
 
     return response.data;
 };
@@ -29,7 +29,7 @@ const clearProductById = async () => {
 
 // get ProductBy slug
 const getProductBySlug = async (slug: string) => {
-    const response = await axios.get(API + API_URL + slug + '/');
+    const response = await axios.get(API + API_URL + 'detail/' + slug + '/');
 
     return response.data;
 };

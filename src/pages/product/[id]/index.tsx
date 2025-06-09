@@ -76,7 +76,6 @@ const ProductPage = () => {
             const res = await dispatch(addWishList({
                 items: product?.product?.id
             }));
-            console.log('ghjgjkd', res)
             if (res?.type.includes('fulfilled')) {
                 Swal.fire({
                     title: "Added to wishlist!",
