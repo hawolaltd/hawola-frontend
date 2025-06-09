@@ -127,7 +127,7 @@ export default function AccountPage() {
 
                                 {tab === 'orders' && <Orders />}
 
-                                {tab === 'setting' && <Settings />}
+                                {tab === 'profile' && <Settings />}
                             </div>
                         )
                     }

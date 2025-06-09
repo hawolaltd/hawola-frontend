@@ -16,10 +16,12 @@ const DisputesPage = () => {
     const { disputes, isLoading, error } = useAppSelector((state) => state.disputes);
     const [statusFilter, setStatusFilter] = useState('all');
 
+    console.log("disputes:", disputes)
+
     const { query } = useRouter()
 
 
-    const filteredDisputes = disputes?.filter((dispute: any) =>
+    const filteredDisputes = [disputes?.disputes]?.filter((dispute: any) =>
         statusFilter === 'all' ? true : dispute.status === statusFilter
     );
 
@@ -41,7 +43,7 @@ const DisputesPage = () => {
     };
 
     const getStatusText = (status: string) => {
-        return status.split('_').map(word =>
+        return status?.split('_').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
     };
@@ -108,30 +110,30 @@ const DisputesPage = () => {
                         ) : (
                             <div className="divide-y divide-gray-200">
                                 {filteredDisputes?.map((dispute: any) => (
-                                    <div key={dispute.id} className="p-4 hover:bg-gray-50">
+                                    <div key={dispute?.id} className="p-4 hover:bg-gray-50">
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    {getStatusIcon(dispute.status)}
-                                                    <span className="font-medium">
-                            Order #{dispute.orderId}
-                          </span>
-                                                </div>
+                          {/*                      <div className="flex items-center gap-2 mb-1">*/}
+                          {/*                          {getStatusIcon(dispute.status)}*/}
+                          {/*                          <span className="font-medium">*/}
+                          {/*  Order #{dispute.orderId}*/}
+                          {/*</span>*/}
+                          {/*                      </div>*/}
                                                 <p className="text-gray-600 text-sm">
-                                                    {dispute.reason} • Filed on{' '}
-                                                    {new Date(dispute.createdAt).toLocaleDateString()}
+                                                    {dispute?.dispute_reason} • Filed on{' '}
+                                                    {new Date(dispute?.createdAt).toLocaleDateString()}
                                                 </p>
                                             </div>
 
                                             <div className="flex items-center gap-3">
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                            dispute.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                dispute.status === 'under_review' ? 'bg-blue-100 text-blue-800' :
-                                    dispute.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                        dispute.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            dispute?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                dispute?.status === 'under_review' ? 'bg-blue-100 text-blue-800' :
+                                    dispute?.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                        dispute?.status === 'rejected' ? 'bg-red-100 text-red-800' :
                                             'bg-purple-100 text-purple-800'
                         }`}>
-                          {getStatusText(dispute.status)}
+                          {getStatusText(dispute?.status)}
                         </span>
                                                 <button className="text-sm text-primary hover:underline">
                                                     View Details

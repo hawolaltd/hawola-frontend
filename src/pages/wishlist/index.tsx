@@ -4,6 +4,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {getMerchants, getWishList} from "@/redux/product/productSlice";
 import RelatedProduct from "@/components/product/RelatedProduct";
+import moment from "moment";
 
 type Product = {
     id: string;
@@ -16,9 +17,7 @@ type Product = {
 
 export default function WishlistPage() {
 
-    const {wishList, product} = useAppSelector(state => state.products)
-
-    console.log('wishList', wishList)
+    const {wishList, product, wishLists} = useAppSelector(state => state.products)
 
     const dispatch = useAppDispatch()
 
@@ -57,16 +56,16 @@ export default function WishlistPage() {
         },
     ]);
 
-    const handleAddToCart = (productId: string) => {
+    const handleAddToCart = (productId: string | number ) => {
         // Add to cart logic here
         console.log(`Added product ${productId} to cart`);
     };
 
-    const handleRemove = (productId: string) => {
+    const handleRemove = (productId: string | number) => {
         setProducts(products.filter(product => product.id !== productId));
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date: any) => {
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -117,9 +116,9 @@ export default function WishlistPage() {
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Price
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Stock Status
-                                    </th>
+                                    {/*<th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">*/}
+                                    {/*    Stock Status*/}
+                                    {/*</th>*/}
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Added On
                                     </th>
@@ -129,40 +128,40 @@ export default function WishlistPage() {
                                 </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                {products.length > 0 ? (
-                                    products.map((product) => (
+                                {wishLists?.wishlists?.length > 0 ? (
+                                    wishLists?.wishlists?.map((product) => (
                                         <tr key={product.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-16 w-16">
-                                                        <img className="h-16 w-16 rounded-md object-cover" src={product.image} alt={product.name} />
+                                                        <img className="h-16 w-16 rounded-md object-cover" src={product?.product?.featured_image?.[0]?.image?.thumbnail} alt={product?.product.name} />
                                                     </div>
                                                     <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                                                        <div className="text-sm font-medium text-gray-900">{product?.product?.name}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
+                                                <div className="text-sm text-gray-900">${(+(product?.product?.price)).toFixed(2)}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStockStatusColor(product.stockStatus)}`}>
-                            {product.stockStatus}
-                          </span>
-                                            </td>
+                          {/*                  <td className="px-6 py-4 whitespace-nowrap">*/}
+                          {/*<span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStockStatusColor(product.stockStatus)}`}>*/}
+                          {/*  {product.stockStatus}*/}
+                          {/*</span>*/}
+                          {/*                  </td>*/}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatDate(product.addedDate)}
+                                                {moment(product?.created_at).format('MMM Do YYYY')}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
-                                                    onClick={() => handleAddToCart(product.id)}
-                                                    disabled={product.stockStatus === 'Out of Stock'}
-                                                    className={`mr-3 ${product.stockStatus === 'Out of Stock' ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary'} text-white px-3 py-1 rounded-md text-sm`}
+                                                    onClick={() => handleAddToCart(product?.product?.id)}
+                                                    // disabled={product.stockStatus === 'Out of Stock'}
+                                                    className={`mr-3 ${product?.product?.name === 'Out of Stock' ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary'} text-white px-3 py-1 rounded-md text-sm`}
                                                 >
                                                     Add to Cart
                                                 </button>
                                                 <button
-                                                    onClick={() => handleRemove(product.id)}
+                                                    onClick={() => handleRemove(product?.product?.id)}
                                                     className="text-red-600 hover:text-red-900"
                                                 >
                                                     Remove
@@ -182,7 +181,7 @@ export default function WishlistPage() {
                         </div>
                     </div>
 
-                    {products.length > 0 && (
+                    {wishLists?.wishlists?.length > 0 && (
                         <div className="mt-6 flex justify-end">
                             <button
                                 onClick={() => {
