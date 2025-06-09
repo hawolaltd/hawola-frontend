@@ -1,6 +1,7 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
+import {useAppSelector} from "@/hook/useReduxTypes";
 
 const Wishlist: NextPage = () => {
     const [wishlistItems, setWishlistItems] = useState([
@@ -51,7 +52,9 @@ const Wishlist: NextPage = () => {
         },
     ]);
 
-    const handleRemove = (id: string) => {
+    const {wishLists} = useAppSelector(state => state.products)
+
+    const handleRemove = (id: string | number) => {
         setWishlistItems(wishlistItems.filter((item) => item.id !== id));
     };
 
@@ -66,26 +69,26 @@ const Wishlist: NextPage = () => {
                         </th>
                         <th className="p-3 text-xs text-gray-600">Product</th>
                         <th className="p-3 text-xs text-gray-600">Price</th>
-                        <th className="p-3 text-xs text-gray-600">Stock status</th>
+                        {/*<th className="p-3 text-xs text-gray-600">Stock status</th>*/}
                         <th className="p-3 text-xs text-gray-600">Action</th>
                         <th className="p-3 text-xs text-gray-600 last:rounded-r">Remove</th>
                     </tr>
                     </thead>
                     <tbody className="mt-8">
-                    {wishlistItems.map((item) => (
+                    {wishLists?.wishlists?.map((item) => (
                         <tr key={item.id} className="border border-gray-200 my-4">
                             <td className="p-4">
                                 <input type="checkbox" className="h-4 w-4" />
                             </td>
                             <td className="p-4 flex items-center">
                                 <img
-                                    src={item.image}
-                                    alt={item.name}
+                                    src={item?.product?.featured_image[0]?.image?.thumbnail}
+                                    alt={item?.product?.name}
                                     className="w-16 h-16 object-contain mr-4"
                                 />
                                 <div>
                                     <p className="text-sm font-semibold text-blue-900">
-                                        {item.name}
+                                        {item?.product?.name}
                                     </p>
                                     <div className="flex items-center mt-1">
                                         <div className="flex">
@@ -93,7 +96,7 @@ const Wishlist: NextPage = () => {
                                                 <svg
                                                     key={i}
                                                     className={`w-4 h-4 ${
-                                                        i < Math.floor(item.rating)
+                                                        i < Math.floor(item?.product?.rating as unknown as number)
                                                             ? 'text-yellow-400'
                                                             : 'text-gray-300'
                                                     }`}
@@ -106,17 +109,17 @@ const Wishlist: NextPage = () => {
                                             ))}
                                         </div>
                                         <span className="text-xs text-gray-600 ml-1">
-                                    ({item.reviews})
+                                    ({item?.product?.numReviews})
                                 </span>
                                     </div>
                                 </div>
                             </td>
-                            <td className="p-4 text-sm text-gray-900">${item.price.toFixed(2)}</td>
-                            <td className="p-4 text-sm text-gray-600">
-                        <span className="px-2 py-1 bg-gray-200 rounded">
-                            {item.inStock ? 'In Stock' : 'Out of Stock'}
-                        </span>
-                            </td>
+                            <td className="p-4 text-sm text-gray-900">${(+(item?.product?.price)).toFixed(2)}</td>
+                        {/*    <td className="p-4 text-sm text-gray-600">*/}
+                        {/*<span className="px-2 py-1 bg-gray-200 rounded">*/}
+                        {/*    {item?.product?. ? 'In Stock' : 'Out of Stock'}*/}
+                        {/*</span>*/}
+                        {/*    </td>*/}
                             <td className="p-4">
                                 <button className="bg-blue-900 text-white px-4 py-2 rounded text-sm">
                                     Add to Cart
@@ -124,7 +127,7 @@ const Wishlist: NextPage = () => {
                             </td>
                             <td className="p-4">
                                 <button
-                                    onClick={() => handleRemove(item.id)}
+                                    onClick={() => handleRemove(item?.product?.id)}
                                     className="text-gray-600 hover:text-red-600"
                                 >
                                     <svg

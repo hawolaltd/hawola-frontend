@@ -178,7 +178,7 @@ const getMerchantReviews = async (slug: string) => {
 // get wishlist
 
 const getWishList = async () => {
-    const response = await axiosInstance.get(API + `wishlist/`);
+    const response = await axiosInstance.get(API + `wishlist/list/`);
     console.log("getWishList:", response)
     return response.data;
 };

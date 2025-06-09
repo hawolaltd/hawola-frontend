@@ -463,3 +463,46 @@ export interface addWishListType{
 export interface deleteWishListType{
     items: number;
 }
+
+export interface WishlistResponse {
+    wishlists: {
+        id: number;
+        product: {
+            id: number;
+            merchant: {
+                id: number;
+                store_name: string;
+                slug: string;
+                support_phone_number: string;
+                support_email: string;
+            };
+            name: string;
+            is_digital: boolean;
+            featured_image: {
+                image: {
+                    thumbnail: string;
+                    thumbnail_100: string;
+                    full_size: string;
+                };
+                image_url: string;
+                image_ppoi: string;
+            }[];
+            rating: string;
+            numReviews: number;
+            price: string;
+            discount_price: string;
+            slug: string;
+        };
+        user: {
+            id: number;
+            username: string;
+            email: string;
+            isAdmin: boolean;
+            last_name: string | null;
+            first_name: string | null;
+            name: string;
+        };
+        created_at: string;
+        updated_at: string;
+    }[];
+}

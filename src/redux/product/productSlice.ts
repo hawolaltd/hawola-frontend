@@ -1,17 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import productService from "@/redux/product/productService";
 import {
-  AddressResponse,
-  AddToCartType,
-  addWishListType,
-  CartResponse,
-  deleteWishListType,
-  LocalCart,
-  OrderDetailsResponse,
-  Product,
-  ProductByIdResponse,
-  ProductCategoriesResponse,
-  ProductResponse,
+    AddressResponse,
+    AddToCartType,
+    addWishListType,
+    CartResponse,
+    deleteWishListType,
+    LocalCart,
+    OrderDetailsResponse,
+    Product,
+    ProductByIdResponse,
+    ProductCategoriesResponse,
+    ProductResponse, WishlistResponse,
 } from "@/types/product";
 import { RootState } from "@/store/store";
 
@@ -26,7 +26,7 @@ interface ProductsState {
   ordersHistory: OrderHistory;
   singleOrder: null;
   reviews: null;
-  wishLists: [];
+  wishLists: WishlistResponse;
   wishList: null;
   merchants: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
@@ -47,7 +47,7 @@ const initialState: ProductsState = {
   singleOrder: null,
   merchantReviews: {} as MerchantReviewResponse,
   reviews: null,
-  wishLists: [],
+  wishLists: {} as WishlistResponse,
   wishList: null,
   merchants: {} as MerchantDetailsResponse,
   isLoading: false,

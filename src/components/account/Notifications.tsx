@@ -1,9 +1,12 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { useState } from 'react';
+import {useCallback, useState} from 'react';
+import {useAppDispatch} from "@/hook/useReduxTypes";
+import {getOrderHistory, getWishList} from "@/redux/product/productSlice";
 
 const Notifications: NextPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const notifications = [
         {
@@ -38,6 +41,10 @@ const Notifications: NextPage = () => {
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+
+    const dispatch = useAppDispatch()
+
+
 
     return (
             <main className="">
