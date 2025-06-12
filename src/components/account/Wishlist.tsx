@@ -1,7 +1,10 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
-import {useAppSelector} from "@/hook/useReduxTypes";
+import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
+import {LocalCartItem, Product} from "@/types/product";
+import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
+import {toast} from "sonner";
 
 const Wishlist: NextPage = () => {
     const [wishlistItems, setWishlistItems] = useState([
@@ -52,11 +55,104 @@ const Wishlist: NextPage = () => {
         },
     ]);
 
-    const {wishLists} = useAppSelector(state => state.products)
+    const {wishLists, isLoading} = useAppSelector(state => state.products)
 
     const handleRemove = (id: string | number) => {
         setWishlistItems(wishlistItems.filter((item) => item.id !== id));
     };
+
+    const [quantity, setQuantity] = useState(1);
+
+    const { isAuthenticated } = useAppSelector(state => state.auth)
+    const {localCart} = useAppSelector(state => state.products)
+
+    const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
+
+    const dispatch = useAppDispatch()
+
+    const handleAddToCart = async (product: Product) => {
+        try {
+            // Convert selected variants to the format expected by backend
+            const variants = product?.product_variant?.length > 0
+                ? Object.entries(selectedVariants).map(([variantId, variantValueId]) => ({
+                    variant: Number(variantId),
+                    variant_value: variantValueId
+                }))
+                : undefined;
+
+            if (isAuthenticated) {
+                const res = await dispatch(addToCarts({
+                    items: [{
+                        qty: quantity,
+                        product: product?.id,
+                        ...(variants && { variant: variants })
+                    }]
+                }));
+
+                if (res?.type.includes('fulfilled')) {
+                    dispatch(getCarts());
+                    toast.success('Added to cart');
+
+                }else {
+                    toast('error')
+                }
+            } else {
+                // Get current cart from localStorage or initialize empty array
+                const cartItems: LocalCartItem[] = JSON.parse(localStorage.getItem("cartItems") || "[]");
+
+                // Check if item already exists in cart with the same variants
+                const existingItemIndex = cartItems.findIndex(item => {
+                    if (item.product?.id !== product?.id) return false;
+
+                    // If no variants, match on product only
+                    if (!variants && !item.variant) return true;
+
+                    // Compare variants
+                    if (variants?.length !== item.variant?.length) return false;
+
+                    // Check each variant matches
+                    return variants?.every(v =>
+                        item.variant?.some(iv =>
+                            iv.variant === v.variant &&
+                            iv.variant_value === v.variant_value
+                        )
+                    );
+                });
+
+                if (existingItemIndex >= 0) {
+                    // Item exists - increment quantity
+                    cartItems[existingItemIndex].qty += quantity;
+                } else {
+                    // Item doesn't exist - add new item
+                    cartItems.push({
+                        qty: quantity,
+                        product: product,
+                        ...(variants && { variant: variants })
+                    });
+                }
+
+                // Update localStorage
+                localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+                // Update Redux state to match localStorage
+                dispatch(addToCartsLocal({
+                    items: cartItems.map(item => ({
+                        qty: item.qty,
+                        product: item.product,
+                        ...(item.variant && { variant: item.variant })
+                    }))
+                }));
+
+                toast.success('Added to cart');
+
+            }
+        } catch (e) {
+            console.error("Error adding to cart:", e);
+            toast.error("Failed to add to cart");
+
+        }
+    }
+
 
     return (
         <div className="">
@@ -121,7 +217,9 @@ const Wishlist: NextPage = () => {
                         {/*</span>*/}
                         {/*    </td>*/}
                             <td className="p-4">
-                                <button className="bg-blue-900 text-white px-4 py-2 rounded text-sm">
+                                <button disabled={isLoading} onClick={()=>{
+                                    handleAddToCart(item?.product as Product)
+                                }} className={`${isLoading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} text-white px-4 py-2 rounded text-sm`}>
                                     Add to Cart
                                 </button>
                             </td>

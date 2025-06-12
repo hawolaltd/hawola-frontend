@@ -16,11 +16,11 @@ const OrderDetailsPage = () => {
 
     console.log("singleOrder:", singleOrder)
 
-    // const dispatch = useAppDispatch()
-    //
-    // useEffect(() => {
-    //         dispatch(getSingleOrder(id as string));
-    // }, [dispatch, id]);
+    const dispatch = useAppDispatch()
+
+    useEffect(() => {
+            dispatch(getSingleOrder(id as string));
+    }, [dispatch, id]);
 
     if (isLoading) {
         return (
@@ -98,7 +98,7 @@ const OrderDetailsPage = () => {
                             </h3>
 
                             <div className="space-y-6">
-                                {orders?.orderItems.map((item: any) => (
+                                {orders?.orderItems?.map((item: any) => (
                                     <div key={item.id}
                                          className="flex flex-col md:flex-row justify-between border-b pb-6 last:border-b-0">
                                         <div className="flex gap-4 mb-4 md:mb-0">
@@ -142,11 +142,11 @@ const OrderDetailsPage = () => {
                                     Shipping Information
                                 </h3>
                                 <div className="space-y-2">
-                                    <p className="font-medium">{orders.shipping_address?.first_name} {orders.shipping_address?.last_name}</p>
-                                    <p>{orders.shipping_address.address}</p>
-                                    <p>{orders.shipping_address?.city?.name}, {orders.shipping_address.state.name}</p>
-                                    <p>{orders.shipping_address.country}</p>
-                                    <p className="mt-2">Phone: {orders.shipping_address.phone}</p>
+                                    <p className="font-medium">{orders?.shipping_address?.first_name} {orders?.shipping_address?.last_name}</p>
+                                    <p>{orders.shipping_address?.address}</p>
+                                    <p>{orders.shipping_address?.city?.name}, {orders?.shipping_address?.state?.name}</p>
+                                    <p>{orders.shipping_address?.country}</p>
+                                    <p className="mt-2">Phone: {orders?.shipping_address?.phone}</p>
                                     {orders?.order_number && (
                                         <div className="mt-4">
                                             <p className="text-sm font-medium">Tracking Number:</p>
@@ -156,7 +156,7 @@ const OrderDetailsPage = () => {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                {orders.order_number}
+                                                {orders?.order_number}
                                             </a>
                                         </div>
                                     )}
@@ -169,17 +169,17 @@ const OrderDetailsPage = () => {
                                     Payment Information
                                 </h3>
                                 <div className="space-y-2">
-                                    <p className="font-medium">{orders.paymentMethod} ending
-                                        in {orders.paymentMethod}</p>
-                                    <p>Payment Status: {orders.isPaid}</p>
-                                    <p>Paid on {new Date(orders.createdAt).toLocaleDateString()}</p>
+                                    <p className="font-medium">{orders?.paymentMethod} ending
+                                        in {orders?.paymentMethod}</p>
+                                    <p>Payment Status: {orders?.isPaid}</p>
+                                    <p>Paid on {new Date(orders?.createdAt).toLocaleDateString()}</p>
 
                                     {/* this should be the billing address */}
                                     <div className="mt-4">
                                         <p className="text-sm font-medium">Billing Address:</p>
                                         <p>{orders?.shipping_address?.address}</p>
-                                        <p>{orders.shipping_address?.city?.name}, {orders.shipping_address?.state.name}</p>
-                                        <p>{orders.shipping_address?.country}</p>
+                                        <p>{orders?.shipping_address?.city?.name}, {orders?.shipping_address?.state?.name}</p>
+                                        <p>{orders?.shipping_address?.country}</p>
                                     </div>
                                 </div>
                             </div>
@@ -190,12 +190,12 @@ const OrderDetailsPage = () => {
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h3>
                             <div className="space-y-3">
                                 <div className="flex justify-between">
-                                    <span>Subtotal ({orders.orderItems.length} items):</span>
-                                    <span>${amountFormatter((+(orders.totalPrice)).toFixed(2))}</span>
+                                    <span>Subtotal ({orders?.orderItems?.length} items):</span>
+                                    <span>${amountFormatter((+(orders?.totalPrice)).toFixed(2))}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Shipping & Handling:</span>
-                                    <span>${amountFormatter((+(orders.shippingPrice)).toFixed(2))}</span>
+                                    <span>${amountFormatter((+(orders?.shippingPrice)).toFixed(2))}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Tax:</span>
@@ -203,7 +203,7 @@ const OrderDetailsPage = () => {
                                 </div>
                                 <div className="flex justify-between pt-3 border-t font-semibold">
                                     <span>Total:</span>
-                                    <span>${amountFormatter((+(orders.paidAmount ?? 0.00)).toFixed(2))}</span>
+                                    <span>${amountFormatter((+(orders?.paidAmount ?? 0.00)).toFixed(2))}</span>
                                 </div>
                             </div>
                         </div>

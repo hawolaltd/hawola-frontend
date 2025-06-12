@@ -25,11 +25,6 @@ export default function AccountPage() {
             id: 'wish',
             name: 'Wishlist',
         },
-        
-        {
-            id: 'dispute',
-            name: 'Disputes',
-        },
         {
             id: 'profile',
             name: 'Profile',
@@ -102,12 +97,12 @@ export default function AccountPage() {
 
                 <main className="p-0">
                     {/* Header */}
-                    <header className="mb-6 bg-headerBg px-14 pt-4">
+                    <header className="mb-6 bg-headerBg px-20 pt-4">
                         <h1 className="text-3xl font-semibold text-white">Hello Steven</h1>
                         <p className="text-sm text-white font-medium mt-2 mb-12">
                             From your account dashboard, you can easily check & view your recent orders, <br/> manage your shipping and billing addresses and edit your password and account details.
                         </p>
-                        <nav className={`mb-8 flex space-x-4 text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer`}>
+                        <nav className={`mb-8 flex space-x-6 text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer`}>
                             {tabs.map(ta => (
                                 <span key={ta.id} onClick={()=>{
                                     setTab(ta.id)
