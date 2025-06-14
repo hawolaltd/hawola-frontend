@@ -43,13 +43,15 @@ const CartPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState(false);
 
-   const { subtotal: selectedSubtotal, shippingCost, total } = useMemo(() => {
+    const { subtotal: selectedSubtotal, shippingCost, total } = useMemo(() => {
         const subtotal = carts?.cart_items?.reduce((sum, product) => {
             if (!selectedItems.includes(product?.id)) return sum;
 
-            const effectiveQty = product?.qty + (pendingUpdates[product?.id] || 0);
+            const effectiveQty = pendingUpdates[product?.id] !== undefined
+                ? pendingUpdates[product?.id]
+                : product?.qty;
             return sum + (+(product?.product?.price) * effectiveQty);
-        }, 0);
+        }, 0) || 0;
 
         const shippingRate = 0.08;
         const shippingCost = subtotal * shippingRate;

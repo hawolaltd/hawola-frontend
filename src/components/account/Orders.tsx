@@ -11,8 +11,8 @@ const Orders: NextPage = () => {
     const router = useRouter()
 
     const itemsPerPage = 10;
-    const totalPages = Math.ceil(ordersHistory?.detail.length / itemsPerPage);
-    const paginatedOrders = ordersHistory?.detail.slice(
+    const totalPages = Math.ceil(ordersHistory?.detail?.length / itemsPerPage);
+    const paginatedOrders = ordersHistory?.detail?.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
