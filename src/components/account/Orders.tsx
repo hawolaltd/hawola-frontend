@@ -39,7 +39,7 @@ const Orders: NextPage = () => {
                         {paginatedOrders.map((order) => (
                             <tr key={order?.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className="text-sm font-medium text-gray-900">#{order.id}</span>
+                                    <span className="text-sm font-medium text-gray-900">#{order?.id}</span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
@@ -136,8 +136,8 @@ const Orders: NextPage = () => {
                             <div>
                                 <p className="text-sm text-gray-700">
                                     Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-                                    <span className="font-medium">{Math.min(currentPage * itemsPerPage, ordersHistory?.detail.length)}</span> of{' '}
-                                    <span className="font-medium">{ordersHistory?.detail.length}</span> orders
+                                    <span className="font-medium">{Math.min(currentPage * itemsPerPage, ordersHistory?.detail?.length)}</span> of{' '}
+                                    <span className="font-medium">{ordersHistory?.detail?.length}</span> orders
                                 </p>
                             </div>
                             <div>
