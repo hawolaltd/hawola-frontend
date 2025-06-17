@@ -24,7 +24,7 @@ interface ProductsState {
   localCart: LocalCart;
   addresses: AddressResponse;
   ordersHistory: OrderHistory;
-  singleOrder: null;
+  singleOrder: NewOrderDetailsResponse;
   reviews: null;
   wishLists: WishlistResponse;
   wishList: null;
@@ -44,7 +44,7 @@ const initialState: ProductsState = {
   localCart: {} as LocalCart,
   addresses: {} as AddressResponse,
   ordersHistory: {} as OrderHistory,
-  singleOrder: null,
+  singleOrder: {} as NewOrderDetailsResponse,
   merchantReviews: {} as MerchantReviewResponse,
   reviews: null,
   wishLists: {} as WishlistResponse,

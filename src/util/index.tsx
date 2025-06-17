@@ -4,6 +4,7 @@ import {authRefreshTokenStorageKeyName, authTokenStorageKeyName} from "@/constan
 import Cookies from "js-cookie";
 import {toast} from "sonner";
 import {useState} from "react";
+import moment from "moment";
 
 export const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -213,4 +214,21 @@ export const TruncatedTextWithTooltip = ({
             )}
         </div>
     );
+};
+
+/**
+ * getLatestStatus:
+ * get the status of an order
+ *
+ * @param {any} statusArray - array of status
+ */
+
+export const getLatestStatus = (statusArray: any) => {
+    if (!statusArray?.length) return null;
+
+    return statusArray.reduce((latest: any, current: any) => {
+        const latestDate = moment(latest.created_at, "dddd, DD-MMMM-YYYY");
+        const currentDate = moment(current.created_at, "dddd, DD-MMMM-YYYY");
+        return currentDate.isAfter(latestDate) ? current : latest;
+    });
 };

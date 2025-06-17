@@ -98,7 +98,7 @@ const Orders: NextPage = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <button className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm transition-all flex items-center whitespace-nowrap" onClick={()=>{
-                                        router.push(`/order/details/${order?.id}`)
+                                        router.push(`/order/details/${order?.orderitem_number}`)
                                     }}>
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

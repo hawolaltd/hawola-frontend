@@ -11,7 +11,7 @@ import {getDisputes} from "@/redux/disputes/disputeSlice";
 
 export default function AccountPage() {
     const {profile: user} = useAppSelector(state => state.auth);
-
+    console.log("user:", user)
     const [loading, setLoading] = useState(false)
 
     const [tab, setTab] = useState('orders');
@@ -98,7 +98,7 @@ export default function AccountPage() {
                 <main className="p-0">
                     {/* Header */}
                     <header className="mb-6 bg-headerBg px-20 pt-4">
-                        <h1 className="text-3xl font-semibold text-white">Hello Steven</h1>
+                        <h1 className="text-3xl font-semibold text-white">Hello {user?.first_name}</h1>
                         <p className="text-sm text-white font-medium mt-2 mb-12">
                             From your account dashboard, you can easily check & view your recent orders, <br/> manage your shipping and billing addresses and edit your password and account details.
                         </p>
@@ -114,10 +114,10 @@ export default function AccountPage() {
                     {
                         loading ? (
                             <div className="flex items-center justify-center h-[270px] bg-white rounded-lg">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondaryBgColor"></div>
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
                             </div>
                         ) : (
-                            <div className={'container  mx-auto mb-12'}>
+                            <div className={'container h-screen overflow-x-hidden mx-auto mb-12'}>
                                 {tab === 'wish' && <Wishlist />}
 
                                 {tab === 'orders' && <Orders />}
