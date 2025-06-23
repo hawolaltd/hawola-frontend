@@ -32,7 +32,7 @@ function RegisterForm() {
         setFormData(data)
 
         const finalData = {
-            email: data.email, username: data.username, password1: data.password1, password2: data.password2,
+            email: data.email, username: data.username, password1: data.password1, password2: data.password2, gender: "M"
         }
         const res = await dispatch(register(finalData))
 

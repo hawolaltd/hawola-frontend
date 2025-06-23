@@ -16,7 +16,9 @@ export default {
         textPadded: "#8C9EC5",
         orange: "#FFB067",
         deepOrange: "#FD9636",
-        detailsBorder: "#dde4f0"
+        detailsBorder: "#dde4f0",
+        smallHeaderText: "#6b83b6",
+        filterBg: "#EBF0F3"
       },
       backgroundImage: {
         'custom-bg': "url('/imgs/page/homepage4/bg-banner-2.png')",

@@ -19,6 +19,8 @@ interface ProductsState {
   products: ProductResponse;
   product: ProductByIdResponse;
   categories: ProductCategoriesResponse;
+  subCategories: ProductCategoriesResponse;
+  secSubCategories: ProductCategoriesResponse;
   carts: CartResponse;
   orders: OrderDetailsResponse;
   localCart: LocalCart;
@@ -28,6 +30,9 @@ interface ProductsState {
   reviews: null;
   wishLists: WishlistResponse;
   wishList: null;
+  productBaseOnCategories: null;
+  productBaseOnSubCategories: null;
+  productBaseOnSecLevelSubCategories: null;
   merchants: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
   isLoading: boolean;
@@ -39,6 +44,8 @@ const initialState: ProductsState = {
   products: {} as ProductResponse,
   product: {} as ProductByIdResponse,
   categories: {} as ProductCategoriesResponse,
+  subCategories: {} as ProductCategoriesResponse,
+  secSubCategories: {} as ProductCategoriesResponse,
   carts: {} as CartResponse,
   orders: {} as OrderDetailsResponse,
   localCart: {} as LocalCart,
@@ -47,6 +54,9 @@ const initialState: ProductsState = {
   singleOrder: {} as NewOrderDetailsResponse,
   merchantReviews: {} as MerchantReviewResponse,
   reviews: null,
+  productBaseOnCategories: null,
+  productBaseOnSubCategories: null,
+  productBaseOnSecLevelSubCategories: null,
   wishLists: {} as WishlistResponse,
   wishList: null,
   merchants: {} as MerchantDetailsResponse,
@@ -132,6 +142,96 @@ export const getAllCategories = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       return await productService.getAllCategories();
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getAllSubCategories = createAsyncThunk(
+  "products/product-sub-categories",
+  async (_, thunkAPI) => {
+    try {
+      return await productService.getAllCategories();
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getAllSubSecCategories = createAsyncThunk(
+  "products/product-sec-sub-categories",
+  async (_, thunkAPI) => {
+    try {
+      return await productService.getAllCategories();
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getAllProductBaseOnCategories = createAsyncThunk(
+  "products/product-base-on-categories",
+  async (slug: string, thunkAPI) => {
+    try {
+      return await productService.getAllProductBaseOnCategories(slug);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getAllProductBaseOnSubCategories = createAsyncThunk(
+  "products/product-base-on-sub-categories",
+  async (slug: string, thunkAPI) => {
+    try {
+      return await productService.getAllProductBaseOnSubCategories(slug);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getAllProductBaseOnSecondLevelSubCategories = createAsyncThunk(
+  "products/product-base-on-sec-level-sub-categories",
+  async (slug: string, thunkAPI) => {
+    try {
+      return await productService.getAllProductBaseOnSecondLevelSubCategories(slug);
     } catch (error: any) {
       const message =
         (error.response &&
@@ -784,6 +884,61 @@ const productSlice = createSlice({
         state.merchants = action.payload;
       })
       .addCase(getMerchants.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      }).addCase(getAllProductBaseOnCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllProductBaseOnCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.productBaseOnCategories  = action.payload;
+      })
+      .addCase(getAllProductBaseOnCategories.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      }).addCase(getAllProductBaseOnSubCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllProductBaseOnSubCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.productBaseOnSubCategories = action.payload;
+      })
+      .addCase(getAllProductBaseOnSubCategories.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      }).addCase(getAllProductBaseOnSecondLevelSubCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllProductBaseOnSecondLevelSubCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.productBaseOnSecLevelSubCategories = action.payload;
+      })
+      .addCase(getAllProductBaseOnSecondLevelSubCategories.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      }).addCase(getAllSubCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllSubCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.subCategories = action.payload;
+      })
+      .addCase(getAllSubCategories.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      }).addCase(getAllSubSecCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllSubSecCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.secSubCategories = action.payload;
+      })
+      .addCase(getAllSubSecCategories.rejected, (state, action) => {
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;

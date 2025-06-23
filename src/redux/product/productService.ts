@@ -37,7 +37,7 @@ const getProductBySlug = async (slug: string) => {
 
 // get all categories
 const getAllCategories = async () => {
-    const response = await axios.get(API + API_URL + `all/categories/`);
+    const response = await axios.get(API + `categories/all`);
 
     return response.data;
 };
@@ -45,7 +45,7 @@ const getAllCategories = async () => {
 
 // get all categories
 const getAllSubCategories = async (slug: string) => {
-    const response = await axios.get(API + API_URL + `all/subcategories/${slug}`);
+    const response = await axios.get(API + `categories/${slug}/`);
 
     return response.data;
 };
@@ -54,7 +54,33 @@ const getAllSubCategories = async (slug: string) => {
 
 // get all sub sec categories
 const getAllSubSecCategories = async (slug: string) => {
-    const response = await axios.get(API + API_URL + `all/subseccategories/${slug}`);
+    const response = await axios.get(API + API_URL + `categories/subcategories/${slug}/`);
+
+    return response.data;
+};
+
+
+
+// Get all produts unique to a category.
+const getAllProductBaseOnCategories = async (slug: string) => {
+    const response = await axios.get(API + API_URL + `categories/products/${slug}/`);
+
+    return response.data;
+};
+
+
+
+// Get all produts unique to a Sub-category.
+const getAllProductBaseOnSubCategories = async (slug: string) => {
+    const response = await axios.get(API + API_URL + `categories/subcategory/products/${slug}/`);
+
+    return response.data;
+};
+
+
+// Get all produts unique to a second level Sub-category.
+const getAllProductBaseOnSecondLevelSubCategories = async (slug: string) => {
+    const response = await axios.get(API + API_URL + `categories/subseccategory/products/${slug}/`);
 
     return response.data;
 };
@@ -246,7 +272,10 @@ const productService = {
     addWishList,
     deleteWishList,
     getWishListById,
-    getMerchants
+    getMerchants,
+    getAllProductBaseOnCategories,
+    getAllProductBaseOnSubCategories,
+    getAllProductBaseOnSecondLevelSubCategories
 };
 
 export default productService;

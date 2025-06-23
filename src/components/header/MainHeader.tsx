@@ -8,12 +8,21 @@ import {CartResponse} from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import {setDrawerOpen} from "@/redux/ui/uiSlice";
 
-const Header = ({isScrolled}: { isScrolled?: any;}) => {
+const Header = ({isScrolled}: { isScrolled?: any; }) => {
     const [userInfo, setUserInfo] = useState(false)
     const [cart, setCart] = useState(false)
     const [items, setItems] = useState([])
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
-    const {carts, localCart, wishLists} = useAppSelector(state => state.products)
+    const [dropdownOpenCat, setDropdownOpenCat] = useState<boolean>(false);
+    const {carts, localCart, wishLists, categories} = useAppSelector(state => state.products)
+    const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
+    const [submenuTimeout, setSubmenuTimeout] = useState<NodeJS.Timeout | null>(null);
+
+// Add this function to handle delayed closing
+    const handleSubmenuClose = () => {
+        if (submenuTimeout) clearTimeout(submenuTimeout);
+        setSubmenuTimeout(setTimeout(() => setHoveredCategory(null), 9000));
+    };
 
     const [userCart, setUserCart] = useState<CartResponse>(carts)
 
@@ -21,6 +30,10 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
 
     const toggleDropdown = (menu: string) => {
         setDropdownOpen(dropdownOpen === menu ? null : menu);
+    };
+
+    const toggleDropdownOpenCat = () => {
+        setDropdownOpenCat(!dropdownOpenCat);
     };
 
     const router = useRouter()
@@ -39,8 +52,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
 
     }, []);
 
-    return (
-        <div className={'relative '}>
+    return (<div className={'relative '}>
 
             {/* Top Component Start*/}
             <div className="bg-white">
@@ -85,37 +97,23 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                         </svg>
                                     </button>
                                     {dropdownOpen === 'category' && (
-                                        <ul className="absolute left-0 z-10 mt-2 w-48 bg-white shadow-lg border rounded-md">
-                                            <li><Link href="#"
+                                        <ul className="absolute left-0 z-10 mt-2 w-52 h-96 overflow-x-hidden bg-white shadow-lg border rounded-md">
+                                            <li><Link href="/categories?type=all"
                                                       className="block text-primary px-4 py-2 hover:text-deepOrange">All
                                                 categories</Link>
                                             </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Computer
-                                                Accessories</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Cell
-                                                Phones</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Gaming
-                                                Gatgets</Link></li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Smart
-                                                Watches</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Login</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Wired
-                                                Headphone</Link></li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Mouse
-                                                Keyboard</Link></li>
-                                        </ul>
-                                    )}
+                                            {categories?.categories?.filter(
+                                                (item, index, self) =>
+                                                    item.name &&
+                                                    self.findIndex((i) => i.name === item.name) === index
+                                            ).map((category: any) => {
+                                                return <li key={category.id}>
+                                                    <Link href={`/categories?type=cat&slug=${category.slug}`}
+                                                          className="block text-primary px-4 py-2 hover:text-deepOrange">{category.name}
+                                                    </Link>
+                                                </li>
+                                            })}
+                                        </ul>)}
                                 </div>
                                 <input
                                     type="text"
@@ -143,9 +141,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                             }} className="cursor-pointer">
                                 <img src="/assets/account.svg" alt="User" className="w-6 h-6"/>
                             </div>
-                            {userInfo && (
-                                <UserInfoDropdown/>
-                            )}
+                            {userInfo && (<UserInfoDropdown/>)}
                         </div>
 
                         {/* Wishlist */}
@@ -180,21 +176,22 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
 
                         {/* Compare */}
                         <div className="relative flex items-center gap-2 text-primary text-[16px]">
-                            <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/> <span className={'hidden lg:flex'}>Compare</span>
+                            <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/> <span
+                            className={'hidden lg:flex'}>Compare</span>
                         </div>
 
-                        <div onClick={()=>{
+                        <div onClick={() => {
                             dispatch(setDrawerOpen(true))
                         }} className={'lg:hidden'}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 7H7M20 7H11M20 17H17M4 17H13M4 12H20" stroke="#64748B" stroke-width="1.5" stroke-linecap="round"/>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 7H7M20 7H11M20 17H17M4 17H13M4 12H20" stroke="#64748B" stroke-width="1.5"
+                                      stroke-linecap="round"/>
                             </svg>
                         </div>
 
                     </div>
-                    {
-                        cart && <CartModal/>
-                    }
+                    {cart && <CartModal/>}
                 </div>
             </div>
 
@@ -208,9 +205,14 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                     <div className="max-w-screen-xl flex items-center gap-8">
 
                         {/* Shop By Categories Dropdown */}
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 relative">
                             <button
+                                onClick={() => toggleDropdownOpenCat()}
                                 className="bg-deepOrange text-white py-2 px-4 rounded-md flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                                </svg>
+
                                 <span>Shop By Categories</span>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -225,6 +227,98 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                     />
                                 </svg>
                             </button>
+                            {dropdownOpenCat && (
+                                <div className="absolute -left-3 top-8 z-10 w-72 h-96 bg-white shadow-lg border rounded-md flex">
+                                    {/* Main categories column */}
+                                    <ul
+                                        className="w-full overflow-y-auto"
+                                        onMouseLeave={handleSubmenuClose}
+                                    >
+                                        <li>
+                                            <Link
+                                                href="/categories?type=all"
+                                                className="block text-primary px-4 py-2 hover:text-deepOrange hover:bg-gray-50"
+                                            >
+                                                All categories
+                                            </Link>
+                                        </li>
+                                        {categories?.categories?.filter(
+                                            (item, index, self) =>
+                                                item.name &&
+                                                self.findIndex((i) => i.name === item.name) === index
+                                        ).map((category: any) => (
+                                            <li
+                                                key={category.id}
+                                                onMouseEnter={() => {
+                                                    if (submenuTimeout) clearTimeout(submenuTimeout);
+                                                    if (category.subcategory?.length > 0) {
+                                                        setHoveredCategory(category.id);
+                                                    }
+                                                }}
+                                                className="relative"
+                                            >
+                                                <Link
+                                                    href={`/categories?type=cat&slug=${category.slug}`}
+                                                    className="flex justify-between items-center text-primary px-4 py-2 hover:text-deepOrange hover:bg-gray-50"
+                                                >
+                                                    {category.name}
+                                                    {category.subcategory?.length > 0 && (
+                                                        <svg
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="ml-2"
+                                                        >
+                                                            <path d="M9 18L15 12L9 6" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        </svg>
+                                                    )}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* Subcategories column */}
+                                    {hoveredCategory && (
+                                        <div
+                                            className="absolute left-full top-0 w-72 h-full bg-white shadow-lg border rounded-md overflow-y-auto"
+                                            onMouseEnter={() => {
+                                                if (submenuTimeout) clearTimeout(submenuTimeout);
+                                            }}
+                                            onMouseLeave={handleSubmenuClose}
+                                        >
+                                            {categories?.categories
+                                                ?.find((cat: any) => cat.id === hoveredCategory)
+                                                ?.subcategory?.map((subcat: any) => (
+                                                    <div
+                                                        key={subcat.id}
+                                                        className="relative"
+                                                    >
+                                                        <Link
+                                                            href={`/categories?type=subcat&slug=${subcat.slug}`}
+                                                            className="flex justify-between items-center text-primary px-4 py-2 hover:text-deepOrange hover:bg-gray-50"
+                                                        >
+                                                            {subcat.name}
+                                                            {subcat.second_subcategory?.length > 0 && (
+                                                                <svg
+                                                                    width="12"
+                                                                    height="12"
+                                                                    viewBox="0 0 24 24"
+                                                                    fill="none"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    className="ml-2"
+                                                                >
+                                                                    <path d="M9 18L15 12L9 6" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                </svg>
+                                                            )}
+                                                        </Link>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Navigation Links */}
@@ -279,8 +373,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
                             <li onMouseEnter={() => setDropdownOpen('shop')}
                                 onMouseLeave={() => setDropdownOpen(null)}
@@ -332,8 +425,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
                             <li onMouseEnter={() => setDropdownOpen('vendor')}
                                 onMouseLeave={() => setDropdownOpen(null)}
@@ -369,8 +461,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Vendors
                                             Single</Link>
                                         </li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
                             <li onMouseEnter={() => setDropdownOpen('pages')}
                                 onMouseLeave={() => setDropdownOpen(null)}
@@ -421,8 +512,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
 
 
@@ -475,8 +565,7 @@ const Header = ({isScrolled}: { isScrolled?: any;}) => {
                                         <li><Link href="#"
                                                   className="block text-primary px-4 py-2 hover:text-deepOrange">Error
                                             404</Link></li>
-                                    </ul>
-                                )}
+                                    </ul>)}
                             </li>
 
 

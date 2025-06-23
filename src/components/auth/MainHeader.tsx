@@ -15,7 +15,7 @@ function MainHeader() {
     const isDrawerOpen = useAppSelector(state => state.ui.isDrawerOpen);
     const [cart, setCart] = useState(false)
 
-    const {carts, localCart, wishLists} = useAppSelector(state => state.products)
+    const {carts, localCart, wishLists, categories} = useAppSelector(state => state.products)
     console.log('localCartAuth:', localCart)
     const [userCart, setUserCart] = useState<CartResponse>(carts)
 
@@ -49,7 +49,6 @@ function MainHeader() {
 
     }, []);
 
-    // console.log("authitems:", items)
 
     return (<div>
         <Drawer
@@ -102,35 +101,22 @@ function MainHeader() {
                                         </svg>
                                     </button>
                                     {dropdownOpen === 'category' && (
-                                        <ul className="absolute left-0 z-10 mt-2 w-48 bg-white shadow-lg border rounded-md">
-                                            <li><Link href="#"
+                                        <ul className="absolute left-0 z-10 mt-2 w-52 h-96 overflow-x-hidden bg-white shadow-lg border rounded-md">
+                                            <li><Link href="/categories?type=all"
                                                       className="block text-primary px-4 py-2 hover:text-deepOrange">All
                                                 categories</Link>
                                             </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Computer
-                                                Accessories</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Cell
-                                                Phones</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Gaming
-                                                Gatgets</Link></li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Smart
-                                                Watches</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Login</Link>
-                                            </li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Wired
-                                                Headphone</Link></li>
-                                            <li><Link href="#"
-                                                      className="block text-primary px-4 py-2 hover:text-deepOrange">Mouse
-                                                Keyboard</Link></li>
+                                            {categories?.categories?.filter(
+                                                (item, index, self) =>
+                                                    item.name &&
+                                                    self.findIndex((i) => i.name === item.name) === index
+                                            ).map((category: any) => {
+                                                return <li key={category.id}>
+                                                    <Link href={`/categories?type=cat&slug=${category.slug}`}
+                                                          className="block text-primary px-4 py-2 hover:text-deepOrange">{category.name}
+                                                    </Link>
+                                                </li>
+                                            })}
                                         </ul>)}
                                 </div>
                                 <input
