@@ -254,11 +254,11 @@ const OrderDetails: NextPage = () => {
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Shipping Price:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.shipping_price.toLocaleString())}</p>
+                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.shipping_price)}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Subtotal:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price_subtotal.toLocaleString())}</p>
+                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price_subtotal)}</p>
                                                </div>
                                            </div>
                                        </div>
