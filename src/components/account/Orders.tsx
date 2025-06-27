@@ -66,7 +66,7 @@ const Orders: NextPage = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex flex-col">
                                         <span className="text-sm font-medium text-gray-900">
-                                            {formatCurrency(order?.order_price)}
+                                            {/*{formatCurrency(order?.order_price)}*/}
                                         </span>
                                         <span className="text-xs text-gray-700 mt-1 bg-purple-50 px-2 py-1 rounded-full whitespace-nowrap w-fit">
                                             {formatCurrency(order?.order_price_subtotal)}

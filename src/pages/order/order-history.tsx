@@ -173,7 +173,7 @@ const OrderHistoryPage = () => {
                                         <div className="md:col-span-3 flex justify-end items-center gap-2">
                                             <div className="md:hidden text-sm text-gray-500 mb-1">Total</div>
                                             <div className="text-right font-medium">
-                                                ${amountFormatter((+(order.order_price_subtotal)).toFixed(2))}
+                                                ${amountFormatter((+(order?.order_price_subtotal)).toFixed(2))}
                                             </div>
 
                                             {!order.isDelivered && (
