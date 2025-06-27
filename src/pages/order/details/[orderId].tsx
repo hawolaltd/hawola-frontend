@@ -46,7 +46,7 @@ const OrderDetails: NextPage = () => {
     const { register, handleSubmit, formState: { errors }, reset } = useForm<DisputeFormData>({
         resolver: yupResolver(disputeSchema),
         defaultValues: {
-            orderitem_number: router.query.orderId as string,
+            orderitem_number: router?.query?.orderId as string,
             want_full_refund: true
         }
     });
@@ -83,12 +83,12 @@ const OrderDetails: NextPage = () => {
             console.log('Submitting dispute:', data);
 
             const formData = new FormData();
-            formData.append('orderitem_number', data.orderitem_number);
-            formData.append('dispute_reason', data.dispute_reason);
+            formData.append('orderitem_number', data?.orderitem_number);
+            formData.append('dispute_reason', data?.dispute_reason);
             if (data.proof_image) {
-                formData.append('proof_image', data.proof_image);
+                formData.append('proof_image', data?.proof_image);
             }
-            formData.append('want_full_refund', String(data.want_full_refund));
+            formData.append('want_full_refund', String(data?.want_full_refund));
 
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -106,8 +106,8 @@ const OrderDetails: NextPage = () => {
     const isFormActive = orderLatestStatus?.status === 'received';
 
     useEffect(() => {
-        dispatch(getSingleOrder(router.query.orderId as string));
-    }, [dispatch, router.query.orderId]);
+        dispatch(getSingleOrder(router?.query?.orderId as string));
+    }, [dispatch, router?.query?.orderId]);
 
     return (
         <AuthLayout>
@@ -250,15 +250,15 @@ const OrderDetails: NextPage = () => {
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Order Price:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder.order_price.toLocaleString())}</p>
+                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price.toLocaleString())}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Shipping Price:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder.shipping_price.toLocaleString())}</p>
+                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.shipping_price.toLocaleString())}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Subtotal:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder.order_price_subtotal.toLocaleString())}</p>
+                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price_subtotal.toLocaleString())}</p>
                                                </div>
                                            </div>
                                        </div>
@@ -268,9 +268,9 @@ const OrderDetails: NextPage = () => {
                                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Payment Status</h3>
                                            <div className="flex items-center">
                                                <div className={`w-3 h-3 rounded-full mr-2 ${
-                                                   singleOrder.payment_confirmed
+                                                   singleOrder?.payment_confirmed
                                                        ? 'bg-green-500'
-                                                       : singleOrder.isPaid
+                                                       : singleOrder?.isPaid
                                                            ? 'bg-yellow-500'
                                                            : 'bg-red-500'
                                                }`}></div>
@@ -278,7 +278,7 @@ const OrderDetails: NextPage = () => {
                                                    {getPaymentStatusMessage()}
                                                </p>
                                            </div>
-                                           {singleOrder.is_offline_payment && (
+                                           {singleOrder?.is_offline_payment && (
                                                <p className="mt-2 text-sm text-gray-500">
                                                    This is an offline payment
                                                </p>
@@ -293,12 +293,12 @@ const OrderDetails: NextPage = () => {
                                        <div className="p-6 rounded-lg shadow">
                                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Tracking Information</h3>
                                            <div className="space-y-4">
-                                               {singleOrder?.shipping_info?.flatMap(info => info.shipping_status).map((update, index) => (
+                                               {singleOrder?.shipping_info?.flatMap(info => info?.shipping_status).map((update, index) => (
                                                    <div key={index} className="flex">
                                                        <div className="flex flex-col items-center mr-4">
                                                            <div className={`w-3 h-3 rounded-full ${
-                                                               update.status === 'delivered' ? 'bg-green-500' :
-                                                                   update.status === 'in-transit' ? 'bg-yellow-500' :
+                                                               update?.status === 'delivered' ? 'bg-green-500' :
+                                                                   update?.status === 'in-transit' ? 'bg-yellow-500' :
                                                                        'bg-purple-500'
                                                            }`}></div>
                                                            {index < singleOrder?.shipping_info?.length - 1 && (
@@ -320,7 +320,7 @@ const OrderDetails: NextPage = () => {
                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                <div>
                                                    <p className="text-sm text-gray-600">Tracking Number:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder.tracking_number}</p>
+                                                   <p className="text-gray-800 font-medium">{singleOrder?.tracking_number}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Expected Date of Arrival:</p>
@@ -355,12 +355,12 @@ const OrderDetails: NextPage = () => {
                                                <textarea
                                                    {...register('dispute_reason')}
                                                    rows={4}
-                                                   className={`w-full px-3 py-2 border rounded-md ${errors.dispute_reason ? 'border-red-500' : 'border-gray-300'}`}
+                                                   className={`w-full px-3 py-2 border rounded-md ${errors?.dispute_reason ? 'border-red-500' : 'border-gray-300'}`}
                                                    placeholder="Explain the reason for your dispute"
                                                    disabled={!isFormActive}
                                                />
-                                               {errors.dispute_reason && (
-                                                   <p className="mt-1 text-sm text-red-600">{errors.dispute_reason.message}</p>
+                                               {errors?.dispute_reason && (
+                                                   <p className="mt-1 text-sm text-red-600">{errors?.dispute_reason.message}</p>
                                                )}
                                            </div>
 
@@ -384,8 +384,8 @@ const OrderDetails: NextPage = () => {
                                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                                    disabled={!isFormActive}
                                                />
-                                               {errors.proof_image && (
-                                                   <p className="mt-1 text-sm text-red-600">{errors.proof_image.message}</p>
+                                               {errors?.proof_image && (
+                                                   <p className="mt-1 text-sm text-red-600">{errors?.proof_image?.message}</p>
                                                )}
                                                <p className="mt-1 text-xs text-gray-500">Max 5MB (JPG, PNG, GIF)</p>
                                            </div>

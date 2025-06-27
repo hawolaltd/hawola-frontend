@@ -234,14 +234,6 @@ const Header = ({isScrolled}: { isScrolled?: any; }) => {
                                         className="w-full overflow-y-auto"
                                         onMouseLeave={handleSubmenuClose}
                                     >
-                                        <li>
-                                            <Link
-                                                href="/categories?type=all"
-                                                className="block text-primary px-4 py-2 hover:text-deepOrange hover:bg-gray-50"
-                                            >
-                                                All categories
-                                            </Link>
-                                        </li>
                                         {categories?.categories?.filter(
                                             (item, index, self) =>
                                                 item.name &&

@@ -4,7 +4,7 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import {ProductResponse} from "@/types/product";
 
-const ProductSlider = ({products}: {products: ProductResponse}) => {
+const ProductSlider = ({products}: {products: any}) => {
     const sliderRef = useRef<Slider>(null);
 
     // Slider settings
@@ -45,7 +45,7 @@ const ProductSlider = ({products}: {products: ProductResponse}) => {
     return (
         <div className="container mx-auto px-4 py-8 relative">
             <Slider ref={sliderRef} {...settings}>
-                {products?.results?.map((product) => (
+                {products?.map((product: any) => (
                     <div key={product.id} className="px-2">
                         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 hover:border hover:border-orange">
                             <div className="p-4 flex gap-4">

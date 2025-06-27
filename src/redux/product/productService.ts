@@ -63,7 +63,7 @@ const getAllSubSecCategories = async (slug: string) => {
 
 // Get all produts unique to a category.
 const getAllProductBaseOnCategories = async (slug: string) => {
-    const response = await axios.get(API + API_URL + `categories/products/${slug}/`);
+    const response = await axios.get(API  + `categories/products/${slug}/`);
 
     return response.data;
 };
@@ -72,7 +72,7 @@ const getAllProductBaseOnCategories = async (slug: string) => {
 
 // Get all produts unique to a Sub-category.
 const getAllProductBaseOnSubCategories = async (slug: string) => {
-    const response = await axios.get(API + API_URL + `categories/subcategory/products/${slug}/`);
+    const response = await axios.get(API + `categories/subcategory/products/${slug}/`);
 
     return response.data;
 };
@@ -80,7 +80,7 @@ const getAllProductBaseOnSubCategories = async (slug: string) => {
 
 // Get all produts unique to a second level Sub-category.
 const getAllProductBaseOnSecondLevelSubCategories = async (slug: string) => {
-    const response = await axios.get(API + API_URL + `categories/subseccategory/products/${slug}/`);
+    const response = await axios.get(API  + `categories/subseccategory/products/${slug}/`);
 
     return response.data;
 };

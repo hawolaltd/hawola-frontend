@@ -4,7 +4,7 @@ import {
     AddressResponse,
     AddToCartType,
     addWishListType,
-    CartResponse,
+    CartResponse, CategoriesProductResponse,
     deleteWishListType,
     LocalCart,
     OrderDetailsResponse,
@@ -30,7 +30,7 @@ interface ProductsState {
   reviews: null;
   wishLists: WishlistResponse;
   wishList: null;
-  productBaseOnCategories: null;
+  productBaseOnCategories: CategoriesProductResponse;
   productBaseOnSubCategories: null;
   productBaseOnSecLevelSubCategories: null;
   merchants: MerchantDetailsResponse;
@@ -54,7 +54,7 @@ const initialState: ProductsState = {
   singleOrder: {} as NewOrderDetailsResponse,
   merchantReviews: {} as MerchantReviewResponse,
   reviews: null,
-  productBaseOnCategories: null,
+  productBaseOnCategories: {} as CategoriesProductResponse,
   productBaseOnSubCategories: null,
   productBaseOnSecLevelSubCategories: null,
   wishLists: {} as WishlistResponse,

@@ -6,11 +6,18 @@ import FilterBar from "@/components/categories/FilterBar";
 import ProductCard from "@/components/product/ProductCard";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import {getAllCategories, getAllProductBaseOnCategories, getProducts} from "@/redux/product/productSlice";
+import {
+    getAllCategories,
+    getAllProductBaseOnCategories,
+    getAllProductBaseOnSubCategories,
+    getProducts
+} from "@/redux/product/productSlice";
 import {useRouter} from "next/router";
 
 function Categories() {
-    const {products, carts} = useAppSelector(state => state.products)
+    const {products, carts, productBaseOnCategories, productBaseOnSubCategories} = useAppSelector(state => state.products)
+
+    console.log("productBaseOnCategories", productBaseOnCategories)
 
     const router = useRouter()
 
@@ -21,10 +28,14 @@ function Categories() {
 
     const init = useCallback(async () => {
         try {
-            if (type === "all") {
-                dispatch(getProducts())
-            }else {
+            if (type === "cat") {
                 dispatch(getAllProductBaseOnCategories(slug))
+
+            }else if (type === "subcat") {
+                dispatch(getAllProductBaseOnSubCategories(slug))
+
+            }else {
+                dispatch(getProducts())
             }
         }catch (e) {
 
@@ -39,10 +50,10 @@ function Categories() {
         <AuthLayout>
             <div className={`h-fit pb-28`}>
                 <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
-                    <Ads2/>
+                   {/*<img src={type === 'cat' ? productBaseOnCategories?.category_banner? : type === 'subcat' ? productBaseOnSubCategories : products?.results} />*/}
                 </div>
 
-                <ProductSlider products={products}/>
+                <ProductSlider products={type === 'cat' ? productBaseOnCategories.products : type === 'subcat' ? productBaseOnSubCategories : products?.results}/>
 
                 <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
                     <Ads2/>
@@ -53,7 +64,7 @@ function Categories() {
                 </div>
 
                 <div className={`container mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4 w-full`}>
-                    {products?.results?.map((product) => (
+                    {(type === 'cat' ? productBaseOnCategories?.products : type === 'subcat' ? productBaseOnSubCategories : products?.results)?.map((product: any) => (
                         <ProductCard key={product?.id} product={product} margin={'mx-2'}/>
                     ))}
                 </div>

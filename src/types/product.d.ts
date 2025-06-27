@@ -506,3 +506,58 @@ export interface WishlistResponse {
         updated_at: string;
     }[];
 }
+
+interface CategoriesProductResponse {
+    category_banner: any[];
+    promoted_products: any[];
+    products: {
+        id: number;
+        merchant: {
+            id: number;
+            store_name: string;
+            slug: string;
+            support_phone_number: string;
+            support_email: string;
+        };
+        name: string;
+        is_digital: boolean;
+        featured_image: {
+            image: {
+                full_size: string;
+                thumbnail: string;
+                thumbnail_100: string;
+            };
+            image_url: string;
+            image_ppoi: string;
+        }[];
+        rating: string;
+        numReviews: number;
+        price: string;
+        discount_price: string;
+        slug: string;
+    }[];
+    category_info: {
+        id: number;
+        name: string;
+        image: string;
+        slug: string;
+        icon: string;
+        subcategory: {
+            id: number;
+            name: string;
+            image: Record<string, never>;
+            slug: string;
+            second_subcategory: {
+                id: number;
+                name: string;
+                image: Record<string, never>;
+                slug: string;
+                second_category_banner_images: any[];
+            }[];
+        }[];
+        category_banner_images: any[];
+    };
+    total_products: number;
+    page: number;
+    number_of_pages: number;
+}
