@@ -250,7 +250,7 @@ const OrderDetails: NextPage = () => {
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Order Price:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price?.toLocaleString())}</p>
+                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price)}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Shipping Price:</p>
