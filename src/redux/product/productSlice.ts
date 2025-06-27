@@ -31,7 +31,7 @@ interface ProductsState {
   wishLists: WishlistResponse;
   wishList: null;
   productBaseOnCategories: CategoriesProductResponse;
-  productBaseOnSubCategories: null;
+  productBaseOnSubCategories: CategoriesProductResponse;
   productBaseOnSecLevelSubCategories: null;
   merchants: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
@@ -55,7 +55,7 @@ const initialState: ProductsState = {
   merchantReviews: {} as MerchantReviewResponse,
   reviews: null,
   productBaseOnCategories: {} as CategoriesProductResponse,
-  productBaseOnSubCategories: null,
+  productBaseOnSubCategories: {} as CategoriesProductResponse,
   productBaseOnSecLevelSubCategories: null,
   wishLists: {} as WishlistResponse,
   wishList: null,

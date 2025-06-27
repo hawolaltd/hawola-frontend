@@ -127,7 +127,9 @@ interface NewOrderDetailsResponse {
         discount_price: string;
         slug: string;
     };
-    shipping_address: null;
+    shipping_address: {
+        address: string
+    };
     shipping_info: {
         id: number;
         shipping_status: {

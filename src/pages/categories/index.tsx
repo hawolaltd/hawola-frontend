@@ -53,7 +53,7 @@ function Categories() {
                    {/*<img src={type === 'cat' ? productBaseOnCategories?.category_banner? : type === 'subcat' ? productBaseOnSubCategories : products?.results} />*/}
                 </div>
 
-                <ProductSlider products={type === 'cat' ? productBaseOnCategories.products : type === 'subcat' ? productBaseOnSubCategories : products?.results}/>
+                <ProductSlider products={type === 'cat' ? productBaseOnCategories.products : type === 'subcat' ? productBaseOnSubCategories?.products : products?.results}/>
 
                 <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
                     <Ads2/>
@@ -64,7 +64,7 @@ function Categories() {
                 </div>
 
                 <div className={`container mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4 w-full`}>
-                    {(type === 'cat' ? productBaseOnCategories?.products : type === 'subcat' ? productBaseOnSubCategories : products?.results)?.map((product: any) => (
+                    {(type === 'cat' ? productBaseOnCategories?.products : type === 'subcat' ? productBaseOnSubCategories?.products : products?.results)?.map((product: any) => (
                         <ProductCard key={product?.id} product={product} margin={'mx-2'}/>
                     ))}
                 </div>

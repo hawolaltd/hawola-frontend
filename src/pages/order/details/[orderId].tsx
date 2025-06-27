@@ -104,7 +104,7 @@ const OrderDetails: NextPage = () => {
     };
 
     const isFormActive = orderLatestStatus?.status === 'received';
-
+    console.log("router?.query?.orderId:", router?.query?.orderId)
     useEffect(() => {
         dispatch(getSingleOrder(router?.query?.orderId as string));
     }, [dispatch, router?.query?.orderId]);
@@ -227,7 +227,7 @@ const OrderDetails: NextPage = () => {
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Shipping address:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.shipping_address}</p>
+                                                   <p className="text-gray-800 font-medium">{singleOrder?.shipping_address?.address}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Contact Phone:</p>

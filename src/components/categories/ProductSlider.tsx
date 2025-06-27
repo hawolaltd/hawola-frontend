@@ -3,9 +3,12 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import {ProductResponse} from "@/types/product";
+import {formatCurrency} from "@/util";
 
 const ProductSlider = ({products}: {products: any}) => {
     const sliderRef = useRef<Slider>(null);
+
+    console.log("products:", products)
 
     // Slider settings
     const settings = {
@@ -50,7 +53,8 @@ const ProductSlider = ({products}: {products: any}) => {
                         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 hover:border hover:border-orange">
                             <div className="p-4 flex gap-4">
                                 <div>
-                                    <img className="w-full h-20 object-cover" src="/imgs/page/homepage1/smartphone.png" alt="product-1"/>
+                                    <img className="w-full h-20 object-cover" src={product?.featured_image?.[0]
+                                        ?.image_url} alt="product-1"/>
                                 </div>
 
                                 <div>
@@ -68,7 +72,7 @@ const ProductSlider = ({products}: {products: any}) => {
 
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <span className="text-lg font-bold text-primary">{product?.price}</span>
+                                            <span className="text-lg font-bold text-primary">{formatCurrency(product?.price)}</span>
                                             <span className="text-sm text-smallHeaderText line-through ml-2">{product.discount_price}</span>
                                         </div>
                                     </div>

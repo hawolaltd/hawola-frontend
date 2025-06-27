@@ -17,6 +17,9 @@ const Orders: NextPage = () => {
         currentPage * itemsPerPage
     );
 
+
+    console.log("paginatedOrders:", paginatedOrders)
+
     return (
         <div className="bg-gray-50 min-h-screen p-6">
 
