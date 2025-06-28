@@ -1,17 +1,19 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import productService from "@/redux/product/productService";
 import {
-    AddressResponse,
-    AddToCartType,
-    addWishListType,
-    CartResponse, CategoriesProductResponse,
-    deleteWishListType,
-    LocalCart,
-    OrderDetailsResponse,
-    Product,
-    ProductByIdResponse,
-    ProductCategoriesResponse,
-    ProductResponse, WishlistResponse,
+  AddressResponse,
+  AddToCartType,
+  addWishListType,
+  CartResponse,
+  CategoriesProductResponse,
+  deleteWishListType,
+  LocalCart,
+  OrderDetailsResponse,
+  Product,
+  ProductByIdResponse,
+  ProductCategoriesResponse,
+  ProductResponse,
+  WishlistResponse,
 } from "@/types/product";
 import { RootState } from "@/store/store";
 
@@ -32,7 +34,7 @@ interface ProductsState {
   wishList: null;
   productBaseOnCategories: CategoriesProductResponse;
   productBaseOnSubCategories: CategoriesProductResponse;
-  productBaseOnSecLevelSubCategories: null;
+  productBaseOnSecLevelSubCategories: CategoriesProductResponse;
   merchants: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
   isLoading: boolean;
@@ -56,7 +58,7 @@ const initialState: ProductsState = {
   reviews: null,
   productBaseOnCategories: {} as CategoriesProductResponse,
   productBaseOnSubCategories: {} as CategoriesProductResponse,
-  productBaseOnSecLevelSubCategories: null,
+  productBaseOnSecLevelSubCategories: {} as CategoriesProductResponse,
   wishLists: {} as WishlistResponse,
   wishList: null,
   merchants: {} as MerchantDetailsResponse,
@@ -231,7 +233,9 @@ export const getAllProductBaseOnSecondLevelSubCategories = createAsyncThunk(
   "products/product-base-on-sec-level-sub-categories",
   async (slug: string, thunkAPI) => {
     try {
-      return await productService.getAllProductBaseOnSecondLevelSubCategories(slug);
+      return await productService.getAllProductBaseOnSecondLevelSubCategories(
+        slug
+      );
     } catch (error: any) {
       const message =
         (error.response &&
@@ -887,18 +891,20 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;
-      }).addCase(getAllProductBaseOnCategories.pending, (state) => {
+      })
+      .addCase(getAllProductBaseOnCategories.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getAllProductBaseOnCategories.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.productBaseOnCategories  = action.payload;
+        state.productBaseOnCategories = action.payload;
       })
       .addCase(getAllProductBaseOnCategories.rejected, (state, action) => {
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;
-      }).addCase(getAllProductBaseOnSubCategories.pending, (state) => {
+      })
+      .addCase(getAllProductBaseOnSubCategories.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getAllProductBaseOnSubCategories.fulfilled, (state, action) => {
@@ -909,18 +915,26 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;
-      }).addCase(getAllProductBaseOnSecondLevelSubCategories.pending, (state) => {
+      })
+      .addCase(getAllProductBaseOnSecondLevelSubCategories.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(getAllProductBaseOnSecondLevelSubCategories.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.productBaseOnSecLevelSubCategories = action.payload;
-      })
-      .addCase(getAllProductBaseOnSecondLevelSubCategories.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = true;
-        state.message = action.payload;
-      }).addCase(getAllSubCategories.pending, (state) => {
+      .addCase(
+        getAllProductBaseOnSecondLevelSubCategories.fulfilled,
+        (state, action) => {
+          state.isLoading = false;
+          state.productBaseOnSecLevelSubCategories = action.payload;
+        }
+      )
+      .addCase(
+        getAllProductBaseOnSecondLevelSubCategories.rejected,
+        (state, action) => {
+          state.isLoading = false;
+          state.error = true;
+          state.message = action.payload;
+        }
+      )
+      .addCase(getAllSubCategories.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getAllSubCategories.fulfilled, (state, action) => {
@@ -931,7 +945,8 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;
-      }).addCase(getAllSubSecCategories.pending, (state) => {
+      })
+      .addCase(getAllSubSecCategories.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getAllSubSecCategories.fulfilled, (state, action) => {
