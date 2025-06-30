@@ -74,7 +74,7 @@ const Orders: NextPage = () => {
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900 max-w-xs">
                         <TruncatedTextWithTooltip
-                          text={order?.product?.name}
+                          text={order?.name}
                           maxLength={15}
                         />
                       </span>
