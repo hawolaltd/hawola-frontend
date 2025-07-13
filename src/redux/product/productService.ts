@@ -62,27 +62,53 @@ const getAllSubSecCategories = async (slug: string) => {
 
 
 // Get all produts unique to a category.
-const getAllProductBaseOnCategories = async (slug: string) => {
-    const response = await axios.get(API  + `categories/products/${slug}/`);
+const getAllProductBaseOnCategories = async (slug: string, page?: string) => {
 
-    return response.data;
+    const params: Record<string, any> = {  };
+
+    if (page) params.page = page;
+
+    try {
+        const response = await axios.get(API  + `categories/products/${slug}/`, {params});
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        throw error;
+    }
 };
 
 
 
 // Get all produts unique to a Sub-category.
-const getAllProductBaseOnSubCategories = async (slug: string) => {
-    const response = await axios.get(API + `categories/subcategory/products/${slug}/`);
+const getAllProductBaseOnSubCategories = async (slug: string, page?: string) => {
 
-    return response.data;
+    const params: Record<string, any> = {  };
+
+    if (page) params.page = page;
+
+    try {
+        const response = await axios.get(API + `categories/subcategory/products/${slug}/`, {params});
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        throw error;
+    }
 };
 
 
 // Get all produts unique to a second level Sub-category.
-const getAllProductBaseOnSecondLevelSubCategories = async (slug: string) => {
-    const response = await axios.get(API  + `categories/subseccategory/products/${slug}/`);
+const getAllProductBaseOnSecondLevelSubCategories = async (slug: string, page?: string) => {
+    const params: Record<string, any> = {  };
 
-    return response.data;
+    if (page) params.page = page;
+
+    try {
+        const response = await axios.get(API  + `categories/subseccategory/products/${slug}/`, {params});
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        throw error;
+    }
 };
 
 

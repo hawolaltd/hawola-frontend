@@ -6,6 +6,7 @@ import {LocalCartItem, Product} from "@/types/product";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
 import {toast} from "sonner";
 import Link from "next/link";
+import {formatCurrency} from "@/util";
 
 const Wishlist: NextPage = () => {
     const {wishLists, isLoading} = useAppSelector(state => state.products)
@@ -189,7 +190,7 @@ const Wishlist: NextPage = () => {
                                     </div>
                                 </div>
                             </td>
-                            <td className="p-4 text-sm text-gray-900">${(+(item?.product?.price)).toFixed(2)}</td>
+                            <td className="p-4 text-sm text-gray-900">{formatCurrency((+(item?.product?.price)).toFixed(2))}</td>
                             {/*    <td className="p-4 text-sm text-gray-600">*/}
                             {/*<span className="px-2 py-1 bg-gray-200 rounded">*/}
                             {/*    {item?.product?. ? 'In Stock' : 'Out of Stock'}*/}

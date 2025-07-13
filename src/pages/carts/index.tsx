@@ -291,7 +291,7 @@ const CartPage = () => {
 
     // Clear pending updates when cart data is refreshed from server
     setPendingUpdates({});
-  }, [carts]);
+  }, [cartItems, carts]);
 
   return (
     <AuthLayout>

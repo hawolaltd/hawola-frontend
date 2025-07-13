@@ -195,9 +195,9 @@ export const getAllSubSecCategories = createAsyncThunk(
 
 export const getAllProductBaseOnCategories = createAsyncThunk(
   "products/product-base-on-categories",
-  async (slug: string, thunkAPI) => {
+  async (data: {slug: string, page?: string}, thunkAPI) => {
     try {
-      return await productService.getAllProductBaseOnCategories(slug);
+      return await productService.getAllProductBaseOnCategories(data?.slug, data?.page);
     } catch (error: any) {
       const message =
         (error.response &&
@@ -213,9 +213,9 @@ export const getAllProductBaseOnCategories = createAsyncThunk(
 
 export const getAllProductBaseOnSubCategories = createAsyncThunk(
   "products/product-base-on-sub-categories",
-  async (slug: string, thunkAPI) => {
+  async (data: {slug: string, page?: string}, thunkAPI) => {
     try {
-      return await productService.getAllProductBaseOnSubCategories(slug);
+      return await productService.getAllProductBaseOnSubCategories(data?.slug, data?.page);
     } catch (error: any) {
       const message =
         (error.response &&
@@ -231,10 +231,11 @@ export const getAllProductBaseOnSubCategories = createAsyncThunk(
 
 export const getAllProductBaseOnSecondLevelSubCategories = createAsyncThunk(
   "products/product-base-on-sec-level-sub-categories",
-  async (slug: string, thunkAPI) => {
+  async (data: {slug: string, page?: string}, thunkAPI) => {
     try {
       return await productService.getAllProductBaseOnSecondLevelSubCategories(
-        slug
+        data?.slug,
+          data?.page
       );
     } catch (error: any) {
       const message =

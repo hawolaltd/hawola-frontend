@@ -41,15 +41,23 @@ function Categories() {
 
   const init = useCallback(async () => {
     try {
+      const page = Number(router.query.page) || 1;
       if (type === "cat") {
-        dispatch(getAllProductBaseOnCategories(slug));
+        dispatch(getAllProductBaseOnCategories({ slug, page: String(page) }));
       } else if (type === "subcat") {
-        dispatch(getAllProductBaseOnSubCategories(slug));
+        dispatch(
+          getAllProductBaseOnSubCategories({ slug, page: String(page) })
+        );
       } else {
-        dispatch(getAllProductBaseOnSecondLevelSubCategories(slug));
+        dispatch(
+          getAllProductBaseOnSecondLevelSubCategories({
+            slug,
+            page: String(page),
+          })
+        );
       }
     } catch (e) {}
-  }, [dispatch, slug, type]);
+  }, [dispatch, slug, type, router.query.page]);
 
   useEffect(() => {
     init();
@@ -139,7 +147,10 @@ function Categories() {
           {/* Show banner if available */}
           {currentCategoryInfo?.image && (
             <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
-              <img src={currentCategoryInfo.image} alt={"category banner"} />
+              <img
+                src={currentCategoryInfo.image?.full_size}
+                alt={"category banner"}
+              />
             </div>
           )}
 
@@ -203,14 +214,14 @@ function Categories() {
   return (
     <AuthLayout>
       <div className={`h-fit pb-28`}>
-        <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
+        <div className="container mx-auto max-w-screen-full flex justify-center py-8">
           <img
-            // src={
-            //   currentCategoryInfo?.image
-            //     ? currentCategoryInfo?.image
-            //     : "/imgs/page/blog/img-big5.png"
-            // }
-            src={"/imgs/page/blog/img-big5.png"}
+            src={
+              currentCategoryInfo?.image
+                ? currentCategoryInfo?.image?.full_size
+                : "/imgs/page/blog/img-big5.png"
+            }
+            // src={"/imgs/page/blog/img-big5.png"}
             alt={"category banner"}
             className="w-full h-52 object-cover"
           />
@@ -254,6 +265,125 @@ function Categories() {
             />
           ))}
         </div>
+
+        {/* Pagination UI */}
+        {(() => {
+          // Get pagination info from the current category object
+          const currentCategoryObj =
+            type === "cat"
+              ? productBaseOnCategories
+              : type === "subcat"
+              ? productBaseOnSubCategories
+              : productBaseOnSecLevelSubCategories;
+          const totalPages = currentCategoryObj?.number_of_pages || 1;
+          const currentPage = currentCategoryObj?.page || 1;
+
+          console.log("currentCategoryObj:", currentCategoryObj);
+
+          if (totalPages <= 0) return null;
+
+          // Helper to handle page change
+          const handlePageChange = (page: number) => {
+            if (page < 1 || page > totalPages || page === currentPage) return;
+            // Update the query param for page
+            router.push({
+              pathname: router.pathname,
+              query: { ...router.query, page },
+            });
+          };
+
+          // Generate page numbers (show all if <= 7, else window around current)
+          let pageNumbers: number[] = [];
+          if (totalPages <= 7) {
+            pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+          } else {
+            if (currentPage <= 4) {
+              pageNumbers = [1, 2, 3, 4, 5, -1, totalPages];
+            } else if (currentPage >= totalPages - 3) {
+              pageNumbers = [
+                1,
+                -1,
+                totalPages - 4,
+                totalPages - 3,
+                totalPages - 2,
+                totalPages - 1,
+                totalPages,
+              ];
+            } else {
+              pageNumbers = [
+                1,
+                -1,
+                currentPage - 1,
+                currentPage,
+                currentPage + 1,
+                -1,
+                totalPages,
+              ];
+            }
+          }
+
+          return (
+            <div className="flex justify-start items-center gap-2 my-8 container mx-auto">
+              <button
+                className="px-2 py-1 rounded text-gray-400 hover:text-primary disabled:opacity-50"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              {pageNumbers.map((num, idx) =>
+                num === -1 ? (
+                  <span
+                    key={"ellipsis-" + idx}
+                    className="px-3 py-2 text-gray-400"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={num}
+                    className={`px-2.5 py-0.5 rounded border ${
+                      num === currentPage
+                        ? "bg-deepOrange text-white font-bold"
+                        : "bg-white text-blue-900 border-gray-200 hover:bg-gray-100"
+                    } transition`}
+                    onClick={() => handlePageChange(num)}
+                    disabled={num === currentPage}
+                  >
+                    {num}
+                  </button>
+                )
+              )}
+              <button
+                className="px-2 py-1 rounded text-gray-400 hover:text-primary disabled:opacity-50"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                aria-label="Next page"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          );
+        })()}
 
         <div className={"mt-28"}>
           <FeaturesSection />

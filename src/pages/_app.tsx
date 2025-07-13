@@ -18,7 +18,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <Provider store={store}>
         <Component {...pageProps} />
         <ToastContainer/>
-        <Toaster/>
+        <Toaster position={'top-right'}/>
     </Provider>
   </PersistGate>
 

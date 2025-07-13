@@ -539,7 +539,10 @@ interface CategoriesProductResponse {
     category_info: {
         id: number;
         name: string;
-        image: string;
+        image: {
+            thumbnail: string;
+            full_size: string;
+        };
         slug: string;
         icon: string;
         subcategory: {
