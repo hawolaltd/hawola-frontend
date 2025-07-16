@@ -2,9 +2,18 @@ import React, {useEffect, useState} from 'react';
 import Head from 'next/head';
 import AuthLayout from "@/components/layout/AuthLayout";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getMerchants, getWishList} from "@/redux/product/productSlice";
+import {
+    addToCarts,
+    addToCartsLocal,
+    deleteCart,
+    getCarts,
+    getMerchants,
+    getWishList
+} from "@/redux/product/productSlice";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import moment from "moment";
+import {LocalCartItem, ProductByIdResponse} from "@/types/product";
+import {toast} from "sonner";
 
 type Product = {
     id: string;
@@ -16,55 +25,120 @@ type Product = {
 };
 
 export default function WishlistPage() {
+    const {isAuthenticated} = useAppSelector(state => state.auth)
+
+    const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
 
     const {wishList, product, wishLists} = useAppSelector(state => state.products)
 
+    const [deleting, setDeleting] = useState(false);
+    const [adding, setAdding] = useState(false);
+
+    const [openDelete, setOpenDelete] = useState(false);
+
+    const [quantity, setQuantity] = useState(1);
     const dispatch = useAppDispatch()
 
-    const [products, setProducts] = useState<Product[]>([
-        {
-            id: '1',
-            name: 'Wireless Bluetooth Headphones',
-            price: 99.99,
-            stockStatus: 'In Stock',
-            addedDate: new Date('2023-05-15'),
-            image: '/images/headphones.jpg',
-        },
-        {
-            id: '2',
-            name: 'Smart Watch Series 5',
-            price: 199.99,
-            stockStatus: 'Low Stock',
-            addedDate: new Date('2023-06-20'),
-            image: '/images/smartwatch.jpg',
-        },
-        {
-            id: '3',
-            name: '4K Ultra HD Smart TV',
-            price: 799.99,
-            stockStatus: 'Out of Stock',
-            addedDate: new Date('2023-04-10'),
-            image: '/images/tv.jpg',
-        },
-        {
-            id: '4',
-            name: 'Wireless Mechanical Keyboard',
-            price: 129.99,
-            stockStatus: 'In Stock',
-            addedDate: new Date('2023-07-05'),
-            image: '/images/keyboard.jpg',
-        },
-    ]);
+    const handleDeleteCart = async (selectedPro: any) => {
 
-    const handleAddToCart = (productId: string | number ) => {
-        // Add to cart logic here
-        console.log(`Added product ${productId} to cart`);
+        setDeleting(true);
+        try {
+            const res = await dispatch(
+                deleteCart({ items: [selectedPro as number] })
+            );
+            if (res?.type.includes("fulfilled")) {
+                toast.success("Deleted");
+                dispatch(getWishList());
+                setOpenDelete(false);
+            }
+        } catch (e) {
+            console.log(e);
+        } finally {
+            setDeleting(false);
+        }
     };
 
-    const handleRemove = (productId: string | number) => {
-        setProducts(products.filter(product => product.id !== productId));
-    };
+    const handleAddToCart = async (product: any) => {
+        console.log("product:", product)
+        setAdding(true)
+        try {
+            // Convert selected variants to the format expected by backend
+            const variants = product?.product_variant?.length > 0
+                ? Object.entries(selectedVariants).map(([variantId, variantValueId]) => ({
+                    variant: Number(variantId),
+                    variant_value: variantValueId
+                }))
+                : undefined;
 
+            if (isAuthenticated) {
+                const res = await dispatch(addToCarts({
+                    items: [{
+                        qty: quantity,
+                        product: product?.id,
+                        ...(variants && { variant: variants })
+                    }]
+                }));
+
+                if (res?.type.includes('fulfilled')) {
+                    dispatch(getWishList());
+                    setAdding(false)
+                    toast.success('Added to cart');
+                }
+            } else {
+                // Get current cart from localStorage or initialize empty array
+                const cartItems: LocalCartItem[] = JSON.parse(localStorage.getItem("cartItems") || "[]");
+
+                // Check if item already exists in cart with the same variants
+                const existingItemIndex = cartItems.findIndex(item => {
+                    if (item.product?.id !== product?.product?.id) return false;
+
+                    // If no variants, match on product only
+                    if (!variants && !item.variant) return true;
+
+                    // Compare variants
+                    if (variants?.length !== item.variant?.length) return false;
+
+                    // Check each variant matches
+                    return variants?.every(v =>
+                        item.variant?.some(iv =>
+                            iv.variant === v.variant &&
+                            iv.variant_value === v.variant_value
+                        )
+                    );
+                });
+
+                if (existingItemIndex >= 0) {
+                    // Item exists - increment quantity
+                    cartItems[existingItemIndex].qty += quantity;
+                } else {
+                    // Item doesn't exist - add new item
+                    cartItems.push({
+                        qty: quantity,
+                        product: product?.product,
+                        ...(variants && { variant: variants })
+                    });
+                }
+
+                // Update localStorage
+                localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+                // Update Redux state to match localStorage
+                dispatch(addToCartsLocal({
+                    items: cartItems.map(item => ({
+                        qty: item.qty,
+                        product: item.product,
+                        ...(item.variant && { variant: item.variant })
+                    }))
+                }));
+
+                toast.success('Added to cart');
+                setAdding(false)
+            }
+        } catch (e) {
+            console.error("Error adding to cart:", e);
+            toast.error("Failed to add to cart");
+        }
+    }
     const formatDate = (date: any) => {
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -102,7 +176,7 @@ export default function WishlistPage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="flex justify-between items-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
-                        <p className="text-gray-600">{products.length} items</p>
+                        <p className="text-gray-600">{wishLists?.wishlists?.length} items</p>
                     </div>
 
                     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -152,17 +226,18 @@ export default function WishlistPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {moment(product?.created_at).format('MMM Do YYYY')}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium`}>
                                                 <button
-                                                    onClick={() => handleAddToCart(product?.product?.id)}
-                                                    // disabled={product.stockStatus === 'Out of Stock'}
-                                                    className={`mr-3 ${product?.product?.name === 'Out of Stock' ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary'} text-white px-3 py-1 rounded-md text-sm`}
+                                                    onClick={() => handleAddToCart(product?.product as unknown as ProductByIdResponse)}
+                                                    disabled={adding}
+                                                    className={`mr-3 ${adding ? "cursor-not-allowed bg-blue-200" : ""} ${product?.product?.name === 'Out of Stock' ? 'bg-gray-300 cursor-not-allowed' : 'bg-primary'} text-white px-3 py-1 rounded-md text-sm`}
                                                 >
                                                     Add to Cart
                                                 </button>
                                                 <button
-                                                    onClick={() => handleRemove(product?.product?.id)}
-                                                    className="text-red-600 hover:text-red-900"
+                                                    disabled={deleting}
+                                                    onClick={() => handleDeleteCart(product?.id)}
+                                                    className={`${deleting ? "cursor-not-allowed text-red-200" : "text-red-600 hover:text-red-900"} `}
                                                 >
                                                     Remove
                                                 </button>
@@ -185,8 +260,8 @@ export default function WishlistPage() {
                         <div className="mt-6 flex justify-end">
                             <button
                                 onClick={() => {
-                                    const inStockProducts = products.filter(p => p.stockStatus === 'In Stock');
-                                    inStockProducts.forEach(p => handleAddToCart(p.id));
+                                    // const inStockProducts = wishLists?.wishlists?.filter(p => p. === 'In Stock');
+                                    // inStockProducts.forEach(p => handleAddToCart(p as unknown as ProductByIdResponse));
                                 }}
                                 className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium"
                             >

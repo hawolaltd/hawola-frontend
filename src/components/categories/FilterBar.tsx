@@ -45,24 +45,24 @@ const FilterBar = ({ products }: { products: CategoriesProductResponse }) => {
     <>
       <div className="flex items-center justify-between px-4 py-2 border-b w-full">
         {/* Filters Section */}
-        <div>
-          <button
-            onClick={handleOpenModal}
-            className="flex items-center px-3 py-1.5 text-sm font-bold text-primary bg-filterBg rounded"
-          >
-            <svg
-              className="w-5 h-5 mr-1 text-primary"
-              viewBox="0 0 15 19"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="m14.546 6.201a.554.554 0 0 1 -.554.554h-1.79a2.22 2.22 0 0 1 -4.298 0h-6.896a.554.554 0 0 1 0-1.108h6.896a2.22 2.22 0 0 1 4.299 0h1.789a.554.554 0 0 1 .554.554zm0 3.7a.554.554 0 0 1 -.554.554h-7.005a2.22 2.22 0 0 1 -4.298 0h-1.68a.554.554 0 0 1 0-1.108h1.68a2.22 2.22 0 0 1 4.298 0h7.005a.554.554 0 0 1 .554.554zm0 3.7a.554.554 0 0 1 -.554.555h-1.79a2.22 2.22 0 0 1 -4.298 0h-6.896a.554.554 0 0 1 0-1.109h6.896a2.22 2.22 0 0 1 4.299 0h1.789a.554.554 0 0 1 .554.554zm-8.597-3.7a1.11 1.11 0 1 0 -1.111 1.111 1.112 1.112 0 0 0 1.11-1.11zm5.215-3.7a1.111 1.111 0 1 0 -1.11 1.11 1.112 1.112 0 0 0 1.11-1.11zm0 7.4a1.111 1.111 0 1 0 -1.11 1.111 1.112 1.112 0 0 0 1.11-1.11z"
-                fill={"#425A8B"}
-              />
-            </svg>
-            All Filters
-          </button>
-        </div>
+        {/*<div>*/}
+        {/*  <button*/}
+        {/*    onClick={handleOpenModal}*/}
+        {/*    className="flex items-center px-3 py-1.5 text-sm font-bold text-primary bg-filterBg rounded"*/}
+        {/*  >*/}
+        {/*    <svg*/}
+        {/*      className="w-5 h-5 mr-1 text-primary"*/}
+        {/*      viewBox="0 0 15 19"*/}
+        {/*      xmlns="http://www.w3.org/2000/svg"*/}
+        {/*    >*/}
+        {/*      <path*/}
+        {/*        d="m14.546 6.201a.554.554 0 0 1 -.554.554h-1.79a2.22 2.22 0 0 1 -4.298 0h-6.896a.554.554 0 0 1 0-1.108h6.896a2.22 2.22 0 0 1 4.299 0h1.789a.554.554 0 0 1 .554.554zm0 3.7a.554.554 0 0 1 -.554.554h-7.005a2.22 2.22 0 0 1 -4.298 0h-1.68a.554.554 0 0 1 0-1.108h1.68a2.22 2.22 0 0 1 4.298 0h7.005a.554.554 0 0 1 .554.554zm0 3.7a.554.554 0 0 1 -.554.555h-1.79a2.22 2.22 0 0 1 -4.298 0h-6.896a.554.554 0 0 1 0-1.109h6.896a2.22 2.22 0 0 1 4.299 0h1.789a.554.554 0 0 1 .554.554zm-8.597-3.7a1.11 1.11 0 1 0 -1.111 1.111 1.112 1.112 0 0 0 1.11-1.11zm5.215-3.7a1.111 1.111 0 1 0 -1.11 1.11 1.112 1.112 0 0 0 1.11-1.11zm0 7.4a1.111 1.111 0 1 0 -1.11 1.111 1.112 1.112 0 0 0 1.11-1.11z"*/}
+        {/*        fill={"#425A8B"}*/}
+        {/*      />*/}
+        {/*    </svg>*/}
+        {/*    All Filters*/}
+        {/*  </button>*/}
+        {/*</div>*/}
 
         <div className={"flex items-center gap-4"}>
           {/* Results and Sorting Section */}
@@ -72,9 +72,9 @@ const FilterBar = ({ products }: { products: CategoriesProductResponse }) => {
               {products?.total_products} results
             </span>
 
-            <div className={"bg-[#D5DFE4] font-medium  h-8 w-[1px]"} />
+            <div className={"hidden bg-[#D5DFE4] font-medium  h-8 w-[1px]"} />
 
-            <div className="relative flex items-center gap-1">
+            <div className="hidden relative  items-center gap-1">
               <span className={"text-smallHeaderText text-xs font-bold"}>
                 Sort by:{" "}
               </span>
@@ -104,9 +104,9 @@ const FilterBar = ({ products }: { products: CategoriesProductResponse }) => {
               </div>
             </div>
 
-            <div className={"bg-[#D5DFE4] font-medium  h-8 w-[1px]"} />
+            <div className={"hidden bg-[#D5DFE4] font-medium  h-8 w-[1px]"} />
 
-            <div className="relative flex items-center gap-1">
+            <div className="hidden relative items-center gap-1">
               <span className={"text-smallHeaderText text-xs font-bold"}>
                 Show:{" "}
               </span>
@@ -137,10 +137,10 @@ const FilterBar = ({ products }: { products: CategoriesProductResponse }) => {
             </div>
           </div>
 
-          <div className={"bg-[#D5DFE4] font-medium  h-8 w-[1px]"} />
+          <div className={"hidden bg-[#D5DFE4] font-medium  h-8 w-[1px]"} />
 
           {/* View Options */}
-          <div className={"flex items-center gap-1"}>
+          <div className={"hidden  items-center gap-1"}>
             <button
               className={`p-1.5 rounded bg-filterBg hover:text-gray-900 ${
                 viewMode === "grid"

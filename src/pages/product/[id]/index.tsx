@@ -9,7 +9,7 @@ import {
     addToCartsLocal, addWishList, clearProductById,
     getCarts,
     getMerchantReviews,
-    getProductBySlug
+    getProductBySlug, getWishList
 } from "@/redux/product/productSlice";
 import {useRouter} from "next/router";
 import {amountFormatter, formatCurrency} from "@/util";
@@ -18,7 +18,6 @@ import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import {router} from "next/client";
-import Swal from "sweetalert2";
 
 const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
@@ -77,26 +76,8 @@ const ProductPage = () => {
                 items: product?.product?.id
             }));
             if (res?.type.includes('fulfilled')) {
-                Swal.fire({
-                    title: "Added to wishlist!",
-                    icon: "success",
-                    draggable: true,
-                    showClass: {
-                        popup: `
-                              animate__animated
-                              animate__fadeInUp
-                              animate__faster
-                            `
-                    },
-                    hideClass: {
-                        popup: `
-                              animate__animated
-                              animate__fadeOutDown
-                              animate__faster
-                            `
-                    }
-
-                });
+                toast.success('Added to wishlist');
+                dispatch(getWishList())
             }
         }catch (e) {
 

@@ -101,7 +101,7 @@ function Categories() {
   const promotedProducts = getPromotedProducts();
 
   // Combine promoted products with regular products, ensuring promoted products come first
-  const allProducts = [...promotedProducts, ...(currentProducts || [])];
+  const allProducts = [...promotedProducts?.filter(item => item.name), ...(currentProducts || [])];
 
   // Loading state
   if (isLoading) {

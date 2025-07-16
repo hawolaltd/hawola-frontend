@@ -128,6 +128,7 @@ function ProductCard({
   };
 
   return (
+      <Link href={`product/${product?.slug}`}>
     <div
       className={`relative bg-white border cursor-pointer ${
         margin ? margin : ""
@@ -222,6 +223,7 @@ function ProductCard({
         </li>
       </ul>
     </div>
+      </Link>
   );
 }
 
