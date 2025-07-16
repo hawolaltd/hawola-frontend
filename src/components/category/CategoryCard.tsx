@@ -8,21 +8,22 @@ interface CategoryCardProps {
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ title, image, items }) => {
     return (
-        <div className="flex justify-between bg-white border border-solid border-[#d5dfe5] rounded-lg gap-4 p-4">
-            <div>
-                <img src={image} alt={title} className=" w-20 h-20 object-cover mb-4"/>
-                <button className="text-[#435a8c] rounded py-1 px-4 text-sm bg-[#d5dfe5] font-normal hover:underline">
-                    View all
-                </button>
+        <div className="flex flex-col bg-white border border-solid border-gray-100 rounded-lg gap-4 p-6 shadow-xs hover:shadow-sm transition-all hover:border-blue-100">
+            <div className="flex justify-center">
+                <img src={image} alt={title} className="w-20 h-20 object-contain"/>
             </div>
-            <div>
-                <h3 className="text-sm font-semibold text-[#435a8c] mb-2">{title}</h3>
-                <ul className="text-xs text-[#6b83b6] space-y-1 mb-4">
+            <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-800 mb-3">{title}</h3>
+                <ul className="text-sm text-gray-600 space-y-2 px-2">
                     {items.map((item, index) => (
-                        <li className={'relative before:absolute before:-left-2 before:top-1  before:w-2 before:h-2 before:bg-[url(/assets/arrowright.png)] before:bg-contain before:bg-no-repeat'} key={index}>{item}</li>
+                        <li
+                            className="relative pl-4 before:absolute before:left-0 before:top-1.5 before:w-2 before:h-2 before:bg-blue-400 before:rounded-full"
+                            key={index}
+                        >
+                            {item}
+                        </li>
                     ))}
                 </ul>
-
             </div>
         </div>
     );
