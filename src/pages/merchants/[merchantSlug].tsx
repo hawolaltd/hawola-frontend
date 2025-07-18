@@ -170,7 +170,7 @@ export default function MerchantPage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                         </svg>
-                                        <span>{merchants?.merchant_details.support_phone_number}</span>
+                                        <span>{merchants?.merchant_details?.support_phone_number}</span>
                                     </div>
                                     <div className="flex items-center">
                                         <svg className="w-5 h-5 merchant-primary-text mr-2" fill="none"
@@ -235,12 +235,12 @@ export default function MerchantPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-medium text-gray-500">Merchant Level</span>
                                         <span
-                                            className="text-sm font-medium merchant-primary-text">{merchants?.merchant_details?.merchant_level.name}</span>
+                                            className="text-sm font-medium merchant-primary-text">{merchants?.merchant_details?.merchant_level?.name}</span>
                                     </div>
                                     <div className="mt-1 w-full bg-gray-200 rounded-full h-2.5">
                                         <div
                                             className="h-2.5 rounded-full merchant-primary"
-                                            style={{width: merchants?.merchant_details?.merchant_level.name === 'Starter' ? '33%' : merchants?.merchant_details?.merchant_level.name === 'Intermediate' ? '66%' : '100%'}}
+                                            style={{width: merchants?.merchant_details?.merchant_level?.name === 'Starter' ? '33%' : merchants?.merchant_details?.merchant_level?.name === 'Intermediate' ? '66%' : '100%'}}
                                         ></div>
                                     </div>
                                 </div>
@@ -329,10 +329,10 @@ export default function MerchantPage() {
                                                     <span className="text-gray-500">Product Image</span>
                                                 </div>
                                                 <div className="p-4">
-                                                    <h3 className="font-medium text-lg mb-1">{capitalize(item.name)}</h3>
+                                                    <h3 className="font-medium text-lg mb-1">{capitalize(item?.name)}</h3>
                                                     {/*<p className="text-gray-600 text-sm mb-2">Description</p>*/}
                                                     <div className="flex justify-between items-center">
-                                                        <span className="font-bold">{formatCurrency(item.discount_price ? item?.discount_price : item?.price)}</span>
+                                                        <span className="font-bold">{formatCurrency(item?.discount_price ? item?.discount_price : item?.price)}</span>
                                                         <button
                                                             className="px-3 py-1 rounded merchant-primary merchant-primary-hover text-white text-sm">
                                                             Add to Cart
