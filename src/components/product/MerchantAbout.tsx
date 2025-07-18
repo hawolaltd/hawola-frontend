@@ -9,7 +9,7 @@ function MerchantAbout({product}: MerchantAboutProps) {
 
     const formatDescription = (text: string) => {
         // First try splitting by sentences
-        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+        const sentences = text?.match(/[^.!?]+[.!?]+/g) || [text];
 
         // Group into paragraphs of 2-3 sentences
         const paragraphs = [];
