@@ -125,8 +125,8 @@ export default function MerchantPage() {
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
                     <div className="text-center">
-                        <h1 className="text-4xl font-bold text-white">{merchants?.merchant_details.store_name}</h1>
-                        <p className="text-xl text-white mt-2">{merchants?.merchant_details.store_page_subtitle}</p>
+                        <h1 className="text-4xl font-bold text-white">{merchants?.merchant_details?.store_name}</h1>
+                        <p className="text-xl text-white mt-2">{merchants?.merchant_details?.store_page_subtitle}</p>
                     </div>
                 </div>
             </div>
@@ -140,8 +140,8 @@ export default function MerchantPage() {
                             {/* Merchant Logo */}
                             <div className="p-4 flex justify-center">
                                 <img
-                                    src={merchants?.merchant_details.logo}
-                                    alt={merchants?.merchant_details.store_name}
+                                    src={merchants?.merchant_details?.logo}
+                                    alt={merchants?.merchant_details?.store_name}
                                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
                                 />
                             </div>
