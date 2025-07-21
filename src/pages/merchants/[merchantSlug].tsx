@@ -76,7 +76,7 @@ export default function MerchantPage() {
             {/* Banner Section */}
             <div className="relative h-64 w-full overflow-hidden">
                 <img
-                    src={merchants?.merchant_details?.merchant_banner?.[0]?.image?.full_size}
+                    src={merchants?.merchant_details?.merchant_banner?.length  > 0 ? merchants?.merchant_details?.merchant_banner?.[0]?.image?.full_size : merchants?.merchant_details?.default_banner?.full_size}
                     alt={merchants?.merchant_details?.store_name}
                     className="w-full h-full object-cover"
                 />
