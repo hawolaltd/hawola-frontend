@@ -6,49 +6,6 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {getMerchants} from "@/redux/product/productSlice";
 import {capitalize, formatCurrency} from "@/util";
 
-type Merchant = {
-    is_verified: boolean;
-    id: number;
-    state: {
-        name: string;
-    };
-    location: {
-        name: string;
-    };
-    market: {
-        name: string;
-        help_text: string;
-    };
-    merchant_level: {
-        name: string;
-    };
-    store_name: string;
-    store_page_title: string;
-    store_page_subtitle: string;
-    logo: string;
-    default_banner: string;
-    image_ppoi: string;
-    primary_color: string;
-    refund_policy: string;
-    about_title: string;
-    about: string;
-    store_address: string;
-    shipping_number_of_days: number;
-    support_phone_number: string;
-    support_email: string;
-    is_allowed_to_stream: boolean;
-    facebook: string;
-    twitter: string;
-    instagram: string;
-    tiktok: string;
-    linkedin: string | null;
-    youtube: string | null;
-    date_added: string;
-    is_active: boolean;
-    slug: string;
-    merchant_user: number;
-};
-
 export default function MerchantPage() {
     const router = useRouter();
     const { merchantSlug } = router.query;

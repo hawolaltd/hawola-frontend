@@ -36,6 +36,7 @@ interface ProductsState {
   productBaseOnSubCategories: CategoriesProductResponse;
   productBaseOnSecLevelSubCategories: CategoriesProductResponse;
   merchants: MerchantDetailsResponse;
+  merchantsProducts: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
   isLoading: boolean;
   error: string | null | unknown;
@@ -62,6 +63,7 @@ const initialState: ProductsState = {
   wishLists: {} as WishlistResponse,
   wishList: null,
   merchants: {} as MerchantDetailsResponse,
+  merchantsProducts: {} as MerchantDetailsResponse,
   isLoading: false,
   error: null,
   message: "",
@@ -606,6 +608,25 @@ export const getMerchants = createAsyncThunk(
   }
 );
 
+// get merchants
+export const getMerchantsProducts = createAsyncThunk(
+  "products/get-merchants-products",
+  async (data: {slug: string, }, thunkAPI) => {
+    try {
+      return await productService.getMerchantsProducts(data.slug, data.slug);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const productSlice = createSlice({
   name: "products",
   initialState,
@@ -889,6 +910,17 @@ const productSlice = createSlice({
         state.merchants = action.payload;
       })
       .addCase(getMerchants.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      }).addCase(getMerchantsProducts.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getMerchantsProducts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.merchantsProducts = action.payload;
+      })
+      .addCase(getMerchantsProducts.rejected, (state, action) => {
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;

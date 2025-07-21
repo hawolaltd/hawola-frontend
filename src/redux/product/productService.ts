@@ -266,7 +266,17 @@ const deleteWishList = async (paylod: deleteWishListType) => {
 // get Merchants
 
 const getMerchants = async (slug: string) => {
-    const response = await axiosInstance.get(API + `merchant/${slug}/`);
+    const response = await axiosInstance.get(API + `merchant/profile/${slug}/`);
+    console.log("getMerchants:", response)
+    return response.data;
+};
+
+
+
+// get Merchants
+
+const getMerchantsProducts = async (slug: string, num_per_page: string) => {
+    const response = await axiosInstance.get(API + `merchant/products/${slug}/${num_per_page}`);
     console.log("getMerchants:", response)
     return response.data;
 };
@@ -301,7 +311,8 @@ const productService = {
     getMerchants,
     getAllProductBaseOnCategories,
     getAllProductBaseOnSubCategories,
-    getAllProductBaseOnSecondLevelSubCategories
+    getAllProductBaseOnSecondLevelSubCategories,
+    getMerchantsProducts
 };
 
 export default productService;
