@@ -76,7 +76,7 @@ export default function MerchantPage() {
             {/* Banner Section */}
             <div className="relative h-64 w-full overflow-hidden">
                 <img
-                    src={merchants?.merchant_details?.default_banner?.thumbnail}
+                    src={merchants?.merchant_details?.merchant_banner?.length  > 0 ? merchants?.merchant_details?.merchant_banner?.[0]?.image?.full_size : merchants?.merchant_details?.default_banner?.full_size}
                     alt={merchants?.merchant_details?.store_name}
                     className="w-full h-full object-cover"
                 />
@@ -283,7 +283,7 @@ export default function MerchantPage() {
                                         {merchants?.recent_products?.map((item, index) => (
                                             <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
                                                 <div className="h-48 bg-gray-200 flex items-center justify-center">
-                                                    <span className="text-gray-500">Product Image</span>
+                                                    <img src={item?.featured_image?.[0]?.image?.full_size} alt={item?.name} className={'w-full h-full'} />
                                                 </div>
                                                 <div className="p-4">
                                                     <h3 className="font-medium text-lg mb-1">{capitalize(item?.name)}</h3>
