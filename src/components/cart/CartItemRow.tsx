@@ -1,5 +1,5 @@
 import { CartItem } from "@/types/product";
-import { amountFormatter } from "@/util";
+import { amountFormatter, formatCurrency } from "@/util";
 
 const CartItemRow = ({
   cart,
@@ -65,7 +65,9 @@ const CartItemRow = ({
         <div className="md:col-span-2 text-center">
           <span className="md:hidden font-medium mr-2">Price:</span>
           <span className="font-semibold">
-            ${amountFormatter((+cart?.product.price).toFixed(2))}
+            {cart?.product?.discount_price
+              ? formatCurrency((+cart?.product.discount_price).toFixed(2))
+              : formatCurrency((+cart?.product.price).toFixed(2))}
           </span>
         </div>
 
@@ -93,7 +95,13 @@ const CartItemRow = ({
         <div className="md:col-span-2 text-center">
           <span className="md:hidden font-medium mr-2">Subtotal:</span>
           <span className="font-semibold">
-            ${amountFormatter((+cart?.product.price * effectiveQty).toFixed(2))}
+            {cart?.product?.discount_price
+              ? formatCurrency(
+                  (+cart?.product.discount_price * effectiveQty).toFixed(2)
+                )
+              : formatCurrency(
+                  (+cart?.product.price * effectiveQty).toFixed(2)
+                )}
           </span>
         </div>
 

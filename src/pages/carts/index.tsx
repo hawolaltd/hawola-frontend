@@ -35,6 +35,7 @@ const CartPage = () => {
   const { products, carts, addresses } = useAppSelector(
     (state) => state.products
   );
+  console.log("carts", carts);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
@@ -64,11 +65,17 @@ const CartPage = () => {
           1,
           product?.qty + (pendingUpdates[product?.id] || 0)
         );
-        return sum + +product?.product?.price * effectiveQty;
+        return (
+          sum +
+          (product?.product?.discount_price
+            ? +product?.product?.discount_price
+            : +product?.product?.price) *
+            effectiveQty
+        );
       }, 0) || 0;
 
-    const shippingRate = 0.08;
-    const shippingCost = subtotal * shippingRate;
+    const shippingRate = 0;
+    const shippingCost = 0;
     const total = subtotal + shippingCost;
 
     return { subtotal, shippingCost, total };
