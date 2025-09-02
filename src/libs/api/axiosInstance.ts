@@ -13,7 +13,7 @@ import { handleLogout } from "@/util";
 import Cookies from "js-cookie";
 
 const baseURL = API;
-
+console.log("refreshToken:", Cookies.get("csrftoken"));
 // Create Axios instance with configuration
 const axiosInstance: AxiosInstance = axios.create({
   baseURL,
@@ -45,8 +45,8 @@ axiosInstance.interceptors.request.use(
 
 // Refresh Token Function
 const refreshTokenRequest = async (): Promise<boolean> => {
-  const refreshToken = Cookies.get(authRefreshTokenStorageKeyName as string);
-  console.log("refreshToken:", refreshToken);
+  const refreshToken = Cookies.get("csrftoken" as string);
+  console.log("refreshTokenoriginah:", refreshToken);
   if (!refreshToken) return false;
 
   try {
@@ -84,10 +84,13 @@ axiosInstance.interceptors.response.use(
     };
     console.log("error:", error);
     console.log("originalRequest:", originalRequest);
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       console.log("got here");
+      console.log("refreshToken:", Cookies.get("csrftoken"));
+      console.log("document.cookie:", document.cookie);
       const refreshed = await refreshTokenRequest();
+      console.log("refreshed1:", refreshed);
       if (refreshed) {
         // Retry the original request with the new token
         console.log("refreshed:", refreshed);
