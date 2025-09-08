@@ -262,7 +262,15 @@ const getMerchants = async (slug: string) => {
   return response.data;
 };
 
-// get Merchants
+// get Merchant Profile
+
+const getMerchantProfile = async (slug: string) => {
+  const response = await axiosInstance.get(API + `merchant/profile/${slug}/`);
+  console.log("getMerchantProfile:", response);
+  return response.data;
+};
+
+// get Merchants Products
 
 const getMerchantsProducts = async (slug: string, num_per_page: string) => {
   const response = await axiosInstance.get(
@@ -303,6 +311,7 @@ const productService = {
   getAllProductBaseOnSubCategories,
   getAllProductBaseOnSecondLevelSubCategories,
   getMerchantsProducts,
+  getMerchantProfile,
 };
 
 export default productService;

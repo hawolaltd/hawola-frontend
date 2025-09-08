@@ -9,8 +9,18 @@ import {
   authRefreshTokenStorageKeyName,
   authTokenStorageKeyName,
 } from "@/constant";
-import { handleLogout } from "@/util";
+import { handleLogout, clearAllStorage, forceLogout } from "@/util";
 import Cookies from "js-cookie";
+import storage from "redux-persist/lib/storage";
+
+console.log("storage:", storage);
+console.log("storage getItem:", storage.getItem("persist:root"));
+
+const gettingFromStorage = async () => {
+  const data = await storage.getItem("persist:root");
+};
+
+console.log("gettingFromStorage:", gettingFromStorage());
 
 const baseURL = API;
 
@@ -81,28 +91,20 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
-    console.log("error:", error);
-    console.log("originalRequest:", originalRequest);
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      console.log("got here");
-      console.log(
-        "refreshToken:",
-        Cookies.get(authRefreshTokenStorageKeyName as string)
-      );
+
       console.log("document.cookie:", document.cookie);
       const refreshed = await refreshTokenRequest();
-      console.log("refreshed1:", refreshed);
       if (refreshed) {
         // Retry the original request with the new token
-        console.log("refreshed:", refreshed);
+
         const newToken = getToken();
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return axiosInstance(originalRequest);
       } else {
-        console.log("got here 2");
-        handleLogout();
-        window.location.href = `/auth/login`;
+        // Force logout - clears all storage and redirects
+        forceLogout();
         return Promise.reject(error);
       }
     }
