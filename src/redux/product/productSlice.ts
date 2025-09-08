@@ -36,6 +36,7 @@ interface ProductsState {
   productBaseOnSubCategories: CategoriesProductResponse;
   productBaseOnSecLevelSubCategories: CategoriesProductResponse;
   merchants: MerchantDetailsResponse;
+  merchantProfile: MerchantProfile;
   merchantsProducts: MerchantDetailsResponse;
   merchantReviews: MerchantReviewResponse;
   isLoading: boolean;
@@ -63,6 +64,7 @@ const initialState: ProductsState = {
   wishLists: {} as WishlistResponse,
   wishList: null,
   merchants: {} as MerchantDetailsResponse,
+  merchantProfile: {} as MerchantProfile,
   merchantsProducts: {} as MerchantDetailsResponse,
   isLoading: false,
   error: null,
@@ -197,9 +199,12 @@ export const getAllSubSecCategories = createAsyncThunk(
 
 export const getAllProductBaseOnCategories = createAsyncThunk(
   "products/product-base-on-categories",
-  async (data: {slug: string, page?: string}, thunkAPI) => {
+  async (data: { slug: string; page?: string }, thunkAPI) => {
     try {
-      return await productService.getAllProductBaseOnCategories(data?.slug, data?.page);
+      return await productService.getAllProductBaseOnCategories(
+        data?.slug,
+        data?.page
+      );
     } catch (error: any) {
       const message =
         (error.response &&
@@ -215,9 +220,12 @@ export const getAllProductBaseOnCategories = createAsyncThunk(
 
 export const getAllProductBaseOnSubCategories = createAsyncThunk(
   "products/product-base-on-sub-categories",
-  async (data: {slug: string, page?: string}, thunkAPI) => {
+  async (data: { slug: string; page?: string }, thunkAPI) => {
     try {
-      return await productService.getAllProductBaseOnSubCategories(data?.slug, data?.page);
+      return await productService.getAllProductBaseOnSubCategories(
+        data?.slug,
+        data?.page
+      );
     } catch (error: any) {
       const message =
         (error.response &&
@@ -233,11 +241,11 @@ export const getAllProductBaseOnSubCategories = createAsyncThunk(
 
 export const getAllProductBaseOnSecondLevelSubCategories = createAsyncThunk(
   "products/product-base-on-sec-level-sub-categories",
-  async (data: {slug: string, page?: string}, thunkAPI) => {
+  async (data: { slug: string; page?: string }, thunkAPI) => {
     try {
       return await productService.getAllProductBaseOnSecondLevelSubCategories(
         data?.slug,
-          data?.page
+        data?.page
       );
     } catch (error: any) {
       const message =
@@ -608,10 +616,27 @@ export const getMerchants = createAsyncThunk(
   }
 );
 
+export const getMerchantProfile = createAsyncThunk(
+  "products/get-merchant-profile",
+  async (slug: string, thunkAPI) => {
+    try {
+      return await productService.getMerchantProfile(slug);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
 // get merchants
 export const getMerchantsProducts = createAsyncThunk(
   "products/get-merchants-products",
-  async (data: {slug: string, }, thunkAPI) => {
+  async (data: { slug: string }, thunkAPI) => {
     try {
       return await productService.getMerchantsProducts(data.slug, data.slug);
     } catch (error: any) {
@@ -913,7 +938,20 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;
-      }).addCase(getMerchantsProducts.pending, (state) => {
+      })
+      .addCase(getMerchantProfile.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getMerchantProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.merchantProfile = action.payload;
+      })
+      .addCase(getMerchantProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(getMerchantsProducts.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getMerchantsProducts.fulfilled, (state, action) => {

@@ -45,9 +45,13 @@ const rootReducer = combineReducers({
 });
 
 const appReducer = (state: any, action: any) => {
-  if (action.type === "auth/logout") {
+  if (
+    action.type === "auth/logout/fulfilled" ||
+    action.type === "auth/logout"
+  ) {
     // Clear all persisted state
     storage.removeItem("persist:root");
+    // Return initial state for all reducers
     return rootReducer(undefined, action);
   }
   return rootReducer(state, action);
