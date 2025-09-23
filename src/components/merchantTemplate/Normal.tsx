@@ -236,7 +236,7 @@ export default function NormalMerchantPage() {
                       )}
                       {merchantProfile?.merchant_details?.instagram && (
                         <a
-                          href={merchants?.merchant_details?.instagram}
+                          href={merchants?.merchant_details?.instagram ?? ""}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-full merchant-light-bg transition"
