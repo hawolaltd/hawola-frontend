@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import { getMerchants } from "@/redux/product/productSlice";
+import { getMerchantProfile, getMerchants } from "@/redux/product/productSlice";
 import { capitalize, formatCurrency } from "@/util";
 
 export default function NormalMerchantPage() {
@@ -15,10 +15,11 @@ export default function NormalMerchantPage() {
     (state) => state.products
   );
 
-  console.log("merchants", merchants);
+  console.log("merchantProfile", merchantProfile);
 
   useEffect(() => {
     dispatch(getMerchants(merchantSlug as string));
+    dispatch(getMerchantProfile(merchantSlug as string));
   }, [dispatch, merchantSlug]);
 
   if (isLoading) {
@@ -29,7 +30,7 @@ export default function NormalMerchantPage() {
     );
   }
 
-  if (!merchants) {
+  if (!merchantProfile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-xl">Merchant not found</p>

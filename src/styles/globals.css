@@ -4,23 +4,109 @@
 @tailwind components;
 @tailwind utilities;
 
-.partner-img{
-    width: 150px !important;
-    height: auto;
+/* Custom animations for dashboard template */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.hoome-sllider-dots .slick-dots .slick-active div  {
-    background-color: #FD9636;
-    width: 12px;
-    height: 12px;
+@layer utilities {
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
 }
 
-.hoome-sllider-dots .slick-dots li div  {
-    background-color: #c6e0d7;
-    width: 10px;
-    height: 10px;
-    margin: 0 2px;
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
-.hoome-sllider-dots .slick-dots li   {
-    margin: 0 0px;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.partner-img {
+  width: 150px !important;
+  height: auto;
+}
+
+.hoome-sllider-dots .slick-dots .slick-active div {
+  background-color: #fd9636;
+  width: 12px;
+  height: 12px;
+}
+
+.hoome-sllider-dots .slick-dots li div {
+  background-color: #c6e0d7;
+  width: 10px;
+  height: 10px;
+  margin: 0 2px;
+}
+.hoome-sllider-dots .slick-dots li {
+  margin: 0 0px;
+}
+
+* {
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter,
+    backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
