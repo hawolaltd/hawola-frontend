@@ -7,7 +7,6 @@ import { useRouter } from "next/router";
 import { CartResponse } from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import { log } from "console";
 
 const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [userInfo, setUserInfo] = useState(false);

@@ -1,0 +1,463 @@
+import React, { useEffect, useState } from "react";
+import { getMerchantProfile, getMerchants } from "@/redux/product/productSlice";
+import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useRouter } from "next/router";
+import AuthLayout from "../layout/AuthLayout";
+import Head from "next/head";
+
+const StandardTemplate = () => {
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<"products" | "about" | "policy">(
+    "products"
+  );
+
+  const router = useRouter();
+  const { merchantSlug, ...rest } = router.query;
+  const {
+    merchants,
+    isLoading,
+    merchantProfile: data,
+  } = useAppSelector((state) => state.products);
+
+  const dispatch = useAppDispatch();
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    dispatch(getMerchants(merchantSlug as string));
+    dispatch(getMerchantProfile(merchantSlug as string));
+  }, [dispatch, merchantSlug]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const {
+    merchant_details,
+    recent_products,
+    merchant_categories,
+    banners,
+    home_page,
+    is_streaming_now,
+  } = data;
+
+  // Function to convert hex to rgba with opacity (same as other templates)
+  const hexToRgba = (hex: string, opacity: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
+  const primaryColor = merchants?.merchant_details?.primary_color || "#010E26";
+  const lighterBg = hexToRgba(primaryColor, 0.1);
+
+  const formatPrice = (price: string) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    }).format(parseFloat(price));
+  };
+
+  const calculateDiscount = (price: string, discountPrice: string) => {
+    const original = parseFloat(price);
+    const discount = parseFloat(discountPrice);
+    return Math.round(((original - discount) / original) * 100);
+  };
+
+  const ProductCard: React.FC<{ product: any }> = ({ product }) => (
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
+      <div className="relative overflow-hidden">
+        <img
+          src={
+            product.featured_image[0]?.image?.full_size || "/placeholder.jpg"
+          }
+          alt={product.name}
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        {product.discount_price && product.discount_price !== product.price && (
+          <div
+            className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-bold"
+            style={{ backgroundColor: primaryColor }}
+          >
+            -{calculateDiscount(product.price, product.discount_price)}%
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-800 line-clamp-2 mb-2 text-sm">
+          {product.name}
+        </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-gray-900">
+              {formatPrice(product.discount_price || product.price)}
+            </span>
+            {product.discount_price &&
+              product.discount_price !== product.price && (
+                <span className="text-sm text-gray-500 line-through">
+                  {formatPrice(product.price)}
+                </span>
+              )}
+          </div>
+          <div className="flex items-center space-x-1">
+            <span className="text-yellow-400">★</span>
+            <span className="text-sm text-gray-600">{product.rating}</span>
+            <span className="text-sm text-gray-400">
+              ({product.numReviews})
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const CategoryCard: React.FC<{ category: MerchantCategory }> = ({
+    category,
+  }) => (
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 text-center group cursor-pointer">
+      <div
+        className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 text-white"
+        style={{ backgroundColor: primaryColor }}
+      >
+        {category.icon ? (
+          <img
+            src={category.icon}
+            alt={category.name || "Category"}
+            className="w-8 h-8 object-contain"
+          />
+        ) : (
+          <span className="text-2xl">🛍️</span>
+        )}
+      </div>
+      <h3 className="font-semibold text-gray-800 truncate">
+        {category.name || "Uncategorized"}
+      </h3>
+    </div>
+  );
+
+  return (
+    <AuthLayout>
+      <Head>
+        <title>{data?.merchant_details?.store_name} | Minimalist Store</title>
+        <meta
+          name="description"
+          content={data?.merchant_details?.about?.substring(0, 160)}
+        />
+        <style>
+          {`
+            .merchant-primary {
+              background-color: ${primaryColor};
+            }
+            .merchant-primary-text {
+              color: ${primaryColor};
+            }
+            .merchant-primary-border {
+              border-color: ${primaryColor};
+            }
+            .merchant-primary-hover:hover {
+              background-color: ${hexToRgba(primaryColor, 0.9)};
+            }
+            .merchant-light-bg {
+              background-color: ${lighterBg};
+            }
+          `}
+        </style>
+      </Head>
+      <div className="min-h-screen bg-gray-50">
+        {/* Banner Section */}
+        <div className="relative h-80 overflow-hidden">
+          {banners?.length > 0 ? (
+            <>
+              <img
+                src={banners[activeBannerIndex]?.image?.full_size}
+                alt="Store Banner"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-30" />
+            </>
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ backgroundColor: primaryColor }}
+            >
+              <div className="text-center text-white">
+                <h1 className="text-4xl font-bold mb-2">
+                  {merchant_details?.store_name}
+                </h1>
+                <p className="text-xl opacity-90">
+                  {merchant_details?.store_page_subtitle}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Banner Navigation */}
+          {banners?.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              {banners.map((_: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveBannerIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === activeBannerIndex ? "scale-125" : "bg-opacity-50"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      index === activeBannerIndex
+                        ? "white"
+                        : hexToRgba(primaryColor, 0.7),
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Store Header */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+              <div className="relative">
+                <img
+                  src={merchant_details?.logo}
+                  alt={merchant_details?.store_name}
+                  className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
+                />
+                {is_streaming_now && (
+                  <div
+                    className="absolute -top-2 -right-2 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    LIVE
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-1">
+                      {merchant_details?.store_name}
+                    </h1>
+                    <div className="flex items-center justify-center md:justify-start space-x-4 text-gray-600">
+                      <span className="flex items-center space-x-1">
+                        <span>⭐</span>
+                        <span>
+                          {merchant_details?.merchant_level?.name} Merchant
+                        </span>
+                      </span>
+                      <span>•</span>
+                      <span>
+                        {merchant_details?.location?.name},{" "}
+                        {merchant_details?.state?.name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-gray-600 mb-4">
+                  {merchant_details?.store_page_subtitle}
+                </p>
+
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div className="flex items-center space-x-1">
+                    <span>🚚</span>
+                    <span>
+                      {merchant_details?.shipping_number_of_days} day delivery
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span>📞</span>
+                    <span>{merchant_details?.support_phone_number}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span>✉️</span>
+                    <span>{merchant_details?.support_email}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-2xl shadow-sm mb-8">
+            <div className="flex border-b">
+              <button
+                onClick={() => setActiveTab("products")}
+                className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
+                  activeTab === "products"
+                    ? "border-b-2 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                style={{
+                  borderBottomColor:
+                    activeTab === "products" ? primaryColor : undefined,
+                  color: activeTab === "products" ? primaryColor : undefined,
+                }}
+              >
+                Products
+              </button>
+              <button
+                onClick={() => setActiveTab("about")}
+                className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
+                  activeTab === "about"
+                    ? "border-b-2 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                style={{
+                  borderBottomColor:
+                    activeTab === "about" ? primaryColor : undefined,
+                  color: activeTab === "about" ? primaryColor : undefined,
+                }}
+              >
+                About Us
+              </button>
+              <button
+                onClick={() => setActiveTab("policy")}
+                className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
+                  activeTab === "policy"
+                    ? "border-b-2 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                style={{
+                  borderBottomColor:
+                    activeTab === "policy" ? primaryColor : undefined,
+                  color: activeTab === "policy" ? primaryColor : undefined,
+                }}
+              >
+                Refund Policy
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="mb-12">
+            {activeTab === "products" && (
+              <>
+                {/* Categories */}
+                {merchant_categories?.filter((cat) => cat.name).length > 0 && (
+                  <section className="mb-12">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                      Shop by Category
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      {merchant_categories
+                        ?.filter((category) => category.name)
+                        .map((category, index) => (
+                          <CategoryCard
+                            key={category.id || index}
+                            category={category}
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Recent Products */}
+                <section>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    Recent Products
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    {recent_products?.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+
+            {activeTab === "about" && (
+              <section className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  {merchant_details?.about_title}
+                </h2>
+                <div className="prose prose-lg max-w-none text-gray-700">
+                  {merchant_details?.about
+                    ?.split("\r\n\r\n")
+                    .map((paragraph, index) => (
+                      <p key={index} className="mb-4 leading-relaxed">
+                        {paragraph}
+                      </p>
+                    ))}
+                </div>
+
+                <div className="mt-8 p-6 bg-gray-50 rounded-xl">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Store Information
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4 text-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        🏪
+                      </div>
+                      <span>{merchant_details?.store_address}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        📍
+                      </div>
+                      <span>
+                        {merchant_details?.location?.name},{" "}
+                        {merchant_details?.state?.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        📞
+                      </div>
+                      <span>{merchant_details?.support_phone_number}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        ✉️
+                      </div>
+                      <span>{merchant_details?.support_email}</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === "policy" && (
+              <section className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  Refund Policy
+                </h2>
+                <div className="prose prose-lg max-w-none text-gray-700">
+                  {merchant_details?.refund_policy
+                    ?.split("\r\n\r\n")
+                    .map((paragraph, index) => (
+                      <div key={index} className="mb-6">
+                        {paragraph.split("\r\n").map((line, lineIndex) => (
+                          <p key={lineIndex} className="mb-3 leading-relaxed">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </div>
+    </AuthLayout>
+  );
+};
+
+export default StandardTemplate;

@@ -37,11 +37,15 @@ function AppContent({ Component, pageProps }: AppProps) {
   );
 }
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps, router }: AppProps) {
   return (
     <PersistGate persistor={persistor}>
       <Provider store={store}>
-        <AppContent Component={Component} pageProps={pageProps} />
+        <AppContent
+          Component={Component}
+          pageProps={pageProps}
+          router={router}
+        />
       </Provider>
     </PersistGate>
   );
