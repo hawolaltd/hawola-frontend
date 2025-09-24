@@ -32,9 +32,140 @@ const DashboardTemplate = () => {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
+  // Enhanced function to check if a color is light or dark with better edge case handling
+  const isLightColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Special handling for yellow and other bright colors
+    // Yellow has high luminance but poor contrast with white text
+    const isYellow = r > 200 && g > 200 && b < 100;
+    const isBrightColor = r > 200 && g > 200 && b > 200; // Very bright colors
+    const isOrange = r > 200 && g > 150 && g < 200 && b < 100;
+    const isCyan = r < 100 && g > 200 && b > 200;
+    const isLime = r > 150 && g > 200 && b < 100;
+
+    // For these bright colors, we need dark text even if luminance is high
+    if (isYellow || isBrightColor || isOrange || isCyan || isLime) {
+      return true; // Force dark text
+    }
+
+    return luminance > 0.5;
+  };
+
+  // Function to get optimal text color based on background
+  const getOptimalTextColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calculate contrast ratios
+    const getContrastRatio = (
+      r1: number,
+      g1: number,
+      b1: number,
+      r2: number,
+      g2: number,
+      b2: number
+    ) => {
+      const getLuminance = (r: number, g: number, b: number) => {
+        const [rs, gs, bs] = [r, g, b].map((c) => {
+          c = c / 255;
+          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+      };
+
+      const l1 = getLuminance(r1, g1, b1);
+      const l2 = getLuminance(r2, g2, b2);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    };
+
+    // Test contrast with white and black text
+    const whiteContrast = getContrastRatio(r, g, b, 255, 255, 255);
+    const blackContrast = getContrastRatio(r, g, b, 0, 0, 0);
+
+    // Use the text color with better contrast (minimum 4.5:1 for AA compliance)
+    if (whiteContrast >= 4.5 && whiteContrast > blackContrast) {
+      return "#ffffff";
+    } else if (blackContrast >= 4.5) {
+      return "#1f2937";
+    } else {
+      // Fallback: use the better contrast ratio even if below 4.5
+      return whiteContrast > blackContrast ? "#ffffff" : "#1f2937";
+    }
+  };
+
+  // Function to darken a color for better contrast
+  const darkenColor = (hex: string, amount: number) => {
+    const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - amount);
+    const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - amount);
+    const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - amount);
+    return `#${r.toString(16).padStart(2, "0")}${g
+      .toString(16)
+      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  };
+
   const primaryColor = data?.merchant_details?.primary_color || "#3B82F6";
+  const isLight = isLightColor(primaryColor);
   const lighterBg = hexToRgba(primaryColor, 0.1);
   const mediumBg = hexToRgba(primaryColor, 0.2);
+  const textColor = getOptimalTextColor(primaryColor);
+  const hoverTextColor = isLight ? "#374151" : "#f3f4f6";
+
+  // For very bright colors like yellow, use a darker version for better contrast
+  const r = parseInt(primaryColor.slice(1, 3), 16);
+  const g = parseInt(primaryColor.slice(3, 5), 16);
+  const b = parseInt(primaryColor.slice(5, 7), 16);
+  const isVeryBright = r > 220 && g > 220 && b < 150; // Very bright yellow/lime colors
+
+  const adjustedPrimaryColor = isVeryBright
+    ? darkenColor(primaryColor, 40)
+    : primaryColor;
+
+  // Create better contrast colors for different elements
+  const getHeadingColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // For very bright colors, use a much darker version for headings
+    if (r > 200 && g > 200 && b < 150) {
+      return darkenColor(hex, 80); // Much darker for yellow/lime
+    } else if (r > 200 && g > 200 && b > 200) {
+      return darkenColor(hex, 60); // Darker for very bright colors
+    } else if (r > 180 && g > 180) {
+      return darkenColor(hex, 50); // Darker for bright colors
+    }
+
+    return hex; // Use original for normal colors
+  };
+
+  const headingColor = getHeadingColor(primaryColor);
+
+  // Create subtle background variations for cards
+  const getCardBackground = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // For very bright colors, use a very subtle tint
+    if (r > 200 && g > 200 && b < 150) {
+      return hexToRgba(hex, 0.03); // Very subtle for yellow
+    } else if (r > 200 && g > 200 && b > 200) {
+      return hexToRgba(hex, 0.05); // Subtle for very bright colors
+    }
+
+    return hexToRgba(hex, 0.08); // Normal subtle tint
+  };
+
+  const cardBackground = getCardBackground(primaryColor);
 
   useEffect(() => {
     dispatch(getMerchants(merchantSlug as string));
@@ -88,16 +219,21 @@ const DashboardTemplate = () => {
         <style>
           {`
             .merchant-primary {
-              background-color: ${primaryColor};
+              background-color: ${adjustedPrimaryColor};
+              color: ${textColor};
             }
             .merchant-primary-text {
               color: ${primaryColor};
+            }
+            .merchant-heading-text {
+              color: ${headingColor};
             }
             .merchant-primary-border {
               border-color: ${primaryColor};
             }
             .merchant-primary-hover:hover {
-              background-color: ${hexToRgba(primaryColor, 0.9)};
+              background-color: ${hexToRgba(adjustedPrimaryColor, 0.9)};
+              color: ${textColor};
             }
             .merchant-light-bg {
               background-color: ${lighterBg};
@@ -106,13 +242,136 @@ const DashboardTemplate = () => {
               background-color: ${mediumBg};
             }
             .merchant-gradient {
-              background: linear-gradient(135deg, ${primaryColor} 0%, ${hexToRgba(
-            primaryColor,
+              background: linear-gradient(135deg, ${adjustedPrimaryColor} 0%, ${hexToRgba(
+            adjustedPrimaryColor,
             0.8
           )} 100%);
+              color: ${textColor};
             }
             .merchant-gradient-light {
               background: linear-gradient(135deg, ${lighterBg} 0%, ${mediumBg} 100%);
+            }
+            .merchant-text-on-primary {
+              color: ${textColor};
+            }
+            .merchant-text-on-primary-hover:hover {
+              color: ${hoverTextColor};
+            }
+            .merchant-button {
+              background-color: ${adjustedPrimaryColor};
+              color: ${textColor};
+              border: 1px solid ${adjustedPrimaryColor};
+            }
+            .merchant-button:hover {
+              background-color: ${hexToRgba(adjustedPrimaryColor, 0.9)};
+              color: ${textColor};
+            }
+            .merchant-button-outline {
+              background-color: transparent;
+              color: ${primaryColor};
+              border: 1px solid ${primaryColor};
+            }
+            .merchant-button-outline:hover {
+              background-color: ${adjustedPrimaryColor};
+              color: ${textColor};
+            }
+            .merchant-text-shadow {
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            .merchant-text-shadow-strong {
+              text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+            .merchant-icon-enhanced {
+              filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+            }
+            .merchant-icon-strong {
+              filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+            }
+            .merchant-outline-button {
+              border: 2px solid ${primaryColor};
+              color: ${primaryColor};
+              background-color: transparent;
+              position: relative;
+              overflow: hidden;
+            }
+            .merchant-outline-button::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: ${primaryColor};
+              opacity: 0;
+              transition: opacity 0.2s ease;
+            }
+            .merchant-outline-button:hover::before {
+              opacity: 0.1;
+            }
+            .merchant-outline-button:hover {
+              background-color: ${hexToRgba(primaryColor, 0.1)};
+              border-color: ${adjustedPrimaryColor};
+              color: ${adjustedPrimaryColor};
+            }
+            .merchant-outline-button:focus {
+              outline: 2px solid ${hexToRgba(primaryColor, 0.3)};
+              outline-offset: 2px;
+            }
+            .merchant-border-subtle {
+              border: 1px solid ${hexToRgba(primaryColor, 0.2)};
+            }
+            .merchant-border-strong {
+              border: 1px solid ${hexToRgba(primaryColor, 0.4)};
+            }
+            .merchant-card-bg {
+              background-color: ${cardBackground};
+            }
+            .merchant-card-bg-subtle {
+              background-color: ${hexToRgba(primaryColor, 0.02)};
+            }
+            .merchant-icon-container {
+              position: relative;
+            }
+            .merchant-icon-container::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 100%;
+              height: 100%;
+              background: radial-gradient(circle, ${hexToRgba(
+                primaryColor,
+                0.1
+              )} 0%, transparent 70%);
+              border-radius: inherit;
+              pointer-events: none;
+            }
+            .merchant-outline-button svg {
+              filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+            }
+            .scrollbar-thin {
+              scrollbar-width: thin;
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+              height: 6px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-track {
+              background: #f1f5f9;
+              border-radius: 3px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+              background: #cbd5e1;
+              border-radius: 3px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+              background: #94a3b8;
+            }
+            .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+              background: #d1d5db;
+            }
+            .scrollbar-track-gray-100::-webkit-scrollbar-track {
+              background: #f3f4f6;
             }
           `}
         </style>
@@ -181,11 +440,11 @@ const DashboardTemplate = () => {
 
               {/* About Section */}
               <div className="animate-fade-in delay-300">
-                <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 merchant-card-bg">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 merchant-gradient rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 merchant-gradient rounded-xl flex items-center justify-center merchant-icon-container">
                       <svg
-                        className="w-6 h-6 text-white"
+                        className="w-6 h-6 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -196,7 +455,7 @@ const DashboardTemplate = () => {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-3xl font-bold merchant-primary-text">
+                    <h2 className="text-3xl font-bold merchant-heading-text">
                       {data?.merchant_details?.about_title}
                     </h2>
                   </div>

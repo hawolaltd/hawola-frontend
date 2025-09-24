@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { useRouter } from "next/router";
 import AuthLayout from "../layout/AuthLayout";
 import Head from "next/head";
+import { Product } from "@/types/product";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -42,7 +43,104 @@ const StandardTemplate = () => {
     is_streaming_now,
   } = data;
 
-  // Function to convert hex to rgba with opacity (same as other templates)
+  // Enhanced function to check if a color is light or dark with better edge case handling
+  const isLightColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Special handling for yellow and other bright colors
+    const isYellow = r > 200 && g > 200 && b < 100;
+    const isBrightColor = r > 200 && g > 200 && b > 200;
+    const isOrange = r > 200 && g > 150 && g < 200 && b < 100;
+    const isCyan = r < 100 && g > 200 && b > 200;
+    const isLime = r > 150 && g > 200 && b < 100;
+
+    // For these bright colors, we need dark text even if luminance is high
+    if (isYellow || isBrightColor || isOrange || isCyan || isLime) {
+      return true; // Force dark text
+    }
+
+    return luminance > 0.5;
+  };
+
+  // Function to get optimal text color based on background
+  const getOptimalTextColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calculate contrast ratios
+    const getContrastRatio = (
+      r1: number,
+      g1: number,
+      b1: number,
+      r2: number,
+      g2: number,
+      b2: number
+    ) => {
+      const getLuminance = (r: number, g: number, b: number) => {
+        const [rs, gs, bs] = [r, g, b].map((c) => {
+          c = c / 255;
+          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+      };
+
+      const l1 = getLuminance(r1, g1, b1);
+      const l2 = getLuminance(r2, g2, b2);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    };
+
+    // Test contrast with white and black text
+    const whiteContrast = getContrastRatio(r, g, b, 255, 255, 255);
+    const blackContrast = getContrastRatio(r, g, b, 0, 0, 0);
+
+    // Use the text color with better contrast (minimum 4.5:1 for AA compliance)
+    if (whiteContrast >= 4.5 && whiteContrast > blackContrast) {
+      return "#ffffff";
+    } else if (blackContrast >= 4.5) {
+      return "#1f2937";
+    } else {
+      // Fallback: use the better contrast ratio even if below 4.5
+      return whiteContrast > blackContrast ? "#ffffff" : "#1f2937";
+    }
+  };
+
+  // Function to get appropriate text color based on background
+  const getTextColor = (backgroundColor: string): string => {
+    return getOptimalTextColor(backgroundColor);
+  };
+
+  // Function to get appropriate border color based on background
+  const getBorderColor = (backgroundColor: string): string => {
+    return isLightColor(backgroundColor) ? "#000000" : "#FFFFFF";
+  };
+
+  // Function to get a darker shade for hover states
+  const getDarkerShade = (color: string, percent: number = 20): string => {
+    const hex = color.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    const darkerR = Math.max(0, r - (r * percent) / 100);
+    const darkerG = Math.max(0, g - (g * percent) / 100);
+    const darkerB = Math.max(0, b - (b * percent) / 100);
+
+    return `#${Math.round(darkerR).toString(16).padStart(2, "0")}${Math.round(
+      darkerG
+    )
+      .toString(16)
+      .padStart(2, "0")}${Math.round(darkerB).toString(16).padStart(2, "0")}`;
+  };
+
+  // Function to convert hex to rgba with opacity
   const hexToRgba = (hex: string, opacity: number) => {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -51,7 +149,42 @@ const StandardTemplate = () => {
   };
 
   const primaryColor = merchants?.merchant_details?.primary_color || "#010E26";
+  const isPrimaryLight = isLightColor(primaryColor);
+  const textColor = getTextColor(primaryColor);
+  const borderColor = getBorderColor(primaryColor);
+  const darkerPrimary = getDarkerShade(primaryColor, 15);
   const lighterBg = hexToRgba(primaryColor, 0.1);
+  const mediumBg = hexToRgba(primaryColor, 0.2);
+
+  // For very bright colors like yellow, use a darker version for better contrast
+  const r = parseInt(primaryColor.slice(1, 3), 16);
+  const g = parseInt(primaryColor.slice(3, 5), 16);
+  const b = parseInt(primaryColor.slice(5, 7), 16);
+  const isVeryBright = r > 220 && g > 220 && b < 150; // Very bright yellow/lime colors
+
+  const adjustedPrimaryColor = isVeryBright
+    ? getDarkerShade(primaryColor, 40)
+    : primaryColor;
+
+  // Create better contrast colors for different elements
+  const getHeadingColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // For very bright colors, use a much darker version for headings
+    if (r > 200 && g > 200 && b < 150) {
+      return getDarkerShade(hex, 80); // Much darker for yellow/lime
+    } else if (r > 200 && g > 200 && b > 200) {
+      return getDarkerShade(hex, 60); // Darker for very bright colors
+    } else if (r > 180 && g > 180) {
+      return getDarkerShade(hex, 50); // Darker for bright colors
+    }
+
+    return hex; // Use original for normal colors
+  };
+
+  const headingColor = getHeadingColor(primaryColor);
 
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat("en-NG", {
@@ -66,7 +199,7 @@ const StandardTemplate = () => {
     return Math.round(((original - discount) / original) * 100);
   };
 
-  const ProductCard: React.FC<{ product: any }> = ({ product }) => (
+  const ProductCard = ({ product }: { product: Product }) => (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
       <div className="relative overflow-hidden">
         <img
@@ -78,8 +211,12 @@ const StandardTemplate = () => {
         />
         {product.discount_price && product.discount_price !== product.price && (
           <div
-            className="absolute top-3 left-3 text-white px-2 py-1 rounded-full text-xs font-bold"
-            style={{ backgroundColor: primaryColor }}
+            className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
+            style={{
+              backgroundColor: primaryColor,
+              color: textColor,
+              border: `1px solid ${borderColor}`,
+            }}
           >
             -{calculateDiscount(product.price, product.discount_price)}%
           </div>
@@ -118,14 +255,20 @@ const StandardTemplate = () => {
   }) => (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 text-center group cursor-pointer">
       <div
-        className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 text-white"
-        style={{ backgroundColor: primaryColor }}
+        className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+        style={{
+          backgroundColor: primaryColor,
+          color: textColor,
+        }}
       >
         {category.icon ? (
           <img
             src={category.icon}
             alt={category.name || "Category"}
             className="w-8 h-8 object-contain"
+            style={{
+              filter: isPrimaryLight ? "none" : "brightness(0) invert(1)",
+            }}
           />
         ) : (
           <span className="text-2xl">🛍️</span>
@@ -148,19 +291,100 @@ const StandardTemplate = () => {
         <style>
           {`
             .merchant-primary {
-              background-color: ${primaryColor};
+              background-color: ${adjustedPrimaryColor};
+              color: ${textColor};
             }
             .merchant-primary-text {
               color: ${primaryColor};
+            }
+            .merchant-heading-text {
+              color: ${headingColor};
             }
             .merchant-primary-border {
               border-color: ${primaryColor};
             }
             .merchant-primary-hover:hover {
-              background-color: ${hexToRgba(primaryColor, 0.9)};
+              background-color: ${darkerPrimary};
+              color: ${getTextColor(darkerPrimary)};
             }
             .merchant-light-bg {
               background-color: ${lighterBg};
+            }
+            .merchant-medium-bg {
+              background-color: ${mediumBg};
+            }
+            .merchant-gradient {
+              background: linear-gradient(135deg, ${adjustedPrimaryColor} 0%, ${hexToRgba(
+            adjustedPrimaryColor,
+            0.8
+          )} 100%);
+              color: ${textColor};
+            }
+            .merchant-text-on-primary {
+              color: ${textColor};
+            }
+            .merchant-text-shadow {
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            .merchant-text-shadow-strong {
+              text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+            .merchant-icon-enhanced {
+              filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+            }
+            .merchant-icon-strong {
+              filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+            }
+            .merchant-button {
+              background-color: ${adjustedPrimaryColor};
+              color: ${textColor};
+              border: 1px solid ${adjustedPrimaryColor};
+            }
+            .merchant-button:hover {
+              background-color: ${hexToRgba(adjustedPrimaryColor, 0.9)};
+              color: ${textColor};
+            }
+            .merchant-button-outline {
+              background-color: transparent;
+              color: ${primaryColor};
+              border: 2px solid ${primaryColor};
+              position: relative;
+              overflow: hidden;
+            }
+            .merchant-button-outline::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: ${primaryColor};
+              opacity: 0;
+              transition: opacity 0.2s ease;
+            }
+            .merchant-button-outline:hover::before {
+              opacity: 0.1;
+            }
+            .merchant-button-outline:hover {
+              background-color: ${hexToRgba(primaryColor, 0.1)};
+              border-color: ${adjustedPrimaryColor};
+              color: ${adjustedPrimaryColor};
+            }
+            .merchant-button-outline:focus {
+              outline: 2px solid ${hexToRgba(primaryColor, 0.3)};
+              outline-offset: 2px;
+            }
+            .merchant-button-outline svg {
+              filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+            }
+            .merchant-tab-active {
+              border-bottom-color: ${primaryColor} !important;
+              color: ${headingColor} !important;
+            }
+            .merchant-badge {
+              background-color: ${adjustedPrimaryColor};
+              color: ${textColor};
+              border: 1px solid ${borderColor};
             }
           `}
         </style>
@@ -182,7 +406,7 @@ const StandardTemplate = () => {
               className="w-full h-full flex items-center justify-center"
               style={{ backgroundColor: primaryColor }}
             >
-              <div className="text-center text-white">
+              <div className="text-center" style={{ color: textColor }}>
                 <h1 className="text-4xl font-bold mb-2">
                   {merchant_details?.store_name}
                 </h1>
@@ -206,8 +430,13 @@ const StandardTemplate = () => {
                   style={{
                     backgroundColor:
                       index === activeBannerIndex
-                        ? "white"
-                        : hexToRgba(primaryColor, 0.7),
+                        ? isPrimaryLight
+                          ? "#000000"
+                          : "#FFFFFF"
+                        : hexToRgba(
+                            isPrimaryLight ? "#000000" : "#FFFFFF",
+                            0.7
+                          ),
                   }}
                 />
               ))}
@@ -227,8 +456,11 @@ const StandardTemplate = () => {
                 />
                 {is_streaming_now && (
                   <div
-                    className="absolute -top-2 -right-2 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse"
-                    style={{ backgroundColor: primaryColor }}
+                    className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold animate-pulse merchant-badge"
+                    style={{
+                      backgroundColor: primaryColor,
+                      color: textColor,
+                    }}
                   >
                     LIVE
                   </div>
@@ -288,14 +520,9 @@ const StandardTemplate = () => {
                 onClick={() => setActiveTab("products")}
                 className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
                   activeTab === "products"
-                    ? "border-b-2 text-blue-600"
+                    ? "merchant-tab-active border-b-2"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                style={{
-                  borderBottomColor:
-                    activeTab === "products" ? primaryColor : undefined,
-                  color: activeTab === "products" ? primaryColor : undefined,
-                }}
               >
                 Products
               </button>
@@ -303,14 +530,9 @@ const StandardTemplate = () => {
                 onClick={() => setActiveTab("about")}
                 className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
                   activeTab === "about"
-                    ? "border-b-2 text-blue-600"
+                    ? "merchant-tab-active border-b-2"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                style={{
-                  borderBottomColor:
-                    activeTab === "about" ? primaryColor : undefined,
-                  color: activeTab === "about" ? primaryColor : undefined,
-                }}
               >
                 About Us
               </button>
@@ -318,14 +540,9 @@ const StandardTemplate = () => {
                 onClick={() => setActiveTab("policy")}
                 className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
                   activeTab === "policy"
-                    ? "border-b-2 text-blue-600"
+                    ? "merchant-tab-active border-b-2"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
-                style={{
-                  borderBottomColor:
-                    activeTab === "policy" ? primaryColor : undefined,
-                  color: activeTab === "policy" ? primaryColor : undefined,
-                }}
               >
                 Refund Policy
               </button>
@@ -362,7 +579,10 @@ const StandardTemplate = () => {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {recent_products?.map((product) => (
-                      <ProductCard key={product.id} product={product} />
+                      <ProductCard
+                        key={product.id}
+                        product={product as Product}
+                      />
                     ))}
                   </div>
                 </section>
@@ -390,19 +610,13 @@ const StandardTemplate = () => {
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4 text-gray-700">
                     <div className="flex items-center space-x-3">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
-                        style={{ backgroundColor: primaryColor }}
-                      >
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
                         🏪
                       </div>
                       <span>{merchant_details?.store_address}</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
-                        style={{ backgroundColor: primaryColor }}
-                      >
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
                         📍
                       </div>
                       <span>
@@ -411,19 +625,13 @@ const StandardTemplate = () => {
                       </span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
-                        style={{ backgroundColor: primaryColor }}
-                      >
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
                         📞
                       </div>
                       <span>{merchant_details?.support_phone_number}</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm"
-                        style={{ backgroundColor: primaryColor }}
-                      >
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
                         ✉️
                       </div>
                       <span>{merchant_details?.support_email}</span>

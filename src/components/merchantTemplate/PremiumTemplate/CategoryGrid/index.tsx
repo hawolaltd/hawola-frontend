@@ -32,39 +32,19 @@ const CategoryGrid = ({ categories }: CategoryGridProps) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold merchant-primary-text">
-            Categories
-          </h2>
-          <p className="text-gray-600 text-sm mt-1">
-            Browse our product categories
-          </p>
-        </div>
-        <button className="inline-flex items-center px-4 py-2 merchant-primary merchant-primary-hover text-white rounded-lg transition-colors duration-200 text-sm font-medium">
-          View All
-          <svg
-            className="w-4 h-4 ml-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+    <div className="bg-white rounded-2xl shadow-lg p-6 merchant-card-bg">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold merchant-heading-text">Categories</h2>
+        <p className="text-gray-600 text-sm mt-1">
+          Browse our product categories
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {validCategories.map((category: Category) => (
           <div
             key={category.id}
-            className="group relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 hover:merchant-light-bg transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer border border-gray-100 hover:merchant-primary-border"
+            className="group relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 hover:merchant-light-bg transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer border border-gray-100 hover:merchant-primary-border flex-shrink-0 w-32"
           >
             {/* Category Icon/Image */}
             <div className="flex flex-col items-center text-center">
@@ -91,9 +71,9 @@ const CategoryGrid = ({ categories }: CategoryGridProps) => {
                 ) : category.icon_code ? (
                   <span className="text-3xl">{category.icon_code}</span>
                 ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 merchant-gradient rounded-lg flex items-center justify-center merchant-icon-container">
                     <svg
-                      className="w-5 h-5 text-white"
+                      className="w-5 h-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >

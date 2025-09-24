@@ -84,8 +84,8 @@ const SocialMedia = ({
   if (!socialLinks.length) return null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold merchant-primary-text mb-4">
+    <div className="bg-white rounded-2xl shadow-lg p-6 merchant-card-bg">
+      <h3 className="text-lg font-semibold merchant-heading-text mb-4">
         Follow Us
       </h3>
 
