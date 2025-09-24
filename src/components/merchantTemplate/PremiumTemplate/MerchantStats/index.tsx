@@ -23,8 +23,8 @@ const MerchantStats = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold merchant-primary-text mb-4">
+    <div className="bg-white rounded-2xl shadow-lg p-6 merchant-card-bg">
+      <h3 className="text-lg font-semibold merchant-heading-text mb-4">
         Store Statistics
       </h3>
 
@@ -32,9 +32,9 @@ const MerchantStats = ({
         {/* Shipping Days */}
         <div className="flex items-center justify-between p-3 merchant-light-bg rounded-xl">
           <div className="flex items-center">
-            <div className="w-10 h-10 merchant-primary rounded-lg flex items-center justify-center mr-3">
+            <div className="w-10 h-10 merchant-primary rounded-lg flex items-center justify-center mr-3 merchant-icon-container">
               <svg
-                className="w-5 h-5 text-white"
+                className="w-5 h-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -54,9 +54,9 @@ const MerchantStats = ({
         {/* Store Status */}
         <div className="flex items-center justify-between p-3 merchant-medium-bg rounded-xl">
           <div className="flex items-center">
-            <div className="w-10 h-10 merchant-primary rounded-lg flex items-center justify-center mr-3">
+            <div className="w-10 h-10 merchant-primary rounded-lg flex items-center justify-center mr-3 merchant-icon-container">
               <svg
-                className="w-5 h-5 text-white"
+                className="w-5 h-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -87,7 +87,7 @@ const MerchantStats = ({
             <div className="flex items-center">
               <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-3">
                 <svg
-                  className="w-5 h-5 text-white"
+                  className="w-5 h-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -112,9 +112,9 @@ const MerchantStats = ({
         {/* Member Since */}
         <div className="flex items-center justify-between p-3 merchant-light-bg rounded-xl">
           <div className="flex items-center">
-            <div className="w-10 h-10 merchant-primary rounded-lg flex items-center justify-center mr-3">
+            <div className="w-10 h-10 merchant-primary rounded-lg flex items-center justify-center mr-3 merchant-icon-container">
               <svg
-                className="w-5 h-5 text-white"
+                className="w-5 h-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >

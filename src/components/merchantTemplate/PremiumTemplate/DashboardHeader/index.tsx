@@ -59,7 +59,7 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
 
             {/* Store Details */}
             <div>
-              <h1 className="text-2xl font-bold merchant-primary-text">
+              <h1 className="text-2xl font-bold merchant-heading-text">
                 {merchant?.store_name}
               </h1>
             </div>
@@ -67,9 +67,9 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-4">
-            <button className="inline-flex items-center px-4 py-2 border merchant-primary-border rounded-lg text-sm font-medium merchant-primary-text bg-white hover:merchant-light-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+            <button className="inline-flex items-center px-4 py-2 merchant-outline-button rounded-lg text-sm font-medium focus:outline-none transition-colors duration-200">
               <svg
-                className="w-4 h-4 mr-2"
+                className="w-4 h-4 mr-2 merchant-icon-enhanced"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -83,9 +83,9 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
               </svg>
               Follow
             </button>
-            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white merchant-primary merchant-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+            <button className="inline-flex items-center px-4 py-2 merchant-button rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
               <svg
-                className="w-4 h-4 mr-2"
+                className="w-4 h-4 mr-2 merchant-icon-enhanced"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

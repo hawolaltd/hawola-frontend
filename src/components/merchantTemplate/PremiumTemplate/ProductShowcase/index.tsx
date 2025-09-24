@@ -62,44 +62,21 @@ const ProductShowcase = ({
   if (!products?.length) return null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 merchant-gradient rounded-xl flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold merchant-primary-text">
-              {title}
-            </h2>
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 merchant-card-bg">
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 merchant-gradient rounded-xl flex items-center justify-center merchant-icon-container">
+            <svg
+              className="w-6 h-6 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+            </svg>
           </div>
-          <p className="text-gray-600 text-sm">{subtitle}</p>
+          <h2 className="text-2xl font-bold merchant-heading-text">{title}</h2>
         </div>
-        <Link
-          href="/shop-with-sidebar"
-          className="inline-flex items-center px-4 py-2 merchant-primary merchant-primary-hover text-white rounded-lg transition-colors duration-200 text-sm font-medium"
-        >
-          View All
-          <svg
-            className="w-4 h-4 ml-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </Link>
+        <p className="text-gray-600 text-sm">{subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -216,7 +193,7 @@ const ProductShowcase = ({
               </div>
 
               {/* Add to Cart Button */}
-              <button className="w-full mt-3 merchant-primary merchant-primary-hover text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200">
+              <button className="w-full mt-3 merchant-button py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200">
                 Add to Cart
               </button>
             </div>

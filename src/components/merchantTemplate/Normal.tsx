@@ -46,8 +46,121 @@ export default function NormalMerchantPage() {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
+  // Enhanced function to check if a color is light or dark with better edge case handling
+  const isLightColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Special handling for yellow and other bright colors
+    const isYellow = r > 200 && g > 200 && b < 100;
+    const isBrightColor = r > 200 && g > 200 && b > 200;
+    const isOrange = r > 200 && g > 150 && g < 200 && b < 100;
+    const isCyan = r < 100 && g > 200 && b > 200;
+    const isLime = r > 150 && g > 200 && b < 100;
+
+    // For these bright colors, we need dark text even if luminance is high
+    if (isYellow || isBrightColor || isOrange || isCyan || isLime) {
+      return true; // Force dark text
+    }
+
+    return luminance > 0.5;
+  };
+
+  // Function to get optimal text color based on background
+  const getOptimalTextColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calculate contrast ratios
+    const getContrastRatio = (
+      r1: number,
+      g1: number,
+      b1: number,
+      r2: number,
+      g2: number,
+      b2: number
+    ) => {
+      const getLuminance = (r: number, g: number, b: number) => {
+        const [rs, gs, bs] = [r, g, b].map((c) => {
+          c = c / 255;
+          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+      };
+
+      const l1 = getLuminance(r1, g1, b1);
+      const l2 = getLuminance(r2, g2, b2);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    };
+
+    // Test contrast with white and black text
+    const whiteContrast = getContrastRatio(r, g, b, 255, 255, 255);
+    const blackContrast = getContrastRatio(r, g, b, 0, 0, 0);
+
+    // Use the text color with better contrast (minimum 4.5:1 for AA compliance)
+    if (whiteContrast >= 4.5 && whiteContrast > blackContrast) {
+      return "#ffffff";
+    } else if (blackContrast >= 4.5) {
+      return "#1f2937";
+    } else {
+      // Fallback: use the better contrast ratio even if below 4.5
+      return whiteContrast > blackContrast ? "#ffffff" : "#1f2937";
+    }
+  };
+
+  // Function to darken a color for better contrast
+  const darkenColor = (hex: string, amount: number) => {
+    const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - amount);
+    const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - amount);
+    const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - amount);
+    return `#${r.toString(16).padStart(2, "0")}${g
+      .toString(16)
+      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  };
+
   const primaryColor = merchants?.merchant_details?.primary_color || "#88AA17";
+  const isLight = isLightColor(primaryColor);
   const lighterBg = hexToRgba(primaryColor, 0.1);
+  const mediumBg = hexToRgba(primaryColor, 0.2);
+  const textColor = getOptimalTextColor(primaryColor);
+  const hoverTextColor = isLight ? "#374151" : "#f3f4f6";
+
+  // For very bright colors like yellow, use a darker version for better contrast
+  const r = parseInt(primaryColor.slice(1, 3), 16);
+  const g = parseInt(primaryColor.slice(3, 5), 16);
+  const b = parseInt(primaryColor.slice(5, 7), 16);
+  const isVeryBright = r > 220 && g > 220 && b < 150; // Very bright yellow/lime colors
+
+  const adjustedPrimaryColor = isVeryBright
+    ? darkenColor(primaryColor, 40)
+    : primaryColor;
+
+  // Create better contrast colors for different elements
+  const getHeadingColor = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // For very bright colors, use a much darker version for headings
+    if (r > 200 && g > 200 && b < 150) {
+      return darkenColor(hex, 80); // Much darker for yellow/lime
+    } else if (r > 200 && g > 200 && b > 200) {
+      return darkenColor(hex, 60); // Darker for very bright colors
+    } else if (r > 180 && g > 180) {
+      return darkenColor(hex, 50); // Darker for bright colors
+    }
+
+    return hex; // Use original for normal colors
+  };
+
+  const headingColor = getHeadingColor(primaryColor);
 
   return (
     <AuthLayout>
@@ -62,22 +175,94 @@ export default function NormalMerchantPage() {
           />
           <style>
             {`
-                          .merchant-primary {
-                            background-color: ${primaryColor};
-                          }
-                          .merchant-primary-text {
-                            color: ${primaryColor};
-                          }
-                          .merchant-primary-border {
-                            border-color: ${primaryColor};
-                          }
-                          .merchant-primary-hover:hover {
-                            background-color: ${hexToRgba(primaryColor, 0.9)};
-                          }
-                          .merchant-light-bg {
-                            background-color: ${lighterBg};
-                          }
-                    `}
+              .merchant-primary {
+                background-color: ${adjustedPrimaryColor};
+                color: ${textColor};
+              }
+              .merchant-primary-text {
+                color: ${primaryColor};
+              }
+              .merchant-heading-text {
+                color: ${headingColor};
+              }
+              .merchant-primary-border {
+                border-color: ${primaryColor};
+              }
+              .merchant-primary-hover:hover {
+                background-color: ${hexToRgba(adjustedPrimaryColor, 0.9)};
+                color: ${textColor};
+              }
+              .merchant-light-bg {
+                background-color: ${lighterBg};
+              }
+              .merchant-medium-bg {
+                background-color: ${mediumBg};
+              }
+              .merchant-gradient {
+                background: linear-gradient(135deg, ${adjustedPrimaryColor} 0%, ${hexToRgba(
+              adjustedPrimaryColor,
+              0.8
+            )} 100%);
+                color: ${textColor};
+              }
+              .merchant-text-on-primary {
+                color: ${textColor};
+              }
+              .merchant-text-shadow {
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+              }
+              .merchant-text-shadow-strong {
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+              }
+              .merchant-icon-enhanced {
+                filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+              }
+              .merchant-icon-strong {
+                filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+              }
+              .merchant-button {
+                background-color: ${adjustedPrimaryColor};
+                color: ${textColor};
+                border: 1px solid ${adjustedPrimaryColor};
+              }
+              .merchant-button:hover {
+                background-color: ${hexToRgba(adjustedPrimaryColor, 0.9)};
+                color: ${textColor};
+              }
+              .merchant-button-outline {
+                background-color: transparent;
+                color: ${primaryColor};
+                border: 2px solid ${primaryColor};
+                position: relative;
+                overflow: hidden;
+              }
+              .merchant-button-outline::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: ${primaryColor};
+                opacity: 0;
+                transition: opacity 0.2s ease;
+              }
+              .merchant-button-outline:hover::before {
+                opacity: 0.1;
+              }
+              .merchant-button-outline:hover {
+                background-color: ${hexToRgba(primaryColor, 0.1)};
+                border-color: ${adjustedPrimaryColor};
+                color: ${adjustedPrimaryColor};
+              }
+              .merchant-button-outline:focus {
+                outline: 2px solid ${hexToRgba(primaryColor, 0.3)};
+                outline-offset: 2px;
+              }
+              .merchant-button-outline svg {
+                filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+              }
+            `}
           </style>
         </Head>
 
@@ -117,7 +302,7 @@ export default function NormalMerchantPage() {
 
                 {/* Merchant Details */}
                 <div className="p-4 border-t">
-                  <h2 className="text-xl font-bold merchant-primary-text">
+                  <h2 className="text-xl font-bold merchant-heading-text">
                     {merchantProfile?.merchant_details?.store_name}
                   </h2>
                   <p className="text-gray-600 mt-1">
@@ -196,7 +381,7 @@ export default function NormalMerchantPage() {
 
                   {/* Social Links */}
                   <div className="mt-6">
-                    <h3 className="font-medium merchant-primary-text mb-2">
+                    <h3 className="font-medium merchant-heading-text mb-2">
                       Follow Us
                     </h3>
                     <div className="flex space-x-3">
@@ -270,70 +455,12 @@ export default function NormalMerchantPage() {
                       )}
                     </div>
                   </div>
-
-                  {/* Merchant Level */}
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-500">
-                        Merchant Level
-                      </span>
-                      <span className="text-sm font-medium merchant-primary-text">
-                        {
-                          merchantProfile?.merchant_details?.merchant_level
-                            ?.name
-                        }
-                      </span>
-                    </div>
-                    <div className="mt-1 w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className="h-2.5 rounded-full merchant-primary"
-                        style={{
-                          width:
-                            merchantProfile?.merchant_details?.merchant_level
-                              ?.name === "Starter"
-                              ? "33%"
-                              : merchantProfile?.merchant_details
-                                  ?.merchant_level?.name === "Intermediate"
-                              ? "66%"
-                              : "100%",
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center mt-4">
-                    {/*{!merchant.is_verified && (*/}
-                    <span className="merchant-light-bg merchant-primary-text text-xs font-semibold mr-2 px-2.5 py-0.5 rounded flex items-center">
-                      <svg
-                        className="w-3 h-3 mr-1"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Verified
-                    </span>
-                    {/*)}*/}
-                    {/*{merchant.is_allowed_to_stream && (*/}
-                    {/*    <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center">*/}
-                    {/*      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">*/}
-                    {/*        <path*/}
-                    {/*            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/>*/}
-                    {/*      </svg>*/}
-                    {/*        Live Shopping*/}
-                    {/*    </span>*/}
-                    {/*)}*/}
-                  </div>
                 </div>
               </div>
 
               {/* About Section */}
               <div className="bg-white rounded-lg shadow-md mt-6 p-6">
-                <h3 className="text-lg font-bold merchant-primary-text mb-3">
+                <h3 className="text-lg font-bold merchant-heading-text mb-3">
                   {merchantProfile?.merchant_details?.about_title}
                 </h3>
                 <p className="text-gray-700">
@@ -351,7 +478,7 @@ export default function NormalMerchantPage() {
                     onClick={() => setActiveTab("products")}
                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
                       activeTab === "products"
-                        ? "merchant-primary-text merchant-primary-border"
+                        ? "merchant-heading-text merchant-primary-border"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -361,7 +488,7 @@ export default function NormalMerchantPage() {
                     onClick={() => setActiveTab("policy")}
                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
                       activeTab === "policy"
-                        ? "merchant-primary-text merchant-primary-border"
+                        ? "merchant-heading-text merchant-primary-border"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -371,7 +498,7 @@ export default function NormalMerchantPage() {
                     onClick={() => setActiveTab("reviews")}
                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
                       activeTab === "reviews"
-                        ? "merchant-primary-text merchant-primary-border"
+                        ? "merchant-heading-text merchant-primary-border"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -382,7 +509,7 @@ export default function NormalMerchantPage() {
                       onClick={() => setActiveTab("live")}
                       className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
                         activeTab === "live"
-                          ? "merchant-primary-text merchant-primary-border"
+                          ? "merchant-heading-text merchant-primary-border"
                           : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                       }`}
                     >
@@ -394,7 +521,7 @@ export default function NormalMerchantPage() {
                     onClick={() => setActiveTab("shipping")}
                     className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
                       activeTab === "shipping"
-                        ? "merchant-primary-text merchant-primary-border"
+                        ? "merchant-heading-text merchant-primary-border"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -407,7 +534,7 @@ export default function NormalMerchantPage() {
               <div className="mt-6 h-[900px] overflow-x-hidden">
                 {activeTab === "products" && (
                   <div>
-                    <h2 className="text-2xl font-bold merchant-primary-text mb-6">
+                    <h2 className="text-2xl font-bold merchant-heading-text mb-6">
                       {merchantProfile?.merchant_details?.store_page_title}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -436,7 +563,7 @@ export default function NormalMerchantPage() {
                                     : item?.price
                                 )}
                               </span>
-                              <button className="px-3 py-1 rounded merchant-primary merchant-primary-hover text-white text-sm">
+                              <button className="px-3 py-1 rounded merchant-button text-sm">
                                 Add to Cart
                               </button>
                             </div>
@@ -449,7 +576,7 @@ export default function NormalMerchantPage() {
 
                 {activeTab === "policy" && (
                   <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold merchant-primary-text mb-4">
+                    <h2 className="text-2xl font-bold merchant-heading-text mb-4">
                       Refund Policy
                     </h2>
                     <div
@@ -465,7 +592,7 @@ export default function NormalMerchantPage() {
 
                 {activeTab === "reviews" && (
                   <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold merchant-primary-text mb-4">
+                    <h2 className="text-2xl font-bold merchant-heading-text mb-4">
                       Customer Reviews
                     </h2>
                     <div className="space-y-4">

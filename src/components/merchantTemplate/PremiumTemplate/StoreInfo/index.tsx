@@ -20,8 +20,8 @@ const StoreInfo = ({
   refundPolicy,
 }: StoreInfoProps) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold merchant-primary-text mb-4">
+    <div className="bg-white rounded-2xl shadow-lg p-6 merchant-card-bg">
+      <h3 className="text-lg font-semibold merchant-heading-text mb-4">
         Store Information
       </h3>
 
@@ -30,7 +30,7 @@ const StoreInfo = ({
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
             <svg
-              className="w-4 h-4 merchant-primary-text"
+              className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -54,7 +54,7 @@ const StoreInfo = ({
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
             <svg
-              className="w-4 h-4 merchant-primary-text"
+              className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -71,7 +71,7 @@ const StoreInfo = ({
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
             <svg
-              className="w-4 h-4 merchant-primary-text"
+              className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -89,7 +89,7 @@ const StoreInfo = ({
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
             <svg
-              className="w-4 h-4 merchant-primary-text"
+              className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -112,7 +112,7 @@ const StoreInfo = ({
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
                 <svg
-                  className="w-4 h-4 merchant-primary-text"
+                  className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
