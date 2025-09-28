@@ -6,10 +6,13 @@ import {
   StateLocationsResponse,
 } from "@/types/general";
 import { RootState } from "@/store/store";
+import { HomeData } from "@/types/home";
 
 interface GeneralState {
   states: StateDataResponse;
   stateLocations: StateLocationsResponse;
+  homePage: HomeData;
+  homeInsight: HomeData;
   isLoading: boolean;
   error: string | null | unknown;
   message: string | null | unknown;
@@ -18,10 +21,48 @@ interface GeneralState {
 const initialState: GeneralState = {
   states: {} as StateDataResponse,
   stateLocations: {} as StateLocationsResponse,
+  homePage: {} as HomeData,
+  homeInsight: {} as HomeData,
   isLoading: false,
   error: null,
   message: "",
 };
+
+export const getHomePage = createAsyncThunk(
+  "auth/homePage",
+  async (_, thunkAPI) => {
+    try {
+      return await generalService.getHomePage();
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getHomeInsight = createAsyncThunk(
+  "auth/homeInsight",
+  async (_, thunkAPI) => {
+    try {
+      return await generalService.getHomeInsight();
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
 
 export const getAllStates = createAsyncThunk(
   "auth/allStates",
@@ -94,6 +135,32 @@ const generalSlice = createSlice({
       .addCase(getStateLocations.rejected, (state, action) => {
         state.isLoading = false;
         state.stateLocations = {} as StateLocationsResponse;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(getHomePage.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getHomePage.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.homePage = action.payload;
+      })
+      .addCase(getHomePage.rejected, (state, action) => {
+        state.isLoading = false;
+        state.homePage = {} as HomeData;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(getHomeInsight.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getHomeInsight.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.homeInsight = action.payload;
+      })
+      .addCase(getHomeInsight.rejected, (state, action) => {
+        state.isLoading = false;
+        state.homeInsight = {} as HomeData;
         state.error = true;
         state.message = action.payload;
       });

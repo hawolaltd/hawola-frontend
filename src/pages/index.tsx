@@ -2,52 +2,60 @@ import Hero from "@/components/Hero";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import Category from "@/components/category/Category";
 import TrendingProducts from "@/components/TrendingProducts";
 import Partner from "@/components/partner/Partner";
 import TopRateProducts from "@/components/home/TopRateProducts";
 import TopSellingProducts from "@/components/home/TopSellingProducts";
-import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getCarts, getProducts, getWishList} from "@/redux/product/productSlice";
+import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import {
+  getCarts,
+  getProducts,
+  getWishList,
+} from "@/redux/product/productSlice";
 import Drawer from "@/components/header/MobileMenuDrawer";
-import {setDrawerOpen} from "@/redux/ui/uiSlice";
+import { setDrawerOpen } from "@/redux/ui/uiSlice";
+import { getHomeInsight, getHomePage } from "@/redux/general/generalSlice";
 
 export default function Home() {
-    const {products, carts} = useAppSelector(state => state.products)
-    const { isAuthenticated } = useAppSelector(state => state.auth)
-    const isDrawerOpen = useAppSelector(state => state.ui.isDrawerOpen);
+  const { products, carts } = useAppSelector((state) => state.products);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
 
+  console.log("isAuthenticated:", isAuthenticated);
+  const dispatch = useAppDispatch();
 
-    console.log("isAuthenticated:", isAuthenticated)
-    const dispatch = useAppDispatch()
+  useEffect(() => {
+    dispatch(getProducts());
 
-    useEffect(() => {
-        dispatch(getProducts())
+    dispatch(getHomePage());
+    dispatch(getHomeInsight());
+    if (isAuthenticated) {
+      dispatch(getCarts());
+      dispatch(getWishList());
+    }
+  }, [dispatch, isAuthenticated]);
 
-        if (isAuthenticated){
-            dispatch(getCarts())
-            dispatch(getWishList())
-        }
-    }, [dispatch, isAuthenticated]);
-
-    return (<div>
-        <Drawer
-            isOpen={isDrawerOpen}
-            onClose={() => dispatch(setDrawerOpen(false))}
-            userName="Steven"
-            messageCount={3}
-        />
-            <div className={'mb-4'}>
-                <Header/>
-            </div>
-            <Hero/>
-            <Partner/>
-            <Category/>
-            <ProductList products={products}/>
-            <TrendingProducts products={products}/>
-            <TopRateProducts products={products}/>
-            <TopSellingProducts products={products}/>
-            <Footer/>
-        </div>);
+  return (
+    <div>
+      <Drawer
+        isOpen={isDrawerOpen}
+        onClose={() => dispatch(setDrawerOpen(false))}
+        userName="Steven"
+        messageCount={3}
+      />
+      <div className={"mb-4"}>
+        <Header />
+      </div>
+      <Hero />
+      {/* <Partner /> */}
+      <Category />
+      {/* <ProductList products={products} /> */}
+      <TrendingProducts products={products} />
+      <TopRateProducts products={products} />
+      <TopSellingProducts products={products} />
+      <Footer />
+    </div>
+  );
 }
