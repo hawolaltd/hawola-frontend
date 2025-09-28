@@ -165,7 +165,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               </div>
 
               {/* Navigation Links */}
-              <div className="hidden xl:block space-x-8 text-sm">
+              {/* <div className="hidden xl:block space-x-8 text-sm">
                 <a
                   href="#"
                   className="text-primary hover:text-deepOrange text-[16px]"
@@ -184,7 +184,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                 >
                   Top Sellers
                 </a>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -464,7 +464,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
 
             {/* Navigation Links */}
             <ul className="hidden xl:flex space-x-8 text-sm">
-              <li
+              {/* <li
                 onMouseEnter={() => setDropdownOpen("home")}
                 onMouseLeave={() => setDropdownOpen(null)}
                 className="relative text-primary text-[14px] hover:text-deepOrange"
@@ -921,7 +921,13 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                     </li>
                   </ul>
                 )}
-              </li>
+              </li> */}
+
+              <Link href={"#"}>
+                <li className="text-primary text-[14px] hover:text-deepOrange">
+                  About Us
+                </li>
+              </Link>
 
               <Link href={"#"}>
                 <li className="text-primary text-[14px] hover:text-deepOrange">
