@@ -42,7 +42,9 @@ function ProductCard2({
         />
       </div>
       <div className="p-4">
-        <h3 className="text-sm font-semibold text-primary">{item.name}</h3>
+        <h3 className="text-sm font-semibold text-primary">
+          {item.name?.length > 40 ? item.name?.slice(0, 40) + "..." : item.name}
+        </h3>
         <div className={"flex items-center gap-1"}>
           {Array.from(item?.rating ?? 0).map((star, key) => (
             <svg

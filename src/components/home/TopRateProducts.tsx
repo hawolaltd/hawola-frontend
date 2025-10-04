@@ -29,7 +29,7 @@ const TopRateProducts = ({ products }: TopRateProductsProps) => {
               </h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 w-full">
             {homePage?.data?.top_rated_products?.map((product, key) => (
               <ProductCard key={key} product={product} />
             ))}
@@ -49,7 +49,7 @@ const TopRateProducts = ({ products }: TopRateProductsProps) => {
             </div>
             <div className="bg-white rounded gap-2 ">
               {homePage?.data?.top_selling_products
-                ?.slice(0, 6)
+                ?.slice(0, 4)
                 ?.map((item, key) => {
                   return (
                     <ProductCard2
