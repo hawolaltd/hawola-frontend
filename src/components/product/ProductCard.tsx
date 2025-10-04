@@ -173,7 +173,9 @@ function ProductCard({
                 // router.push(`product/${product?.slug}`)
               }}
             >
-              {product.name}
+              {product.name?.length > 50
+                ? product.name?.slice(0, 50) + "..."
+                : product.name}
             </h3>
           </Link>
           <div className={"flex items-center gap-1"}>
@@ -212,17 +214,6 @@ function ProductCard({
           {/*}}>Add to Cart*/}
           {/*</button>*/}
         </div>
-        <ul className={"p-4 max-w-screen-xl text-primary"}>
-          <li className={"text-[10px] list-disc"}>
-            27-inch (diagonal) Retina 5K display
-          </li>
-          <li className={"text-[10px] list-disc Edit Configurations..."}>
-            3.1GHz 6-core 10th-generationc Intel Core i5
-          </li>
-          <li className={"text-[10px] list-disc"}>
-            AMD Radeon Pro 5300 graphics
-          </li>
-        </ul>
       </div>
     </Link>
   );

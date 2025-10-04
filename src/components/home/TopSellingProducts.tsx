@@ -181,7 +181,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
   return (
     <section className="max-w-screen-2xl px-6 xl:px-0 mx-auto flex flex-col gap-4 items-center justify-center py-4">
       <div className="max-w-screen-xl flex justify-center py-4">
-        <ImageSlider banners={homePage?.data?.advert_banner_middle || []} />
+        <ImageSlider banners={homePage?.data?.advert_banner || []} />
       </div>
 
       <div className="max-w-screen-xl flex flex-col justify-center py-4">

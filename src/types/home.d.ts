@@ -72,6 +72,8 @@ type AdvertBanner = {
   advertising_product: boolean;
   start_date: string;
   stop_date: string;
+    web_banner_image: string;
+    banner_image: string;
 };
 
 // Main home data type

@@ -16,14 +16,14 @@ function CategorySlider({ categories }: CategorySliderProps) {
 
   // Calculate items per slide based on screen size
   const getItemsPerSlide = () => {
-    if (typeof window === "undefined") return 4; // Default for SSR
-    if (window.innerWidth >= 1024) return 4; // lg: 4 items
+    if (typeof window === "undefined") return 6; // Default for SSR
+    if (window.innerWidth >= 1024) return 6; // lg: 4 items
     if (window.innerWidth >= 768) return 3; // md: 3 items
     if (window.innerWidth >= 640) return 2; // sm: 2 items
     return 1; // xs: 1 item
   };
 
-  const [itemsPerSlide, setItemsPerSlide] = useState(4);
+  const [itemsPerSlide, setItemsPerSlide] = useState(6);
 
   // Update items per slide on window resize
   useEffect(() => {
@@ -77,12 +77,9 @@ function CategorySlider({ categories }: CategorySliderProps) {
         >
           {Array.from({ length: totalSlides }).map((_, slideIndex) => (
             <div key={slideIndex} className="w-full flex-shrink-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4 px-2">
                 {categories
-                  .slice(
-                    slideIndex * itemsPerSlide,
-                    (slideIndex + 1) * itemsPerSlide
-                  )
+
                   .map((category, index) => (
                     <CategoryCard
                       key={`${slideIndex}-${index}`}

@@ -99,7 +99,7 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
             </div>
             <div className="bg-white rounded gap-2 ">
               {homePage?.data?.best_selling_products
-                ?.slice(0, 6)
+                ?.slice(0, 4)
                 ?.map((item, key) => {
                   return (
                     <ProductCard2

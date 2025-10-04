@@ -14,7 +14,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, image, items }) => {
             </div>
             <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-800 mb-3">{title}</h3>
-                <ul className="text-sm text-gray-600 space-y-2 px-2">
+                <ul className="text-xs text-gray-600 space-y-2 px-2">
                     {items.map((item, index) => (
                         <li
                             className="relative pl-4 before:absolute before:left-0 before:top-1.5 before:w-2 before:h-2 before:bg-blue-400 before:rounded-full"
