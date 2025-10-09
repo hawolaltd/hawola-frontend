@@ -16,11 +16,7 @@ function MiniHeader() {
       } hidden xl:block`}
     >
       <div
-        className={`${
-          router.pathname !== "/"
-            ? "max-w-[1320px] mx-auto px-4"
-            : "max-w-screen-xl mx-auto px-6"
-        } flex items-center justify-center lg:justify-between `}
+        className={`max-w-screen-xl mx-auto px-6 flex items-center justify-center lg:justify-between `}
       >
         {/* Left section: Navigation Links */}
         <div className="lg:flex gap-2 text-sm hidden">

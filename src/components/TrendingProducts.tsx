@@ -13,8 +13,8 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
 
   return (
-    <section className="max-w-screen-2xl px-6 xl:px-0 mx-auto  flex gap-4 bg-[#f1f3f9] justify-center py-4">
-      <div className={"max-w-screen-xl w-full flex flex-col xl:flex-row gap-4"}>
+    <section className="max-w-screen-xl px-6 xl:px-0 mx-auto flex gap-4 bg-[#f1f3f9] py-4">
+      <div className={"w-full flex flex-col xl:flex-row gap-4"}>
         <div className="w-full">
           <div className="mx-auto text-left mb-8 w-full">
             <div

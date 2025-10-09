@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import AuthLayout from "@/components/layout/AuthLayout";
-import {FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter} from 'react-icons/fa';
+import {FaFacebookF, FaLinkedinIn, FaTwitter, FaWhatsapp} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
@@ -34,6 +34,51 @@ const ProductPage = () => {
     const {isAuthenticated} = useAppSelector(state => state.auth)
 
     const [mainImage, setMainImage] = useState("");
+
+    // Get current product URL for sharing
+    const getProductUrl = () => {
+        if (typeof window !== 'undefined') {
+            return window.location.href;
+        }
+        return '';
+    };
+
+    // Social media share handlers
+    const handleShare = (platform: string) => {
+        const productUrl = encodeURIComponent(getProductUrl());
+        const productTitle = encodeURIComponent(product?.product?.name || 'Check out this product!');
+        
+        let shareUrl = '';
+        
+        switch (platform) {
+            case 'facebook':
+                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${productUrl}`;
+                break;
+            case 'twitter':
+                shareUrl = `https://twitter.com/intent/tweet?url=${productUrl}&text=${productTitle}`;
+                break;
+            case 'linkedin':
+                shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${productUrl}`;
+                break;
+            case 'whatsapp':
+                shareUrl = `https://wa.me/?text=${productTitle}%20${productUrl}`;
+                break;
+            default:
+                return;
+        }
+        
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    };
+
+    // Copy link to clipboard
+    const handleCopyLink = () => {
+        const productUrl = getProductUrl();
+        navigator.clipboard.writeText(productUrl).then(() => {
+            toast.success('Product link copied to clipboard!');
+        }).catch(() => {
+            toast.error('Failed to copy link');
+        });
+    };
 
     const LoadingSpinner = () => (
         <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
@@ -223,7 +268,7 @@ const ProductPage = () => {
                                 <img
                                     src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
                                     alt="Product Thumbnail"
-                                    className="w-[100px] h-full object-contain"
+                                    className="w-[100px] object-contain"
                                 />
                             </div>
                         ))}
@@ -569,38 +614,53 @@ const ProductPage = () => {
 
                         {/* Additional info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-12">
-                            <div>
+                            {/* <div>
                                 <p className="font-bold text-primary flex items-center gap-0 text-sm">Free
                                     Delivery</p>
                                 <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}>Available
                                     for all locations.</p>
                                 <p className="text-textPadded font-semibold flex items-center gap-0 text-sm">Delivery
                                     Options & Info</p>
-                            </div>
+                            </div> */}
 
                             {/* Social icons */}
                             <div className="flex gap-4 items-end ">
                                 <span className="text-primary font-bold">Share</span>
-                                <Link href={product?.product?.merchant?.facebook ?? ''}>
-                                    <div className={'pt-1 pl-1 bg-primary'}>
-                                        <FaFacebookF className="text-white cursor-pointer"/>
-                                    </div>
-                                </Link>
-                                <Link href={product?.product?.merchant?.linkedin ?? ''}>
-                                    <div className={'p-[0.2rem] rounded-full bg-primary'}>
-                                        <FaLinkedinIn className="text-white cursor-pointer"/>
-                                    </div>
-                                </Link>
-                                <Link href={product?.product?.merchant?.twitter ?? ''}>
-                                    <div className={''}>
-                                        <FaTwitter className="text-primary cursor-pointer"/>
-                                    </div>
-                                </Link>
-                                <Link href={product?.product?.merchant?.instagram ?? ''}>
-                                    <div className={'p-[0.1rem] rounded-[4px] bg-primary'}>
-                                        <FaInstagram className="text-white cursor-pointer"/>
-                                    </div>
-                                </Link>
+                                <button 
+                                    onClick={() => handleShare('facebook')}
+                                    className={'pt-1 pl-1 bg-primary hover:bg-opacity-80 transition-all'}
+                                    title="Share on Facebook"
+                                >
+                                    <FaFacebookF className="text-white cursor-pointer"/>
+                                </button>
+                                <button 
+                                    onClick={() => handleShare('linkedin')}
+                                    className={'p-[0.2rem] rounded-full bg-primary hover:bg-opacity-80 transition-all'}
+                                    title="Share on LinkedIn"
+                                >
+                                    <FaLinkedinIn className="text-white cursor-pointer"/>
+                                </button>
+                                <button 
+                                    onClick={() => handleShare('twitter')}
+                                    className={'hover:opacity-80 transition-all'}
+                                    title="Share on Twitter"
+                                >
+                                    <FaTwitter className="text-primary cursor-pointer"/>
+                                </button>
+                                <button 
+                                    onClick={() => handleShare('whatsapp')}
+                                    className={'p-[0.3rem] rounded-[4px] bg-[#25D366] hover:bg-opacity-80 transition-all'}
+                                    title="Share on WhatsApp"
+                                >
+                                    <FaWhatsapp className="text-white cursor-pointer"/>
+                                </button>
+                                <button 
+                                    onClick={handleCopyLink}
+                                    className={'px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs text-primary font-semibold transition-all whitespace-nowrap'}
+                                    title="Copy link"
+                                >
+                                    Copy Link
+                                </button>
                             </div>
                         </div>
 

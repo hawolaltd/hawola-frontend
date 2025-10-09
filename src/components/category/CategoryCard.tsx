@@ -13,7 +13,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, image, items }) => {
                 <img src={image} alt={title} className="w-20 h-20 object-contain"/>
             </div>
             <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-800 mb-3">{title}</h3>
+                <h3 className="text-sm font-semibold text-primary">{title}</h3>
                 <ul className="text-xs text-gray-600 space-y-2 px-2">
                     {items.map((item, index) => (
                         <li

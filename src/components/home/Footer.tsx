@@ -8,7 +8,7 @@ const Footer = () => {
         <>
             {router.pathname === '/' && <SubscribeSection/>}
             <footer className="bg-gray-100 py-10  text-gray-600 text-sm">
-                <div className="container mx-auto px-4 lg:grid-cols-2 grid xl:grid-cols-5 gap-4">
+                <div className="max-w-screen-xl mx-auto px-6 xl:px-0 lg:grid-cols-2 grid xl:grid-cols-5 gap-4">
                     <div className={'flex flex-col gap-4'}>
                         <h4 className="font-bold text-primary">Contact</h4>
                         <p className={'text-primary font-bold'}>Address: <span
@@ -78,7 +78,7 @@ const Footer = () => {
             </footer>
 
             <div className="bg-white text-gray-700 text-sm border-t border-gray-200">
-                <div className="container mx-auto px-4 py-6">
+                <div className="max-w-screen-xl mx-auto px-6 xl:px-0 py-6">
                     <div className="flex flex-col lg:flex-row gap-6 items-center">
                         {/* Logo and Links */}
                         <div className="flex items-center space-x-2">

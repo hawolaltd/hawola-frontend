@@ -28,6 +28,7 @@ const OrderSummary = ({
   loading,
   onCheckout,
   shippingError,
+  isAuthenticated = true,
 }: {
   subtotal: number;
   shippingCost: number;
@@ -43,6 +44,7 @@ const OrderSummary = ({
   onCheckout: () => void;
   loading: boolean;
   shippingError: string | null;
+  isAuthenticated?: boolean;
 }) => {
   const [openDelete, setOpenDelete] = useState<boolean | string | null>(null);
 
@@ -159,12 +161,19 @@ const OrderSummary = ({
         </div>
       )}
 
+      {/* Show login message for unauthenticated users */}
+      {!isAuthenticated && (
+        <div className="mt-4 p-3 bg-blue-50 text-blue-600 rounded-md text-sm">
+          Please login to proceed with checkout
+        </div>
+      )}
+
       {/* Checkout Button */}
       <button
-        disabled={!selectedAdd || total <= 0 || loading}
+        disabled={!selectedAdd || total <= 0 || loading || !isAuthenticated}
         onClick={onCheckout}
         className={`w-full mt-6 py-3 ${
-          !selectedAdd || total <= 0 || loading
+          !selectedAdd || total <= 0 || loading || !isAuthenticated
             ? "bg-blue-200 cursor-not-allowed"
             : "bg-primary hover:bg-primary-dark"
         } text-white font-medium rounded-md transition flex justify-center items-center`}
@@ -193,6 +202,8 @@ const OrderSummary = ({
             </svg>
             Processing...
           </>
+        ) : !isAuthenticated ? (
+          "Login to Checkout"
         ) : (
           "Proceed To Checkout"
         )}

@@ -179,12 +179,12 @@ function ImageSlider({ banners }: ImageSliderProps) {
 function TopSellingProducts({ products }: TopSellingProductsProps) {
   const { homePage } = useAppSelector((state) => state.general);
   return (
-    <section className="max-w-screen-2xl px-6 xl:px-0 mx-auto flex flex-col gap-4 items-center justify-center py-4">
-      <div className="max-w-screen-xl flex justify-center py-4">
+    <section className="max-w-screen-xl px-6 xl:px-0 mx-auto flex flex-col gap-4 py-4">
+      <div className="w-full flex justify-center py-4">
         <ImageSlider banners={homePage?.data?.advert_banner || []} />
       </div>
 
-      <div className="max-w-screen-xl flex flex-col justify-center py-4">
+      <div className="w-full flex flex-col justify-center py-4">
         <div className="flex flex-col mx-auto text-left mb-8 w-full border-b border-b-[#CAD6EC] pb-4">
           <div className={"flex flex-col "}>
             <h2 className="text-xl font-bold text-primary">
@@ -269,7 +269,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
         </div>
       </div>
 
-      <div className="max-w-screen-xl flex justify-center py-4">
+      <div className="w-full flex justify-center py-4">
         <ImageSlider banners={homePage?.data?.advert_banner_middle || []} />
       </div>
 

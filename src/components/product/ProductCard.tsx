@@ -137,13 +137,13 @@ function ProductCard({
           viewMode === "list" ? "flex items-center gap-4" : ""
         }`}
       >
-        <span
+        {/* <span
           className={
             "absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white"
           }
         >
           -17%
-        </span>
+        </span> */}
 
         {/* Promoted badge */}
         {isPromoted && (
@@ -157,7 +157,7 @@ function ProductCard({
             src={product.featured_image?.[0]?.image_url}
             alt={product.name}
             style={{
-              width: "200px",
+              // width: "200px",
               height: "150px",
             }}
           />

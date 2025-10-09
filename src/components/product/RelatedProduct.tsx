@@ -17,6 +17,7 @@ const RelatedProduct = ({product}: ProductCardProps) => {
     const {products} = useAppSelector(state => state.products)
 
     return (<section className="max-w-screen-2xl flex gap-4 justify-center py-4">
+        {/* Related Products */}
         <div className={'max-w-screen-xl w-full flex  flex-col gap-4'}>
             <div className={'border-b border-b-detailsBorder pb-6'}>
                 <div className="mx-auto text-left mb-8 w-fullsw">
@@ -30,7 +31,7 @@ const RelatedProduct = ({product}: ProductCardProps) => {
                 </div>
             </div>
 
-            <div>
+            {/* <div>
                 <div className="mx-auto text-left mb-8 w-fullsw">
                     <div className={'flex items-center justify-between gap-8 pt-4'}>
                         <h2 className="text-2xl font-semibold text-primary">You may also like</h2>
@@ -41,13 +42,13 @@ const RelatedProduct = ({product}: ProductCardProps) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
                     {product?.merchant_other_products?.map((product, key) => (<MerchantOtherItemsCard key={key} product={product}/>))}
                 </div>
-            </div>
+            </div> */}
 
-            <RecentlyViewedItems/>
+            {/* <RecentlyViewedItems/> */}
 
 
 
-            <div>
+            {/* <div>
                 <div className="mx-auto text-left mb-8 w-fullsw">
                     <div className={'flex items-center justify-between gap-8 pt-4'}>
                         <h2 className="text-2xl font-semibold text-primary">Similar products to compare</h2>
@@ -58,14 +59,17 @@ const RelatedProduct = ({product}: ProductCardProps) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
                     {products?.results?.slice(0, 5)?.map((product, key) => (<ProductCard key={key} product={product}/>))}
                 </div>
-            </div>
+            </div> */}
 
 
-            <div className={'flex items-center justify-center mt-8 mb-8'}>
+            {/* ADVERT BANNER ON PRODUCT DETAILS PAGE */}
+
+            {/* <div className={'flex items-center justify-center mt-8 mb-8'}>
                 <img src={'/assets/banner-ads.png'} alt={'ads'}/>
-            </div>
+            </div> */}
 
-            <FeaturesSection/>
+            {/* FEATURES SECTION ON PRODUCT DETAILS PAGE */}
+            {/* <FeaturesSection/> */}
         </div>
     </section>);
 }

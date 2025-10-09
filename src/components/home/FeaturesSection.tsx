@@ -8,7 +8,7 @@ const features = [
 
 const FeaturesSection = () => {
     return (
-        <div className="container mx-auto px-4 py-2 grid md:grid-cols-5 gap-4 text-center">
+        <div className="w-full mx-auto py-2 grid md:grid-cols-5 gap-4 text-center">
             {features.map((feature, index) => (
                 <div key={index} className="p-2 border border-[#D5DFE4] flex items-center gap-2 rounded">
                     <img src={feature.icon} alt={'features'} width={20} height={20}/>

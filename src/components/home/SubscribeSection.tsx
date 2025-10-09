@@ -5,8 +5,8 @@ const SubscribeSection = () => {
 
 
     return (
-        <div className={`max-w-screen-2xl w-full mx-auto flex items-center justify-center bg-[#0E224D] ${router.pathname !== ('/') ? 'bg-custom-bg3 bg-center bg-cover bg-no-repeat h-60' : ''} bg-center bg-cover text-white py-10 text-center`}>
-            <div className={'max-w-screen-xl w-full px-4 lg:px-0 flex flex-col lg:flex-row items-center lg:items-start lg:gap-28'}>
+        <div className={`w-full mx-auto flex items-center justify-center bg-[#0E224D] ${router.pathname !== ('/') ? 'bg-custom-bg3 bg-center bg-cover bg-no-repeat h-60' : ''} bg-center bg-cover text-white py-10 text-center`}>
+            <div className={'max-w-screen-xl w-full px-6 xl:px-0 flex flex-col lg:flex-row items-center lg:items-start lg:gap-28'}>
                 <div>
                     <h3 className="text-xl text-left font-bold">Subscribe & Get <span
                         className="text-deepOrange">10%</span> Discount

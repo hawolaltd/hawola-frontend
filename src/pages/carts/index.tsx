@@ -32,9 +32,10 @@ interface OrderItem {
 }
 
 const CartPage = () => {
-  const { products, carts, addresses } = useAppSelector(
+  const { products, carts, addresses, localCart } = useAppSelector(
     (state) => state.products
   );
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   console.log("carts", carts);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -43,7 +44,7 @@ const CartPage = () => {
   const [pendingUpdates, setPendingUpdates] = useState<{
     [id: number]: number;
   }>({});
-  const [cartItems, setCartItems] = useState(carts["cart_items"]);
+  const [cartItems, setCartItems] = useState<(CartItem | any)[]>(carts["cart_items"] || []);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -212,6 +213,13 @@ const CartPage = () => {
   };
 
   const handleProceedToCheckout = async () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast.info("Please login to continue with checkout");
+      router.push("/auth/login");
+      return;
+    }
+
     if (!selectedAdd || selectedItems.length === 0) return;
 
     setCreatingOrder(true);
@@ -228,7 +236,7 @@ const CartPage = () => {
           shipping_cost: calculateShippingCost(+item.product.price),
           merchant: item.product.merchant.id,
           // Add variants if they exist
-          variant: item?.cart_variant?.map((v) => ({
+          variant: item?.cart_variant?.map((v: any) => ({
             variant: v.variant.id,
             variant_value: v.variant_value.id,
           })),
@@ -277,11 +285,12 @@ const CartPage = () => {
 
   // Update cart items when carts change
   useEffect(() => {
-    const newCartItems = carts["cart_items"];
+    const newCartItems = isAuthenticated ? (carts["cart_items"] || []) : (localCart?.items || []);
 
     // Check if cart structure changed (items added/removed)
-    const currentItemIds = new Set(cartItems?.map((item) => item.id) || []);
-    const newItemIds = new Set(newCartItems?.map((item) => item.id) || []);
+    const getItemId = (item: any) => item.id || item.product?.id;
+    const currentItemIds = new Set(cartItems?.map(getItemId).filter(Boolean) || []);
+    const newItemIds = new Set(newCartItems?.map(getItemId).filter(Boolean) || []);
 
     // Only reset selections if items were added or removed
     const cartStructureChanged =
@@ -289,7 +298,7 @@ const CartPage = () => {
       [...currentItemIds].some((id) => !newItemIds.has(id)) ||
       [...newItemIds].some((id) => !currentItemIds.has(id));
 
-    setCartItems(newCartItems);
+    setCartItems(newCartItems as any);
 
     if (cartStructureChanged) {
       // Reset selection when cart structure changes
@@ -298,7 +307,7 @@ const CartPage = () => {
 
     // Clear pending updates when cart data is refreshed from server
     setPendingUpdates({});
-  }, [cartItems, carts]);
+  }, [cartItems, carts, localCart, isAuthenticated]);
 
   return (
     <AuthLayout>
@@ -345,20 +354,23 @@ const CartPage = () => {
               {/* Product Items */}
               <div className={"h-[550px] overflow-x-auto"}>
                 {cartItems?.length > 0 ? (
-                  cartItems.map((cart) => (
-                    <CartItemRow
-                      key={cart.id}
-                      cart={cart}
-                      updateQuantity={updateQuantity}
-                      onDelete={() => {
-                        setSelectedPro(cart);
-                        setOpenDelete(true);
-                      }}
-                      onSelect={handleSelectItem}
-                      isSelected={selectedItems.includes(cart.id)}
-                      pendingUpdates={pendingUpdates}
-                    />
-                  ))
+                  cartItems.map((cart) => {
+                    const cartId = cart.id || cart.product?.id;
+                    return (
+                      <CartItemRow
+                        key={cartId}
+                        cart={cart}
+                        updateQuantity={updateQuantity}
+                        onDelete={() => {
+                          setSelectedPro(cart);
+                          setOpenDelete(true);
+                        }}
+                        onSelect={handleSelectItem}
+                        isSelected={selectedItems.includes(cartId)}
+                        pendingUpdates={pendingUpdates}
+                      />
+                    );
+                  })
                 ) : (
                   <div className="p-8 text-center text-gray-500">
                     Your cart is empty
@@ -403,6 +415,7 @@ const CartPage = () => {
               onCheckout={handleProceedToCheckout}
               loading={creatingOrder}
               shippingError={shippingError}
+              isAuthenticated={isAuthenticated}
             />
           </div>
         </div>

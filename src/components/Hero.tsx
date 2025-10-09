@@ -195,7 +195,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="grid grid-cols-1 xl:grid-cols-12 gap-4 py-4 px-8 xl:px-0 md:max-w-screen-lg xl:max-w-screen-xl mx-auto ">
+    <section className="grid grid-cols-1 xl:grid-cols-12 gap-4 py-4 px-6 xl:px-0 max-w-screen-xl mx-auto ">
       <div className={"xl:col-span-9  rounded-xl "}>
           {/*{homePage?.data?.banners?.map((item, index) => (*/}
               <ImageSlider banners={homePage?.data?.banners as any || []} />

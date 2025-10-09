@@ -9,7 +9,7 @@ const CartItemRow = ({
   isSelected,
   pendingUpdates,
 }: {
-  cart: CartItem;
+  cart: CartItem | any;
   updateQuantity: (id: number, change: number) => void;
   onDelete: () => void;
   onSelect: (id: number, isSelected: boolean) => void;
@@ -17,24 +17,49 @@ const CartItemRow = ({
   pendingUpdates: { [id: number]: number };
 }) => {
   // Calculate the effective quantity (including pending updates)
-  const effectiveQty = Math.max(1, cart.qty + (pendingUpdates[cart.id] || 0));
+  const cartId = cart.id || cart.product?.id;
+  const effectiveQty = Math.max(1, cart.qty + (pendingUpdates[cartId] || 0));
+  
+  // Handle different image structures for authenticated vs local cart
+  const getImageUrl = () => {
+    const featuredImage = cart?.product?.featured_image?.[0];
+    if (!featuredImage) return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23e5e7eb" width="80" height="80"/%3E%3C/svg%3E';
+    
+    // For authenticated cart items
+    if (featuredImage.image_url) {
+      return featuredImage.image_url;
+    }
+    
+    // For local cart items
+    if (featuredImage.image?.thumbnail) {
+      return featuredImage.image.thumbnail;
+    }
+    
+    // Fallback to main image or empty SVG
+    return featuredImage.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23e5e7eb" width="80" height="80"/%3E%3C/svg%3E';
+  };
 
   return (
-    <div key={cart.id} className="p-4 border-b last:border-b-0">
+    <div key={cartId} className="p-4 border-b last:border-b-0">
       <div className="flex flex-col md:grid md:grid-cols-12 gap-4 items-center">
         {/* Product Info with Checkbox */}
         <div className="md:col-span-5 flex items-center gap-4">
           <input
             type="checkbox"
             checked={isSelected}
-            onChange={(e) => onSelect(cart.id, e.target.checked)}
+            onChange={(e) => onSelect(cartId, e.target.checked)}
             className="h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded"
           />
-          <div className="w-20 h-20 bg-gray-200 rounded-md flex-shrink-0">
+          <div className="w-20 h-20 bg-gray-200 rounded-md flex-shrink-0 overflow-hidden">
             <img
-              src={cart?.product.featured_image?.[0]?.image_url}
-              alt={cart?.product.name}
+              src={getImageUrl()}
+              alt={cart?.product?.name || 'Product'}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loop
+                target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%239ca3af"%3ENo Image%3C/text%3E%3C/svg%3E';
+              }}
             />
           </div>
           <div>
@@ -75,7 +100,7 @@ const CartItemRow = ({
         <div className="md:col-span-2 flex justify-center">
           <div className="flex items-center border rounded-md">
             <button
-              onClick={() => updateQuantity(cart.id, -1)}
+              onClick={() => updateQuantity(cartId, -1)}
               className="px-3 py-1 text-gray-600 hover:bg-gray-100"
               disabled={effectiveQty <= 1}
             >
@@ -83,7 +108,7 @@ const CartItemRow = ({
             </button>
             <span className="px-3 py-1 border-x">{effectiveQty}</span>
             <button
-              onClick={() => updateQuantity(cart.id, 1)}
+              onClick={() => updateQuantity(cartId, 1)}
               className="px-3 py-1 text-gray-600 hover:bg-gray-100"
             >
               +

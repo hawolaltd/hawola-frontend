@@ -16,19 +16,19 @@ function MerchantOtherItemsCard({
       }}
       className={`relative bg-white border cursor-pointer border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4`}
     >
-      <span
+      {/* <span
         className={
           "absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white"
         }
       >
         -17%
-      </span>
+      </span> */}
       <div className={"w-full flex items-center justify-center"}>
         <img
           src={product?.featured_image?.[0]?.image?.thumbnail}
           alt={product.name}
           style={{
-            width: "200px",
+            // width: "200px",
             height: "150px",
           }}
         />
