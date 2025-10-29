@@ -40,10 +40,22 @@ const CheckoutPage = () => {
   const [showPaystack, setShowPaystack] = useState(false);
 
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string;
+  
+  // Validate that we're using a public key, not a secret key
+  React.useEffect(() => { 
+    if (publicKey && publicKey.startsWith('sk_')) {
+      console.error('❌ ERROR: You are using a SECRET KEY (sk_...) instead of a PUBLIC KEY (pk_...)');
+      console.error('⚠️  This is a security risk! Please update your .env file with your Paystack PUBLIC KEY.');
+      toast.error('Payment configuration error. Please contact support.');
+    } else if (!publicKey) {
+      console.warn('⚠️  Paystack public key is not configured. Please add NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY to your .env file.');
+    }
+  }, [publicKey]);
+  
   const config = {
     reference: orders?.payment_reference as string,
     email: profile?.email as string,
-    amount: +orders?.totalPrice * 100,
+    amount: +(orders?.totalPriceDue || orders?.totalPrice) * 100,
     publicKey,
   };
   const handlePayment = async () => {
@@ -247,21 +259,21 @@ const CheckoutPage = () => {
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
                   <span className="font-semibold">
-                    {formatCurrency((+orders?.totalPrice).toFixed(2))}
+                    {formatCurrency((+orders?.totalPrice || 0).toFixed(2))}
                   </span>
                 </div>
 
                 <div className="flex justify-between">
                   <span>Shipping:</span>
                   <span className="font-semibold">
-                    {formatCurrency((+orders?.shippingPrice).toFixed(2))}
+                    {formatCurrency((+orders?.shippingPrice || 0).toFixed(2))}
                   </span>
                 </div>
 
                 <div className="border-t pt-4 flex justify-between">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-lg">
-                    {formatCurrency((+orders?.totalPrice).toFixed(2))}
+                    {formatCurrency((+(orders?.totalPriceDue || orders?.totalPrice) || 0).toFixed(2))}
                   </span>
                 </div>
 
@@ -299,7 +311,7 @@ const CheckoutPage = () => {
                       Processing Payment...
                     </>
                   ) : (
-                    `Pay ${formatCurrency((+orders?.totalPrice).toFixed(2))}`
+                    `Pay ${formatCurrency((+(orders?.totalPriceDue || orders?.totalPrice) || 0).toFixed(2))}`
                   )}
                 </button>
               </div>

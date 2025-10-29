@@ -8,7 +8,7 @@ interface CategoryCardProps {
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ title, image, items }) => {
     return (
-        <div className="flex flex-col bg-white border border-solid border-gray-100 rounded-lg gap-4 p-6 shadow-xs hover:shadow-sm transition-all hover:border-blue-100">
+        <div className="flex flex-col bg-slate-200 border border-solid border-gray-100 rounded-lg gap-4 py-4 px-2 shadow-xs hover:shadow-sm transition-all hover:border-blue-100">
             <div className="flex justify-center">
                 <img src={image} alt={title} className="w-20 h-20 object-contain"/>
             </div>

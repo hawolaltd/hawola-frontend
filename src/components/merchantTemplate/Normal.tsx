@@ -1,26 +1,21 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import { getMerchantProfile, getMerchants } from "@/redux/product/productSlice";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import { capitalize, formatCurrency } from "@/util";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
   const { merchantSlug } = router.query;
   const [activeTab, setActiveTab] = useState("products");
-  const dispatch = useAppDispatch();
   const { merchants, isLoading, merchantProfile } = useAppSelector(
     (state) => state.products
   );
 
-  console.log("merchantProfile", merchantProfile);
-
-  useEffect(() => {
-    dispatch(getMerchants(merchantSlug as string));
-    dispatch(getMerchantProfile(merchantSlug as string));
-  }, [dispatch, merchantSlug]);
+  // Use merchantProfile first, fallback to merchants
+  // Data is fetched by the parent page component
+  const merchantData = merchantProfile || merchants;
 
   if (isLoading) {
     return (
@@ -30,7 +25,7 @@ export default function NormalMerchantPage() {
     );
   }
 
-  if (!merchantProfile) {
+  if (!merchantData || !merchantData.merchant_details) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-xl">Merchant not found</p>
@@ -125,7 +120,7 @@ export default function NormalMerchantPage() {
       .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
   };
 
-  const primaryColor = merchants?.merchant_details?.primary_color || "#88AA17";
+  const primaryColor = merchantData?.merchant_details?.primary_color || "#88AA17";
   const isLight = isLightColor(primaryColor);
   const lighterBg = hexToRgba(primaryColor, 0.1);
   const mediumBg = hexToRgba(primaryColor, 0.2);
@@ -167,11 +162,11 @@ export default function NormalMerchantPage() {
       <div className="min-h-screen bg-gray-50">
         <Head>
           <title>
-            {merchantProfile?.merchant_details?.store_name} | Merchant
+            {merchantData?.merchant_details?.store_name} | Merchant
           </title>
           <meta
             name="description"
-            content={merchantProfile?.merchant_details?.about.substring(0, 160)}
+            content={merchantData?.merchant_details?.about?.substring(0, 160) || ''}
           />
           <style>
             {`
@@ -269,14 +264,14 @@ export default function NormalMerchantPage() {
         {/* Banner Section */}
         <div className="relative h-64 w-full overflow-hidden">
           <img
-            src={merchantProfile?.banners?.[0]?.image?.full_size}
-            alt={merchantProfile?.merchant_details?.store_name}
+            src={merchantData?.banners?.[0]?.image?.full_size}
+            alt={merchantData?.merchant_details?.store_name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white">
-                {merchantProfile?.merchant_details?.store_name}
+                {merchantData?.merchant_details?.store_name}
               </h1>
               <p className="text-xl text-white mt-2">
                 {merchants?.merchant_details?.store_page_subtitle}
@@ -294,7 +289,7 @@ export default function NormalMerchantPage() {
                 {/* Merchant Logo */}
                 <div className="p-4 flex justify-center">
                   <img
-                    src={merchantProfile?.merchant_details?.logo}
+                    src={merchantData?.merchant_details?.logo}
                     alt={merchants?.merchant_details?.store_name}
                     className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
                   />
@@ -303,11 +298,11 @@ export default function NormalMerchantPage() {
                 {/* Merchant Details */}
                 <div className="p-4 border-t">
                   <h2 className="text-xl font-bold merchant-heading-text">
-                    {merchantProfile?.merchant_details?.store_name}
+                    {merchantData?.merchant_details?.store_name}
                   </h2>
                   <p className="text-gray-600 mt-1">
-                    {merchantProfile?.merchant_details?.market.help_text}{" "}
-                    {merchantProfile?.merchant_details?.market.name}
+                    {merchantData?.merchant_details?.market?.help_text}{" "}
+                    {merchantData?.merchant_details?.market?.name}
                   </p>
 
                   <div className="mt-4 space-y-2">
@@ -333,7 +328,7 @@ export default function NormalMerchantPage() {
                         />
                       </svg>
                       <span>
-                        {merchantProfile?.merchant_details?.store_address}
+                        {merchantData?.merchant_details?.store_address}
                       </span>
                     </div>
                     <div className="flex items-center">
@@ -353,7 +348,7 @@ export default function NormalMerchantPage() {
                       </svg>
                       <span>
                         {
-                          merchantProfile?.merchant_details
+                          merchantData?.merchant_details
                             ?.support_phone_number
                         }
                       </span>
@@ -374,7 +369,7 @@ export default function NormalMerchantPage() {
                         />
                       </svg>
                       <span>
-                        {merchantProfile?.merchant_details?.support_email}
+                        {merchantData?.merchant_details?.support_email}
                       </span>
                     </div>
                   </div>
@@ -385,9 +380,9 @@ export default function NormalMerchantPage() {
                       Follow Us
                     </h3>
                     <div className="flex space-x-3">
-                      {merchantProfile?.merchant_details?.facebook && (
+                      {merchantData?.merchant_details?.facebook && (
                         <a
-                          href={merchantProfile?.merchant_details?.facebook}
+                          href={merchantData?.merchant_details?.facebook}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-full merchant-light-bg transition"
@@ -402,9 +397,9 @@ export default function NormalMerchantPage() {
                           </svg>
                         </a>
                       )}
-                      {merchantProfile?.merchant_details?.twitter && (
+                      {merchantData?.merchant_details?.twitter && (
                         <a
-                          href={merchantProfile?.merchant_details?.twitter}
+                          href={merchantData?.merchant_details?.twitter}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-full merchant-light-bg transition"
@@ -419,7 +414,7 @@ export default function NormalMerchantPage() {
                           </svg>
                         </a>
                       )}
-                      {merchantProfile?.merchant_details?.instagram && (
+                      {merchantData?.merchant_details?.instagram && (
                         <a
                           href={merchants?.merchant_details?.instagram ?? ""}
                           target="_blank"
@@ -436,9 +431,9 @@ export default function NormalMerchantPage() {
                           </svg>
                         </a>
                       )}
-                      {merchantProfile?.merchant_details?.tiktok && (
+                      {merchantData?.merchant_details?.tiktok && (
                         <a
-                          href={merchantProfile?.merchant_details?.tiktok}
+                          href={merchantData?.merchant_details?.tiktok}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-full merchant-light-bg transition"
@@ -461,10 +456,10 @@ export default function NormalMerchantPage() {
               {/* About Section */}
               <div className="bg-white rounded-lg shadow-md mt-6 p-6">
                 <h3 className="text-lg font-bold merchant-heading-text mb-3">
-                  {merchantProfile?.merchant_details?.about_title}
+                  {merchantData?.merchant_details?.about_title}
                 </h3>
                 <p className="text-gray-700">
-                  {merchantProfile?.merchant_details?.about}
+                  {merchantData?.merchant_details?.about}
                 </p>
               </div>
             </div>
@@ -504,7 +499,7 @@ export default function NormalMerchantPage() {
                   >
                     Reviews
                   </button>
-                  {merchantProfile?.merchant_details?.is_allowed_to_stream && (
+                  {merchantData?.merchant_details?.is_allowed_to_stream && (
                     <button
                       onClick={() => setActiveTab("live")}
                       className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
@@ -535,10 +530,10 @@ export default function NormalMerchantPage() {
                 {activeTab === "products" && (
                   <div>
                     <h2 className="text-2xl font-bold merchant-heading-text mb-6">
-                      {merchantProfile?.merchant_details?.store_page_title}
+                      {merchantData?.merchant_details?.store_page_title}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {merchantProfile?.recent_products?.map((item, index) => (
+                      {merchantData?.recent_products?.map((item, index) => (
                         <div
                           key={index}
                           className="bg-white rounded-lg shadow-md overflow-hidden"
@@ -582,7 +577,7 @@ export default function NormalMerchantPage() {
                     <div
                       className="prose max-w-none"
                       dangerouslySetInnerHTML={{
-                        __html: merchantProfile?.merchant_details?.refund_policy
+                        __html: merchantData?.merchant_details?.refund_policy
                           .replace(/\r\n/g, "<br/>")
                           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
                       }}
@@ -695,7 +690,7 @@ export default function NormalMerchantPage() {
                       <span>
                         Usually ships within{" "}
                         {
-                          merchantProfile?.merchant_details
+                          merchantData?.merchant_details
                             ?.shipping_number_of_days
                         }{" "}
                         business days

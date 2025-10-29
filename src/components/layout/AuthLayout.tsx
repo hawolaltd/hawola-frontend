@@ -14,7 +14,6 @@ function AuthLayout({children}: { children: ReactNode }) {
                 {/*    <Sidebar/>*/}
                 {/*</div>*/}
                 <div className={'w-[100%]'}>
-                    <MainHeader/>
                     {children}
                     <SubscribeSection/>
                     <Footer/>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMerchantProfile, getMerchants } from "@/redux/product/productSlice";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import { useRouter } from "next/router";
 import AuthLayout from "../layout/AuthLayout";
 import Head from "next/head";
@@ -20,13 +19,7 @@ const StandardTemplate = () => {
     merchantProfile: data,
   } = useAppSelector((state) => state.products);
 
-  const dispatch = useAppDispatch();
   const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    dispatch(getMerchants(merchantSlug as string));
-    dispatch(getMerchantProfile(merchantSlug as string));
-  }, [dispatch, merchantSlug]);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -34,6 +27,15 @@ const StandardTemplate = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Use data (merchantProfile) first, fallback to merchants
+  // Data is fetched by the parent page component
+  const merchantData = data || merchants;
+  
+  // Early return if no data to prevent unnecessary renders
+  if (!merchantData) {
+    return null;
+  }
+  
   const {
     merchant_details,
     recent_products,
@@ -41,7 +43,7 @@ const StandardTemplate = () => {
     banners,
     home_page,
     is_streaming_now,
-  } = data;
+  } = merchantData;
 
   // Enhanced function to check if a color is light or dark with better edge case handling
   const isLightColor = (hex: string) => {

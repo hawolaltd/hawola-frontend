@@ -10,6 +10,7 @@ import {
   getAddress,
   getCarts,
   updateCart,
+  syncLocalCartFromStorage,
 } from "@/redux/product/productSlice";
 import DeleteModal from "@/components/shared/Delete";
 import { AddressData, CartItem } from "@/types/product";
@@ -39,6 +40,7 @@ const CartPage = () => {
   console.log("carts", carts);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<string>("");
   const [shippingError, setShippingError] = useState<string | null>(null);
   const router = useRouter();
   const [pendingUpdates, setPendingUpdates] = useState<{
@@ -75,12 +77,59 @@ const CartPage = () => {
         );
       }, 0) || 0;
 
-    const shippingRate = 0;
-    const shippingCost = 0;
+    // Calculate shipping cost based on location comparison
+    let shippingCost = 0;
+    
+    if (selectedAdd) {
+      const customerState = selectedAdd?.state?.name?.toLowerCase().trim() || '';
+      const customerCity = selectedAdd?.city?.name?.toLowerCase().trim() || '';
+      
+      cartItems
+        .filter((item) => selectedItems.includes(item.id || item.product?.id))
+        .forEach((item) => {
+          const product = item?.product;
+          const merchant = product?.merchant;
+          
+          if (!merchant || !product) return;
+          
+          const merchantState = merchant?.state?.name?.toLowerCase().trim() || '';
+          const merchantCity = merchant?.location?.name?.toLowerCase().trim() || '';
+          
+          // Determine which shipping cost to use
+          let itemShippingCost = 0;
+          let shippingType = '';
+          
+          // Different states → use shipping_cost_outside_state
+          if (merchantState !== customerState) {
+            itemShippingCost = parseFloat(product?.shipping_cost_outside_state?.shipping_cost || '0');
+            shippingType = 'outside_state';
+          }
+          // Same state, different location → use shipping_cost_outside
+          else if (merchantCity !== customerCity) {
+            itemShippingCost = parseFloat(product?.shipping_cost_outside?.shipping_cost || '0');
+            shippingType = 'outside_vicinity';
+          }
+          // Same state and location → use shipping_cost_within
+          else {
+            itemShippingCost = parseFloat(product?.shipping_cost_within?.shipping_cost || '0');
+            shippingType = 'within';
+          }
+          
+          console.log(`Shipping for ${product.name}:`, {
+            type: shippingType,
+            cost: itemShippingCost,
+            merchantLocation: `${merchantCity}, ${merchantState}`,
+            customerLocation: `${customerCity}, ${customerState}`,
+          });
+          
+          shippingCost += itemShippingCost;
+        });
+    }
+
     const total = subtotal + shippingCost;
 
     return { subtotal, shippingCost, total };
-  }, [carts, selectedItems, pendingUpdates]);
+  }, [carts, cartItems, selectedItems, pendingUpdates, selectedAdd]);
 
   const allSelected =
     cartItems?.length > 0 && selectedItems.length === cartItems.length;
@@ -176,37 +225,143 @@ const CartPage = () => {
     setEditingAddress(false);
   };
 
-  // Helper function to calculate shipping cost for an item
-  const calculateShippingCost = (price: number) => {
-    const shippingRate = 0.08;
-    return price * shippingRate;
+  // Helper function to calculate shipping cost for an item based on location
+  const calculateShippingCostForItem = (product: any) => {
+    if (!selectedAdd) return 0;
+    
+    const customerState = selectedAdd?.state?.name?.toLowerCase().trim() || '';
+    const customerCity = selectedAdd?.city?.name?.toLowerCase().trim() || '';
+    const merchantState = product?.merchant?.state?.name?.toLowerCase().trim() || '';
+    const merchantCity = product?.merchant?.location?.name?.toLowerCase().trim() || '';
+    
+    // Different states → use shipping_cost_outside_state
+    if (merchantState !== customerState) {
+      return parseFloat(product?.shipping_cost_outside_state?.shipping_cost || '0');
+    }
+    // Same state, different location → use shipping_cost_outside
+    else if (merchantCity !== customerCity) {
+      return parseFloat(product?.shipping_cost_outside?.shipping_cost || '0');
+    }
+    // Same state and location → use shipping_cost_within
+    else {
+      return parseFloat(product?.shipping_cost_within?.shipping_cost || '0');
+    }
   };
 
+  console.log("cartItems--", cartItems);
+
   const checkMerchantShipping = async (items: OrderItem[]) => {
-    const merchantIds = [...new Set(items.map((item) => item.merchant))];
+    if (!selectedAdd) return "Please select a delivery address";
 
-    const problematicMerchants = cartItems?.filter(
-      (pro) => !pro?.product?.ship_outside_state
-    );
-    // const problematicMerchants = cartItems?.filter(pro => !pro?.product?.ship_outside_state  || !pro?.product?.ship_outside_vicinity)
+    // Get selected address location details
+    const selectedAddressState = selectedAdd?.state?.name?.toLowerCase().trim() || '';
+    const selectedAddressCity = selectedAdd?.city?.name?.toLowerCase().trim() || '';
+    
+    console.log("=== Shipping Check Debug ===");
+    console.log("Customer Address:", {
+      state: selectedAdd?.state?.name,
+      city: selectedAdd?.city?.name,
+    });
+    
+    const problematicItems: any[] = [];
 
-    // Find problematic items
-    const problematicItems = problematicMerchants.filter((item) =>
-      selectedItems.includes(item.id)
-    );
+    // Check each selected cart item
+    cartItems
+      .filter((item) => selectedItems.includes(item.id))
+      .forEach((item) => {
+        const merchant = item?.product?.merchant;
+        const product = item?.product;
+        
+        if (!merchant || !product) return;
+
+        // Get merchant location from product.merchant.state.name and product.merchant.location.name
+        const merchantState = merchant?.state?.name?.toLowerCase().trim() || '';
+        const merchantCity = merchant?.location?.name?.toLowerCase().trim() || '';
+
+        // Check if states are different
+        const differentState = merchantState !== selectedAddressState;
+        
+        // Check if cities/locations are different (vicinity check)
+        const differentCity = merchantCity !== selectedAddressCity;
+
+        // Get proper capitalized names for display
+        const merchantStateDisplay = merchant?.state?.name || 'Unknown State';
+        const merchantCityDisplay = merchant?.location?.name || 'Unknown Location';
+        const customerStateDisplay = selectedAdd?.state?.name || '';
+        const customerCityDisplay = selectedAdd?.city?.name || '';
+
+        console.log(`Product: ${product.name}`, {
+          merchant: {
+            state: merchant?.state?.name,
+            location: merchant?.location?.name,
+          },
+          customer: {
+            state: selectedAdd?.state?.name,
+            city: selectedAdd?.city?.name,
+          },
+          comparison: {
+            differentState,
+            differentCity,
+          },
+          policies: {
+            shipOutsideState: product?.ship_outside_state,
+            shipOutsideVicinity: product?.ship_outside_vicinity,
+          },
+        });
+
+        // Determine if shipping is allowed based on policies
+        let shippingBlocked = false;
+        let reason = "";
+
+        // RULE 1: If ship_outside_state is TRUE → Can ship ANYWHERE
+        if (product?.ship_outside_state === true) {
+          // No restrictions - shipping allowed everywhere
+          shippingBlocked = false;
+        }
+        // RULE 2: If ship_outside_state is FALSE and states are DIFFERENT → BLOCKED
+        else if (product?.ship_outside_state === false && differentState) {
+          shippingBlocked = true;
+          reason = `Merchant is located in ${merchantCityDisplay}, ${merchantStateDisplay} and does not ship outside ${merchantStateDisplay} state`;
+        }
+        // RULE 3: States are SAME - check vicinity policy
+        else if (!differentState) {
+          // If ship_outside_vicinity is TRUE → Can ship to different cities in same state
+          if (product?.ship_outside_vicinity === true) {
+            shippingBlocked = false;
+          }
+          // If ship_outside_vicinity is FALSE and cities are DIFFERENT → BLOCKED
+          else if (product?.ship_outside_vicinity === false && differentCity) {
+            shippingBlocked = true;
+            reason = `Merchant is in ${merchantCityDisplay}, ${merchantStateDisplay} and only ships within ${merchantCityDisplay} (their city)`;
+          }
+          // Same city and state → ALLOWED
+          else {
+            shippingBlocked = false;
+          }
+        }
+
+        if (shippingBlocked) {
+          problematicItems.push({
+            name: product.name,
+            merchant: merchant.store_name || 'Merchant',
+            merchantState: merchantStateDisplay,
+            merchantCity: merchantCityDisplay,
+            reason: reason,
+          });
+        }
+      });
 
     if (problematicItems.length > 0) {
-      const productNames = problematicItems
-        .map(
-          (item) =>
-            cartItems.find((ci) => ci.product.id === item?.product?.id)?.product
-              .name
-        )
-        .filter(Boolean);
+      const errorMessages = problematicItems.map(
+        (item) => `• ${item.name} (${item.merchant})\n  ${item.reason}`
+      );
 
-      return `The following items cannot be shipped to your location: ${productNames.join(
-        ", "
-      )}. Please remove them to proceed.`;
+      const customerStateDisplay = selectedAdd?.state?.name || '';
+      const customerCityDisplay = selectedAdd?.city?.name || '';
+
+      return `Shipping Restriction:\n\n${errorMessages.join(
+        "\n\n"
+      )}\n\n📍 Your delivery address: ${customerCityDisplay}, ${customerStateDisplay}\n\nPlease remove these items or change your delivery address to proceed.`;
     }
 
     return null;
@@ -220,12 +375,18 @@ const CartPage = () => {
       return;
     }
 
-    if (!selectedAdd || selectedItems.length === 0) return;
+    if (!selectedAdd || selectedItems.length === 0) {
+      toast.error("Please select items and a delivery address");
+      return;
+    }
 
     setCreatingOrder(true);
     setShippingError(null);
+    setCheckoutStep("validating");
 
     try {
+      console.log("Starting checkout process...", { selectedItems, cartItems: cartItems.length });
+      
       // Prepare order items
       const orderItems: OrderItem[] = cartItems
         .filter((item) => selectedItems.includes(item.id))
@@ -233,7 +394,7 @@ const CartPage = () => {
           product: item.product.id,
           qty: Math.max(1, item.qty + (pendingUpdates[item.id] || 0)),
           price: +item.product.price,
-          shipping_cost: calculateShippingCost(+item.product.price),
+          shipping_cost: calculateShippingCostForItem(item.product),
           merchant: item.product.merchant.id,
           // Add variants if they exist
           variant: item?.cart_variant?.map((v: any) => ({
@@ -242,12 +403,18 @@ const CartPage = () => {
           })),
         }));
 
+      console.log("Checking shipping for items:", orderItems.length);
       const shippingIssues = await checkMerchantShipping(orderItems);
       if (shippingIssues) {
+        console.log("Shipping issues found:", shippingIssues);
         setShippingError(shippingIssues);
+        setCreatingOrder(false); // Reset loading state
+        setCheckoutStep(""); // Reset step
+        toast.error("Some items cannot be shipped to your location. Please check the details below.");
         return;
       }
 
+      setCheckoutStep("creating");
       // Create order payload
       const orderPayload = {
         shippingAddress_id: selectedAdd.id,
@@ -256,17 +423,32 @@ const CartPage = () => {
           product_id: item.product,
         })),
       };
+      
+      console.log("Creating order with payload:", orderPayload);
       // Dispatch order creation
       const result = await dispatch(addOrder(orderPayload));
+      console.log("Order creation result:", result);
 
       if (result?.type.includes("fulfilled")) {
-        router.push(`/carts/checkout`);
+        setCheckoutStep("redirecting");
+        console.log("Order created successfully, redirecting to checkout");
+        setTimeout(() => {
+          router.push(`/carts/checkout`);
+        }, 1000); // Small delay to show the final step
+      } else {
+        console.error("Order creation failed:", result);
+        toast.error("Failed to create order. Please try again.");
       }
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Failed to create order");
+      setCheckoutStep(""); // Reset step on error
     } finally {
-      setCreatingOrder(false);
+      // Only reset if not redirecting (to show the final step)
+      if (checkoutStep !== "redirecting") {
+        setCreatingOrder(false);
+        setCheckoutStep("");
+      }
     }
   };
 
@@ -281,7 +463,15 @@ const CartPage = () => {
   useEffect(() => {
     dispatch(getAddress());
     dispatch(getAllStates());
-  }, [dispatch]);
+    
+    // Fetch cart data based on authentication status
+    if (isAuthenticated) {
+      dispatch(getCarts());
+    } else {
+      // Sync local cart from localStorage for anonymous users
+      dispatch(syncLocalCartFromStorage());
+    }
+  }, [dispatch, isAuthenticated]);
 
   // Update cart items when carts change
   useEffect(() => {
@@ -309,6 +499,7 @@ const CartPage = () => {
     setPendingUpdates({});
   }, [cartItems, carts, localCart, isAuthenticated]);
 
+  // console.log("selectedAdd--", selectedAdd, selectedAdd?.id);
   return (
     <AuthLayout>
       <DeleteModal
@@ -356,6 +547,62 @@ const CartPage = () => {
                 {cartItems?.length > 0 ? (
                   cartItems.map((cart) => {
                     const cartId = cart.id || cart.product?.id;
+                    
+                    // Calculate shipping cost, type, and availability for this item
+                    let itemShippingCost = 0;
+                    let itemShippingType = '';
+                    let canShipToAddress = true;
+                    let shippingBlockReason = '';
+                    
+                    if (selectedAdd && cart?.product) {
+                      const product = cart?.product;
+                      const merchant = product?.merchant;
+                      const customerState = selectedAdd?.state?.name?.toLowerCase().trim() || '';
+                      const customerCity = selectedAdd?.city?.name?.toLowerCase().trim() || '';
+                      const merchantState = merchant?.state?.name?.toLowerCase().trim() || '';
+                      const merchantCity = merchant?.location?.name?.toLowerCase().trim() || '';
+                      
+                      const differentState = merchantState !== customerState;
+                      const differentCity = merchantCity !== customerCity;
+                      
+                      // Check if shipping is allowed based on policies
+                      if (product?.ship_outside_state === true) {
+                        // Can ship anywhere
+                        canShipToAddress = true;
+                      } else if (product?.ship_outside_state === false && differentState) {
+                        // Cannot ship to different state
+                        canShipToAddress = false;
+                        shippingBlockReason = `Only ships within ${merchant?.state?.name || 'their state'}`;
+                      } else if (!differentState) {
+                        // Same state - check vicinity
+                        if (product?.ship_outside_vicinity === true) {
+                          canShipToAddress = true;
+                        } else if (product?.ship_outside_vicinity === false && differentCity) {
+                          canShipToAddress = false;
+                          shippingBlockReason = `Only ships within ${merchant?.location?.name || 'their city'}`;
+                        }
+                      }
+                      
+                      // Calculate shipping cost
+                      if (canShipToAddress) {
+                        // Different states
+                        if (differentState) {
+                          itemShippingCost = parseFloat(product?.shipping_cost_outside_state?.shipping_cost || '0');
+                          itemShippingType = 'outside_state';
+                        }
+                        // Same state, different city
+                        else if (differentCity) {
+                          itemShippingCost = parseFloat(product?.shipping_cost_outside?.shipping_cost || '0');
+                          itemShippingType = 'outside_vicinity';
+                        }
+                        // Same state and city
+                        else {
+                          itemShippingCost = parseFloat(product?.shipping_cost_within?.shipping_cost || '0');
+                          itemShippingType = 'within';
+                        }
+                      }
+                    }
+                    
                     return (
                       <CartItemRow
                         key={cartId}
@@ -368,6 +615,10 @@ const CartPage = () => {
                         onSelect={handleSelectItem}
                         isSelected={selectedItems.includes(cartId)}
                         pendingUpdates={pendingUpdates}
+                        shippingCost={itemShippingCost}
+                        shippingType={itemShippingType}
+                        canShip={canShipToAddress}
+                        shippingBlockReason={shippingBlockReason}
                       />
                     );
                   })
@@ -435,9 +686,69 @@ const CartPage = () => {
         </div>
       </div>
 
-      <div className={"m-12"}>
-        <FeaturesSection />
-      </div>
+      {/* Checkout Loading Modal */}
+      {creatingOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              {/* Animated spinner */}
+              <div className="mb-6">
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-primary mx-auto"></div>
+              </div>
+              
+              {/* Loading text */}
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                {checkoutStep === "validating" && "Validating Your Order"}
+                {checkoutStep === "creating" && "Creating Your Order"}
+                {checkoutStep === "redirecting" && "Almost Ready!"}
+                {!checkoutStep && "Processing Your Order"}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {checkoutStep === "validating" && "Checking shipping availability and calculating costs..."}
+                {checkoutStep === "creating" && "Creating your order and preparing for checkout..."}
+                {checkoutStep === "redirecting" && "Redirecting you to the checkout page..."}
+                {!checkoutStep && "Please wait while we process your order..."}
+              </p>
+              
+              {/* Progress steps */}
+              <div className="space-y-2 text-sm text-gray-500">
+                <div className="flex items-center justify-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    checkoutStep === "validating" ? "bg-primary animate-pulse" : 
+                    ["creating", "redirecting"].includes(checkoutStep) ? "bg-green-500" : "bg-gray-300"
+                  }`}></div>
+                  <span className={checkoutStep === "validating" ? "text-primary font-medium" : ""}>
+                    Validating shipping
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    checkoutStep === "creating" ? "bg-primary animate-pulse" : 
+                    checkoutStep === "redirecting" ? "bg-green-500" : "bg-gray-300"
+                  }`}></div>
+                  <span className={checkoutStep === "creating" ? "text-primary font-medium" : ""}>
+                    Creating order
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    checkoutStep === "redirecting" ? "bg-primary animate-pulse" : "bg-gray-300"
+                  }`}></div>
+                  <span className={checkoutStep === "redirecting" ? "text-primary font-medium" : ""}>
+                    Preparing checkout
+                  </span>
+                </div>
+              </div>
+              
+              {/* Don't close warning */}
+              <p className="text-xs text-gray-400 mt-4">
+                Please don't close this window
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
     </AuthLayout>
   );
 };

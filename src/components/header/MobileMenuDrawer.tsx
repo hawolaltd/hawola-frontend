@@ -51,7 +51,6 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, userName = 'Steven', m
         { href: '/wishlist', label: 'My Wishlist' },
         { href: '/tracking', label: 'Order Tracking' },
         { href: '/settings', label: 'Setting' },
-        { href: '/orders', label: 'My Orders' },
         { href: '/logout', label: 'Sign Out' }
     ];
 

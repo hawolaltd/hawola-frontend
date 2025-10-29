@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { getMerchantProfile, getMerchants } from "@/redux/product/productSlice";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import AuthLayout from "../layout/AuthLayout";
@@ -20,13 +19,15 @@ const BasicTemplate = () => {
     merchantProfile: data,
   } = useAppSelector((state) => state.products);
 
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    dispatch(getMerchants(merchantSlug as string));
-    dispatch(getMerchantProfile(merchantSlug as string));
-  }, [dispatch, merchantSlug]);
-
+  // Use data (merchantProfile) first, fallback to merchants
+  // Data is fetched by the parent page component
+  const merchantData = data || merchants;
+  
+  // Early return if no data to prevent unnecessary renders
+  if (!merchantData) {
+    return null;
+  }
+  
   const {
     merchant_details,
     recent_products,
@@ -34,7 +35,7 @@ const BasicTemplate = () => {
     banners,
     home_page,
     is_streaming_now,
-  } = data;
+  } = merchantData;
 
   // Improved color detection with better contrast ratios
   const getLuminance = (color: string): number => {

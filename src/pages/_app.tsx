@@ -15,6 +15,7 @@ import { Toaster } from "sonner";
 import { useEffect } from "react";
 import { checkTokenValidity, clearAllStorage } from "@/util";
 import { clearAuthState } from "@/redux/auth/authSlice";
+import { syncLocalCartFromStorage } from "@/redux/product/productSlice";
 
 function AppContent({ Component, pageProps }: AppProps) {
   const dispatch = useDispatch();
@@ -26,6 +27,9 @@ function AppContent({ Component, pageProps }: AppProps) {
       clearAllStorage();
       dispatch(clearAuthState());
     }
+    
+    // Sync cart from localStorage on app start
+    dispatch(syncLocalCartFromStorage());
   }, [dispatch]);
 
   return (

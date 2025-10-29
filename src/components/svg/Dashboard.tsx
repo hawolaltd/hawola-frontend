@@ -3,7 +3,7 @@ import React from 'react';
 function Dashboard({}) {
     return (
         <svg fill="none" height="22" viewBox="0 0 15 14" width="22" xmlns="http://www.w3.org/2000/svg">
-            <g fill="#fff" stroke="#4147d5" stroke-linecap="round" stroke-linejoin="round" stroke-width="0">
+            <g fill="#fff" stroke="#4147d5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0">
                 <path
                     d="m3.8125 5.79468c1.38071 0 2.5-1.11929 2.5-2.5s-1.11929-2.500002-2.5-2.500002-2.5 1.119292-2.5 2.500002 1.11929 2.5 2.5 2.5z" fill={'#425A8B'}/>
                 <path

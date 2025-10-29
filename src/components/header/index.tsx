@@ -24,16 +24,8 @@ const Header = () => {
 
 
     return (<div>
-        {router.pathname !== ('/') ? <MiniHeader/> : <>
-            <div
-                className={`transition-all duration-300 ${isScrolled ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100 h-auto'}`}>
-                <MiniHeader/>
-            </div>
-            <div className={`bg-white ${isScrolled ? 'fixed top-0 left-0 right-0 z-50 shadow-md' : 'relative'}`}>
-                <MainHeader isScrolled={isScrolled}/>
-            </div>
-        </>}
-
+        <MiniHeader/>
+        <MainHeader isScrolled={isScrolled}/>
     </div>);
 }
 

@@ -9,14 +9,14 @@ function MiniHeader() {
     <div
       className={`${
         router.pathname !== "/"
-          ? "bg-white text-primary"
+          ? "bg-headerBg text-white"
           : "bg-headerBg text-white"
       }  ${
-        router.pathname !== "/" ? "border-b border-b-[#D5DFE4] py-2" : "py-2"
+        router.pathname !== "/" ? "border-b border-b-[#D5DFE4] py-2" : "border-b border-b-[#D5DFE4] py-2"
       } hidden xl:block`}
     >
       <div
-        className={`max-w-screen-xl mx-auto px-6 flex items-center justify-center lg:justify-between `}
+        className={`w-full px-6 flex items-center justify-center lg:justify-between `}
       >
         {/* Left section: Navigation Links */}
         <div className="lg:flex gap-2 text-sm hidden">
@@ -24,8 +24,8 @@ function MiniHeader() {
             href="#"
             className={`${
               router.pathname !== "/"
-                ? "text-primary text-xs"
-                : "text-white text-xs font-medium"
+                ? "text-white text-xs"
+                : "text-white text-xs"
             } border-r px-2`}
           >
             About Us
@@ -34,7 +34,7 @@ function MiniHeader() {
             href="#"
             className={`${
               router.pathname !== "/"
-                ? "text-primary text-xs"
+                ? "text-white text-xs"
                 : "text-white text-xs font-medium"
             } border-r px-2`}
           >
@@ -44,7 +44,7 @@ function MiniHeader() {
             href="#"
             className={`${
               router.pathname !== "/"
-                ? "text-primary text-xs"
+                ? "text-white text-xs"
                 : "text-white text-xs font-medium"
             }`}
           >
@@ -57,7 +57,7 @@ function MiniHeader() {
           <span
             className={`${
               router.pathname !== "/"
-                ? "text-primary text-xs"
+                ? "text-white text-xs"
                 : "text-white text-xs font-medium"
             }`}
           >
@@ -86,7 +86,7 @@ function MiniHeader() {
             <span
               className={`flex items-center ${
                 router.pathname !== "/"
-                  ? "text-primary text-xs"
+                  ? "text-white text-xs"
                   : "text-white text-xs"
               }`}
             >
@@ -107,7 +107,7 @@ function MiniHeader() {
             <span
               className={`flex items-center ${
                 router.pathname !== "/"
-                  ? "text-primary text-xs"
+                  ? "text-white text-xs"
                   : "text-white text-xs"
               }`}
             >

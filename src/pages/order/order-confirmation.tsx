@@ -22,21 +22,24 @@ const OrderConfirmationPage = () => {
         }
     }, [orders, id]);
 
-    if (!orders) {
+    // Redirect to cart if no order data
+    useEffect(() => {
+        if (!orders || !orders.id || !orders.order_number) {
+            router.push('/carts');
+        }
+    }, [orders, router]);
+
+    if (!orders || !orders.id || !orders.order_number) {
         return (
             <AuthLayout>
-                <div className="container mx-auto px-4 py-8 text-center">
-                    <div className="max-w-3xl mx-auto">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Order Not Found</h2>
-                        <p className="text-gray-600 mb-8">We couldn't find your order details. Please check your email for confirmation or contact support.</p>
-                        <Link href="/" className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition">
-                            Return to Homepage
-                        </Link>
-                    </div>
+                <div className="container mx-auto px-4 py-8 flex justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                 </div>
             </AuthLayout>
         );
     }
+
+    console.log("orders--", orders)
 
     return (
         <AuthLayout>
@@ -57,7 +60,7 @@ const OrderConfirmationPage = () => {
                     <div className="border rounded-lg p-6 mb-8">
                         <div className="flex flex-wrap justify-between items-center mb-4">
                             <div className="mb-4 md:mb-0">
-                                <h3 className="text-lg font-semibold text-gray-800">Order #{orders.id}</h3>
+                                <h3 className="text-lg font-semibold text-gray-800">Order #{orders.order_number}</h3>
                                 <p className="text-gray-600 text-sm">
                                     Placed on {new Date(orders?.createdAt).toLocaleDateString()}
                                 </p>
@@ -70,7 +73,7 @@ const OrderConfirmationPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Delivery Information */}
                             <div>
-                                <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                                {/* <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
                                     <TruckIcon className="w-5 h-5"/>
                                     Delivery Information
                                 </h4>
@@ -78,7 +81,7 @@ const OrderConfirmationPage = () => {
                                     Estimated delivery: {new Date(
                                     new Date().setDate(new Date().getDate() + 3)
                                 ).toLocaleDateString()}
-                                </p>
+                                </p> */}
                                 <p className="text-gray-600 mt-2">
                                     {orders?.shipping_address?.address}<br/>
                                     {orders.shipping_address.city?.name}, {orders.shipping_address.state.name}<br/>
@@ -95,17 +98,17 @@ const OrderConfirmationPage = () => {
                                 <div className="flex justify-between mb-1">
                                     <span className="text-gray-600">Items ({orders.orderItems.length}):</span>
                                     <span
-                                        className="font-medium">${amountFormatter((+(orders.totalPrice)).toFixed(2))}</span>
+                                        className="font-medium">₦{amountFormatter((+(orders.totalPrice)).toFixed(2))}</span>
                                 </div>
                                 <div className="flex justify-between mb-1">
                                     <span className="text-gray-600">Shipping:</span>
                                     <span
-                                        className="font-medium">${amountFormatter((+(orders?.shippingPrice)).toFixed(2))}</span>
+                                        className="font-medium">₦{amountFormatter((+(orders?.shippingPrice)).toFixed(2))}</span>
                                 </div>
                                 <div className="flex justify-between mt-2 pt-2 border-t">
                                     <span className="font-semibold">Total:</span>
                                     <span className="font-semibold text-lg">
-                    ${amountFormatter((+(orders.totalPrice)).toFixed(2))}
+                    ₦{amountFormatter((+(orders.totalPriceDue)).toFixed(2))}
                   </span>
                                 </div>
                             </div>

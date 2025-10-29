@@ -1,13 +1,12 @@
-
 export interface MerchantLocation {
     name: string;
 }
 
-export interface MerchantState  {
+export interface MerchantState {
     name: string;
 }
 
-export interface Merchant  {
+export interface Merchant {
     id: number;
     state: MerchantState;
     location: MerchantLocation;
@@ -40,14 +39,13 @@ export interface Merchant  {
     merchant_user: number;
 }
 
-
-export interface FeaturedImage  {
+export interface FeaturedImage {
     image: Image;
     image_url: string;
     image_ppoi: string;
 }
 
-export interface Product  {
+export interface Product {
     id: number;
     user: string;
     second_subcategory: string;
@@ -89,17 +87,16 @@ export interface Product  {
     product_variant: any[];
 }
 
-export interface ProductResponse  {
+export interface ProductResponse {
     count: number;
     next: string | null;
     previous: string | null;
     results: Product[];
 }
 
-
 // Product by Id
 
-export interface Currency  {
+export interface Currency {
     id: number;
     name: string;
     symbol: string;
@@ -108,7 +105,7 @@ export interface Currency  {
     date_added: string;
 }
 
-export interface Country  {
+export interface Country {
     id: number;
     currency: Currency;
     name: string;
@@ -120,7 +117,7 @@ export interface State {
     name: string;
 }
 
-export interface ShippingCost  {
+export interface ShippingCost {
     id: number;
     country: Country;
     state: State;
@@ -161,7 +158,7 @@ export interface Image {
     thumbnail: string;
 }
 
-export interface ProductImage  {
+export interface ProductImage {
     id: number;
     image: Image;
     image_url: string;
@@ -171,7 +168,7 @@ export interface ProductImage  {
     product: number;
 }
 
-export interface ReImage  {
+export interface ReImage {
     id: number;
     thumbnail: string;
     original: string;
@@ -180,7 +177,7 @@ export interface ReImage  {
     alt_text: string | null;
 }
 
-export interface MerchantOtherProduct  {
+export interface MerchantOtherProduct {
     id: number;
     merchant: {
         id: number;
@@ -199,8 +196,7 @@ export interface MerchantOtherProduct  {
     slug: string;
 }
 
-
-export interface ProductByIdResponse  {
+export interface ProductByIdResponse {
     product: Product;
     product_images: ProductImage[];
     product_variant: any[];
@@ -210,14 +206,13 @@ export interface ProductByIdResponse  {
     merchant_other_products: MerchantOtherProduct[];
 }
 
-
 // Categories
 
-export interface CategoryImage  {
+export interface CategoryImage {
     [key: string]: unknown;
 }
 
-export interface SecondSubCategory  {
+export interface SecondSubCategory {
     id: number;
     name: string;
     image: CategoryImage;
@@ -225,9 +220,7 @@ export interface SecondSubCategory  {
     second_category_banner_images: unknown[];
 }
 
-
-
-export interface ProductCategory  {
+export interface ProductCategory {
     id: number;
     name: string;
     image: string;
@@ -237,11 +230,11 @@ export interface ProductCategory  {
     category_banner_images: unknown[];
 }
 
-export interface ProductCategoriesResponse  {
+export interface ProductCategoriesResponse {
     categories: ProductCategory[];
 }
 
-export interface CartProduct  {
+export interface CartProduct {
     id: number;
     merchant: Merchant;
     name: string;
@@ -261,7 +254,7 @@ export interface CartProduct  {
     slug: string;
 }
 
-export interface CartItem  {
+export interface CartItem {
     id: number;
     product: CartProduct;
     cart_variant: any[];
@@ -305,10 +298,10 @@ export interface AddressData {
     id: number;
     state: {
         name: string;
-    },
+    };
     city: {
         name: string;
-    },
+    };
     first_name: string;
     last_name: string;
     address: string;
@@ -320,7 +313,7 @@ export interface AddressData {
 }
 
 export interface AddressResponse {
-    addresses: AddressData[]
+    addresses: AddressData[];
 }
 
 export interface OrderDetailsResponse {
@@ -433,6 +426,7 @@ export interface OrderDetailsResponse {
     taxPrice: null | string;
     shippingPrice: string;
     totalPrice: string;
+    totalPriceDue: string;
     paidAmount: null | string;
     isPaid: boolean;
     paymentMethod: null | string;
@@ -451,16 +445,14 @@ export interface LocalCartType {
     items: {
         qty: number;
         product: number;
-    }
-
+    };
 }
 
-
-export interface addWishListType{
+export interface addWishListType {
     items: number;
 }
 
-export interface deleteWishListType{
+export interface deleteWishListType {
     items: number;
 }
 

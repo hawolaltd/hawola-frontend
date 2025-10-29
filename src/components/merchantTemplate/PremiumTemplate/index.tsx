@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import DashboardHeader from "./DashboardHeader";
 import MerchantStats from "./MerchantStats";
 import BannerShowcase from "./BannerShowcase";
@@ -7,10 +7,9 @@ import ProductShowcase from "./ProductShowcase";
 import StoreInfo from "./StoreInfo";
 import SocialMedia from "./SocialMedia";
 import Newsletter from "@/components/Newsletter";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import AuthLayout from "@/components/layout/AuthLayout";
 import Head from "next/head";
-import { getMerchantProfile, getMerchants } from "@/redux/product/productSlice";
 import { useRouter } from "next/router";
 
 const DashboardTemplate = () => {
@@ -21,8 +20,6 @@ const DashboardTemplate = () => {
     isLoading,
     merchantProfile: data,
   } = useAppSelector((state) => state.products);
-
-  const dispatch = useAppDispatch();
 
   // Function to convert hex to rgba with opacity
   const hexToRgba = (hex: string, opacity: number) => {
@@ -112,7 +109,47 @@ const DashboardTemplate = () => {
       .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
   };
 
-  const primaryColor = data?.merchant_details?.primary_color || "#3B82F6";
+  // Use data (merchantProfile) first, fallback to merchants
+  // Data is fetched by the parent page component
+  const merchantData = data || merchants;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading store dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!merchantData || !merchantData.merchant_details) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-10 h-10 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </div>
+          <p className="text-xl text-gray-600">Store not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const primaryColor = merchantData?.merchant_details?.primary_color || "#3B82F6";
   const isLight = isLightColor(primaryColor);
   const lighterBg = hexToRgba(primaryColor, 0.1);
   const mediumBg = hexToRgba(primaryColor, 0.2);
@@ -167,54 +204,13 @@ const DashboardTemplate = () => {
 
   const cardBackground = getCardBackground(primaryColor);
 
-  useEffect(() => {
-    dispatch(getMerchants(merchantSlug as string));
-    dispatch(getMerchantProfile(merchantSlug as string));
-  }, [dispatch, merchantSlug]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading store dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-10 h-10 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </div>
-          <p className="text-xl text-gray-600">Store not found</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AuthLayout>
       <Head>
-        <title>{data?.merchant_details?.store_name} | Store Dashboard</title>
+        <title>{merchantData?.merchant_details?.store_name} | Store Dashboard</title>
         <meta
           name="description"
-          content={data?.merchant_details?.about.substring(0, 160)}
+          content={merchantData?.merchant_details?.about.substring(0, 160)}
         />
         <style>
           {`
@@ -378,7 +374,7 @@ const DashboardTemplate = () => {
       </Head>
       <main className="min-h-screen merchant-gradient-light">
         {/* Dashboard Header */}
-        <DashboardHeader merchant={data?.merchant_details} />
+        <DashboardHeader merchant={merchantData?.merchant_details} />
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -387,28 +383,28 @@ const DashboardTemplate = () => {
             <div className="lg:col-span-1 space-y-6">
               <div className="sticky top-8 space-y-6">
                 <MerchantStats
-                  merchantLevel={data?.merchant_details?.merchant_level?.name}
-                  shippingDays={data?.merchant_details?.shipping_number_of_days}
-                  isActive={data?.merchant_details?.is_active}
-                  dateAdded={data?.merchant_details?.date_added}
-                  isStreaming={data?.is_streaming_now}
+                  merchantLevel={merchantData?.merchant_details?.merchant_level?.name}
+                  shippingDays={merchantData?.merchant_details?.shipping_number_of_days}
+                  isActive={merchantData?.merchant_details?.is_active}
+                  dateAdded={merchantData?.merchant_details?.date_added}
+                  isStreaming={merchantData?.is_streaming_now}
                 />
                 <StoreInfo
-                  address={data?.merchant_details?.store_address}
-                  phone={data?.merchant_details?.support_phone_number}
-                  email={data?.merchant_details?.support_email}
-                  location={data?.merchant_details?.location?.name}
-                  state={data?.merchant_details?.state?.name}
-                  market={data?.merchant_details?.market?.name}
-                  refundPolicy={data?.merchant_details?.refund_policy}
+                  address={merchantData?.merchant_details?.store_address}
+                  phone={merchantData?.merchant_details?.support_phone_number}
+                  email={merchantData?.merchant_details?.support_email}
+                  location={merchantData?.merchant_details?.location?.name}
+                  state={merchantData?.merchant_details?.state?.name}
+                  market={merchantData?.merchant_details?.market?.name}
+                  refundPolicy={merchantData?.merchant_details?.refund_policy}
                 />
                 <SocialMedia
-                  facebook={data?.merchant_details?.facebook}
-                  twitter={data?.merchant_details?.twitter}
-                  instagram={data?.merchant_details?.instagram}
-                  tiktok={data?.merchant_details?.tiktok}
-                  linkedin={data?.merchant_details?.linkedin}
-                  youtube={data?.merchant_details?.youtube}
+                  facebook={merchantData?.merchant_details?.facebook}
+                  twitter={merchantData?.merchant_details?.twitter}
+                  instagram={merchantData?.merchant_details?.instagram}
+                  tiktok={merchantData?.merchant_details?.tiktok}
+                  linkedin={merchantData?.merchant_details?.linkedin}
+                  youtube={merchantData?.merchant_details?.youtube}
                 />
               </div>
             </div>
@@ -418,23 +414,23 @@ const DashboardTemplate = () => {
               {/* Banner Showcase */}
               <div className="animate-fade-in">
                 <BannerShowcase
-                  banners={data?.banners}
-                  defaultBanner={data?.merchant_details?.default_banner as any}
-                  merchantBanner={data?.merchant_details?.merchant_banner}
+                  banners={merchantData?.banners}
+                  defaultBanner={merchantData?.merchant_details?.default_banner as any}
+                  merchantBanner={merchantData?.merchant_details?.merchant_banner}
                 />
               </div>
 
               {/* Categories */}
               <div className="animate-fade-in delay-100">
-                <CategoryGrid categories={data?.merchant_categories as any} />
+                <CategoryGrid categories={merchantData?.merchant_categories as any} />
               </div>
 
               {/* Products */}
               <div className="animate-fade-in delay-200">
                 <ProductShowcase
-                  products={data?.recent_products}
-                  title={data?.merchant_details?.store_page_title}
-                  subtitle={data?.merchant_details?.store_page_subtitle}
+                  products={merchantData?.recent_products}
+                  title={merchantData?.merchant_details?.store_page_title}
+                  subtitle={merchantData?.merchant_details?.store_page_subtitle}
                 />
               </div>
 
@@ -456,13 +452,13 @@ const DashboardTemplate = () => {
                       </svg>
                     </div>
                     <h2 className="text-3xl font-bold merchant-heading-text">
-                      {data?.merchant_details?.about_title}
+                      {merchantData?.merchant_details?.about_title}
                     </h2>
                   </div>
                   <div
                     className="prose prose-lg max-w-none text-gray-600 leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: data?.merchant_details?.about
+                      __html: merchantData?.merchant_details?.about
                         .replace(/\r\n/g, "<br>")
                         .replace(/\n/g, "<br>"),
                     }}

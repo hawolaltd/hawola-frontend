@@ -15,7 +15,7 @@ function UserInfoDropdown() {
       {isAuthenticated ? (
         <ul
           className={`absolute -right-20 ${
-            isAuthenticated ? "-bottom-[17.2rem]" : "bottom-0"
+            isAuthenticated ? "-bottom-[14.5rem]" : "bottom-0"
           } z-10 mt-2 w-48 bg-white shadow-lg border rounded-md`}
         >
           <li>
@@ -33,15 +33,6 @@ function UserInfoDropdown() {
               className="block text-primary px-4 py-2 hover:text-deepOrange"
             >
               Order Tracking
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              href="/order/order-history"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              My Orders
             </Link>
           </li>
 

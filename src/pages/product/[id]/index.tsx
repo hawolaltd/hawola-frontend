@@ -207,6 +207,7 @@ const ProductPage = () => {
         }
     }
 
+    console.log("product--", product);
 // Update your init function to clear previous product data:
     const init = useCallback(async () => {
         setLoadingProduct(true);

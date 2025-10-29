@@ -78,10 +78,20 @@ export const handleLogout = () => {
 /**
  * clearAllStorage:
  * Clears all storage including localStorage, cookies, and Redux persist
+ * BUT preserves anonymous user cart items and session
  *
  * @returns {void}
  */
 export const clearAllStorage = () => {
+  if (typeof window === "undefined") return;
+  
+  // Preserve cart items and session for anonymous users
+  let cartItems = null;
+  let sessionId = null;
+  
+  cartItems = localStorage.getItem("cartItems");
+  sessionId = localStorage.getItem("hawola_session_id");
+
   // Clear cookies
   Cookies.remove(authRefreshTokenStorageKeyName as string);
   Cookies.remove(authTokenStorageKeyName as string);
@@ -89,35 +99,57 @@ export const clearAllStorage = () => {
   // Clear localStorage
   localStorage.clear();
 
-  // Clear Redux persist storage
-  if (typeof window !== "undefined") {
-    storage.removeItem("persist:root");
+  // Restore preserved items
+  if (cartItems) {
+    localStorage.setItem("cartItems", cartItems);
   }
+  if (sessionId) {
+    localStorage.setItem("hawola_session_id", sessionId);
+  }
+
+  // Clear Redux persist storage
+  storage.removeItem("persist:root");
 };
 
 /**
  * clearAllStorageWithPersistor:
  * Clears all storage including localStorage, cookies, and Redux persist using persistor
+ * BUT preserves anonymous user cart items and session
  *
  * @param {any} persistor - The Redux persist persistor instance
  * @returns {Promise<void>}
  */
 export const clearAllStorageWithPersistor = async (persistor: any) => {
+  if (typeof window === "undefined") return;
+  
+  // Preserve cart items and session for anonymous users
+  let cartItems = null;
+  let sessionId = null;
+  
+  cartItems = localStorage.getItem("cartItems");
+  sessionId = localStorage.getItem("hawola_session_id");
+
   // Clear cookies
   Cookies.remove(authRefreshTokenStorageKeyName as string);
   Cookies.remove(authTokenStorageKeyName as string);
 
   // Clear localStorage
   localStorage.clear();
+
+  // Restore preserved items
+  if (cartItems) {
+    localStorage.setItem("cartItems", cartItems);
+  }
+  if (sessionId) {
+    localStorage.setItem("hawola_session_id", sessionId);
+  }
 
   // Purge Redux persist storage using persistor
   if (persistor) {
     await persistor.purge();
   } else {
     // Fallback to manual storage removal
-    if (typeof window !== "undefined") {
-      storage.removeItem("persist:root");
-    }
+    storage.removeItem("persist:root");
   }
 };
 

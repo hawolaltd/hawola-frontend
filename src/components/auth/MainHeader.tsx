@@ -14,6 +14,7 @@ function MainHeader() {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
   const [cart, setCart] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { carts, localCart, wishLists, categories } = useAppSelector(
     (state) => state.products
@@ -33,6 +34,14 @@ function MainHeader() {
   const router = useRouter();
 
   const dispatch = useAppDispatch();
+
+  // Handle search submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     const getCartCount = () => {
@@ -55,102 +64,107 @@ function MainHeader() {
         userName="Steven"
         messageCount={3}
       />
-      <div className="bg-white border-b border-b-[#D5DFE4] relative pr-4">
-        <div className="max-w-screen-md lg:max-w-screen-lg xl:max-w-[1320px] mx-auto px-4 md:px-0 py-4 flex items-center justify-between">
-          <div className="flex  justify-center items-center gap-3">
+      <div className="bg-white border-b border-gray-300 relative pr-4">
+        <div className="w-full px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             {/* Logo */}
             <Link href={"/"}>
-              <div className="flex items-center ">
+              <div className="flex items-center cursor-pointer">
                 <img src="/assets/hawola.png" alt="Logo" className="w-30 h-8" />
               </div>
             </Link>
 
-            <div className="hidden md:flex items-center gap-4 text-primary">
-              {/* Categories Dropdown and Search Bar */}
-              <div className="flex items-center space-x-4 border rounded-md">
-                {/*<select className="p-2 text-primary text-sm">*/}
-                {/*    <option>All categories</option>*/}
-                {/*</select>*/}
-                <div
-                  // onMouseEnter={() => setDropdownOpen('category')}
-                  // onMouseLeave={() => setDropdownOpen(null)}
-                  className="relative text-primary text-[14px] pl-4 "
+            {/* Categories Dropdown */}
+            <div className="hidden md:flex items-center">
+              <div className="relative text-primary text-[14px]">
+                <button
+                  onClick={() => toggleDropdown("category")}
+                  className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                 >
-                  <button
-                    onClick={() => toggleDropdown("category")}
-                    className="flex items-center gap-1"
+                  Shop by category
+                  <svg
+                    width="12"
+                    height="11"
+                    viewBox="0 0 12 11"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    All categories
-                    <svg
-                      width="12"
-                      height="11"
-                      viewBox="0 0 12 11"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <g clip-path="url(#clip0_1_95)">
-                        <path
-                          d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
-                          stroke="#9EB4E0"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                    <g clip-path="url(#clip0_1_95)">
+                      <path
+                        d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
+                        stroke="#9EB4E0"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_1_95">
+                        <rect
+                          width="11"
+                          height="10"
+                          fill="white"
+                          transform="translate(0.669922 0.470001)"
                         />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_1_95">
-                          <rect
-                            width="11"
-                            height="10"
-                            fill="white"
-                            transform="translate(0.669922 0.470001)"
-                          />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                  </button>
-                  {dropdownOpen === "category" && (
-                    <ul className="absolute left-0 z-10 mt-2 w-52 h-96 overflow-x-hidden bg-white shadow-lg border rounded-md">
-                      <li>
-                        <Link
-                          href="/categories?type=all"
-                          className="block text-primary px-4 py-2 hover:text-deepOrange"
-                        >
-                          All categories
-                        </Link>
-                      </li>
-                      {categories?.categories
-                        ?.filter(
-                          (item, index, self) =>
-                            item.name &&
-                            self.findIndex((i) => i.name === item.name) ===
-                              index
-                        )
-                        .map((category: any) => {
-                          return (
-                            <li key={category.id}>
-                              <Link
-                                href={`/categories?type=cat&slug=${category.slug}`}
-                                className="block text-primary px-4 py-2 hover:text-deepOrange"
-                              >
-                                {category.name}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                    </ul>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search for items"
-                  className="p-2 rounded-md w-64 text-sm text-primary"
-                />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </button>
+                {dropdownOpen === "category" && (
+                  <ul className="absolute left-0 z-10 mt-2 w-52 h-96 overflow-x-hidden bg-white shadow-lg border rounded-md">
+                    <li>
+                      <Link
+                        href="/categories?type=all"
+                        className="block text-primary px-4 py-2 hover:text-deepOrange"
+                      >
+                        All categories
+                      </Link>
+                    </li>
+                    {categories?.categories
+                      ?.filter(
+                        (item, index, self) =>
+                          item.name &&
+                          self.findIndex((i) => i.name === item.name) ===
+                            index
+                      )
+                      .map((category: any) => {
+                        return (
+                          <li key={category.id}>
+                            <Link
+                              href={`/categories?type=cat&slug=${category.slug}`}
+                              className="block text-primary px-4 py-2 hover:text-deepOrange"
+                            >
+                              {category.name}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                )}
               </div>
             </div>
 
+            {/* Search Bar */}
+            <div className="hidden md:flex items-center">
+              <form onSubmit={handleSearchSubmit} className="flex items-center border rounded-md">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for items"
+                  className="p-2 rounded-l-md w-64 text-sm text-primary outline-none"
+                />
+                <button
+                  type="submit"
+                  className="bg-[#FF5733] text-white px-4 py-2 rounded-r-md hover:bg-[#E64A2E] transition-colors text-sm font-medium"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
+
             {/* Navigation Links */}
-            <ul className="hidden xl:flex space-x-4 text-sm">
+            {/* <ul className="hidden xl:flex space-x-4 text-sm ">
               <li
                 onMouseEnter={() => setDropdownOpen("home")}
                 onMouseLeave={() => setDropdownOpen(null)}
@@ -172,9 +186,9 @@ function MainHeader() {
                       <path
                         d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
                         stroke="#9EB4E0"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </g>
                     <defs>
@@ -271,9 +285,9 @@ function MainHeader() {
                       <path
                         d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
                         stroke="#9EB4E0"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </g>
                     <defs>
@@ -371,9 +385,9 @@ function MainHeader() {
                       <path
                         d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
                         stroke="#9EB4E0"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </g>
                     <defs>
@@ -431,9 +445,9 @@ function MainHeader() {
                       <path
                         d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
                         stroke="#9EB4E0"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </g>
                     <defs>
@@ -531,9 +545,9 @@ function MainHeader() {
                       <path
                         d="M10.1699 4.97L6.66992 8.47L3.16992 4.97"
                         stroke="#9EB4E0"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </g>
                     <defs>
@@ -615,7 +629,7 @@ function MainHeader() {
                   Contact Us
                 </li>
               </Link>
-            </ul>
+            </ul> */}
           </div>
 
           <div className="flex relative space-x-4 items-center">
@@ -690,8 +704,8 @@ function MainHeader() {
                 <path
                   d="M4 7H7M20 7H11M20 17H17M4 17H13M4 12H20"
                   stroke="#64748B"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
                 />
               </svg>
             </div>

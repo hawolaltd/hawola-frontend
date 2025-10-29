@@ -77,7 +77,7 @@ function CategorySlider({ categories }: CategorySliderProps) {
         >
           {Array.from({ length: totalSlides }).map((_, slideIndex) => (
             <div key={slideIndex} className="w-full flex-shrink-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-4 px-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-1 px-2">
                 {categories
 
                   .map((category, index) => (

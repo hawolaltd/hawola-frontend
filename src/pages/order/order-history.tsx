@@ -3,7 +3,18 @@ import {useAppDispatch, useAppSelector} from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
 import {amountFormatter} from '@/util';
 import Link from 'next/link';
-import {CheckCircleIcon, ClockIcon, TruckIcon, XCircleIcon} from '@heroicons/react/24/outline';
+import {
+    CheckCircleIcon,
+    ClockIcon,
+    TruckIcon,
+    XCircleIcon,
+    MagnifyingGlassIcon,
+    ShoppingBagIcon,
+    ExclamationTriangleIcon,
+    ChatBubbleLeftRightIcon,
+    PhoneIcon,
+    EnvelopeIcon
+} from '@heroicons/react/24/outline';
 import {getOrderHistory} from "@/redux/product/productSlice";
 import ProductCard from "@/components/product/ProductCard";
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -13,27 +24,56 @@ const OrderHistoryPage = () => {
     const dispatch = useAppDispatch();
     const {ordersHistory, isLoading, error, products} = useAppSelector(state => state.products);
     const [statusFilter, setStatusFilter] = useState('all');
-    const [selectedOrderForDispute, setSelectedOrderForDispute] = useState< OrderDetail | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedOrderForDispute, setSelectedOrderForDispute] = useState<OrderDetail | null>(null);
     const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
 
+    const filteredOrders = ordersHistory?.detail?.filter((order: any) => {
+        const matchesStatus = statusFilter === 'all' || 
+            (statusFilter === 'delivered' && order.isDelivered) ||
+            (statusFilter === 'shipped' && order.isShipped && !order.isDelivered) ||
+            (statusFilter === 'pending' && !order.isShipped && !order.isDelivered);
+        
+        const matchesSearch = !searchQuery || 
+            order.orderitem_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            order.product?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        return matchesStatus && matchesSearch;
+    });
 
-
-    console.log("error", error)
-
-    const filteredOrders = ordersHistory?.detail?.filter((order: any) => statusFilter === 'all' ? true : order?.status === statusFilter);
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'processing':
-                return <ClockIcon className="w-5 h-5 text-blue-500"/>;
-            case 'shipped':
-                return <TruckIcon className="w-5 h-5 text-purple-500"/>;
-            case 'delivered':
-                return <CheckCircleIcon className="w-5 h-5 text-green-500"/>;
-            case 'cancelled':
-                return <XCircleIcon className="w-5 h-5 text-red-500"/>;
-            default:
-                return <ClockIcon className="w-5 h-5 text-gray-500"/>;
+    const getStatusBadge = (order: any) => {
+        if (order.isDelivered) {
+            return {
+                icon: <CheckCircleIcon className="w-5 h-5" />,
+                text: 'Delivered',
+                bgColor: 'bg-green-50',
+                textColor: 'text-green-700',
+                borderColor: 'border-green-200'
+            };
+        } else if (order.isShipped) {
+            return {
+                icon: <TruckIcon className="w-5 h-5" />,
+                text: 'Shipped',
+                bgColor: 'bg-blue-50',
+                textColor: 'text-blue-700',
+                borderColor: 'border-blue-200'
+            };
+        } else if (order.isPaid) {
+            return {
+                icon: <ClockIcon className="w-5 h-5" />,
+                text: 'Processing',
+                bgColor: 'bg-yellow-50',
+                textColor: 'text-yellow-700',
+                borderColor: 'border-yellow-200'
+            };
+        } else {
+            return {
+                icon: <ClockIcon className="w-5 h-5" />,
+                text: 'Pending',
+                bgColor: 'bg-gray-50',
+                textColor: 'text-gray-700',
+                borderColor: 'border-gray-200'
+            };
         }
     };
 
@@ -42,210 +82,321 @@ const OrderHistoryPage = () => {
     }, [dispatch]);
 
     if (isLoading) {
-        return (<AuthLayout>
-                <div className="container mx-auto px-4 py-8 flex justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        return (
+            <AuthLayout>
+                <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
+                    <div className="container mx-auto px-4">
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+                            <p className="mt-4 text-gray-600 font-medium">Loading your orders...</p>
+                        </div>
+                    </div>
                 </div>
-            </AuthLayout>);
+            </AuthLayout>
+        );
     }
 
-    if (error) {
-        return (<AuthLayout>
-                <div className="container mx-auto px-4 py-8 text-center">
-                    <h2 className="text-2xl font-bold text-red-500 mb-4">Error Loading Orders</h2>
-                    <p className="text-gray-600 mb-8">Please try refreshing the page or contact support.</p>
-                    <button
-                        onClick={() => dispatch(getOrderHistory())}
-                        className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition"
-                    >
-                        Retry
-                    </button>
+    if (error && !isLoading) {
+        return (
+            <AuthLayout>
+                <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
+                    <div className="container mx-auto px-4">
+                        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-8 text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <XCircleIcon className="w-10 h-10 text-red-600" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800 mb-3">Unable to Load Orders</h2>
+                            <p className="text-gray-600 mb-6">
+                                {typeof error === 'string' ? error : 'Please try refreshing the page or contact support.'}
+                            </p>
+                            <button
+                                onClick={() => dispatch(getOrderHistory())}
+                                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all transform hover:scale-105 font-medium shadow-md"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </AuthLayout>);
+            </AuthLayout>
+        );
     }
 
-    return (<AuthLayout>
-            <div className="container mx-auto px-4 py-8">
-                <DisputeModal order={selectedOrderForDispute as OrderDetail}  onClose={()=>{
-                    setIsDisputeModalOpen(false)
-                }} isOpen={isDisputeModalOpen}/>
-                <div className="max-w-6xl mx-auto">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Order History</h1>
+    return (
+        <AuthLayout>
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 md:py-12">
+                <DisputeModal 
+                    order={selectedOrderForDispute as OrderDetail} 
+                    onClose={() => setIsDisputeModalOpen(false)} 
+                    isOpen={isDisputeModalOpen}
+                />
+                
+                <div className="container mx-auto px-4">
+                    {/* Header Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-3 mb-2">
+                            <ShoppingBagIcon className="w-8 h-8 text-primary" />
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Order History</h1>
+                        </div>
+                        <p className="text-gray-600 ml-11">Track and manage all your orders in one place</p>
+                    </div>
 
-                    {/* Filters */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2 border rounded-md bg-white"
-                        >
-                            <option value="all">All Orders</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                    {/* Filters & Search */}
+                    <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
+                        <div className="flex flex-col md:flex-row gap-4">
+                            {/* Status Filter */}
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                                >
+                                    <option value="all">All Orders</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="delivered">Delivered</option>
+                                </select>
+                            </div>
 
-                        <div className="relative flex-1">
-                            <input
-                                type="text"
-                                placeholder="Search orders..."
-                                className="w-full px-4 py-2 border rounded-md"
-                            />
+                            {/* Search */}
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Search Orders</label>
+                                <div className="relative">
+                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Order number or product name..."
+                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                            <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                <p className="text-2xl font-bold text-primary">{ordersHistory?.detail?.length || 0}</p>
+                                <p className="text-xs text-gray-600">Total Orders</p>
+                            </div>
+                            <div className="text-center p-3 bg-green-50 rounded-lg">
+                                <p className="text-2xl font-bold text-green-600">
+                                    {ordersHistory?.detail?.filter((o: any) => o.isDelivered).length || 0}
+                                </p>
+                                <p className="text-xs text-gray-600">Delivered</p>
+                            </div>
+                            <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                <p className="text-2xl font-bold text-blue-600">
+                                    {ordersHistory?.detail?.filter((o: any) => o.isShipped && !o.isDelivered).length || 0}
+                                </p>
+                                <p className="text-xs text-gray-600">In Transit</p>
+                            </div>
+                            <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                                <p className="text-2xl font-bold text-yellow-600">
+                                    {ordersHistory?.detail?.filter((o: any) => !o.isShipped && !o.isDelivered).length || 0}
+                                </p>
+                                <p className="text-xs text-gray-600">Processing</p>
+                            </div>
                         </div>
                     </div>
 
                     {/* Orders List */}
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                        {/* Table Header */}
-                        <div className="hidden md:grid grid-cols-12 bg-gray-50 p-4 border-b gap-4">
-                            <div className="col-span-2 font-medium">Order Number</div>
-                            <div className="col-span-2 font-medium">Date</div>
-                            <div className="col-span-2 font-medium">Status</div>
-                            <div className="col-span-3 font-medium">Items</div>
-                            <div className="col-span-3 font-medium text-right">Total</div>
-                        </div>
+                    <div className="space-y-4">
+                        {!filteredOrders || filteredOrders?.length === 0 ? (
+                            <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+                                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <ShoppingBagIcon className="w-10 h-10 text-gray-400" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                    {searchQuery || statusFilter !== 'all' 
+                                        ? "No Orders Found" 
+                                        : "No Orders Yet"}
+                                </h3>
+                                <p className="text-gray-600 mb-6">
+                                    {searchQuery || statusFilter !== 'all'
+                                        ? "Try adjusting your filters or search terms"
+                                        : "Start shopping to see your order history here!"}
+                                </p>
+                                {!searchQuery && statusFilter === 'all' && (
+                                    <Link href="/">
+                                        <button className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all transform hover:scale-105 font-medium shadow-md">
+                                            Start Shopping
+                                        </button>
+                                    </Link>
+                                )}
+                            </div>
+                        ) : (
+                            filteredOrders?.map((order: any) => {
+                                const statusBadge = getStatusBadge(order);
+                                return (
+                                    <div key={order.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
+                                        <Link href={`/order/${order.id}`}>
+                                            <div className="p-4 md:p-6">
+                                                {/* Order Header */}
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 pb-4 border-b">
+                                                    <div className="flex items-center gap-4 mb-3 md:mb-0">
+                                                        {/* Product Image */}
+                                                        <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                                            <img
+                                                                src={order.product?.featured_image?.[0]?.image_url || '/placeholder.png'}
+                                                                alt={order.product?.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        
+                                                        {/* Order Info */}
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-xs font-medium text-gray-500">Order #</span>
+                                                                <span className="font-mono text-sm font-semibold text-primary">
+                                                                    {order.orderitem_number}
+                                                                </span>
+                                                            </div>
+                                                            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">
+                                                                {order.product?.name || order.name}
+                                                            </h3>
+                                                            <p className="text-sm text-gray-500">
+                                                                {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                                                    year: 'numeric',
+                                                                    month: 'long',
+                                                                    day: 'numeric'
+                                                                })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
 
-                        {/* Orders */}
-                        {filteredOrders?.length === 0 ? (
-                            <div className="p-8 text-center text-gray-500">
-                                No orders found matching your criteria
-                            </div>) :
-                            (filteredOrders?.map((order) => (
-                                <Link
-                                    key={order.id}
-                                    href={`/order/${order.id}`}
-                                    className="block hover:bg-gray-50 border-b last:border-b-0"
-                                >
-                                    <div className="grid grid-cols-1 md:grid-cols-12 p-4 gap-4">
-                                        {/* Order Number */}
-                                        <div className="md:col-span-2">
-                                            <div className="md:hidden text-sm text-gray-500 mb-1">Order #</div>
-                                            <div className="font-medium text-primary">#{order.id}</div>
-                                        </div>
-
-                                        {/* Date */}
-                                        <div className="md:col-span-2">
-                                            <div className="md:hidden text-sm text-gray-500 mb-1">Date</div>
-                                            <div className="text-gray-600">
-                                                {new Date(order.createdAt).toLocaleDateString()}
-                                            </div>
-                                        </div>
-
-                                        {/* Status */}
-                                        <div className="md:col-span-2">
-                                            <div className="md:hidden text-sm text-gray-500 mb-1">Status</div>
-                                            <div className="flex items-center gap-2">
-                                                {getStatusIcon(order?.isDelivered ? 'delivered' : order?.isShipped ? "shipped" : 'pending')}
-                                                <span
-                                                    className={`text-sm ${order.isDelivered ? 'text-green-600' : order.isShipped ? 'text-purple-600' : 'text-orange'}`}>
-                                                    {order?.isDelivered ? 'delivered'.toUpperCase() : order?.isShipped ? "shipped".toUpperCase() : "pending".toUpperCase()}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Items */}
-                                        <div className="md:col-span-3">
-                                            <div className="md:hidden text-sm text-gray-500 mb-1">Items</div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex -space-x-2">
-
-                                                    <img
-
-                                                        src={order.product.featured_image?.[0]?.image_url}
-                                                        alt={order.product.name}
-                                                        className="w-8 h-8 rounded-full border-2 border-white"
-                                                    />
-
-                                                    {/*{order.orderItems.length > 3 && (*/}
-                                                    {/*    <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs">*/}
-                                                    {/*        +{order.orderItems.length - 3}*/}
-                                                    {/*    </div>*/}
-                                                    {/*)}*/}
+                                                    {/* Status Badge */}
+                                                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${statusBadge.bgColor} ${statusBadge.textColor} ${statusBadge.borderColor} w-fit`}>
+                                                        {statusBadge.icon}
+                                                        <span className="font-medium text-sm">{statusBadge.text}</span>
+                                                    </div>
                                                 </div>
-                                                {/*                        <span className="text-sm text-gray-600">*/}
-                                                {/*  {order.orderItems.length} item{order.orderItems.length > 1 ? 's' : ''}*/}
-                                                {/*</span>*/}
-                                            </div>
-                                        </div>
 
-                                        {/* Total */}
-                                        <div className="md:col-span-3 flex justify-end items-center gap-2">
-                                            <div className="md:hidden text-sm text-gray-500 mb-1">Total</div>
-                                            <div className="text-right font-medium">
-                                                ${amountFormatter((+(order?.order_price_subtotal)).toFixed(2))}
-                                            </div>
+                                                {/* Order Details */}
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-1">Quantity</p>
+                                                        <p className="font-semibold text-gray-800">{order.qty} item(s)</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-1">Order Total</p>
+                                                        <p className="font-bold text-primary text-lg">
+                                                            ₦{amountFormatter((+order.order_price_subtotal).toFixed(2))}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-1">Payment</p>
+                                                        <p className={`font-semibold ${order.isPaid ? 'text-green-600' : 'text-orange-600'}`}>
+                                                            {order.isPaid ? 'Paid' : 'Pending'}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-1">Shipping</p>
+                                                        <p className="font-semibold text-gray-800">
+                                                            ₦{amountFormatter((+order.shipping_price || 0).toFixed(2))}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                            {!order.isDelivered && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setSelectedOrderForDispute(order);
-                                                        setIsDisputeModalOpen(true);
-                                                    }}
-                                                    className="ml-1 px-2 py-1 bg-red-50 text-red-600 rounded-md text-xs hover:bg-red-100"
-                                                >
-                                                    File Dispute
-                                                </button>
-                                            )}
-
-                                            {!order.isDelivered && (
-                                                <Link href={`/disputes/${order.orderitem_number}`}>
-                                                    <p
-                                                        className="text-primary text-xs underline"
+                                                {/* Action Buttons */}
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Link 
+                                                        href={`/order/${order.id}`}
+                                                        className="flex-1 md:flex-none px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all font-medium text-sm text-center"
                                                     >
-                                                        View Dispute
-                                                    </p>
-                                                </Link>
-
-                                            )}
-                                        </div>
+                                                        View Details
+                                                    </Link>
+                                                    
+                                                    {!order.isDelivered && (
+                                                        <>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    setSelectedOrderForDispute(order);
+                                                                    setIsDisputeModalOpen(true);
+                                                                }}
+                                                                className="flex-1 md:flex-none px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-medium text-sm border border-red-200 flex items-center justify-center gap-2"
+                                                            >
+                                                                <ExclamationTriangleIcon className="w-4 h-4" />
+                                                                File Dispute
+                                                            </button>
+                                                            
+                                                            <Link 
+                                                                href={`/disputes/${order.orderitem_number}`}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="flex-1 md:flex-none px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-all font-medium text-sm border border-gray-200 flex items-center justify-center gap-2"
+                                                            >
+                                                                <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                                                                View Dispute
+                                                            </Link>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Link>
                                     </div>
-                                </Link>))
-                            )
-                        }
+                                );
+                            })
+                        )}
                     </div>
 
-                    {/* Support CTA */}
-                    <div className="mt-8 p-6 bg-gray-50 rounded-lg text-center">
-                        <h3 className="text-lg font-medium mb-2">Need help with an order?</h3>
-                        <p className="text-gray-600 mb-4">
-                            Contact our support team 24/7 for assistance with your purchases
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                            <a
-                                href="mailto:support@yourstore.com"
-                                className="px-4 py-2 bg-white border rounded-md hover:bg-gray-100"
-                            >
-                                Email Support
-                            </a>
-                            <a
-                                href="tel:+18001234567"
-                                className="px-4 py-2 bg-white border rounded-md hover:bg-gray-100"
-                            >
-                                Call Support
-                            </a>
+                    {/* Support Section */}
+                    <div className="mt-12 bg-gradient-to-r from-primary to-primary-dark rounded-xl shadow-lg p-8 text-white">
+                        <div className="max-w-3xl mx-auto text-center">
+                            <h3 className="text-2xl font-bold mb-3">Need Help With Your Order?</h3>
+                            <p className="text-white/90 mb-6">
+                                Our support team is available 24/7 to assist you with any questions or concerns
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <a
+                                    href="mailto:support@hawola.com"
+                                    className="px-6 py-3 bg-white text-primary rounded-lg hover:bg-gray-100 transition-all font-medium flex items-center justify-center gap-2 shadow-md"
+                                >
+                                    <EnvelopeIcon className="w-5 h-5" />
+                                    Email Support
+                                </a>
+                                <a
+                                    href="tel:+2348012345678"
+                                    className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-lg hover:bg-white/20 transition-all font-medium flex items-center justify-center gap-2"
+                                >
+                                    <PhoneIcon className="w-5 h-5" />
+                                    Call Support
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Recommended Products */}
-                <div className={'m-8'}>
-                    <div className={'flex justify-between items-center'}>
-                        <h4 className={'font-bold text-2xl text-primary py-6'}>You May Also Like</h4>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                        {products?.results?.slice(0, 8)?.map((product, key) => (
-                            <ProductCard key={key} product={product}/>))}
-                    </div>
-                </div>
-                <div className={'m-12'}>
-                    <FeaturesSection/>
-                </div>
+                    {/* Recommended Products */}
+                    {products?.results?.length > 0 && (
+                        <div className="mt-16">
+                            <div className="flex items-center justify-between mb-6">
+                                <h4 className="text-2xl font-bold text-gray-800">You May Also Like</h4>
+                                <Link href="/" className="text-primary hover:text-primary-dark font-medium flex items-center gap-2">
+                                    View All
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {products?.results?.slice(0, 8)?.map((product: any, key: number) => (
+                                    <ProductCard key={key} product={product} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
+                    {/* Features Section */}
+                    <div className="mt-16">
+                        <FeaturesSection />
+                    </div>
+                </div>
             </div>
-        </AuthLayout>);
+        </AuthLayout>
+    );
 };
 
 export default OrderHistoryPage;

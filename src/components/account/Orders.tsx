@@ -3,6 +3,13 @@ import { useState } from "react";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import { formatCurrency, TruncatedTextWithTooltip } from "@/util";
 import { useRouter } from "next/router";
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  TruckIcon,
+  ArrowRightIcon,
+  ShoppingBagIcon,
+} from "@heroicons/react/24/outline";
 
 const Orders: NextPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,263 +24,232 @@ const Orders: NextPage = () => {
     currentPage * itemsPerPage
   );
 
-  console.log("paginatedOrders:", paginatedOrders);
+  const getStatusConfig = (order: any) => {
+    if (order?.isDelivered) {
+      return {
+        icon: <CheckCircleIcon className="w-4 h-4" />,
+        text: "Delivered",
+        color: "text-green-600",
+        bg: "bg-green-50",
+      };
+    } else if (order?.isShipped) {
+      return {
+        icon: <TruckIcon className="w-4 h-4" />,
+        text: "Shipped",
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+      };
+    } else {
+      return {
+        icon: <ClockIcon className="w-4 h-4" />,
+        text: "Processing",
+        color: "text-gray-600",
+        bg: "bg-gray-50",
+      };
+    }
+  };
+
+  if (!paginatedOrders || paginatedOrders.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-20">
+          <ShoppingBagIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No orders yet
+          </h3>
+          <p className="text-gray-500 mb-6">
+            Your order history will appear here
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-5 py-2.5 bg-primary text-white font-medium hover:bg-primary-dark transition-colors"
+          >
+            Start Shopping
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="p-6">
+      {/* Summary Stats */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Your Orders</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {ordersHistory?.detail?.length || 0} total orders
+          </p>
+        </div>
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-gray-600">
+              {ordersHistory?.detail?.filter((o: any) => o.isDelivered).length || 0} Delivered
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span className="text-gray-600">
+              {ordersHistory?.detail?.filter((o: any) => o.isShipped && !o.isDelivered).length || 0} Shipped
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+            <span className="text-gray-600">
+              {ordersHistory?.detail?.filter((o: any) => !o.isShipped && !o.isDelivered).length || 0} Processing
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  Order Preview
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  Order Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  Customer Paid
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  Amount in Stock
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  Shipping Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedOrders?.map((order) => (
-                <tr
-                  key={order?.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-gray-900">
-                      #{order?.id}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        src={order?.image}
-                        alt={order?.product?.name}
-                        className="w-12 h-12 object-cover rounded-md"
-                      />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900 max-w-xs">
-                        <TruncatedTextWithTooltip
-                          text={order?.name}
-                          maxLength={15}
-                        />
-                      </span>
-                      <span className="text-xs text-gray-700 mt-1 bg-blue-50 px-2 py-1 rounded-full inline-block whitespace-nowrap w-fit">
-                        #{order?.orderitem_number}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatCurrency(order?.order_price)}
-                      </span>
-                      <span className="text-xs text-gray-700 mt-1 bg-purple-50 px-2 py-1 rounded-full whitespace-nowrap w-fit">
-                        {formatCurrency(order?.order_price_subtotal)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-700">
-                        Payment is handled by Odinwo
-                      </span>
-                      <span className="text-xs text-gray-700 mt-1 bg-green-50 px-2 py-1 rounded-full whitespace-nowrap w-fit">
-                        {order?.payment_confirmed
-                          ? "Payment confirmed ✓"
-                          : "Processing payment"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span
-                        className={`px-3 py-1 text-xs rounded-full font-medium whitespace-nowrap w-fit ${
-                          order?.isShipped
-                            ? "bg-green-100 text-green-800"
-                            : order?.is_reviewed
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {order?.isShipped
-                          ? "Shipped"
-                          : order?.is_reviewed
-                          ? "Reviewing"
-                          : "Pending"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm transition-all flex items-center whitespace-nowrap"
-                      onClick={() => {
-                        router.push(
-                          `/order/details/${order?.orderitem_number}`
-                        );
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      View Order
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="bg-white border border-gray-200">
+        {/* Table Header */}
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase">
+          <div className="col-span-3">Product</div>
+          <div className="col-span-2">Order ID</div>
+          <div className="col-span-1 text-right">Price</div>
+          <div className="col-span-1 text-right">Shipping</div>
+          <div className="col-span-1 text-right">Total</div>
+          <div className="col-span-2">Status</div>
+          <div className="col-span-2"></div>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        {/* Table Body */}
+        <div className="divide-y divide-gray-200">
+          {paginatedOrders?.map((order) => {
+            const statusConfig = getStatusConfig(order);
+            return (
+              <div
+                key={order?.id}
+                className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => router.push(`/order/details/${order?.orderitem_number}`)}
               >
-                Previous
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * itemsPerPage + 1}
-                  </span>{" "}
-                  to{" "}
-                  <span className="font-medium">
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      ordersHistory?.detail?.length
-                    )}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-medium">
-                    {ordersHistory?.detail?.length}
-                  </span>{" "}
-                  orders
-                </p>
-              </div>
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
-                >
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    <span className="sr-only">Previous</span>
-                    <svg
-                      className="h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page
-                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )
+                {/* Product Info */}
+                <div className="col-span-12 md:col-span-3 flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gray-100 border border-gray-200 flex-shrink-0">
+                    <img
+                      src={order?.image || "/placeholder.png"}
+                      alt={order?.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-gray-900 mb-0.5 truncate">
+                      {order?.name}
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Qty: {order?.qty || 1}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Order ID */}
+                <div className="col-span-12 md:col-span-2 flex flex-col justify-center">
+                  <p className="text-xs text-gray-500 md:hidden mb-0.5">Order ID</p>
+                  <p className="text-sm font-mono text-gray-900">
+                    #{order?.id}
+                  </p>
+                  <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">
+                    {order?.orderitem_number}
+                  </p>
+                </div>
+
+                {/* Price */}
+                <div className="col-span-4 md:col-span-1 flex flex-col justify-center md:text-right">
+                  <p className="text-xs text-gray-500 md:hidden mb-0.5">Price</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {formatCurrency(order?.order_price)}
+                  </p>
+                </div>
+
+                {/* Shipping */}
+                <div className="col-span-4 md:col-span-1 flex flex-col justify-center md:text-right">
+                  <p className="text-xs text-gray-500 md:hidden mb-0.5">Shipping</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {formatCurrency(order?.shipping_price || 0)}
+                  </p>
+                </div>
+
+                {/* Total */}
+                <div className="col-span-4 md:col-span-1 flex flex-col justify-center md:text-right">
+                  <p className="text-xs text-gray-500 md:hidden mb-0.5">Total</p>
+                  <p className="text-base font-bold text-gray-900">
+                    {formatCurrency(order?.order_price_subtotal)}
+                  </p>
+                  {order?.payment_confirmed && (
+                    <p className="text-xs text-green-600 mt-0.5 flex items-center gap-1 md:justify-end">
+                      <CheckCircleIcon className="w-3 h-3" />
+                      Paid
+                    </p>
                   )}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  >
-                    <span className="sr-only">Next</span>
-                    <svg
-                      className="h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </nav>
+                </div>
+
+                {/* Status - Color Coded */}
+                <div className="col-span-6 md:col-span-2 flex items-center">
+                  {order?.isDelivered ? (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 border border-green-200 w-full md:w-auto">
+                      <CheckCircleIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Delivered</span>
+                    </div>
+                  ) : order?.isShipped ? (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 border border-blue-200 w-full md:w-auto">
+                      <TruckIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Shipped</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 w-full md:w-auto">
+                      <ClockIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Processing</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action */}
+                <div className="col-span-6 md:col-span-2 flex items-center justify-end">
+                  <ArrowRightIcon className="w-5 h-5 text-gray-400" />
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 border text-sm font-medium transition-colors ${
+                currentPage === 1
+                  ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 border text-sm font-medium transition-colors ${
+                currentPage === totalPages
+                  ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

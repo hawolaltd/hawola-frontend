@@ -149,7 +149,7 @@ const CartModal = () => {
 
       <div className="flex justify-between font-semibold text-lg">
         <p>Total</p>
-        <p className="text-blue-500">
+        <p className="text-black">
           N
           {amountFormatter(
             (hasAuthenticatedCart
