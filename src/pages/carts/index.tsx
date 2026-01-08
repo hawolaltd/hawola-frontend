@@ -36,7 +36,7 @@ const CartPage = () => {
   const { products, carts, addresses, localCart } = useAppSelector(
     (state) => state.products
   );
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
   console.log("carts", carts);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -284,9 +284,9 @@ const CartPage = () => {
         // Check if cities/locations are different (vicinity check)
         const differentCity = merchantCity !== selectedAddressCity;
 
-        // Get proper capitalized names for display
-        const merchantStateDisplay = merchant?.state?.name || 'Unknown State';
-        const merchantCityDisplay = merchant?.location?.name || 'Unknown Location';
+        // Get proper capitalized names for display - only show if not unknown
+        const merchantStateDisplay = merchant?.state?.name && merchant?.state?.name !== 'unknown' ? merchant?.state?.name : null;
+        const merchantCityDisplay = merchant?.location?.name && merchant?.location?.name !== 'unknown' ? merchant?.location?.name : null;
         const customerStateDisplay = selectedAdd?.state?.name || '';
         const customerCityDisplay = selectedAdd?.city?.name || '';
 
@@ -321,7 +321,7 @@ const CartPage = () => {
         // RULE 2: If ship_outside_state is FALSE and states are DIFFERENT → BLOCKED
         else if (product?.ship_outside_state === false && differentState) {
           shippingBlocked = true;
-          reason = `Merchant is located in ${merchantCityDisplay}, ${merchantStateDisplay} and does not ship outside ${merchantStateDisplay} state`;
+          reason = merchantCityDisplay && merchantStateDisplay ? `Merchant is located in ${merchantCityDisplay}, ${merchantStateDisplay} and does not ship outside ${merchantStateDisplay} state` : 'Merchant cannot ship to your location';
         }
         // RULE 3: States are SAME - check vicinity policy
         else if (!differentState) {
@@ -332,7 +332,7 @@ const CartPage = () => {
           // If ship_outside_vicinity is FALSE and cities are DIFFERENT → BLOCKED
           else if (product?.ship_outside_vicinity === false && differentCity) {
             shippingBlocked = true;
-            reason = `Merchant is in ${merchantCityDisplay}, ${merchantStateDisplay} and only ships within ${merchantCityDisplay} (their city)`;
+            reason = merchantCityDisplay && merchantStateDisplay ? `Merchant is in ${merchantCityDisplay}, ${merchantStateDisplay} and only ships within ${merchantCityDisplay} (their city)` : 'Merchant cannot ship to your location';
           }
           // Same city and state → ALLOWED
           else {
@@ -459,19 +459,26 @@ const CartPage = () => {
     }
   }, [pendingUpdates, syncWithServer]);
 
-  // Fetch data on mount
+  // Redirect to login if not authenticated
   useEffect(() => {
+    // Wait for auth state to be determined
+    if (authLoading) return;
+    
+    if (!isAuthenticated) {
+      // Store the current cart page URL to redirect back after login
+      const currentUrl = router.asPath;
+      router.push(`/auth/login?redirect=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Fetch data on mount (only if authenticated)
+  useEffect(() => {
+    if (!isAuthenticated || authLoading) return;
+    
     dispatch(getAddress());
     dispatch(getAllStates());
-    
-    // Fetch cart data based on authentication status
-    if (isAuthenticated) {
-      dispatch(getCarts());
-    } else {
-      // Sync local cart from localStorage for anonymous users
-      dispatch(syncLocalCartFromStorage());
-    }
-  }, [dispatch, isAuthenticated]);
+    dispatch(getCarts());
+  }, [dispatch, isAuthenticated, authLoading]);
 
   // Update cart items when carts change
   useEffect(() => {
@@ -498,6 +505,31 @@ const CartPage = () => {
     // Clear pending updates when cart data is refreshed from server
     setPendingUpdates({});
   }, [cartItems, carts, localCart, isAuthenticated]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <AuthLayout>
+        <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Don't render cart if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return (
+      <AuthLayout>
+        <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">Redirecting to login...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   // console.log("selectedAdd--", selectedAdd, selectedAdd?.id);
   return (

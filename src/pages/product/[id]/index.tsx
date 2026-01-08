@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
+import Head from 'next/head';
 import AuthLayout from "@/components/layout/AuthLayout";
 import {FaFacebookF, FaLinkedinIn, FaTwitter, FaWhatsapp} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
@@ -18,6 +19,7 @@ import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import {router} from "next/client";
+import { TagIcon } from '@heroicons/react/24/outline';
 
 const ProductPage = () => {
     const [quantity, setQuantity] = useState(1);
@@ -249,8 +251,26 @@ const ProductPage = () => {
         return <AuthLayout><ProductSkeleton /></AuthLayout>;
     }
 
+    // Generate dynamic title
+    const pageTitle = product?.product?.name 
+        ? `Hawola | ${product.product.name}`
+        : 'Hawola | Product Details';
 
     return (<AuthLayout>
+        <Head>
+            <title>{pageTitle}</title>
+            <meta 
+                name="description" 
+                content={product?.product?.description 
+                    ? `${product.product.description.substring(0, 160)}...` 
+                    : `View ${product?.product?.name || 'this product'} on Hawola`} 
+            />
+            {product?.product?.featured_image?.[0]?.image_url && (
+                <meta property="og:image" content={product.product.featured_image[0].image_url} />
+            )}
+            <meta property="og:title" content={pageTitle} />
+            <meta property="og:type" content="product" />
+        </Head>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
             {/* Product Image start*/}
             <div className="flex flex-col md:flex-row gap-4 border-b border-b-[#dde4f0] pb-16">
@@ -382,88 +402,193 @@ const ProductPage = () => {
                     </div>
 
 
-                    <p className="text-xl lg:text-3xl font-bold text-primary">{formatCurrency(product.product?.discount_price)}<span
-                        className="line-through text-xl lg:text-3xl font-medium text-[#8c9ec5]">{formatCurrency(product?.product?.price)}</span>
-                    </p>
+                    <div className="flex items-end gap-3 mb-4">
+                        <p className="text-2xl lg:text-4xl font-bold text-primary">
+                            {formatCurrency(product.product?.discount_price)}
+                        </p>
+                        {product?.product?.price && product?.product?.discount_price && (
+                            <>
+                                <span className="line-through text-base lg:text-xl font-medium text-[#8c9ec5]">
+                                    {formatCurrency(product?.product?.price)}
+                                </span>
+                                {(Number(product?.product?.price) > Number(product?.product?.discount_price)) && (
+                                    <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">
+                                        {Math.round(((Number(product?.product?.price) - Number(product?.product?.discount_price)) / (Number(product?.product?.price) || 1)) * 100)}% OFF
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </div>
 
+                    {/* Product Condition */}
+                    {product?.product?.product_condition && (
+                        <div className="mb-4">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Condition: {product.product.product_condition}
+                            </span>
+                        </div>
+                    )}
+                   
+                    <div className={`self-start w-fit inline-flex items-center gap-3 ${
+                        product?.product?.accept_payment_on_delivery 
+                            ? 'bg-green-50 border-green-200 text-green-700' 
+                            : 'bg-gray-50 border-gray-200 text-gray-500'
+                    } px-4 py-3 rounded-xl border-2 transition-all duration-200`}>
+                        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                            product?.product?.accept_payment_on_delivery 
+                                ? 'bg-green-100' 
+                                : 'bg-gray-100'
+                        }`}>
+                            <TagIcon className={`w-4 h-4 ${
+                                product?.product?.accept_payment_on_delivery 
+                                    ? 'text-green-600' 
+                                    : 'text-gray-400'
+                            }`}/>
+                        </div>
+                        <div>
+                            <p className={`text-sm font-medium ${
+                                product?.product?.accept_payment_on_delivery 
+                                    ? 'text-green-800' 
+                                    : 'text-gray-600'
+                            }`}>
+                                {product?.product?.accept_payment_on_delivery 
+                                    ? 'Payment on Delivery Available' 
+                                    : 'Online Payment Only'
+                                }
+                            </p>
+                            <p className={`text-xs ${
+                                product?.product?.accept_payment_on_delivery 
+                                    ? 'text-green-600' 
+                                    : 'text-gray-500'
+                            }`}>
+                                {product?.product?.accept_payment_on_delivery 
+                                    ? 'Pay when your order arrives' 
+                                    : 'Secure online payment required'
+                                }
+                            </p>
+                        </div>
+                        {product?.product?.accept_payment_on_delivery && (
+                            <div className="flex items-center">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            </div>
+                        )}
+                    </div>
+                    {/* Info strip: delivery, returns, warranty - commented out for now */}
+                    {/* <div className="mt-4 flex flex-wrap gap-3">
+                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">
+                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h13l5 5-5 5H3V7z" />
+                            </svg>
+                            <div>
+                                <p className="text-sm font-medium text-primary">Fast Delivery</p>
+                                <p className="text-xs text-gray-500">2–5 business days</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">
+                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v16h16M8 12l3 3 5-7" />
+                            </svg>
+                            <div>
+                                <p className="text-sm font-medium text-primary">7-Day Returns</p>
+                                <p className="text-xs text-gray-500">Conditions apply</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">
+                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <p className="text-sm font-medium text-primary">Warranty</p>
+                                <p className="text-xs text-gray-500">Merchant-backed</p>
+                            </div>
+                        </div>
+                    </div> */}
                     <ul className={'flex flex-col gap-2 text-sm mt-6 mb-6 px-5 font-medium'}>
+                        {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
+                            <li className={'flex items-center gap-2 text-sm text-primary'}>
+                                <svg className={'w-4 h-4'} width="8" height="8" viewBox="0 0 16 17" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0)">
+                                        <path
+                                            d="M8.00001 16.7564L7.53334 16.3564C6.89001 15.8178 1.27267 10.9664 1.27267 7.41776C1.27267 5.63356 1.98145 3.92244 3.24306 2.66082C4.50468 1.3992 6.21581 0.69043 8.00001 0.69043C9.78421 0.69043 11.4953 1.3992 12.757 2.66082C14.0186 3.92244 14.7273 5.63356 14.7273 7.41776C14.7273 10.9664 9.11001 15.8178 8.46934 16.3591L8.00001 16.7564ZM8.00001 2.1451C6.6021 2.14668 5.2619 2.70271 4.27342 3.69118C3.28495 4.67965 2.72893 6.01985 2.72734 7.41776C2.72734 9.6471 6.18334 13.2084 8.00001 14.8384C9.81667 13.2078 13.2727 9.64443 13.2727 7.41776C13.2711 6.01985 12.7151 4.67965 11.7266 3.69118C10.7381 2.70271 9.39792 2.14668 8.00001 2.1451Z"
+                                            fill="#425A8B"/>
+                                        <path
+                                            d="M8.00001 10.0843C7.47259 10.0843 6.95702 9.92791 6.51849 9.6349C6.07996 9.34188 5.73817 8.9254 5.53633 8.43813C5.3345 7.95086 5.28169 7.41469 5.38458 6.8974C5.48748 6.38012 5.74145 5.90497 6.11439 5.53203C6.48733 5.15909 6.96249 4.90511 7.47977 4.80222C7.99705 4.69932 8.53323 4.75213 9.0205 4.95397C9.50777 5.1558 9.92425 5.49759 10.2173 5.93612C10.5103 6.37465 10.6667 6.89023 10.6667 7.41764C10.6667 8.12489 10.3857 8.80317 9.88563 9.30326C9.38553 9.80336 8.70726 10.0843 8.00001 10.0843ZM8.00001 6.08431C7.7363 6.08431 7.47852 6.16251 7.25925 6.30902C7.03999 6.45553 6.86909 6.66377 6.76817 6.9074C6.66726 7.15103 6.64085 7.41912 6.6923 7.67776C6.74374 7.93641 6.87073 8.17398 7.0572 8.36045C7.24367 8.54692 7.48125 8.67391 7.73989 8.72536C7.99853 8.77681 8.26662 8.7504 8.51026 8.64948C8.75389 8.54857 8.96213 8.37767 9.10864 8.1584C9.25515 7.93914 9.33335 7.68135 9.33335 7.41764C9.33335 7.06402 9.19287 6.72488 8.94282 6.47484C8.69277 6.22479 8.35363 6.08431 8.00001 6.08431Z"
+                                            fill="#425A8B"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0">
+                                            <rect width="16" height="16" fill="white" transform="translate(0 0.750977)"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                
+                                    Seller's
+                                    Location: {product?.product?.merchant?.location?.name} {product?.product?.merchant?.state?.name}
+                            </li>
+                        )}
 
-                        <li className={'flex items-center gap-2 text-sm text-primary'}>
-                            <svg className={'w-4 h-4'} width="8" height="8" viewBox="0 0 16 17" fill="none"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <g clip-path="url(#clip0)">
+                        {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
+                            <li className={'flex items-center gap-2 text-sm text-primary'}>
+                                <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
+                                    xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
+                                    <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
+                                                    y2="101.26">
+                                        <stop offset=".0074201" stop-color="#fff8e1"/>
+                                        <stop offset=".1774" stop-color="#fff6da"/>
+                                        <stop offset=".4164" stop-color="#fff2c8"/>
+                                        <stop offset=".6962" stop-color="#ffeaaa"/>
+                                        <stop offset=".9948" stop-color="#ffe082"/>
+                                    </linearGradient>
+                                    <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
+                                                    y1="29.333" y2="90.334">
+                                        <stop offset=".0048889" stop-color="#bcaaa4"/>
+                                        <stop offset=".3916" stop-color="#ac958e"/>
+                                        <stop offset=".9986" stop-color="#8d6e63"/>
+                                    </linearGradient>
                                     <path
-                                        d="M8.00001 16.7564L7.53334 16.3564C6.89001 15.8178 1.27267 10.9664 1.27267 7.41776C1.27267 5.63356 1.98145 3.92244 3.24306 2.66082C4.50468 1.3992 6.21581 0.69043 8.00001 0.69043C9.78421 0.69043 11.4953 1.3992 12.757 2.66082C14.0186 3.92244 14.7273 5.63356 14.7273 7.41776C14.7273 10.9664 9.11001 15.8178 8.46934 16.3591L8.00001 16.7564ZM8.00001 2.1451C6.6021 2.14668 5.2619 2.70271 4.27342 3.69118C3.28495 4.67965 2.72893 6.01985 2.72734 7.41776C2.72734 9.6471 6.18334 13.2084 8.00001 14.8384C9.81667 13.2078 13.2727 9.64443 13.2727 7.41776C13.2711 6.01985 12.7151 4.67965 11.7266 3.69118C10.7381 2.70271 9.39792 2.14668 8.00001 2.1451Z"
-                                        fill="#425A8B"/>
+                                        d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
+                                        fill="url(#a)"/>
                                     <path
-                                        d="M8.00001 10.0843C7.47259 10.0843 6.95702 9.92791 6.51849 9.6349C6.07996 9.34188 5.73817 8.9254 5.53633 8.43813C5.3345 7.95086 5.28169 7.41469 5.38458 6.8974C5.48748 6.38012 5.74145 5.90497 6.11439 5.53203C6.48733 5.15909 6.96249 4.90511 7.47977 4.80222C7.99705 4.69932 8.53323 4.75213 9.0205 4.95397C9.50777 5.1558 9.92425 5.49759 10.2173 5.93612C10.5103 6.37465 10.6667 6.89023 10.6667 7.41764C10.6667 8.12489 10.3857 8.80317 9.88563 9.30326C9.38553 9.80336 8.70726 10.0843 8.00001 10.0843ZM8.00001 6.08431C7.7363 6.08431 7.47852 6.16251 7.25925 6.30902C7.03999 6.45553 6.86909 6.66377 6.76817 6.9074C6.66726 7.15103 6.64085 7.41912 6.6923 7.67776C6.74374 7.93641 6.87073 8.17398 7.0572 8.36045C7.24367 8.54692 7.48125 8.67391 7.73989 8.72536C7.99853 8.77681 8.26662 8.7504 8.51026 8.64948C8.75389 8.54857 8.96213 8.37767 9.10864 8.1584C9.25515 7.93914 9.33335 7.68135 9.33335 7.41764C9.33335 7.06402 9.19287 6.72488 8.94282 6.47484C8.69277 6.22479 8.35363 6.08431 8.00001 6.08431Z"
-                                        fill="#425A8B"/>
-                                </g>
-                                <defs>
-                                    <clipPath id="clip0">
-                                        <rect width="16" height="16" fill="white" transform="translate(0 0.750977)"/>
-                                    </clipPath>
-                                </defs>
-                            </svg>
-                            Seller's
-                            Location: {product?.product?.merchant?.location?.name} {product?.product?.merchant?.state?.name}
-                        </li>
-
-                        <li className={'flex items-center gap-2 text-sm text-primary'}>
-                            <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
-                                 xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
-                                <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
-                                                y2="101.26">
-                                    <stop offset=".0074201" stop-color="#fff8e1"/>
-                                    <stop offset=".1774" stop-color="#fff6da"/>
-                                    <stop offset=".4164" stop-color="#fff2c8"/>
-                                    <stop offset=".6962" stop-color="#ffeaaa"/>
-                                    <stop offset=".9948" stop-color="#ffe082"/>
-                                </linearGradient>
-                                <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
-                                                y1="29.333" y2="90.334">
-                                    <stop offset=".0048889" stop-color="#bcaaa4"/>
-                                    <stop offset=".3916" stop-color="#ac958e"/>
-                                    <stop offset=".9986" stop-color="#8d6e63"/>
-                                </linearGradient>
-                                <path
-                                    d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
-                                    fill="url(#a)"/>
-                                <path
-                                    d="m3.88 91.5v11.22c0 5.11 4.18 9.28 9.28 9.28h101.74c5.11 0 9.28-4.18 9.28-9.28v-11.22z"
-                                    fill="#66bb6a"/>
-                                <path
-                                    d="m18.41 47 97.5.5c3.45 0 5.49 2.12 5.49 5.51l-.4 38.49v10.79c0 3.84-3.32 6.64-5.1 6.64l-101.74.11c-6.05 0-7.3-3.81-7.3-6.99l.04-10.63 4.13-38.09.02-.1c.37-5.15 4.21-6.23 7.36-6.23m.01-3c-5.62 0-9.92 2.92-10.36 9l-4.15 38.25-.03 10.79c0 5.11 2.82 10 10.32 10l101.69-.11c3.58 0 8.1-4.27 8.1-9.64v-10.79l.4-38.47c0-5.11-3.44-8.53-8.54-8.53z"
-                                    fill="#424242" opacity=".2"/>
-                                <path
-                                    d="m29.9 75.34h-14.59c-1.65 0-2.85-1.31-2.67-2.92l1.75-15.51c.18-1.61 1.67-2.92 3.33-2.92h12.93c1.65 0 2.85 1.31 2.67 2.92l-.1 15.51c-.18 1.62-1.67 2.92-3.32 2.92z"
-                                    fill="#546e7a"/>
-                                <path d="m124.19 91.65h-88.19v-59.3c0-2.21 1.79-4 4-4h80.19c2.21 0 4 1.79 4 4z"
-                                      fill="url(#b)"/>
-                                <path
-                                    d="m30.65 56c.24 0 .43.07.55.21.11.12.15.28.13.48-.01.07-.01.14-.01.21l-.1 15.38c-.11.57-.72 1.06-1.33 1.06h-14.58c-.24 0-.43-.07-.55-.21-.11-.12-.15-.28-.13-.48l1.75-15.51c.07-.6.71-1.14 1.34-1.14zm0-2h-12.93c-1.65 0-3.14 1.31-3.33 2.92l-1.75 15.51c-.18 1.61 1.01 2.92 2.67 2.92h14.59c1.65 0 3.14-1.31 3.33-2.92l.1-15.51c.17-1.61-1.02-2.92-2.68-2.92z"
-                                    fill="#424242" opacity=".2"/>
-                                <path d="m76.33 28.35h11.29v23.65h-11.29z" fill="#6d4c41"/>
-                                <path d="m76.33 68.84h11.29v22.81h-11.29z" fill="#6d4c41"/>
-                                <path
-                                    d="m120.19 31.35c.55 0 1 .45 1 1v56.3h-82.19v-56.3c0-.55.45-1 1-1zm0-3h-80.19c-2.21 0-4 1.79-4 4v59.3h88.19v-59.3c0-2.21-1.79-4-4-4z"
-                                    fill="#424242" opacity=".2"/>
-                                <circle cx="30" cy="110" fill="#4e342e" r="14"/>
-                                <path
-                                    d="m30 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
-                                    fill="#eee" opacity=".2"/>
-                                <circle cx="30" cy="110" fill="#bdbdbd" r="6"/>
-                                <circle cx="102" cy="110" fill="#4e342e" r="14"/>
-                                <path
-                                    d="m102 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
-                                    fill="#eee" opacity=".2"/>
-                                <circle cx="102" cy="110" fill="#bdbdbd" r="6"/>
-                            </svg>
-                            {product?.product?.ship_outside_vicinity ? `This Seller ships outside ${product?.product?.merchant?.location?.name}` : `This Seller does not ship outside ${product?.product?.merchant?.location?.name}`}
-                        </li>
+                                        d="m3.88 91.5v11.22c0 5.11 4.18 9.28 9.28 9.28h101.74c5.11 0 9.28-4.18 9.28-9.28v-11.22z"
+                                        fill="#66bb6a"/>
+                                    <path
+                                        d="m18.41 47 97.5.5c3.45 0 5.49 2.12 5.49 5.51l-.4 38.49v10.79c0 3.84-3.32 6.64-5.1 6.64l-101.74.11c-6.05 0-7.3-3.81-7.3-6.99l.04-10.63 4.13-38.09.02-.1c.37-5.15 4.21-6.23 7.36-6.23m.01-3c-5.62 0-9.92 2.92-10.36 9l-4.15 38.25-.03 10.79c0 5.11 2.82 10 10.32 10l101.69-.11c3.58 0 8.1-4.27 8.1-9.64v-10.79l.4-38.47c0-5.11-3.44-8.53-8.54-8.53z"
+                                        fill="#424242" opacity=".2"/>
+                                    <path
+                                        d="m29.9 75.34h-14.59c-1.65 0-2.85-1.31-2.67-2.92l1.75-15.51c.18-1.61 1.67-2.92 3.33-2.92h12.93c1.65 0 2.85 1.31 2.67 2.92l-.1 15.51c-.18 1.62-1.67 2.92-3.32 2.92z"
+                                        fill="#546e7a"/>
+                                    <path d="m124.19 91.65h-88.19v-59.3c0-2.21 1.79-4 4-4h80.19c2.21 0 4 1.79 4 4z"
+                                        fill="url(#b)"/>
+                                    <path
+                                        d="m30.65 56c.24 0 .43.07.55.21.11.12.15.28.13.48-.01.07-.01.14-.01.21l-.1 15.38c-.11.57-.72 1.06-1.33 1.06h-14.58c-.24 0-.43-.07-.55-.21-.11-.12-.15-.28-.13-.48l1.75-15.51c.07-.6.71-1.14 1.34-1.14zm0-2h-12.93c-1.65 0-3.14 1.31-3.33 2.92l-1.75 15.51c-.18 1.61 1.01 2.92 2.67 2.92h14.59c1.65 0 3.14-1.31 3.33-2.92l.1-15.51c.17-1.61-1.02-2.92-2.68-2.92z"
+                                        fill="#424242" opacity=".2"/>
+                                    <path d="m76.33 28.35h11.29v23.65h-11.29z" fill="#6d4c41"/>
+                                    <path d="m76.33 68.84h11.29v22.81h-11.29z" fill="#6d4c41"/>
+                                    <path
+                                        d="m120.19 31.35c.55 0 1 .45 1 1v56.3h-82.19v-56.3c0-.55.45-1 1-1zm0-3h-80.19c-2.21 0-4 1.79-4 4v59.3h88.19v-59.3c0-2.21-1.79-4-4-4z"
+                                        fill="#424242" opacity=".2"/>
+                                    <circle cx="30" cy="110" fill="#4e342e" r="14"/>
+                                    <path
+                                        d="m30 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                        fill="#eee" opacity=".2"/>
+                                    <circle cx="30" cy="110" fill="#bdbdbd" r="6"/>
+                                    <circle cx="102" cy="110" fill="#4e342e" r="14"/>
+                                    <path
+                                        d="m102 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                        fill="#eee" opacity=".2"/>
+                                    <circle cx="102" cy="110" fill="#bdbdbd" r="6"/>
+                                </svg>
+                                {product?.product?.ship_outside_vicinity ? `This Seller ships outside ${product?.product?.merchant?.location?.name}` : `This Seller does not ship outside ${product?.product?.merchant?.location?.name}`}
+                            </li>
+                        )}
 
 
-                        {product?.product?.ship_outside_vicinity &&
+
+                        {product?.product?.ship_outside_vicinity && product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
                                 <svg className={'w-6 h-6'} height="8" viewBox="0 0 100 100" width="8"
                                      xmlns="http://www.w3.org/2000/svg">
@@ -476,63 +601,64 @@ const ProductPage = () => {
                                 Shipping
                                 outside {product?.product?.merchant?.location?.name} cost {amountFormatter(product?.product?.shipping_cost_outside?.shipping_cost)}
                             </li>
-                        }
+                        )}
 
+                        {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && product?.product?.merchant?.state?.name && (
+                            <li className={'flex items-center gap-2 text-sm text-primary'}>
+                                <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
+                                    xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
+                                    <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
+                                                    y2="101.26">
+                                        <stop offset=".0074201" stop-color="#fff8e1"/>
+                                        <stop offset=".1774" stop-color="#fff6da"/>
+                                        <stop offset=".4164" stop-color="#fff2c8"/>
+                                        <stop offset=".6962" stop-color="#ffeaaa"/>
+                                        <stop offset=".9948" stop-color="#ffe082"/>
+                                    </linearGradient>
+                                    <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
+                                                    y1="29.333" y2="90.334">
+                                        <stop offset=".0048889" stop-color="#bcaaa4"/>
+                                        <stop offset=".3916" stop-color="#ac958e"/>
+                                        <stop offset=".9986" stop-color="#8d6e63"/>
+                                    </linearGradient>
+                                    <path
+                                        d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
+                                        fill="url(#a)"/>
+                                    <path
+                                        d="m3.88 91.5v11.22c0 5.11 4.18 9.28 9.28 9.28h101.74c5.11 0 9.28-4.18 9.28-9.28v-11.22z"
+                                        fill="#66bb6a"/>
+                                    <path
+                                        d="m18.41 47 97.5.5c3.45 0 5.49 2.12 5.49 5.51l-.4 38.49v10.79c0 3.84-3.32 6.64-5.1 6.64l-101.74.11c-6.05 0-7.3-3.81-7.3-6.99l.04-10.63 4.13-38.09.02-.1c.37-5.15 4.21-6.23 7.36-6.23m.01-3c-5.62 0-9.92 2.92-10.36 9l-4.15 38.25-.03 10.79c0 5.11 2.82 10 10.32 10l101.69-.11c3.58 0 8.1-4.27 8.1-9.64v-10.79l.4-38.47c0-5.11-3.44-8.53-8.54-8.53z"
+                                        fill="#424242" opacity=".2"/>
+                                    <path
+                                        d="m29.9 75.34h-14.59c-1.65 0-2.85-1.31-2.67-2.92l1.75-15.51c.18-1.61 1.67-2.92 3.33-2.92h12.93c1.65 0 2.85 1.31 2.67 2.92l-.1 15.51c-.18 1.62-1.67 2.92-3.32 2.92z"
+                                        fill="#546e7a"/>
+                                    <path d="m124.19 91.65h-88.19v-59.3c0-2.21 1.79-4 4-4h80.19c2.21 0 4 1.79 4 4z"
+                                        fill="url(#b)"/>
+                                    <path
+                                        d="m30.65 56c.24 0 .43.07.55.21.11.12.15.28.13.48-.01.07-.01.14-.01.21l-.1 15.38c-.11.57-.72 1.06-1.33 1.06h-14.58c-.24 0-.43-.07-.55-.21-.11-.12-.15-.28-.13-.48l1.75-15.51c.07-.6.71-1.14 1.34-1.14zm0-2h-12.93c-1.65 0-3.14 1.31-3.33 2.92l-1.75 15.51c-.18 1.61 1.01 2.92 2.67 2.92h14.59c1.65 0 3.14-1.31 3.33-2.92l.1-15.51c.17-1.61-1.02-2.92-2.68-2.92z"
+                                        fill="#424242" opacity=".2"/>
+                                    <path d="m76.33 28.35h11.29v23.65h-11.29z" fill="#6d4c41"/>
+                                    <path d="m76.33 68.84h11.29v22.81h-11.29z" fill="#6d4c41"/>
+                                    <path
+                                        d="m120.19 31.35c.55 0 1 .45 1 1v56.3h-82.19v-56.3c0-.55.45-1 1-1zm0-3h-80.19c-2.21 0-4 1.79-4 4v59.3h88.19v-59.3c0-2.21-1.79-4-4-4z"
+                                        fill="#424242" opacity=".2"/>
+                                    <circle cx="30" cy="110" fill="#4e342e" r="14"/>
+                                    <path
+                                        d="m30 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                        fill="#eee" opacity=".2"/>
+                                    <circle cx="30" cy="110" fill="#bdbdbd" r="6"/>
+                                    <circle cx="102" cy="110" fill="#4e342e" r="14"/>
+                                    <path
+                                        d="m102 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
+                                        fill="#eee" opacity=".2"/>
+                                    <circle cx="102" cy="110" fill="#bdbdbd" r="6"/>
+                                </svg>
+                                {product?.product?.ship_outside_state ? `This Seller ship outside ${product?.product?.merchant?.state?.name}` : `This Seller does not ship outside ${product?.product?.merchant?.state?.name}`}
+                            </li>
+                        )}
 
-                        <li className={'flex items-center gap-2 text-sm text-primary'}>
-                            <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
-                                 xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
-                                <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
-                                                y2="101.26">
-                                    <stop offset=".0074201" stop-color="#fff8e1"/>
-                                    <stop offset=".1774" stop-color="#fff6da"/>
-                                    <stop offset=".4164" stop-color="#fff2c8"/>
-                                    <stop offset=".6962" stop-color="#ffeaaa"/>
-                                    <stop offset=".9948" stop-color="#ffe082"/>
-                                </linearGradient>
-                                <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
-                                                y1="29.333" y2="90.334">
-                                    <stop offset=".0048889" stop-color="#bcaaa4"/>
-                                    <stop offset=".3916" stop-color="#ac958e"/>
-                                    <stop offset=".9986" stop-color="#8d6e63"/>
-                                </linearGradient>
-                                <path
-                                    d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
-                                    fill="url(#a)"/>
-                                <path
-                                    d="m3.88 91.5v11.22c0 5.11 4.18 9.28 9.28 9.28h101.74c5.11 0 9.28-4.18 9.28-9.28v-11.22z"
-                                    fill="#66bb6a"/>
-                                <path
-                                    d="m18.41 47 97.5.5c3.45 0 5.49 2.12 5.49 5.51l-.4 38.49v10.79c0 3.84-3.32 6.64-5.1 6.64l-101.74.11c-6.05 0-7.3-3.81-7.3-6.99l.04-10.63 4.13-38.09.02-.1c.37-5.15 4.21-6.23 7.36-6.23m.01-3c-5.62 0-9.92 2.92-10.36 9l-4.15 38.25-.03 10.79c0 5.11 2.82 10 10.32 10l101.69-.11c3.58 0 8.1-4.27 8.1-9.64v-10.79l.4-38.47c0-5.11-3.44-8.53-8.54-8.53z"
-                                    fill="#424242" opacity=".2"/>
-                                <path
-                                    d="m29.9 75.34h-14.59c-1.65 0-2.85-1.31-2.67-2.92l1.75-15.51c.18-1.61 1.67-2.92 3.33-2.92h12.93c1.65 0 2.85 1.31 2.67 2.92l-.1 15.51c-.18 1.62-1.67 2.92-3.32 2.92z"
-                                    fill="#546e7a"/>
-                                <path d="m124.19 91.65h-88.19v-59.3c0-2.21 1.79-4 4-4h80.19c2.21 0 4 1.79 4 4z"
-                                      fill="url(#b)"/>
-                                <path
-                                    d="m30.65 56c.24 0 .43.07.55.21.11.12.15.28.13.48-.01.07-.01.14-.01.21l-.1 15.38c-.11.57-.72 1.06-1.33 1.06h-14.58c-.24 0-.43-.07-.55-.21-.11-.12-.15-.28-.13-.48l1.75-15.51c.07-.6.71-1.14 1.34-1.14zm0-2h-12.93c-1.65 0-3.14 1.31-3.33 2.92l-1.75 15.51c-.18 1.61 1.01 2.92 2.67 2.92h14.59c1.65 0 3.14-1.31 3.33-2.92l.1-15.51c.17-1.61-1.02-2.92-2.68-2.92z"
-                                    fill="#424242" opacity=".2"/>
-                                <path d="m76.33 28.35h11.29v23.65h-11.29z" fill="#6d4c41"/>
-                                <path d="m76.33 68.84h11.29v22.81h-11.29z" fill="#6d4c41"/>
-                                <path
-                                    d="m120.19 31.35c.55 0 1 .45 1 1v56.3h-82.19v-56.3c0-.55.45-1 1-1zm0-3h-80.19c-2.21 0-4 1.79-4 4v59.3h88.19v-59.3c0-2.21-1.79-4-4-4z"
-                                    fill="#424242" opacity=".2"/>
-                                <circle cx="30" cy="110" fill="#4e342e" r="14"/>
-                                <path
-                                    d="m30 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
-                                    fill="#eee" opacity=".2"/>
-                                <circle cx="30" cy="110" fill="#bdbdbd" r="6"/>
-                                <circle cx="102" cy="110" fill="#4e342e" r="14"/>
-                                <path
-                                    d="m102 98c6.62 0 12 5.38 12 12s-5.38 12-12 12-12-5.38-12-12 5.38-12 12-12m0-2c-7.73 0-14 6.27-14 14s6.27 14 14 14 14-6.27 14-14-6.27-14-14-14z"
-                                    fill="#eee" opacity=".2"/>
-                                <circle cx="102" cy="110" fill="#bdbdbd" r="6"/>
-                            </svg>
-                            {product?.product?.ship_outside_state ? `This Seller ship outside ${product?.product?.merchant?.state?.name}` : `This Seller does not ship outside ${product?.product?.merchant?.state?.name}`}
-                        </li>
-
-                        {product?.product?.ship_outside_state &&
+                        {product?.product?.ship_outside_state && product?.product?.merchant?.state?.name && (
                             <li className={'flex items-center text-sm text-primary'}>
                                 <svg className={'w-6 h-6'} height="6" viewBox="0 0 100 100" width="6"
                                      xmlns="http://www.w3.org/2000/svg">
@@ -545,7 +671,7 @@ const ProductPage = () => {
                                 Shipping
                                 outside {product?.product?.merchant?.state?.name} cost {amountFormatter(product?.product?.shipping_cost_outside_state?.shipping_cost)}
                             </li>
-                        }
+                        )}
 
                     </ul>
 
@@ -603,10 +729,8 @@ const ProductPage = () => {
                                 <div onClick={()=>{
                                     handleAddToCart(product as ProductByIdResponse)
                                 }} className="flex flex-col sm:flex-row lg:items-center gap-4">
-                                    <button className="border border-primary rounded px-16 py-1 text-primary">Add to
-                                        cart
-                                    </button>
-                                    <button className="bg-primary text-white rounded px-16 py-1">Buy now</button>
+                                    <button className="px-6 py-2 border border-primary text-primary hover:bg-primary/5 transition-colors">Add to cart</button>
+                                    <button className="px-6 py-2 bg-primary text-white hover:bg-primary/90 transition-colors">Buy now</button>
                                 </div>
 
                             </div>

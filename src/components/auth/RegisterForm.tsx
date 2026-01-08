@@ -1,20 +1,34 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {Controller, useForm, useWatch} from "react-hook-form";
 import {RegisterFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {register} from "@/redux/auth/authSlice";
+import {register, resendConfirmationEmail} from "@/redux/auth/authSlice";
 import ControlledInput from "@/components/shared/ControlledInput";
 import {toast} from "sonner";
 import {useRouter} from "next/router";
 import {normalizeErrors} from "@/util";
+import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
+
+// Rate limiting constants
+const MAX_RESEND_ATTEMPTS = 2;
+const COOLDOWN_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Storage keys
+const getStorageKey = (email: string) => `resend_email_${email}`;
+const getAttemptsKey = (email: string) => `resend_attempts_${email}`;
+const getCooldownKey = (email: string) => `resend_cooldown_${email}`;
 
 function RegisterForm() {
 
     const {control, handleSubmit, formState: {errors}, reset} = useForm<RegisterFormType>();
 
     const [regSuccess, setRegSuccess] = useState(false)
-
     const [formData, setFormData] = useState<RegisterFormType | null>(null)
+    const [resendLoading, setResendLoading] = useState(false)
+    const [resendAttempts, setResendAttempts] = useState(0)
+    const [cooldownTime, setCooldownTime] = useState<number | null>(null)
+    const [timeRemaining, setTimeRemaining] = useState<number>(0)
+    const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
     const dispatch = useAppDispatch()
 
@@ -25,6 +39,127 @@ function RegisterForm() {
     })
 
     const router = useRouter()
+
+    // Load saved attempts and cooldown from localStorage
+    useEffect(() => {
+        if (formData?.email) {
+            const attempts = parseInt(localStorage.getItem(getAttemptsKey(formData.email)) || '0', 10);
+            const cooldownEnd = localStorage.getItem(getCooldownKey(formData.email));
+            
+            setResendAttempts(attempts);
+            
+            if (cooldownEnd) {
+                const cooldownEndTime = parseInt(cooldownEnd, 10);
+                const now = Date.now();
+                if (cooldownEndTime > now) {
+                    setCooldownTime(cooldownEndTime);
+                } else {
+                    // Cooldown expired, clear it
+                    localStorage.removeItem(getCooldownKey(formData.email));
+                }
+            }
+        }
+    }, [formData?.email]);
+
+    // Update countdown timer
+    useEffect(() => {
+        if (cooldownTime) {
+            const updateTimer = () => {
+                const now = Date.now();
+                const remaining = Math.max(0, Math.ceil((cooldownTime - now) / 1000));
+                setTimeRemaining(remaining);
+                
+                if (remaining <= 0) {
+                    setCooldownTime(null);
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                }
+            };
+
+            updateTimer();
+            intervalRef.current = setInterval(updateTimer, 1000);
+
+            return () => {
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                }
+            };
+        }
+    }, [cooldownTime]);
+
+    // Cleanup interval on unmount
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
+
+    const formatTime = (seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleResendEmail = async () => {
+        if (!formData?.email) {
+            toast.error('Email address not found');
+            return;
+        }
+
+        // Check if max attempts reached
+        if (resendAttempts >= MAX_RESEND_ATTEMPTS) {
+            toast.error(`You've reached the maximum number of resend attempts (${MAX_RESEND_ATTEMPTS}). Please wait before trying again.`);
+            return;
+        }
+
+        // Check if still in cooldown
+        if (cooldownTime && Date.now() < cooldownTime) {
+            toast.error('Please wait before requesting another email.');
+            return;
+        }
+
+        setResendLoading(true);
+
+        try {
+            const result = await dispatch(resendConfirmationEmail(formData.email));
+            
+            if (resendConfirmationEmail.fulfilled.match(result)) {
+                // Increment attempts
+                const newAttempts = resendAttempts + 1;
+                setResendAttempts(newAttempts);
+                localStorage.setItem(getAttemptsKey(formData.email), newAttempts.toString());
+
+                // If this was the last attempt, set cooldown
+                if (newAttempts >= MAX_RESEND_ATTEMPTS) {
+                    const cooldownEnd = Date.now() + COOLDOWN_DURATION;
+                    setCooldownTime(cooldownEnd);
+                    localStorage.setItem(getCooldownKey(formData.email), cooldownEnd.toString());
+                    toast.success('Confirmation email sent! You have reached the maximum attempts. Please wait before requesting again.');
+                } else {
+                    toast.success('Confirmation email sent successfully!');
+                }
+            } else {
+                // Handle error from API
+                const errorMessage = result.payload as string || 'Failed to resend confirmation email';
+                toast.error(errorMessage);
+                
+                // If API returns rate limit error, set cooldown
+                if (errorMessage.toLowerCase().includes('wait') || errorMessage.toLowerCase().includes('cooldown')) {
+                    const cooldownEnd = Date.now() + COOLDOWN_DURATION;
+                    setCooldownTime(cooldownEnd);
+                    localStorage.setItem(getCooldownKey(formData.email), cooldownEnd.toString());
+                }
+            }
+        } catch (error: any) {
+            toast.error('An unexpected error occurred. Please try again later.');
+        } finally {
+            setResendLoading(false);
+        }
+    };
 
     const onSubmit = async (data: RegisterFormType) => {
         console.log(data);
@@ -60,12 +195,172 @@ function RegisterForm() {
 
         <div className="flex flex-col lg:flex-row gap-12 w-full pt-16 mb-28 md:px-28 bg-white">
 
-            {regSuccess && (<div className={"flex items-center justify-center w-full"}>
-                    <p>A confirmation mail has been to your email {formData?.email}, <span className={'text-primary cursor-pointer'} onClick={()=>{
-                        router.push('/')
-                    }}>click</span> on back to the homepage</p>
-                </div>
+            {regSuccess && (
+                <div className="flex items-center justify-center w-full min-h-[60vh] px-4">
+                    <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-8 md:p-12">
+                        {/* Success Icon */}
+                        <div className="flex justify-center mb-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-75"></div>
+                                <div className="relative bg-green-50 rounded-full p-4">
+                                    <CheckCircleIcon className="h-16 w-16 text-green-500" />
+                                </div>
+                            </div>
+                        </div>
 
+                        {/* Main Message */}
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                                Welcome to Hawola! 🎉
+                            </h2>
+                            <p className="text-lg text-gray-600 mb-6">
+                                Your account has been created successfully
+                            </p>
+                        </div>
+
+                        {/* Email Confirmation Card */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                    <EnvelopeIcon className="h-8 w-8 text-blue-600" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                        Check your email
+                                    </h3>
+                                    <p className="text-gray-700 mb-3">
+                                        We've sent a confirmation email to:
+                                    </p>
+                                    <p className="text-blue-700 font-semibold text-lg break-all mb-4">
+                                        {formData?.email}
+                                    </p>
+                                    <div className="bg-white rounded-lg p-4 border border-blue-200">
+                                        <p className="text-sm text-gray-600 mb-2">
+                                            <span className="font-semibold">Next steps:</span>
+                                        </p>
+                                        <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                                            <li>Click the verification link in the email</li>
+                                            <li>Check your spam folder if you don't see it</li>
+                                            <li>Verify your email to activate your account</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <button
+                                onClick={() => router.push('/')}
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#435a8c] hover:bg-[#354a73] text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            >
+                                <span>Back to Homepage</span>
+                                <ArrowRightIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // Optionally resend email or go to login
+                                    router.push('/auth/login');
+                                }}
+                                className="flex-1 border-2 border-[#435a8c] text-[#435a8c] hover:bg-[#435a8c] hover:text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200"
+                            >
+                                Go to Login
+                            </button>
+                        </div>
+
+                        {/* Resend Email Section */}
+                        <div className="mt-8 border-t border-gray-200 pt-6">
+                            <div className="text-center">
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Didn't receive the email?
+                                </p>
+                                
+                                {/* Attempts Counter */}
+                                {resendAttempts > 0 && (
+                                    <div className="mb-4">
+                                        <p className="text-xs text-gray-500">
+                                            Resend attempts: {resendAttempts} / {MAX_RESEND_ATTEMPTS}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Cooldown Timer */}
+                                {cooldownTime && timeRemaining > 0 && (
+                                    <div className="mb-4 flex items-center justify-center gap-2 text-orange-600">
+                                        <ClockIcon className="h-5 w-5" />
+                                        <span className="text-sm font-semibold">
+                                            Please wait {formatTime(timeRemaining)} before requesting again
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Resend Button */}
+                                <button
+                                    onClick={handleResendEmail}
+                                    disabled={
+                                        resendLoading || 
+                                        resendAttempts >= MAX_RESEND_ATTEMPTS || 
+                                        (cooldownTime !== null && Date.now() < cooldownTime)
+                                    }
+                                    className={`
+                                        inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm
+                                        transition-all duration-200
+                                        ${
+                                            resendLoading || 
+                                            resendAttempts >= MAX_RESEND_ATTEMPTS || 
+                                            (cooldownTime !== null && Date.now() < cooldownTime)
+                                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                : 'bg-blue-50 text-[#435a8c] hover:bg-blue-100 border-2 border-[#435a8c]'
+                                        }
+                                    `}
+                                >
+                                    {resendLoading ? (
+                                        <>
+                                            <svg 
+                                                className="animate-spin h-4 w-4" 
+                                                xmlns="http://www.w3.org/2000/svg" 
+                                                fill="none" 
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle 
+                                                    className="opacity-25" 
+                                                    cx="12" 
+                                                    cy="12" 
+                                                    r="10" 
+                                                    stroke="currentColor" 
+                                                    strokeWidth="4"
+                                                ></circle>
+                                                <path 
+                                                    className="opacity-75" 
+                                                    fill="currentColor" 
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
+                                            </svg>
+                                            <span>Sending...</span>
+                                        </>
+                                    ) : resendAttempts >= MAX_RESEND_ATTEMPTS ? (
+                                        <>
+                                            <EnvelopeIcon className="h-4 w-4" />
+                                            <span>Maximum attempts reached</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <EnvelopeIcon className="h-4 w-4" />
+                                            <span>Resend confirmation email</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Helpful Message */}
+                                {resendAttempts >= MAX_RESEND_ATTEMPTS && !cooldownTime && (
+                                    <p className="mt-3 text-xs text-gray-500">
+                                        You can try again after the cooldown period expires
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {!regSuccess && <div className="w-full max-w-xl px-8 bg-white ">

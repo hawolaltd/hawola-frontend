@@ -136,6 +136,27 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+// resend confirmation email
+export const resendConfirmationEmail = createAsyncThunk(
+  "auth/resendConfirmationEmail",
+  async (email: string, thunkAPI) => {
+    try {
+      return await authService.resendConfirmationEmail(email);
+    } catch (error: any) {
+      console.log("error from slice", error);
+      const message =
+        (error.response &&
+          error.response.data &&
+          (error.response.data.message || error.response.data.detail || error.response.data.error)) ||
+        error.message ||
+        error.error ||
+        "Failed to resend confirmation email";
+      
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // get User Profile
 export const getUserProfile = createAsyncThunk(
   "auth/profile",
@@ -277,6 +298,17 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(resetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(resendConfirmationEmail.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resendConfirmationEmail.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(resendConfirmationEmail.rejected, (state, action) => {
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;

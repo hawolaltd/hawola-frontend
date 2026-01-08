@@ -38,6 +38,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showPaystack, setShowPaystack] = useState(false);
+  const [paymentConfirming, setPaymentConfirming] = useState(false);
 
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string;
   
@@ -58,9 +59,28 @@ const CheckoutPage = () => {
     amount: +(orders?.totalPriceDue || orders?.totalPrice) * 100,
     publicKey,
   };
+
+  // Prevent re-initialization if we've already completed payment
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const done = sessionStorage.getItem('PAYMENT_COMPLETED');
+      if (done === '1') {
+        setShowPaystack(false);
+        setPaymentConfirming(false);
+      }
+    }
+    return () => {
+      setShowPaystack(false);
+      setPaymentConfirming(false);
+    };
+  }, []);
   const handlePayment = async () => {
     setProcessingPayment(true);
     try {
+      // Fresh attempt: clear previous completion flag
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('PAYMENT_COMPLETED');
+      }
       const params = {
         payment_reference: orders?.payment_reference ?? "4yrg0exv8o",
         order_id: orders?.order_number,
@@ -122,10 +142,38 @@ const CheckoutPage = () => {
         )}
 
         {showPaystack && (
-          <PaystackCheckout
-            config={config}
-            onSuccess={() => router.push("/order/order-confirmation")}
-          />
+          <>
+            {/* Fullscreen overlay while Paystack modal is open */}
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-sm text-center">
+                <div className="mx-auto mb-4 animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
+                <h3 className="text-lg font-semibold mb-1">Waiting for payment...</h3>
+                <p className="text-sm text-gray-600">Please complete your payment in the Paystack window.</p>
+              </div>
+            </div>
+            <PaystackCheckout
+              config={config}
+              onSuccess={() => {
+                // Mark payment as completed and teardown modal state before navigating
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem('PAYMENT_COMPLETED', '1');
+                }
+                setShowPaystack(false);
+                setPaymentConfirming(true);
+                router.push("/order/order-confirmation");
+              }}
+            />
+          </>
+        )}
+
+        {paymentConfirming && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-sm text-center">
+              <div className="mx-auto mb-4 animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
+              <h3 className="text-lg font-semibold mb-1">Confirming your order...</h3>
+              <p className="text-sm text-gray-600">Please wait while we finalize your order.</p>
+            </div>
+          </div>
         )}
 
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>

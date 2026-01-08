@@ -255,9 +255,9 @@ const StandardTemplate = () => {
   const CategoryCard: React.FC<{ category: MerchantCategory }> = ({
     category,
   }) => (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 p-6 text-center group cursor-pointer">
+    <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 text-center group cursor-pointer border border-gray-100 transform hover:-translate-y-2">
       <div
-        className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+        className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md"
         style={{
           backgroundColor: primaryColor,
           color: textColor,
@@ -267,18 +267,21 @@ const StandardTemplate = () => {
           <img
             src={category.icon}
             alt={category.name || "Category"}
-            className="w-8 h-8 object-contain"
+            className="w-10 h-10 object-contain"
             style={{
               filter: isPrimaryLight ? "none" : "brightness(0) invert(1)",
             }}
           />
         ) : (
-          <span className="text-2xl">🛍️</span>
+          <span className="text-3xl">🛍️</span>
         )}
       </div>
-      <h3 className="font-semibold text-gray-800 truncate">
+      <h3 className="font-bold text-gray-900 truncate text-base group-hover:text-gray-700 transition-colors">
         {category.name || "Uncategorized"}
       </h3>
+      <div className="mt-2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+        Explore →
+      </div>
     </div>
   );
 
@@ -393,7 +396,7 @@ const StandardTemplate = () => {
       </Head>
       <div className="min-h-screen bg-gray-50">
         {/* Banner Section */}
-        <div className="relative h-80 overflow-hidden">
+        <div className="relative h-[400px] md:h-[500px] overflow-hidden">
           {banners?.length > 0 ? (
             <>
               <img
@@ -401,18 +404,21 @@ const StandardTemplate = () => {
                 alt="Store Banner"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
             </>
           ) : (
             <div
-              className="w-full h-full flex items-center justify-center"
-              style={{ backgroundColor: primaryColor }}
+              className="w-full h-full flex items-center justify-center relative"
+              style={{ 
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${getDarkerShade(primaryColor, 20)} 100%)`
+              }}
             >
-              <div className="text-center" style={{ color: textColor }}>
-                <h1 className="text-4xl font-bold mb-2">
+              <div className="text-center z-10 px-4" style={{ color: textColor }}>
+                <h1 className="text-5xl md:text-6xl font-extrabold mb-4 drop-shadow-2xl">
                   {merchant_details?.store_name}
                 </h1>
-                <p className="text-xl opacity-90">
+                <p className="text-xl md:text-2xl opacity-95 drop-shadow-lg">
                   {merchant_details?.store_page_subtitle}
                 </p>
               </div>
@@ -421,13 +427,15 @@ const StandardTemplate = () => {
 
           {/* Banner Navigation */}
           {banners?.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
               {banners.map((_: any, index: number) => (
                 <button
                   key={index}
                   onClick={() => setActiveBannerIndex(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === activeBannerIndex ? "scale-125" : "bg-opacity-50"
+                  className={`transition-all duration-300 rounded-full ${
+                    index === activeBannerIndex 
+                      ? "w-8 h-3 scale-110" 
+                      : "w-3 h-3 bg-opacity-50 hover:bg-opacity-75"
                   }`}
                   style={{
                     backgroundColor:

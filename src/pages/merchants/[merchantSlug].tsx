@@ -49,14 +49,16 @@ export default function MerchantPage() {
       </div>
     );
   }
-
+console.log("templateName", templateName)
   return (
     <div>
+      
       {templateName === "Standard" && <StandardTemplate />}
       {templateName === "Premium" && <DashboardTemplate />}
       {templateName === "Basic" && <BasicTemplate />}
       {/* Default to Normal template if no template specified or Normal selected */}
-      {(!templateName || templateName === "Normal") && <NormalMerchantPage />}
+      {(!templateName || templateName === "Normal") && <BasicTemplate />}
+      {/* {(!templateName || templateName === "Normal") && <NormalMerchantPage />} */}
     </div>
   );
 }

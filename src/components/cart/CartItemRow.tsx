@@ -71,7 +71,17 @@ const CartItemRow = ({
             />
           </div>
           <div>
-            <h3 className="font-medium">{cart.product.name}</h3>
+            <h3 className="font-medium flex items-center gap-2">
+              {cart.product.name}
+              {cart?.product?.accept_payment_on_delivery && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-wide bg-green-50 text-green-700 border border-green-200">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2" />
+                  </svg>
+                  Pay on Delivery
+                </span>
+              )}
+            </h3>
             {/* Shipping availability indicator */}
             {canShip !== undefined && (
               <div className="mt-1">

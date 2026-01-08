@@ -11,6 +11,7 @@ import {
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
+import OptimizedImage from "@/components/common/OptimizedImage";
 import {AdvertBanner} from "@/types/home";
 
 
@@ -61,7 +62,7 @@ function ImageSlider({ banners }: ImageSliderProps) {
                 >
                     {banners.map((banner, index) => (
                         <div key={banner.id} className="w-full flex-shrink-0 relative">
-                            <Image
+                            <OptimizedImage
                                 src={banner.web_banner_image || banner.banner_image}
                                 alt={`Advertisement ${index + 1}`}
                                 width={1200}

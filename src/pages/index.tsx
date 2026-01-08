@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Hero from "@/components/Hero";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/home/Footer";
@@ -26,11 +27,15 @@ export default function Home() {
   console.log("isAuthenticated:", isAuthenticated);
   const dispatch = useAppDispatch();
 
+  // Fetch public homepage data once on mount
   useEffect(() => {
     dispatch(getProducts());
-
     dispatch(getHomePage());
     dispatch(getHomeInsight());
+  }, [dispatch]);
+
+  // Fetch user-specific data when auth status changes
+  useEffect(() => {
     if (isAuthenticated) {
       dispatch(getCarts());
       dispatch(getWishList());
@@ -39,6 +44,16 @@ export default function Home() {
 
   return (
     <div>
+      <Head>
+        <title>Hawola | Everything you need, at better prices</title>
+        <meta 
+          name="description" 
+          content="Hawola - Everything you need, at better prices. Your trusted marketplace with amazing deals on thousands of products." 
+        />
+        <meta property="og:title" content="Hawola | Everything you need, at better prices" />
+        <meta property="og:description" content="Hawola - Everything you need, at better prices" />
+        <meta property="og:type" content="website" />
+      </Head>
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => dispatch(setDrawerOpen(false))}

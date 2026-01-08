@@ -75,6 +75,19 @@ const forgotPassword = async (data?: ForgotPasswordFormType) => {
   return response.data;
 };
 
+// Resend confirmation email
+const resendConfirmationEmail = async (email: string) => {
+  // Use the full endpoint URL as specified
+  const response = await axiosInstance.post(
+    API_URL + `/account-re-confirm-email/`,
+    { email }
+  );
+
+  console.log("resendConfirmationEmail:", response);
+
+  return response.data;
+};
+
 const resetPassword = async (data?: ForgotPasswordConfirmFormType) => {
   const response = await axiosInstance.post(
     API_URL + `/password/reset/confirm/`,
@@ -131,6 +144,7 @@ const authService = {
   updateProfile,
   getCarts,
   addToCarts,
+  resendConfirmationEmail,
 };
 
 export default authService;

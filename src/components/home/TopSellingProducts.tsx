@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import OptimizedImage from "@/components/common/OptimizedImage";
 import Ads3 from "@/components/svg/ads3";
 import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -71,7 +72,7 @@ function ImageSlider({ banners }: ImageSliderProps) {
         >
           {banners.map((banner, index) => (
             <div key={banner.id} className="w-full flex-shrink-0 relative">
-              <Image
+              <OptimizedImage
                 src={banner.web_image || banner.image}
                 alt={`Advertisement ${index + 1}`}
                 width={1200}

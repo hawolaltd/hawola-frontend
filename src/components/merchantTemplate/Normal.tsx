@@ -285,90 +285,98 @@ export default function NormalMerchantPage() {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Left Sidebar */}
             <div className="w-full md:w-1/3 lg:w-1/4">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 sticky top-8">
                 {/* Merchant Logo */}
-                <div className="p-4 flex justify-center">
-                  <img
-                    src={merchantData?.merchant_details?.logo}
-                    alt={merchants?.merchant_details?.store_name}
-                    className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-md"
-                  />
+                <div className="p-6 flex justify-center bg-gradient-to-br from-gray-50 to-white">
+                  <div className="relative">
+                    <img
+                      src={merchantData?.merchant_details?.logo}
+                      alt={merchants?.merchant_details?.store_name}
+                      className="h-32 w-32 rounded-3xl object-cover border-4 border-white shadow-2xl ring-4 ring-gray-100"
+                    />
+                    {merchantData?.merchant_details?.is_active && (
+                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Merchant Details */}
-                <div className="p-4 border-t">
-                  <h2 className="text-xl font-bold merchant-heading-text">
+                <div className="p-6 border-t border-gray-100">
+                  <h2 className="text-xl font-bold merchant-heading-text mb-2">
                     {merchantData?.merchant_details?.store_name}
                   </h2>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-gray-600 text-sm mb-4">
                     {merchantData?.merchant_details?.market?.help_text}{" "}
                     {merchantData?.merchant_details?.market?.name}
                   </p>
 
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 merchant-primary-text mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      <span>
+                  <div className="mt-6 space-y-3">
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="p-2 rounded-lg merchant-light-bg">
+                        <svg
+                          className="w-5 h-5 merchant-primary-text"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-700 flex-1">
                         {merchantData?.merchant_details?.store_address}
                       </span>
                     </div>
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 merchant-primary-text mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                      <span>
-                        {
-                          merchantData?.merchant_details
-                            ?.support_phone_number
-                        }
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="p-2 rounded-lg merchant-light-bg">
+                        <svg
+                          className="w-5 h-5 merchant-primary-text"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-700 flex-1">
+                        {merchantData?.merchant_details?.support_phone_number}
                       </span>
                     </div>
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 merchant-primary-text mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="p-2 rounded-lg merchant-light-bg">
+                        <svg
+                          className="w-5 h-5 merchant-primary-text"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-700 flex-1 break-all">
                         {merchantData?.merchant_details?.support_email}
                       </span>
                     </div>
@@ -467,13 +475,13 @@ export default function NormalMerchantPage() {
             {/* Main Content */}
             <div className="w-full md:w-2/3 lg:w-3/4">
               {/* Tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="flex -mb-px">
+              <div className="border-b border-gray-200 bg-white rounded-t-3xl shadow-sm">
+                <nav className="flex -mb-px overflow-x-auto scrollbar-hide">
                   <button
                     onClick={() => setActiveTab("products")}
-                    className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`mr-6 py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
                       activeTab === "products"
-                        ? "merchant-heading-text merchant-primary-border"
+                        ? "merchant-heading-text merchant-primary-border border-b-3"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -536,32 +544,44 @@ export default function NormalMerchantPage() {
                       {merchantData?.recent_products?.map((item, index) => (
                         <div
                           key={index}
-                          className="bg-white rounded-lg shadow-md overflow-hidden"
+                          className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl overflow-hidden border border-gray-100 transition-all duration-300 transform hover:-translate-y-2"
                         >
-                          <div className="h-48 bg-gray-200 flex items-center justify-center">
+                          <div className="relative h-56 bg-gray-100 overflow-hidden">
                             <img
                               src={item?.featured_image?.[0]?.image?.full_size}
                               alt={item?.name}
-                              className={"w-full h-full"}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
+                            {item?.discount_price && item?.discount_price !== item?.price && (
+                              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-sm merchant-primary">
+                                {Math.round(((parseFloat(item.price) - parseFloat(item.discount_price)) / parseFloat(item.price)) * 100)}% OFF
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           </div>
-                          <div className="p-4">
-                            <h3 className="font-medium text-lg mb-1">
+                          <div className="p-5">
+                            <h3 className="font-semibold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-gray-700 transition-colors">
                               {capitalize(item?.name)}
                             </h3>
-                            {/*<p className="text-gray-600 text-sm mb-2">Description</p>*/}
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold">
-                                {formatCurrency(
-                                  item?.discount_price
-                                    ? item?.discount_price
-                                    : item?.price
+                            <div className="flex justify-between items-center mb-4">
+                              <div>
+                                <span className="text-2xl font-bold text-gray-900">
+                                  {formatCurrency(
+                                    item?.discount_price
+                                      ? item?.discount_price
+                                      : item?.price
+                                  )}
+                                </span>
+                                {item?.discount_price && item?.discount_price !== item?.price && (
+                                  <span className="text-sm text-gray-400 line-through ml-2">
+                                    {formatCurrency(item?.price)}
+                                  </span>
                                 )}
-                              </span>
-                              <button className="px-3 py-1 rounded merchant-button text-sm">
-                                Add to Cart
-                              </button>
+                              </div>
                             </div>
+                            <button className="w-full px-4 py-3 rounded-xl merchant-button text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
+                              Add to Cart
+                            </button>
                           </div>
                         </div>
                       ))}
