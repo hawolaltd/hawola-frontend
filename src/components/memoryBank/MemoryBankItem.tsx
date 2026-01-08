@@ -34,7 +34,7 @@ const MemoryBankItem: React.FC<MemoryBankItemProps> = ({ item }) => {
                 <div className="w-full md:w-1/4">
                     {item.product.featured_image && item.product.featured_image.length > 0 ? (
                         <img
-                            src={item.product.featured_image[0]}
+                            src={item.product.featured_image[0]?.image_url || item.product.featured_image[0]?.image?.full_size || "/placeholder.jpg"}
                             alt={item.product.name}
                             className="w-full h-40 object-cover rounded-md"
                         />
