@@ -7,6 +7,7 @@ import productReducer from '@/redux/product/productSlice';
 import disputeReducer from '@/redux/disputes/disputeSlice';
 import uiReducer from '@/redux/ui/uiSlice';
 import searchReducer from '@/redux/search/searchSlice';
+import memoryBankReducer from '@/redux/memoryBank/memoryBankSlice';
 import {
     FLUSH,
     PAUSE,
@@ -32,6 +33,7 @@ const persistConfig = {
         'products',
         'disputes',
         'search',
+        'memoryBank',
     ],
 };
 
@@ -45,6 +47,7 @@ const rootReducer = combineReducers({
     disputes: disputeReducer,
     ui: uiReducer,
     search: searchReducer,
+    memoryBank: memoryBankReducer,
 });
 
 const appReducer = (state: any, action: any) => {
