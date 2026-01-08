@@ -10,10 +10,17 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {getAddress, getSingleOrder} from "@/redux/product/productSlice";
 import {formatCurrency, getLatestStatus} from "@/util";
 
+type DisputeFormData = {
+    orderitem_number: string;
+    dispute_reason: string;
+    proof_image?: File | null;
+    want_full_refund: boolean;
+};
+
 // Define validation schema
-const disputeSchema = yup.object<DisputeFormData>().shape({
+const disputeSchema = yup.object({
     dispute_reason: yup.string().required('Dispute reason is required'),
-    proof_image: yup.mixed().nullable().notRequired().test(
+    proof_image: yup.mixed().nullable().optional().test(
         'fileSize',
         'File too large',
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -22,14 +29,7 @@ const disputeSchema = yup.object<DisputeFormData>().shape({
     ),
     want_full_refund: yup.boolean().required(),
     orderitem_number: yup.string().required()
-});
-
-type DisputeFormData = {
-    orderitem_number: string;
-    dispute_reason: string;
-    proof_image?: File;
-    want_full_refund: boolean;
-};
+}) as yup.Schema<DisputeFormData>;
 
 const OrderDetails: NextPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
