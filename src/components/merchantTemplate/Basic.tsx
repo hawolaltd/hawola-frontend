@@ -209,7 +209,7 @@ const BasicTemplate = () => {
         </header>
 
         {/* Hero Banner */}
-        <section className="relative h-[400px] md:h-[500px] overflow-hidden">
+        <section className={`relative overflow-hidden ${banners?.length > 0 ? 'h-[400px] md:h-[500px]' : 'h-[300px] md:h-[400px]'}`}>
           {banners?.length > 0 ? (
             <>
               <img
@@ -223,7 +223,7 @@ const BasicTemplate = () => {
             <div
               className="w-full h-full relative"
               style={{
-                background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColorBrightness(primaryColor, -20)} 50%, ${adjustColorBrightness(primaryColor, -30)} 100%)`,
+                background: `linear-gradient(135deg, ${adjustColorBrightness(primaryColor, -40)} 0%, ${adjustColorBrightness(primaryColor, -50)} 50%, ${adjustColorBrightness(primaryColor, -60)} 100%)`,
               }}
             >
               {/* Pattern overlay for visual interest */}
