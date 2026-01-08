@@ -11,16 +11,17 @@ import {getAddress, getSingleOrder} from "@/redux/product/productSlice";
 import {formatCurrency, getLatestStatus} from "@/util";
 
 // Define validation schema
-const disputeSchema = yup.object().shape({
+const disputeSchema = yup.object<DisputeFormData>().shape({
     dispute_reason: yup.string().required('Dispute reason is required'),
-    proof_image: yup.mixed().test(
+    proof_image: yup.mixed<File | undefined>().nullable().notRequired().test(
         'fileSize',
         'File too large',
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         value => !value || (value && value.size <= 5000000) // 5MB max
     ),
-    want_full_refund: yup.boolean().required()
+    want_full_refund: yup.boolean().required(),
+    orderitem_number: yup.string().required()
 });
 
 type DisputeFormData = {
