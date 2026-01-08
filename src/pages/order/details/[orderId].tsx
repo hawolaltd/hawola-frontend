@@ -29,7 +29,7 @@ const disputeSchema = yup.object({
     ),
     want_full_refund: yup.boolean().required(),
     orderitem_number: yup.string().required()
-}) as yup.Schema<DisputeFormData>;
+});
 
 const OrderDetails: NextPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +45,8 @@ const OrderDetails: NextPage = () => {
     const dispatch = useAppDispatch();
 
     const { register, handleSubmit, formState: { errors }, reset } = useForm<DisputeFormData>({
-        resolver: yupResolver(disputeSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: yupResolver(disputeSchema as any),
         defaultValues: {
             orderitem_number: router?.query?.orderId as string,
             want_full_refund: true
