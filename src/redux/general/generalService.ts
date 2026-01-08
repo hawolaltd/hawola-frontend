@@ -23,8 +23,14 @@ const getHomeInsight = async () => {
 // get All States
 const getAllStates = async () => {
     const response = await axiosInstance.get(API + 'location/all/states/');
-    console.log('getAllStates:', response.data);
-
+    console.log('getAllStates response:', response.data);
+    
+    // If response.data is already an array, wrap it in { data: [...] }
+    // If it's already { data: [...] }, return as is
+    if (Array.isArray(response.data)) {
+        return { data: response.data };
+    }
+    
     return response.data;
 };
 
@@ -32,8 +38,14 @@ const getAllStates = async () => {
 const getStateLocations = async (id: string) => {
     const response = await axiosInstance.get(API + `location/${id}/`);
 
-    console.log('getStateLocations:', response.data);
-
+    console.log('getStateLocations response:', response.data);
+    
+    // If response.data is already an array, wrap it in { data: [...] }
+    // If it's already { data: [...] }, return as is
+    if (Array.isArray(response.data)) {
+        return { data: response.data };
+    }
+    
     return response.data;
 };
 

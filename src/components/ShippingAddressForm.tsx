@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useAppSelector, useAppDispatch } from "@/hook/useReduxTypes";
-import {getStateLocations} from "@/redux/general/generalSlice";
+import {getStateLocations, getAllStates} from "@/redux/general/generalSlice";
 import {addAddress, getAddress} from "@/redux/product/productSlice";
 import {toast} from "sonner";
 import {AddressData} from "@/types/product";
@@ -22,21 +22,28 @@ const ShippingAddressForm = ({selectedAdd, editingAddress}:{selectedAdd: Address
 
     const { control, handleSubmit, watch, setValue } = useForm<ShippingFormValues>({
         defaultValues: {
-            first_name: selectedAdd?.first_name,
-            last_name: selectedAdd?.last_name,
-            address: selectedAdd?.address,
-            phone: selectedAdd?.phone,
-            phone2: selectedAdd?.phone2,
-            state: selectedAdd?.state?.name,
-            location: selectedAdd?.city?.name
+            first_name: selectedAdd?.first_name || "",
+            last_name: selectedAdd?.last_name || "",
+            address: selectedAdd?.address || "",
+            phone: selectedAdd?.phone || "",
+            phone2: selectedAdd?.phone2 || "",
+            state: (selectedAdd?.state as any)?.id?.toString() || "",
+            location: (selectedAdd?.city as any)?.id?.toString() || ""
         }
     });
+
+    // Fetch states when component mounts
+    useEffect(() => {
+        if (!states?.data || states.data.length === 0) {
+            dispatch(getAllStates());
+        }
+    }, [dispatch, states?.data]);
 
     // Watch state value changes
     const selectedState = watch("state");
 
     // Reset location when state changes
-    React.useEffect(() => {
+    useEffect(() => {
         if (selectedState) {
             setValue("location", "");
             dispatch(getStateLocations(selectedState));
@@ -122,11 +129,11 @@ const ShippingAddressForm = ({selectedAdd, editingAddress}:{selectedAdd: Address
                                 <select
                                     {...field}
                                     className={`border ${error ? 'border-red-500' : 'border-slate-200'} rounded-md p-2 w-full text-slate-500`}
-                                    disabled={!states?.data?.length}
+                                    disabled={isLoading || !states?.data?.length}
                                 >
-                                    <option value="">Select a state...</option>
-                                    {states?.data?.map(state => (
-                                        <option key={state.id} value={state.id}>{state.name}</option>
+                                    <option value="">{isLoading ? "Loading states..." : "Select a state..."}</option>
+                                    {states?.data?.map((state: any) => (
+                                        <option key={state.id} value={state.id.toString()}>{state.name}</option>
                                     ))}
                                 </select>
                                 {error && <p className="text-red-500 text-xs mt-1">{error.message}</p>}
@@ -150,7 +157,7 @@ const ShippingAddressForm = ({selectedAdd, editingAddress}:{selectedAdd: Address
                                 >
                                     <option value="">{isLoading ? "Loading locations..." : "Select a location..."}</option>
                                     {stateLocations?.data?.map(location => (
-                                        <option key={location.id} value={location.id}>{location.name}</option>
+                                        <option key={location.id} value={location.id.toString()}>{location.name}</option>
                                     ))}
                                 </select>
                                 {error && <p className="text-red-500 text-xs mt-1">{error.message}</p>}
