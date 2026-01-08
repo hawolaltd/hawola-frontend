@@ -13,7 +13,7 @@ import {formatCurrency, getLatestStatus} from "@/util";
 // Define validation schema
 const disputeSchema = yup.object<DisputeFormData>().shape({
     dispute_reason: yup.string().required('Dispute reason is required'),
-    proof_image: yup.mixed<File | undefined>().nullable().notRequired().test(
+    proof_image: yup.mixed().nullable().notRequired().test(
         'fileSize',
         'File too large',
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
