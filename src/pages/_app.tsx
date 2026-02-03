@@ -7,6 +7,7 @@ import "swiper/css/scrollbar";
 import "swiper/css";
 import "sweetalert2/src/sweetalert2.scss";
 import type { AppProps } from "next/app";
+import Head from "next/head";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/store/store";
 import { Provider, useDispatch } from "react-redux";
@@ -34,6 +35,9 @@ function AppContent({ Component, pageProps }: AppProps) {
 
   return (
     <>
+      <Head>
+        <title>Hawola</title>
+      </Head>
       <Component {...pageProps} />
       <ToastContainer />
       <Toaster position={"top-right"} />

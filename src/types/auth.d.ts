@@ -21,13 +21,19 @@ export interface LoginResponse {
     access: string;
     refresh: string;
     user: {
-        pk: number;
+        pk?: number;
+        id?: number;
         email: string;
-        phone_number: string;
-        gender: number;
+        phone_number?: string;
+        gender?: number | string;
         username: string;
-        last_name: string;
-        first_name: string;
+        last_name?: string;
+        first_name?: string;
+        is_staff?: boolean;
+        is_superuser?: boolean;
+        is_verified?: boolean;
+        is_active?: boolean;
+        created_at?: string;
     }
 }
 

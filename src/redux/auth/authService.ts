@@ -60,7 +60,7 @@ const login = async (userData: LoginFormType) => {
 };
 
 const changePassword = async (data?: ChangePasswordType) => {
-  const response = await axiosInstance.put(API_URL + `/update-password/`, data);
+  const response = await axiosInstance.post(API + API_URL + `/update-password/`, data);
 
   console.log("changePassword:", response);
 

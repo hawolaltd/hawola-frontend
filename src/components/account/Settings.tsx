@@ -1,9 +1,10 @@
 import type {NextPage} from 'next';
 import {useEffect, useState} from 'react';
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getUserProfile, updateProfile} from "@/redux/auth/authSlice";
+import {getUserProfile, updateProfile, changePassword} from "@/redux/auth/authSlice";
 import {getAddress} from "@/redux/product/productSlice";
 import {capitalize} from "@/util";
+import {toast} from "sonner";
 
 const Settings: NextPage = () => {
     const {profile} = useAppSelector(state => state.auth)
@@ -12,15 +13,24 @@ const Settings: NextPage = () => {
     const dispatch = useAppDispatch()
 
     const [loading, setLoading] = useState(false)
+    const [passwordLoading, setPasswordLoading] = useState(false)
+    const [showPasswordForm, setShowPasswordForm] = useState(false)
 
     const [contactInfo, setContactInfo] = useState({
-        first_name: profile?.first_name,
-        last_name: profile?.last_name,
-        username: profile?.username,
-        phone_number: profile?.phone_number,
-        email: profile?.email,
+        first_name: profile?.first_name || '',
+        last_name: profile?.last_name || '',
+        username: profile?.username || '',
+        phone_number: profile?.phone_number || '',
+        email: profile?.email || '',
         keepUpdated: false,
     });
+    
+    const [passwordData, setPasswordData] = useState({
+        old_password: '',
+        new_password1: '',
+        new_password2: '',
+    });
+
     const [shippingAddress, setShippingAddress] = useState({
         firstName: addresses?.addresses?.[0]?.first_name  ?? "",
         lastName: addresses?.addresses?.[0]?.last_name ?? "",
@@ -33,17 +43,76 @@ const Settings: NextPage = () => {
         additionalInfo: '',
     });
 
+    // Update contactInfo when profile changes
+    useEffect(() => {
+        if (profile) {
+            setContactInfo({
+                first_name: profile?.first_name || '',
+                last_name: profile?.last_name || '',
+                username: profile?.username || '',
+                phone_number: profile?.phone_number || '',
+                email: profile?.email || '',
+                keepUpdated: false,
+            });
+        }
+    }, [profile]);
+
     const handleSave = async () => {
         setLoading(true)
         try {
            await dispatch(updateProfile(contactInfo))
-        } catch (e) {
+           toast.success("Profile updated successfully")
+        } catch (e: any) {
+            toast.error(e?.response?.data?.detail || "Failed to update profile")
             setLoading(false)
         } finally {
             setLoading(false)
         }
     };
 
+    const handlePasswordChange = async () => {
+        // Validate passwords
+        if (!passwordData.old_password || !passwordData.new_password1 || !passwordData.new_password2) {
+            toast.error("Please fill in all password fields");
+            return;
+        }
+
+        if (passwordData.new_password1 !== passwordData.new_password2) {
+            toast.error("New passwords do not match");
+            return;
+        }
+
+        if (passwordData.new_password1.length < 8) {
+            toast.error("New password must be at least 8 characters long");
+            return;
+        }
+
+        setPasswordLoading(true)
+        try {
+            await dispatch(changePassword({
+                old_password: passwordData.old_password,
+                new_password1: passwordData.new_password1,
+                new_password2: passwordData.new_password2,
+            }))
+            toast.success("Password changed successfully")
+            // Reset password form
+            setPasswordData({
+                old_password: '',
+                new_password1: '',
+                new_password2: '',
+            })
+            setShowPasswordForm(false)
+        } catch (e: any) {
+            const errorMessage = e?.response?.data?.detail || 
+                                e?.response?.data?.old_password?.[0] ||
+                                e?.response?.data?.new_password2?.[0] ||
+                                "Failed to change password"
+            toast.error(errorMessage)
+            setPasswordLoading(false)
+        } finally {
+            setPasswordLoading(false)
+        }
+    };
 
     useEffect(() => {
         dispatch(getUserProfile())
@@ -100,10 +169,8 @@ const Settings: NextPage = () => {
                                 type="email"
                                 placeholder="Email *"
                                 value={contactInfo.email}
-                                onChange={(e) =>
-                                    setContactInfo({...contactInfo, email: e.target.value})
-                                }
-                                className="w-full p-2 border rounded bg-inherit"
+                                disabled
+                                className="w-full p-2 border rounded bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-60"
                             />
                             <label className="flex items-center">
                                 <input
@@ -122,6 +189,92 @@ const Settings: NextPage = () => {
                     </span>
                             </label>
                         </div>
+                    </div>
+
+                    {/* Password Change */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold text-primary">
+                                Change Password
+                            </h2>
+                            {!showPasswordForm && (
+                                <button
+                                    onClick={() => setShowPasswordForm(true)}
+                                    className="text-sm text-primary hover:underline"
+                                >
+                                    Change Password
+                                </button>
+                            )}
+                        </div>
+                        {showPasswordForm && (
+                            <div className="space-y-4">
+                                <input
+                                    type="password"
+                                    placeholder="Current Password *"
+                                    value={passwordData.old_password}
+                                    onChange={(e) =>
+                                        setPasswordData({...passwordData, old_password: e.target.value})
+                                    }
+                                    className="w-full p-2 border rounded bg-inherit"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="New Password * (min 8 characters)"
+                                    value={passwordData.new_password1}
+                                    onChange={(e) =>
+                                        setPasswordData({...passwordData, new_password1: e.target.value})
+                                    }
+                                    className="w-full p-2 border rounded bg-inherit"
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Confirm New Password *"
+                                    value={passwordData.new_password2}
+                                    onChange={(e) =>
+                                        setPasswordData({...passwordData, new_password2: e.target.value})
+                                    }
+                                    className="w-full p-2 border rounded bg-inherit"
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={passwordLoading}
+                                        onClick={handlePasswordChange}
+                                        className={`flex items-center justify-center ${passwordLoading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} text-white px-6 py-2 rounded`}
+                                    >
+                                        {passwordLoading ? (
+                                            <div className={'flex items-center justify-center w-full'}>
+                                                <span role="status">
+                                                    <svg aria-hidden="true"
+                                                         className="w-5 h-5 text-gray-200 animate-spin fill-blue-300"
+                                                         viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path
+                                                            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                                            fill="currentColor"/>
+                                                        <path
+                                                            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                                            fill="#435a8c"/>
+                                                    </svg>
+                                                    <span className="sr-only">Loading...</span>
+                                                </span>
+                                            </div>
+                                        ) : "Update Password"}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowPasswordForm(false)
+                                            setPasswordData({
+                                                old_password: '',
+                                                new_password1: '',
+                                                new_password2: '',
+                                            })
+                                        }}
+                                        className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-2 rounded"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Shipping Address */}

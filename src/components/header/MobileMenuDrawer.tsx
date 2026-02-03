@@ -1,5 +1,8 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
+import { addToCartsLocal } from '@/redux/product/productSlice';
+import { logout } from '@/redux/auth/authSlice';
 
 interface DrawerLinkProps {
     href?: string;
@@ -10,12 +13,20 @@ interface DrawerLinkProps {
 interface DrawerProps {
     isOpen: boolean;
     onClose: () => void;
-    userName?: string;
     messageCount?: number;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, userName = 'Steven', messageCount = 3 }) => {
+const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) => {
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null>(null);
+    const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState<boolean>(false);
+
+    const dispatch = useAppDispatch();
+    const { categories } = useAppSelector((state) => state.products);
+    const { isAuthenticated, user, profile } = useAppSelector((state) => state.auth);
+
+    const displayEmail = profile?.email || user?.user?.email || '';
 
     const toggleExpand = (label: string) => {
         setExpandedItems(prev => ({
@@ -50,8 +61,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, userName = 'Steven', m
         { href: '/account', label: 'My Account' },
         { href: '/wishlist', label: 'My Wishlist' },
         { href: '/tracking', label: 'Order Tracking' },
-        { href: '/settings', label: 'Setting' },
-        { href: '/logout', label: 'Sign Out' }
+        { href: '/settings', label: 'Settings' },
     ];
 
     return (
@@ -61,7 +71,10 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, userName = 'Steven', m
                 className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
                     isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
-                onClick={onClose}
+                onClick={() => {
+                    setIsCategoryDrawerOpen(false);
+                    onClose();
+                }}
             />
 
             {/* Drawer */}
@@ -77,7 +90,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, userName = 'Steven', m
                     </div>
                     <svg onClick={onClose} width={'35'} height={'35'} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h24v24h-24z" fill="#fff" opacity="0" transform="matrix(-1 0 0 -1 24 24)"/><path d="m13.41 12 4.3-4.29a1 1 0 1 0 -1.42-1.42l-4.29 4.3-4.29-4.3a1 1 0 0 0 -1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z" fill="#8C9EC5"/></svg>
                 </div>
-                <div className="h-full flex flex-col overflow-y-auto">
+                <div className="h-full flex flex-col overflow-hidden">
                     {/* Navigation Links */}
                     <div className="p-4 space-y-2">
                         {navigationLinks.map((item) => (
@@ -88,39 +101,319 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, userName = 'Steven', m
                                 onToggleExpand={() => toggleExpand(item.label)}
                             />
                         ))}
+
+                        {/* Entry point for categories drawer */}
+                        {categories?.categories && categories.categories.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setIsCategoryDrawerOpen(true)}
+                                className="w-full mt-2 flex items-center justify-between rounded-md px-3 py-2 text-sm font-semibold text-primary bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                            >
+                                <span>Shop by categories</span>
+                                <svg
+                                    className="w-4 h-4 text-gray-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </button>
+                        )}
                     </div>
 
-                    {/* User Greeting */}
-                    <div className="p-4 border-t border-gray-200 flex items-center gap-2">
-                        <img className="w-10 h-10 border-2 border-[#17CE89] border-solid rounded-full object-cover"
-                             src="/assets/author-3.png"
-                             alt="user avatar"/>
-                        <div>
-                            <p className="text-sm font-semibold text-primary "> Hello {userName} !</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                You have {messageCount} new {messageCount === 1 ? 'message' : 'messages'}
-                            </p>
+                    {/* User Greeting + Account CTA (mirrors desktop account behavior) */}
+                    <div className="p-4 border-t border-gray-200 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 border-2 border-[#17CE89] border-solid rounded-full flex items-center justify-center bg-white">
+                                <img
+                                    src="/assets/account.svg"
+                                    alt="Account"
+                                    className="w-5 h-5"
+                                />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-primary">
+                                    {isAuthenticated && displayEmail
+                                        ? displayEmail
+                                        : 'Welcome to Hawola'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {isAuthenticated
+                                        ? 'Manage your account and orders'
+                                        : 'Sign in to access your account'}
+                                </p>
+                            </div>
                         </div>
+                        {!isAuthenticated && (
+                            <Link
+                                href="/auth/login"
+                                onClick={onClose}
+                                className="text-xs font-semibold text-white bg-deepOrange px-3 py-1.5 rounded-md"
+                            >
+                                Sign In
+                            </Link>
+                        )}
                     </div>
 
-                    {/* Account Links */}
-                    <div className="grid grid-cols-2 gap-2 p-4 border-b border-gray-200">
-                        {accountLinks.map((item) => (
-                            <DrawerLink
-                                key={item.label}
-                                item={item}
-                            />
-                        ))}
-                    </div>
-
-                    <div className={'mt-4 w-full p-4 flex flex-col gap-2'}>
-                        <img className={'w-full'} src={'/imgs/page/homepage4/promotion6.png'} alt={'banner'} />
-                        <p className="mt-6 text-sm text-primary">&copy; 2025 Hawola. All rights reserved.</p>
-
-                    </div>
+                    {/* Account Links (authenticated only, same items as desktop dropdown) */}
+                    {isAuthenticated && (
+                        <div className="p-4 border-b border-gray-200 space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
+                                {accountLinks.map((item) => (
+                                    <Link
+                                        key={item.label}
+                                        href={item.href || '#'}
+                                        onClick={onClose}
+                                        className="block px-3 py-2 text-sm font-semibold text-primary rounded-md bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-center"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    dispatch(addToCartsLocal({ items: [] }));
+                                    dispatch(logout());
+                                    onClose();
+                                }}
+                                className="w-full mt-1 text-sm font-semibold text-white bg-deepOrange px-3 py-2 rounded-md"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Categories side drawer layered on top */}
+            {categories?.categories && (
+                <CategoriesDrawer
+                    isOpen={isCategoryDrawerOpen}
+                    onClose={() => setIsCategoryDrawerOpen(false)}
+                    categories={categories.categories}
+                    selectedCategoryId={selectedCategoryId}
+                    setSelectedCategoryId={setSelectedCategoryId}
+                    selectedSubCategoryId={selectedSubCategoryId}
+                    setSelectedSubCategoryId={setSelectedSubCategoryId}
+                />
+            )}
         </>
+    );
+};
+
+// Separate categories side drawer on top of main drawer
+const CategoriesDrawer: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    categories: any[];
+    selectedCategoryId: number | null;
+    setSelectedCategoryId: (id: number | null) => void;
+    selectedSubCategoryId: number | null;
+    setSelectedSubCategoryId: (id: number | null) => void;
+}> = ({
+    isOpen,
+    onClose,
+    categories,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    selectedSubCategoryId,
+    setSelectedSubCategoryId,
+}) => {
+    return (
+        <div
+            className={`fixed top-0 right-0 h-full w-80 bg-white z-[60] shadow-xl transform transition-transform duration-300 ease-in-out ${
+                isOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+        >
+            <div className="h-full flex flex-col">
+                {/* Header with back button */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+                    >
+                        <svg
+                            className="w-5 h-5 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 19l-7-7 7-7"
+                            />
+                        </svg>
+                        Back
+                    </button>
+                    <h2 className="text-sm font-semibold text-primary">Categories</h2>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Body: 3-level categories list */}
+                <div className="flex-1 overflow-y-auto p-4 hide-scrollbar">
+                    {categories
+                        .filter(
+                            (item, index, self) =>
+                                item.name &&
+                                self.findIndex((i: any) => i.name === item.name) === index
+                        )
+                        .map((category: any) => {
+                            const isActiveCategory = selectedCategoryId === category.id;
+                            const hasSubcategories =
+                                category.subcategory && category.subcategory.length > 0;
+
+                            return (
+                                <div key={category.id} className="mb-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (hasSubcategories) {
+                                                setSelectedCategoryId(
+                                                    isActiveCategory ? null : category.id
+                                                );
+                                                setSelectedSubCategoryId(null);
+                                            } else {
+                                                onClose();
+                                                window.location.href = `/categories?type=cat&slug=${category.slug}`;
+                                            }
+                                        }}
+                                        className={`w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                                            isActiveCategory
+                                                ? 'bg-gray-100 text-deepOrange'
+                                                : 'text-gray-800 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <span className="truncate">{category.name}</span>
+                                        {hasSubcategories && (
+                                            <svg
+                                                className={`w-4 h-4 text-gray-400 transform transition-transform ${
+                                                    isActiveCategory ? 'rotate-90' : ''
+                                                }`}
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9 5l7 7-7 7"
+                                                />
+                                            </svg>
+                                        )}
+                                    </button>
+
+                                    {/* Second level: subcategories */}
+                                    {isActiveCategory && hasSubcategories && (
+                                        <div className="mt-1 ml-3 border-l border-gray-200 pl-2 space-y-1">
+                                            {category.subcategory.map((subcat: any) => {
+                                                const isActiveSub =
+                                                    selectedSubCategoryId === subcat.id;
+                                                const hasThirdLevel =
+                                                    subcat.second_subcategory &&
+                                                    subcat.second_subcategory.length > 0;
+
+                                                return (
+                                                    <div key={subcat.id}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (hasThirdLevel) {
+                                                                    setSelectedSubCategoryId(
+                                                                        isActiveSub
+                                                                            ? null
+                                                                            : subcat.id
+                                                                    );
+                                                                } else {
+                                                                    onClose();
+                                                                    window.location.href = `/categories?type=subcat&slug=${subcat.slug}`;
+                                                                }
+                                                            }}
+                                                            className={`w-full flex items-center justify-between rounded-md px-2 py-1.5 text-[11px] transition-colors ${
+                                                                isActiveSub
+                                                                    ? 'bg-gray-100 text-deepOrange'
+                                                                    : 'text-gray-700 hover:bg-gray-100'
+                                                            }`}
+                                                        >
+                                                            <span className="truncate">
+                                                                {subcat.name}
+                                                            </span>
+                                                            {hasThirdLevel && (
+                                                                <svg
+                                                                    className={`w-3 h-3 text-gray-400 transform transition-transform ${
+                                                                        isActiveSub
+                                                                            ? 'rotate-90'
+                                                                            : ''
+                                                                    }`}
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M9 5l7 7-7 7"
+                                                                    />
+                                                                </svg>
+                                                            )}
+                                                        </button>
+
+                                                        {/* Third level: second_subcategory */}
+                                                        {isActiveSub && hasThirdLevel && (
+                                                            <div className="mt-1 ml-3 border-l border-gray-200 pl-2 space-y-1">
+                                                                {subcat.second_subcategory.map(
+                                                                    (secSubcat: any) => (
+                                                                        <Link
+                                                                            key={secSubcat.id}
+                                                                            href={`/categories?type=secsubcat&slug=${secSubcat.slug}`}
+                                                                            onClick={onClose}
+                                                                            className="block rounded-md px-2 py-1 text-[10px] text-gray-700 hover:text-deepOrange hover:bg-gray-100 transition-colors"
+                                                                        >
+                                                                            {secSubcat.name}
+                                                                        </Link>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                </div>
+            </div>
+        </div>
     );
 };
 
