@@ -215,7 +215,6 @@ const SearchPage = () => {
         <Drawer
           isOpen={isDrawerOpen}
           onClose={() => dispatch(setDrawerOpen(false))}
-          userName="User"
           messageCount={0}
         />
         

@@ -57,7 +57,6 @@ export default function Home() {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => dispatch(setDrawerOpen(false))}
-        userName="Steven"
         messageCount={3}
       />
       <div className={"mb-4"}>
