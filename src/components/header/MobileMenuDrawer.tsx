@@ -26,7 +26,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
     const { categories } = useAppSelector((state) => state.products);
     const { isAuthenticated, user, profile } = useAppSelector((state) => state.auth);
 
-    const displayEmail = profile?.email || user?.user?.email || '';
+    const displayEmail = profile?.email || user?.email || '';
 
     const toggleExpand = (label: string) => {
         setExpandedItems(prev => ({
