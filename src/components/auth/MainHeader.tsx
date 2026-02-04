@@ -61,7 +61,6 @@ function MainHeader() {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => dispatch(setDrawerOpen(false))}
-        userName="Steven"
         messageCount={3}
       />
       <div className="bg-white border-b border-gray-300 relative pr-4">
