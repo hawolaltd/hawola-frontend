@@ -512,10 +512,13 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                     )}
 
                     {/* Third Level Categories Panel - Takes 1/4 of width on the right */}
-                    {selectedSubCategoryId && categories?.categories
-                      ?.find((cat: any) => cat.id === selectedCategoryId)
-                      ?.subcategory?.find((subcat: any) => subcat.id === selectedSubCategoryId)
-                      ?.second_subcategory?.length > 0 ? (
+                    {selectedSubCategoryId != null &&
+                    ((categories?.categories
+                        ?.find((cat: any) => cat.id === selectedCategoryId)
+                        ?.subcategory?.find(
+                          (subcat: any) => subcat.id === selectedSubCategoryId
+                        )
+                        ?.second_subcategory?.length ?? 0) > 0) ? (
                       <div className="w-1/4 bg-gray-100 border-l border-gray-200 p-4 overflow-y-auto h-[400px]">
                         <div className="space-y-1">
                           {categories?.categories
