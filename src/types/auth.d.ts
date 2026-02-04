@@ -14,7 +14,8 @@ export interface RegisterFormType {
 
 export interface ChangePasswordType {
     old_password: string;
-    new_password: string;
+    new_password1: string;
+    new_password2: string;
 }
 
 export interface LoginResponse {
