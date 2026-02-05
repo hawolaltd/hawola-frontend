@@ -28,8 +28,7 @@ export default function ForgotPasswordForm() {
         console.log(res)
 
         if (res?.type.includes('fulfilled')){
-            toast.success("Password reset e-mail has been sent.")
-            router.push('/auth/reset-password')
+            toast.success("Password reset e-mail has been sent. Please check your inbox for a reset link.");
         }
     };
 

@@ -14,6 +14,7 @@ import {
   RegisterFormType,
   UpdateProfileDataType,
   UserProfileResponse,
+  LoginCodeVerifyPayload,
 } from "@/types/auth";
 import { AddToCartType } from "@/types/product";
 import storage from "redux-persist/lib/storage";
@@ -54,6 +55,33 @@ const login = async (userData: LoginFormType) => {
     );
     // localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
     // localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
+  }
+
+  return response.data;
+};
+
+// Request one-time login code (magic link)
+const requestLoginCode = async (email: string) => {
+  const response = await axiosInstance.post(API + API_URL + "/login/code/request/", {
+    email,
+  });
+
+  return response.data;
+};
+
+// Verify one-time login code and receive JWT tokens
+const verifyLoginCode = async (data: LoginCodeVerifyPayload) => {
+  const response = await axiosInstance.post(
+    API + API_URL + "/login/code/verify/",
+    data
+  );
+
+  if (response.data) {
+    Cookies.set(authTokenStorageKeyName as string, response.data.access);
+    Cookies.set(
+      authRefreshTokenStorageKeyName as string,
+      response.data.refresh
+    );
   }
 
   return response.data;
@@ -137,6 +165,8 @@ const authService = {
   register,
   logout,
   login,
+  requestLoginCode,
+  verifyLoginCode,
   changePassword,
   forgotPassword,
   resetPassword,

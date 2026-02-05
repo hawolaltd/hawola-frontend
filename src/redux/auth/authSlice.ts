@@ -6,6 +6,7 @@ import {
   RegisterFormType,
   UpdateProfileDataType,
   UserProfileResponse,
+  LoginCodeVerifyPayload,
 } from "@/types/auth";
 import authService from "@/redux/auth/authService";
 import { toast } from "sonner";
@@ -86,6 +87,52 @@ export const changePassword = createAsyncThunk(
         error.error ||
         error.toString();
       toast.error(message);
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Request one-time login code
+export const requestLoginCode = createAsyncThunk(
+  "auth/requestLoginCode",
+  async (email: string, thunkAPI) => {
+    try {
+      return await authService.requestLoginCode(email);
+    } catch (error: any) {
+      console.log("error from slice", error);
+      const message =
+        (error.response &&
+          error.response.data &&
+          (error.response.data.message ||
+            error.response.data.detail ||
+            error.response.data.error)) ||
+        error.message ||
+        error.error ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Verify one-time login code
+export const verifyLoginCode = createAsyncThunk(
+  "auth/verifyLoginCode",
+  async (data: LoginCodeVerifyPayload, thunkAPI) => {
+    try {
+      return await authService.verifyLoginCode(data);
+    } catch (error: any) {
+      console.log("error from slice", error);
+      const message =
+        (error.response &&
+          error.response.data &&
+          (error.response.data.message ||
+            error.response.data.detail ||
+            error.response.data.error)) ||
+        error.message ||
+        error.error ||
+        error.toString();
 
       return thunkAPI.rejectWithValue(message);
     }
@@ -234,7 +281,11 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
+        // dj-rest-auth login returns { access, refresh, user }
+        // keep only user object in state.user for UI simplicity
+        // but fall back gracefully if shape differs
+        // @ts-ignore
+        state.user = action.payload?.user || action.payload;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -287,6 +338,32 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(requestLoginCode.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(requestLoginCode.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(requestLoginCode.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(verifyLoginCode.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyLoginCode.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        // Response shape from /login/code/verify/ matches normal login
+        // @ts-ignore
+        state.user = action.payload?.user || action.payload;
+      })
+      .addCase(verifyLoginCode.rejected, (state, action) => {
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;

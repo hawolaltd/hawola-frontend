@@ -38,6 +38,11 @@ export interface LoginResponse {
     }
 }
 
+export interface LoginCodeVerifyPayload {
+    email: string;
+    code: string;
+}
+
 export interface ForgotPasswordFormType {
     email: string;
 }

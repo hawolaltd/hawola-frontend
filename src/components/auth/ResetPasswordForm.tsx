@@ -20,9 +20,21 @@ export default function ResetPasswordForm() {
 
 
     const onSubmit = async (data: ForgotPasswordConfirmFormType) => {
-        console.log(data);
+        // Pull uid and token from the URL (sent via email link)
+        const { uid, token } = router.query;
 
-        const  res = await dispatch(resetPassword(data))
+        if (!uid || !token || typeof uid !== "string" || typeof token !== "string") {
+            toast.error("Invalid or missing reset link. Please request a new password reset.");
+            return;
+        }
+
+        const payload: ForgotPasswordConfirmFormType = {
+            ...data,
+            uid,
+            token,
+        };
+
+        const  res = await dispatch(resetPassword(payload))
 
         console.log(res)
 

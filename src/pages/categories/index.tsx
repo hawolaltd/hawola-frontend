@@ -100,6 +100,12 @@ function Categories() {
   const currentCategoryInfo = getCurrentCategoryInfo();
   const promotedProducts = getPromotedProducts();
 
+  // Compute banner src with safe fallback to placeholder
+  const bannerSrc =
+    currentCategoryInfo?.image && (currentCategoryInfo as any).image?.full_size
+      ? (currentCategoryInfo as any).image.full_size
+      : "/imgs/page/blog/img-big5.png";
+
   // Combine promoted products with regular products, ensuring promoted products come first
   const allProducts = [...promotedProducts?.filter(item => item.name), ...(currentProducts || [])];
 
@@ -144,15 +150,14 @@ function Categories() {
     return (
       <AuthLayout>
         <div className={`h-fit pb-28`}>
-          {/* Show banner if available */}
-          {currentCategoryInfo?.image && (
-            <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
-              <img
-                src={currentCategoryInfo.image?.full_size}
-                alt={"category banner"}
-              />
-            </div>
-          )}
+          {/* Show banner with placeholder if category image is missing */}
+          <div className="container mx-auto max-w-screen-xl flex justify-center py-8">
+            <img
+              src={bannerSrc}
+              alt={"category banner"}
+              className="w-full h-52 object-cover"
+            />
+          </div>
 
           {/* Show subcategory slider if available */}
           {type !== "subsubcat" && currentCategoryInfo?.subcategory && (
@@ -216,12 +221,7 @@ function Categories() {
       <div className={`h-fit pb-28`}>
         <div className="container mx-auto max-w-screen-full flex justify-center py-8">
           <img
-            src={
-              currentCategoryInfo?.image
-                ? currentCategoryInfo?.image?.full_size
-                : "/imgs/page/blog/img-big5.png"
-            }
-            // src={"/imgs/page/blog/img-big5.png"}
+            src={bannerSrc}
             alt={"category banner"}
             className="w-full h-52 object-cover"
           />
