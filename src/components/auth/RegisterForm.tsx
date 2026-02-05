@@ -19,8 +19,8 @@ const getAttemptsKey = (email: string) => `resend_attempts_${email}`;
 const getCooldownKey = (email: string) => `resend_cooldown_${email}`;
 
 function RegisterForm() {
-
-    const {control, handleSubmit, formState: {errors}, reset} = useForm<RegisterFormType>();
+    
+    const {control, handleSubmit, formState: {errors}, reset, getValues} = useForm<RegisterFormType>();
 
     const [regSuccess, setRegSuccess] = useState(false)
     const [formData, setFormData] = useState<RegisterFormType | null>(null)
@@ -166,9 +166,14 @@ function RegisterForm() {
 
         setFormData(data)
 
+        // Auto-generate username from email (no separate username input)
         const finalData = {
-            email: data.email, username: data.username, password1: data.password1, password2: data.password2, gender: "M"
-        }
+            email: data.email,
+            username: data.email,
+            password1: data.password1,
+            password2: data.password2,
+            gender: "M"
+        };
         const res = await dispatch(register(finalData))
 
         console.log(res)
@@ -388,23 +393,7 @@ function RegisterForm() {
                         />
 
                     </div>
-                    <div>
-                        <ControlledInput<RegisterFormType>
-                            control={control}
-                            errors={errors}
-                            name="username"
-                            label=" Username*"
-                            type="text"
-                            placeholder="stevenjob"
-                            defaultValue={''}
-                            rules={{
-                                required: 'Username is required', minLength: {
-                                    value: 5, message: 'Username must be at least 5 characters',
-                                },
-                            }}
-                            className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
-                        />
-                    </div>
+                    {/* Username field hidden: we derive username from email on submit */}
                     <div>
                         <ControlledInput<RegisterFormType>
                             control={control}
@@ -415,8 +404,16 @@ function RegisterForm() {
                             placeholder="*********"
                             defaultValue={''}
                             rules={{
-                                required: 'Password is required', minLength: {
-                                    value: 8, message: 'Password must be at least 8 characters',
+                                required: 'Password is required',
+                                validate: (value) => {
+                                    if (!value || value.length < 8) {
+                                        return 'Password must be at least 8 characters';
+                                    }
+                                    const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+                                    if (!strongRegex.test(value)) {
+                                        return 'Password must include upper & lower case letters, a number, and a symbol';
+                                    }
+                                    return true;
                                 },
                             }}
                             className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
@@ -433,8 +430,16 @@ function RegisterForm() {
                             placeholder="*********"
                             defaultValue={''}
                             rules={{
-                                required: 'Password is required', minLength: {
-                                    value: 8, message: 'Password must be at least 8 characters',
+                                required: 'Password is required',
+                                validate: (value) => {
+                                    const pwd1 = getValues('password1');
+                                    if (!value || value.length < 8) {
+                                        return 'Password must be at least 8 characters';
+                                    }
+                                    if (value !== pwd1) {
+                                        return 'Passwords do not match';
+                                    }
+                                    return true;
                                 },
                             }}
                             className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"

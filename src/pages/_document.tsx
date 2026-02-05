@@ -5,6 +5,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <meta name="description" content="Hawola - Your trusted marketplace" />
+        <link rel="icon" href="/fav.png" />
       </Head>
       <body className="antialiased">
         <Main />

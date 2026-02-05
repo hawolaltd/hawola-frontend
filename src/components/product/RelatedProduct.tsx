@@ -16,9 +16,10 @@ interface ProductCardProps {
 const RelatedProduct = ({product}: ProductCardProps) => {
     const {products} = useAppSelector(state => state.products)
 
-    return (<section className="max-w-screen-2xl flex gap-4 justify-center py-4">
+    return (
+      <section className="w-full flex flex-col gap-4 py-8">
         {/* Related Products */}
-        <div className={'max-w-screen-xl w-full flex  flex-col gap-4'}>
+        <div className="w-full flex flex-col gap-4">
             <div className={'border-b border-b-detailsBorder pb-6'}>
                 <div className="mx-auto text-left mb-8 w-fullsw">
                     <div className={'flex items-center justify-between gap-8 pt-4'}>

@@ -5,10 +5,10 @@ import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   addToCarts,
   addToCartsLocal,
-  deleteCart,
   getCarts,
   getMerchants,
   getWishList,
+  deleteWishList,
 } from "@/redux/product/productSlice";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import moment from "moment";
@@ -44,16 +44,16 @@ export default function WishlistPage() {
   const [quantity, setQuantity] = useState(1);
   const dispatch = useAppDispatch();
 
-  const handleDeleteCart = async (selectedPro: any) => {
+  // Remove a single item from the wishlist
+  const handleDeleteWishlist = async (item: any) => {
     setDeleting(true);
     try {
       const res = await dispatch(
-        deleteCart({ items: [selectedPro as number] })
+        deleteWishList({ items: item?.product?.id as number })
       );
       if (res?.type.includes("fulfilled")) {
-        toast.success("Deleted");
+        toast.success("Removed from wishlist");
         dispatch(getWishList());
-        setOpenDelete(false);
       }
     } catch (e) {
       console.log(e);
@@ -297,7 +297,7 @@ export default function WishlistPage() {
                             </button>
                             <button
                               disabled={deleting}
-                              onClick={() => handleDeleteCart(product?.id)}
+                              onClick={() => handleDeleteWishlist(product)}
                               className={`${
                                 deleting
                                   ? "cursor-not-allowed text-red-200"
@@ -339,8 +339,11 @@ export default function WishlistPage() {
             )}
           </div>
         </main>
-
-        <RelatedProduct product={product} />
+        <div className="container mx-auto py-4 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <RelatedProduct product={product} />
+          </div>
+        </div>
       </div>
     </AuthLayout>
   );
