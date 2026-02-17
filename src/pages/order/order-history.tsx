@@ -367,7 +367,6 @@ const OrderHistoryPage = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                 );
                             })
                         )}

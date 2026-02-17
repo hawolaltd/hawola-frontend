@@ -356,15 +356,15 @@ const authSlice = createSlice({
         if (typeof action.payload === 'string') {
           state.message = action.payload;
         } else if (action.payload && typeof action.payload === 'object') {
-          // Extract error message from object
-          if (action.payload.error) {
-            state.message = Array.isArray(action.payload.error) 
-              ? action.payload.error[0] 
-              : String(action.payload.error);
-          } else if (action.payload.message) {
-            state.message = String(action.payload.message);
-          } else if (action.payload.detail) {
-            state.message = String(action.payload.detail);
+          const payload = action.payload as { error?: string | string[]; message?: string; detail?: string };
+          if (payload.error) {
+            state.message = Array.isArray(payload.error) 
+              ? payload.error[0] 
+              : String(payload.error);
+          } else if (payload.message) {
+            state.message = String(payload.message);
+          } else if (payload.detail) {
+            state.message = String(payload.detail);
           } else {
             state.message = 'Unable to log in. Please check your credentials.';
           }

@@ -32,6 +32,7 @@ interface OrderDetail {
     isDelivered: boolean;
     user_confirm_order: boolean;
     user_open_dispute: boolean;
+    dispute_id?: number | null;
     image: string;
     is_reviewed: boolean;
     is_merchant_reviewed: boolean;
@@ -175,6 +176,7 @@ interface NewOrderDetailsResponse {
     isDelivered: boolean;
     user_confirm_order: boolean;
     user_open_dispute: boolean;
+    dispute_id?: number | null;
     image: string;
     is_reviewed: boolean;
     is_merchant_reviewed: boolean;
