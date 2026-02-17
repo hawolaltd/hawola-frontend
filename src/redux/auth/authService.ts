@@ -42,22 +42,57 @@ const logout = async () => {
 
 //login user
 const login = async (userData: LoginFormType) => {
-  const response = await axiosInstance.post(
-    API + API_URL + "/login/",
-    userData
-  );
-
-  if (response.data) {
-    Cookies.set(authTokenStorageKeyName as string, response.data.access);
-    Cookies.set(
-      authRefreshTokenStorageKeyName as string,
-      response.data.refresh
+  // Log what's being sent to the API
+  console.log('[FRONTEND] authService.login - User data received:', {
+    email: userData.email,
+    password: userData.password ? '***' : 'MISSING',
+    hasEmail: !!userData.email,
+    hasPassword: !!userData.password,
+    dataType: typeof userData,
+    dataKeys: Object.keys(userData),
+    dataStringified: JSON.stringify(userData)
+  });
+  
+  const url = API + API_URL + "/login/";
+  console.log('[FRONTEND] authService.login - API URL:', url);
+  console.log('[FRONTEND] authService.login - Request payload:', userData);
+  console.log('[FRONTEND] authService.login - Request payload (stringified):', JSON.stringify(userData));
+  
+  try {
+    const response = await axiosInstance.post(
+      url,
+      userData
     );
-    // localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
-    // localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
-  }
+    
+    console.log('[FRONTEND] authService.login - Response received:', {
+      status: response.status,
+      hasData: !!response.data,
+      hasAccess: !!response.data?.access,
+      hasRefresh: !!response.data?.refresh
+    });
 
-  return response.data;
+    if (response.data) {
+      Cookies.set(authTokenStorageKeyName as string, response.data.access);
+      Cookies.set(
+        authRefreshTokenStorageKeyName as string,
+        response.data.refresh
+      );
+      // localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
+      // localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
+    }
+
+    return response.data;
+  } catch (error: any) {
+    // Log the error for debugging
+    console.error('[FRONTEND] authService.login - Error caught:', {
+      error,
+      response: error?.response?.data,
+      status: error?.response?.status,
+    });
+    
+    // Re-throw the error so it can be handled by the thunk
+    throw error;
+  }
 };
 
 // Request one-time login code (magic link)

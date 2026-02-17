@@ -9,6 +9,7 @@ import {
   TruckIcon,
   ArrowRightIcon,
   ShoppingBagIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 const Orders: NextPage = () => {
@@ -120,10 +121,13 @@ const Orders: NextPage = () => {
         <div className="divide-y divide-gray-200">
           {paginatedOrders?.map((order) => {
             const statusConfig = getStatusConfig(order);
+            const isDisputed = Boolean(order?.user_open_dispute || order?.dispute_id != null);
             return (
               <div
                 key={order?.id}
-                className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                className={`grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 transition-colors cursor-pointer ${
+                  isDisputed ? "bg-red-50/50 border-l-4 border-red-500 hover:bg-red-50/70" : "hover:bg-gray-50"
+                }`}
                 onClick={() => router.push(`/order/details/${order?.orderitem_number}`)}
               >
                 {/* Product Info */}
@@ -154,6 +158,12 @@ const Orders: NextPage = () => {
                   <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">
                     {order?.orderitem_number}
                   </p>
+                  {isDisputed && (
+                    <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 w-fit">
+                      <ExclamationTriangleIcon className="w-3.5 h-3.5" />
+                      Disputed
+                    </span>
+                  )}
                 </div>
 
                 {/* Price */}
@@ -187,7 +197,7 @@ const Orders: NextPage = () => {
                 </div>
 
                 {/* Status - Color Coded */}
-                <div className="col-span-6 md:col-span-2 flex items-center">
+                <div className="col-span-6 md:col-span-2 flex items-center gap-2 flex-wrap">
                   {order?.isDelivered ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 border border-green-200 w-full md:w-auto">
                       <CheckCircleIcon className="w-4 h-4" />
@@ -204,11 +214,36 @@ const Orders: NextPage = () => {
                       <span className="text-sm font-medium">Processing</span>
                     </div>
                   )}
+                  {isDisputed && (
+                    <span className="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800">Disputed</span>
+                  )}
                 </div>
 
-                {/* Action */}
-                <div className="col-span-6 md:col-span-2 flex items-center justify-end">
-                  <ArrowRightIcon className="w-5 h-5 text-gray-400" />
+                {/* Action - disputed badge is visual only (no link) */}
+                <div
+                  className="col-span-6 md:col-span-2 flex items-center justify-end gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isDisputed && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-600 text-white cursor-default">
+                      <ExclamationTriangleIcon className="w-4 h-4" />
+                      Disputed
+                    </span>
+                  )}
+                  <span
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/order/details/${order?.orderitem_number}`)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(`/order/details/${order?.orderitem_number}`);
+                      }
+                    }}
+                  >
+                    <ArrowRightIcon className="w-5 h-5 text-gray-400" />
+                  </span>
                 </div>
               </div>
             );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import ControlledInput from "@/components/shared/ControlledInput";
 import {useForm} from "react-hook-form";
@@ -24,39 +24,189 @@ export default function LoginForm() {
     const {isLoading, error, message } = useAppSelector(state => state.auth)
     const {localCart} = useAppSelector(state => state.products)
 
+    // Handle errors from Redux state (in case error is set but not caught in onSubmit)
+    useEffect(() => {
+        if (error && message) {
+            try {
+                const errorMessage = typeof message === 'string' 
+                    ? message 
+                    : normalizeErrors(message);
+                
+                if (errorMessage) {
+                    toast.error(errorMessage, {
+                        style: {
+                            background: "#ef4444",
+                            color: "white",
+                        },
+                        duration: 5000,
+                    });
+                }
+            } catch (e) {
+                // If error handling fails, show generic message
+                console.error('Error in useEffect error handler:', e);
+                toast.error('Unable to log in. Please check your email and password.', {
+                    style: {
+                        background: "#ef4444",
+                        color: "white",
+                    },
+                    duration: 5000,
+                });
+            }
+        }
+    }, [error, message]);
+
 
 
     const onSubmit = async (data: LoginFormType) => {
-        const  res = await dispatch(login({
-            ...data,
-            username: data.email
-        }))
-
-        // Treat login as successful only if fulfilled AND access token is present
-        // to avoid "fake" logins when backend blocks activation.
-        // @ts-ignore
-        const hasAccessToken = res?.type?.includes('fulfilled') && res?.payload?.access;
-
-        if (hasAccessToken){
-            toast.success("Welcome Back to HAWOLA")
-
-            if (localCart?.items?.length > 0){
-                dispatch( addToCarts({
-                    items: localCart?.items.map(cart => ({
-                        qty: cart.qty,
-                        product: cart?.product?.id
-                    }))
-                }))
-                dispatch(addToCartsLocal({items: []}))
+        // Log what the form is submitting
+        console.log('[FRONTEND] LoginForm.onSubmit - Form data:', {
+            email: data.email,
+            password: data.password ? '***' : 'MISSING',
+            hasEmail: !!data.email,
+            hasPassword: !!data.password
+        });
+        
+        const loginPayload = {
+            email: data.email,
+            password: data.password
+        };
+        
+        console.log('[FRONTEND] LoginForm.onSubmit - Login payload being dispatched:', {
+            email: loginPayload.email,
+            password: loginPayload.password ? '***' : 'MISSING',
+            payloadKeys: Object.keys(loginPayload),
+            payloadStringified: JSON.stringify(loginPayload)
+        });
+        
+        try {
+            // Use promise-based approach to properly catch errors
+            let res;
+            try {
+                res = await dispatch(login(loginPayload));
+            } catch (dispatchError: any) {
+                // If dispatch itself throws, handle it
+                console.error('Dispatch error:', dispatchError);
+                res = { 
+                    type: 'auth/login/rejected', 
+                    payload: dispatchError?.message || 'Login failed. Please try again.' 
+                };
             }
-            router.push('/')
-        }else {
-            const errorMessage = normalizeErrors(message)
-            toast.error(errorMessage, {style: {
+
+            // Check if the action was fulfilled
+            // @ts-ignore
+            const isFulfilled = res?.type?.includes('fulfilled');
+            // @ts-ignore
+            const isRejected = res?.type?.includes('rejected');
+            
+            // @ts-ignore
+            const hasAccessToken = isFulfilled && res?.payload?.access;
+
+            if (hasAccessToken){
+                toast.success("Welcome Back to HAWOLA")
+
+                if (localCart?.items?.length > 0){
+                    dispatch( addToCarts({
+                        items: localCart?.items.map(cart => ({
+                            qty: cart.qty,
+                            product: cart?.product?.id
+                        }))
+                    }))
+                    dispatch(addToCartsLocal({items: []}))
+                }
+                router.push('/')
+            } else if (isRejected) {
+                // Login failed - extract error from the rejected action
+                let errorMessage = 'Unable to log in. Please check your email and password.';
+                
+                try {
+                    // @ts-ignore
+                    const errorPayload = res?.payload;
+                    
+                    if (errorPayload) {
+                        if (typeof errorPayload === 'string') {
+                            errorMessage = errorPayload;
+                        } else if (errorPayload && typeof errorPayload === 'object') {
+                            if (errorPayload.error) {
+                                // Handle format: {"error": ["message"]}
+                                if (Array.isArray(errorPayload.error)) {
+                                    errorMessage = errorPayload.error[0] || errorMessage;
+                                } else if (typeof errorPayload.error === 'string') {
+                                    errorMessage = errorPayload.error;
+                                }
+                            } else if (errorPayload.message) {
+                                errorMessage = errorPayload.message;
+                            } else if (errorPayload.detail) {
+                                errorMessage = errorPayload.detail;
+                            } else {
+                                // Try normalizeErrors as fallback
+                                const normalized = normalizeErrors(errorPayload);
+                                if (normalized) {
+                                    errorMessage = normalized;
+                                }
+                            }
+                        }
+                    } else if (message) {
+                        // Fallback to Redux state message
+                        try {
+                            errorMessage = typeof message === 'string' ? message : normalizeErrors(message) || errorMessage;
+                        } catch (e) {
+                            // If normalizeErrors fails, use default
+                            console.error('Error normalizing message:', e);
+                        }
+                    }
+                } catch (parseError) {
+                    // If error parsing fails, use default message
+                    console.error('Error parsing error payload:', parseError);
+                }
+                
+                // Show user-friendly error message
+                toast.error(errorMessage, {
+                    style: {
+                        background: "#ef4444",
+                        color: "white",
+                    },
+                    duration: 5000,
+                });
+            } else {
+                // Unknown state - show generic error
+                toast.error('Unable to log in. Please check your email and password.', {
+                    style: {
+                        background: "#ef4444",
+                        color: "white",
+                    },
+                    duration: 5000,
+                });
+            }
+        } catch (error: any) {
+            // Catch any unexpected errors to prevent app crash
+            console.error('Login form error:', error);
+            
+            let errorMessage = 'An unexpected error occurred. Please try again.';
+            
+            if (error?.response?.data) {
+                const errorData = error.response.data;
+                if (errorData.error) {
+                    if (Array.isArray(errorData.error)) {
+                        errorMessage = errorData.error[0] || errorMessage;
+                    } else if (typeof errorData.error === 'string') {
+                        errorMessage = errorData.error;
+                    }
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.detail) {
+                    errorMessage = errorData.detail;
+                }
+            } else if (error?.message) {
+                errorMessage = error.message;
+            }
+            
+            toast.error(errorMessage, {
+                style: {
                     background: "#ef4444",
                     color: "white",
-                },}
-            )
+                },
+                duration: 5000,
+            });
         }
 
     };
@@ -79,17 +229,35 @@ export default function LoginForm() {
         const res = await dispatch(requestLoginCode(email));
 
         if (res?.type.includes("fulfilled")) {
+            // Clear the form after successful request
+            setMagicEmail("");
             toast.success(
-                "If an account with that email exists, we've sent you a one-time login link."
+                "If an account with that email exists, we've sent you a one-time login link. Please check your email."
             );
         } else {
-            const errorMessage = normalizeErrors(message);
-            toast.error(errorMessage, {
-                style: {
-                    background: "#ef4444",
-                    color: "white",
-                },
-            });
+            // Check if it's a rate limit error
+            const errorPayload = (res as any)?.payload;
+            if (errorPayload?.retry_after) {
+                const minutes = Math.ceil(errorPayload.retry_after / 60);
+                toast.error(
+                    `Too many requests. Please wait ${minutes} minute(s) before requesting another login link.`,
+                    {
+                        style: {
+                            background: "#ef4444",
+                            color: "white",
+                        },
+                        duration: 5000,
+                    }
+                );
+            } else {
+                const errorMessage = normalizeErrors(message);
+                toast.error(errorMessage, {
+                    style: {
+                        background: "#ef4444",
+                        color: "white",
+                    },
+                });
+            }
         }
     };
 

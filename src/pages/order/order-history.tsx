@@ -3,6 +3,7 @@ import {useAppDispatch, useAppSelector} from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
 import {amountFormatter} from '@/util';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import {
     CheckCircleIcon,
     ClockIcon,
@@ -21,6 +22,7 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import DisputeModal from "@/components/product/DisputeModal";
 
 const OrderHistoryPage = () => {
+    const router = useRouter();
     const dispatch = useAppDispatch();
     const {ordersHistory, isLoading, error, products} = useAppSelector(state => state.products);
     const [statusFilter, setStatusFilter] = useState('all');
@@ -230,10 +232,26 @@ const OrderHistoryPage = () => {
                         ) : (
                             filteredOrders?.map((order: any) => {
                                 const statusBadge = getStatusBadge(order);
+                                const isDisputed = Boolean(order.user_open_dispute || order.dispute_id != null);
                                 return (
-                                    <div key={order.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden">
-                                        <Link href={`/order/${order.id}`}>
-                                            <div className="p-4 md:p-6">
+                                    <div
+                                        key={order.id}
+                                        className={`rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden ${
+                                            isDisputed ? 'bg-red-50/50 border-2 border-red-300' : 'bg-white'
+                                        }`}
+                                    >
+                                        <div
+                                            className="p-4 md:p-6 cursor-pointer"
+                                            onClick={() => router.push(`/order/details/${order.orderitem_number}`)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    router.push(`/order/details/${order.orderitem_number}`);
+                                                }
+                                            }}
+                                        >
                                                 {/* Order Header */}
                                                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 pb-4 border-b">
                                                     <div className="flex items-center gap-4 mb-3 md:mb-0">
@@ -248,11 +266,16 @@ const OrderHistoryPage = () => {
                                                         
                                                         {/* Order Info */}
                                                         <div>
-                                                            <div className="flex items-center gap-2 mb-1">
+                                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                                 <span className="text-xs font-medium text-gray-500">Order #</span>
                                                                 <span className="font-mono text-sm font-semibold text-primary">
                                                                     {order.orderitem_number}
                                                                 </span>
+                                                                {isDisputed && (
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                                                        Disputed
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">
                                                                 {order.product?.name || order.name}
@@ -300,10 +323,16 @@ const OrderHistoryPage = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Action Buttons */}
-                                                <div className="flex flex-wrap gap-2">
+                                                {/* Action Buttons - stop propagation so card click doesn't run */}
+                                                <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                                                    {isDisputed && (
+                                                        <span className="flex-1 md:flex-none px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 cursor-default">
+                                                            <ExclamationTriangleIcon className="w-4 h-4" />
+                                                            Disputed
+                                                        </span>
+                                                    )}
                                                     <Link 
-                                                        href={`/order/${order.id}`}
+                                                        href={`/order/details/${order.orderitem_number}`}
                                                         className="flex-1 md:flex-none px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all font-medium text-sm text-center"
                                                     >
                                                         View Details
@@ -312,9 +341,9 @@ const OrderHistoryPage = () => {
                                                     {!order.isDelivered && (
                                                         <>
                                                             <button
+                                                                type="button"
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    e.stopPropagation();
                                                                     setSelectedOrderForDispute(order);
                                                                     setIsDisputeModalOpen(true);
                                                                 }}
@@ -324,19 +353,20 @@ const OrderHistoryPage = () => {
                                                                 File Dispute
                                                             </button>
                                                             
-                                                            <Link 
-                                                                href={`/disputes/${order.orderitem_number}`}
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                className="flex-1 md:flex-none px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-all font-medium text-sm border border-gray-200 flex items-center justify-center gap-2"
-                                                            >
-                                                                <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                                                                View Dispute
-                                                            </Link>
+                                                            {!isDisputed && (
+                                                                <Link 
+                                                                    href={`/disputes/${order.orderitem_number}`}
+                                                                    className="flex-1 md:flex-none px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-all font-medium text-sm border border-gray-200 flex items-center justify-center gap-2"
+                                                                >
+                                                                    <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                                                                    View Dispute
+                                                                </Link>
+                                                            )}
                                                         </>
                                                     )}
                                                 </div>
                                             </div>
-                                        </Link>
+                                        </div>
                                     </div>
                                 );
                             })

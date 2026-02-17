@@ -12,7 +12,7 @@ export default function ForgotPasswordForm() {
 
     const router = useRouter()
 
-    const { control, handleSubmit,  formState: { errors }, } = useForm<ForgotPasswordFormType>();
+    const { control, handleSubmit, formState: { errors }, reset } = useForm<ForgotPasswordFormType>();
 
     const dispatch = useAppDispatch()
 
@@ -23,12 +23,38 @@ export default function ForgotPasswordForm() {
     const onSubmit = async (data: ForgotPasswordFormType) => {
         console.log(data);
 
-        const  res = await dispatch(forgotPassword(data))
+        const res = await dispatch(forgotPassword(data));
 
-        console.log(res)
+        console.log(res);
 
         if (res?.type.includes('fulfilled')){
+            // Clear the form after successful request
+            reset();
             toast.success("Password reset e-mail has been sent. Please check your inbox for a reset link.");
+        } else {
+            // Check if it's a rate limit error
+            const errorPayload = (res as any)?.payload;
+            if (errorPayload?.retry_after) {
+                const minutes = Math.ceil(errorPayload.retry_after / 60);
+                toast.error(
+                    `Too many requests. Please wait ${minutes} minute(s) before requesting another password reset.`,
+                    {
+                        style: {
+                            background: "#ef4444",
+                            color: "white",
+                        },
+                        duration: 5000,
+                    }
+                );
+            } else {
+                const errorMessage = (errorPayload?.detail || errorPayload?.email?.[0] || "An error occurred. Please try again.");
+                toast.error(errorMessage, {
+                    style: {
+                        background: "#ef4444",
+                        color: "white",
+                    },
+                });
+            }
         }
     };
 

@@ -36,17 +36,70 @@ const initialState: AuthState = {
 export const login = createAsyncThunk(
   "auth/login",
   async (
-    user: { username: string; email: string; password: string },
+    user: { email: string; password: string },
     thunkAPI
   ) => {
+    // Log what the thunk receives
+    console.log('[FRONTEND] authSlice.login - Thunk received user data:', {
+      email: user.email,
+      password: user.password ? '***' : 'MISSING',
+      hasEmail: !!user.email,
+      hasPassword: !!user.password,
+      userType: typeof user,
+      userKeys: Object.keys(user),
+      userStringified: JSON.stringify(user)
+    });
+    
     try {
-      return await authService.login(user);
+      console.log('[FRONTEND] authSlice.login - Calling authService.login with:', user);
+      const result = await authService.login(user);
+      console.log('[FRONTEND] authSlice.login - authService.login returned:', {
+        hasResult: !!result,
+        hasAccess: !!result?.access,
+        hasRefresh: !!result?.refresh
+      });
+      return result;
     } catch (error: any) {
-      const message =
-        error.response.data ||
-        error.response.data.message ||
-        error.message ||
-        error.toString();
+      console.error('[FRONTEND] authSlice.login - Error caught:', {
+        error,
+        errorMessage: error?.message,
+        errorResponse: error?.response?.data,
+        errorStatus: error?.response?.status
+      });
+      
+      // Extract error message from various possible formats
+      let message = 'Unable to log in. Please check your credentials.';
+      
+      if (error?.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle format: {"error": ["message"]}
+        if (errorData.error) {
+          if (Array.isArray(errorData.error)) {
+            message = errorData.error[0] || message;
+          } else if (typeof errorData.error === 'string') {
+            message = errorData.error;
+          }
+        }
+        // Handle format: {"message": "..."}
+        else if (errorData.message) {
+          message = errorData.message;
+        }
+        // Handle format: {"detail": "..."}
+        else if (errorData.detail) {
+          message = errorData.detail;
+        }
+        // Handle format: string directly
+        else if (typeof errorData === 'string') {
+          message = errorData;
+        }
+        // Handle format: array of errors
+        else if (Array.isArray(errorData)) {
+          message = errorData[0] || message;
+        }
+      } else if (error?.message) {
+        message = error.message;
+      }
 
       return thunkAPI.rejectWithValue(message);
     }
@@ -101,6 +154,10 @@ export const requestLoginCode = createAsyncThunk(
       return await authService.requestLoginCode(email);
     } catch (error: any) {
       console.log("error from slice", error);
+      // For rate limit errors, pass through the full error response
+      if (error.response?.status === 429) {
+        return thunkAPI.rejectWithValue(error.response.data);
+      }
       const message =
         (error.response &&
           error.response.data &&
@@ -111,7 +168,7 @@ export const requestLoginCode = createAsyncThunk(
         error.error ||
         error.toString();
 
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(error.response?.data || { detail: message });
     }
   }
 );
@@ -147,6 +204,10 @@ export const forgotPassword = createAsyncThunk(
       return await authService.forgotPassword(data);
     } catch (error: any) {
       console.log("error from slice", error);
+      // For rate limit errors, pass through the full error response
+      if (error.response?.status === 429) {
+        return thunkAPI.rejectWithValue(error.response.data);
+      }
       const message =
         (error.response &&
           error.response.data &&
@@ -154,9 +215,8 @@ export const forgotPassword = createAsyncThunk(
         error.message ||
         error.error ||
         error.toString();
-      toast.error(message);
 
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue(error.response?.data || { detail: message });
     }
   }
 );
@@ -290,8 +350,27 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.user = null;
+        state.isAuthenticated = false;
         state.error = true;
-        state.message = action.payload;
+        // Ensure message is always a string to prevent crashes
+        if (typeof action.payload === 'string') {
+          state.message = action.payload;
+        } else if (action.payload && typeof action.payload === 'object') {
+          // Extract error message from object
+          if (action.payload.error) {
+            state.message = Array.isArray(action.payload.error) 
+              ? action.payload.error[0] 
+              : String(action.payload.error);
+          } else if (action.payload.message) {
+            state.message = String(action.payload.message);
+          } else if (action.payload.detail) {
+            state.message = String(action.payload.detail);
+          } else {
+            state.message = 'Unable to log in. Please check your credentials.';
+          }
+        } else {
+          state.message = 'Unable to log in. Please check your credentials.';
+        }
       })
       .addCase(getUserProfile.pending, (state) => {
         state.isLoading = true;

@@ -6,6 +6,7 @@ import {register, resendConfirmationEmail} from "@/redux/auth/authSlice";
 import ControlledInput from "@/components/shared/ControlledInput";
 import {toast} from "sonner";
 import {useRouter} from "next/router";
+import Link from "next/link";
 import {normalizeErrors} from "@/util";
 import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
 
@@ -486,6 +487,12 @@ function RegisterForm() {
                             </span>
                         </div> : "Sign Up"}
                     </button>
+                    
+                    <Link href={'/auth/login'}>
+                        <p className="text-left text-xs text-[#435a8c] mt-4">
+                            Already have an account? <span className="text-blue-900 font-semibold">Sign In</span>
+                        </p>
+                    </Link>
                 </form>
             </div>}
 

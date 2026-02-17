@@ -31,6 +31,29 @@ function AppContent({ Component, pageProps }: AppProps) {
     
     // Sync cart from localStorage on app start
     dispatch(syncLocalCartFromStorage());
+
+    // Global error handler for unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      // Prevent the default browser error handling
+      event.preventDefault();
+      // You can also show a toast or log to an error reporting service here
+    };
+
+    // Global error handler for uncaught errors
+    const handleError = (event: ErrorEvent) => {
+      console.error('Uncaught error:', event.error);
+      // Prevent the default browser error handling
+      event.preventDefault();
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+    };
   }, [dispatch]);
 
   return (

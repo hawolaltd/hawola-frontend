@@ -173,6 +173,35 @@ const getSingleOrder = async (id: string) => {
     return response.data;
 };
 
+// get order item messages (customer)
+const getOrderItemMessages = async (orderitemNumber: string) => {
+    const response = await axiosInstance.get(
+        API + `orders/order-item/${orderitemNumber}/messages/`
+    );
+    return response.data;
+};
+
+// send order item message (customer)
+const sendOrderItemMessage = async (
+    orderitemNumber: string,
+    message: string
+) => {
+    const response = await axiosInstance.post(
+        API + `orders/order-item/${orderitemNumber}/message/`,
+        { message }
+    );
+    return response.data;
+};
+
+// confirm order item delivery (customer)
+const confirmOrderItem = async (orderitemNumber: string) => {
+    const response = await axiosInstance.post(
+        API + 'orders/confirm-orderitem/',
+        { order_id: orderitemNumber, user_confirm_order: true }
+    );
+    return response.data;
+};
+
 // update payment
 const updatePayment = async (data: any) => {
     const response = await axiosInstance.post(
@@ -300,6 +329,9 @@ const productService = {
     updatePayment,
     getOrderHistory,
     getSingleOrder,
+    getOrderItemMessages,
+    sendOrderItemMessage,
+    confirmOrderItem,
     getReviews,
     getMerchantReviews,
     clearProductById,

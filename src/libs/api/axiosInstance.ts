@@ -50,6 +50,21 @@ axiosInstance.interceptors.request.use(
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
+        
+        // Log request details for login endpoint
+        if (config.url?.includes('/login/')) {
+            console.log('[FRONTEND] axiosInstance - Request interceptor for login:', {
+                url: config.url,
+                method: config.method,
+                headers: config.headers,
+                data: config.data,
+                dataStringified: config.data ? JSON.stringify(config.data) : 'NO DATA',
+                contentType: config.headers['Content-Type'],
+                hasData: !!config.data,
+                dataKeys: config.data ? Object.keys(config.data) : []
+            });
+        }
+        
         return config;
     },
     (error: AxiosError) => Promise.reject(error)
