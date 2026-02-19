@@ -49,11 +49,18 @@ const getStateLocations = async (id: string) => {
     return response.data;
 };
 
+// Public site settings (e.g. site_under_construction, date_time_till)
+const getSiteSettings = async () => {
+    const response = await axiosInstance.get(API + "site/settings/");
+    return response.data;
+};
+
 const generalService = {
     getAllStates,
     getStateLocations,
     getHomePage,
     getHomeInsight,
+    getSiteSettings,
 };
 
 export default generalService;

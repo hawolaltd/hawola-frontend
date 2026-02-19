@@ -8,11 +8,21 @@ import {
 import { RootState } from "@/store/store";
 import { HomeData } from "@/types/home";
 
+export interface SiteSettingsData {
+  site_under_construction?: boolean;
+  date_time_till?: string | null;
+  app_name?: string;
+  app_slogan?: string;
+  [key: string]: unknown;
+}
+
 interface GeneralState {
   states: StateDataResponse;
   stateLocations: StateLocationsResponse;
   homePage: HomeData;
   homeInsight: HomeData;
+  siteSettings: SiteSettingsData | null;
+  siteSettingsLoaded: boolean;
   isLoading: boolean;
   error: string | null | unknown;
   message: string | null | unknown;
@@ -23,6 +33,8 @@ const initialState: GeneralState = {
   stateLocations: {} as StateLocationsResponse,
   homePage: {} as HomeData,
   homeInsight: {} as HomeData,
+  siteSettings: null,
+  siteSettingsLoaded: false,
   isLoading: false,
   error: null,
   message: "",
@@ -100,6 +112,23 @@ export const getStateLocations = createAsyncThunk(
   }
 );
 
+export const getSiteSettings = createAsyncThunk(
+  "general/siteSettings",
+  async (_, thunkAPI) => {
+    try {
+      return await generalService.getSiteSettings();
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          (error.response.data.detail || error.response.data.message)) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const generalSlice = createSlice({
   name: "general",
   initialState,
@@ -163,6 +192,17 @@ const generalSlice = createSlice({
         state.homeInsight = {} as HomeData;
         state.error = true;
         state.message = action.payload;
+      })
+      .addCase(getSiteSettings.pending, (state) => {
+        state.siteSettingsLoaded = false;
+      })
+      .addCase(getSiteSettings.fulfilled, (state, action) => {
+        state.siteSettings = action.payload as SiteSettingsData;
+        state.siteSettingsLoaded = true;
+      })
+      .addCase(getSiteSettings.rejected, (state) => {
+        state.siteSettings = null;
+        state.siteSettingsLoaded = true;
       });
   },
 });

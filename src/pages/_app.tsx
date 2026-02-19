@@ -10,16 +10,25 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/store/store";
-import { Provider, useDispatch } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { Toaster } from "sonner";
 import { useEffect } from "react";
 import { checkTokenValidity, clearAllStorage } from "@/util";
 import { clearAuthState } from "@/redux/auth/authSlice";
 import { syncLocalCartFromStorage } from "@/redux/product/productSlice";
+import { getSiteSettings } from "@/redux/general/generalSlice";
+import { RootState } from "@/store/store";
+import LaunchPage from "@/components/LaunchPage";
 
 function AppContent({ Component, pageProps }: AppProps) {
   const dispatch = useDispatch();
+  const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
+  const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
+
+  useEffect(() => {
+    dispatch(getSiteSettings());
+  }, [dispatch]);
 
   useEffect(() => {
     // Check if tokens exist on app initialization
@@ -55,6 +64,23 @@ function AppContent({ Component, pageProps }: AppProps) {
       window.removeEventListener('error', handleError);
     };
   }, [dispatch]);
+
+  // Only show launch page when API has returned and explicitly says under construction (false by default until API returns true)
+  const showLaunchPage =
+    siteSettingsLoaded &&
+    siteSettings?.site_under_construction === true &&
+    siteSettings?.date_time_till;
+
+  if (showLaunchPage && siteSettings) {
+    return (
+      <>
+        <Head>
+          <title>{siteSettings.app_name || "Hawola"} | Coming Soon</title>
+        </Head>
+        <LaunchPage siteSettings={siteSettings} />
+      </>
+    );
+  }
 
   return (
     <>
