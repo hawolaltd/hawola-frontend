@@ -10,7 +10,7 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/store/store";
-import { Provider, useDispatch, useSelector } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { Toaster } from "sonner";
 import { useEffect } from "react";
@@ -19,10 +19,11 @@ import { clearAuthState } from "@/redux/auth/authSlice";
 import { syncLocalCartFromStorage } from "@/redux/product/productSlice";
 import { getSiteSettings } from "@/redux/general/generalSlice";
 import { RootState } from "@/store/store";
+import { useAppDispatch } from "@/hook/useReduxTypes";
 import LaunchPage from "@/components/LaunchPage";
 
 function AppContent({ Component, pageProps }: AppProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
 
