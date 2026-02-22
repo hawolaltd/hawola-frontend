@@ -8,6 +8,7 @@ import "swiper/css";
 import "sweetalert2/src/sweetalert2.scss";
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/store/store";
 import { Provider, useSelector } from "react-redux";
@@ -67,10 +68,13 @@ function AppContent({ Component, pageProps }: AppProps) {
   }, [dispatch]);
 
   // Only show launch page when API has returned and explicitly says under construction (false by default until API returns true)
+  const dateTimeTill = siteSettings
+    ? (siteSettings.date_time_till ?? (siteSettings as Record<string, unknown>).dateTimeTill)
+    : null;
   const showLaunchPage =
     siteSettingsLoaded &&
     siteSettings?.site_under_construction === true &&
-    siteSettings?.date_time_till;
+    dateTimeTill;
 
   if (showLaunchPage && siteSettings) {
     return (
@@ -95,16 +99,20 @@ function AppContent({ Component, pageProps }: AppProps) {
   );
 }
 
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
 export default function App({ Component, pageProps, router }: AppProps) {
   return (
     <PersistGate persistor={persistor}>
-      <Provider store={store}>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <Provider store={store}>
         <AppContent
           Component={Component}
           pageProps={pageProps}
           router={router}
         />
       </Provider>
+      </GoogleOAuthProvider>
     </PersistGate>
   );
 }

@@ -1,13 +1,15 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Controller, useForm, useWatch} from "react-hook-form";
+import { GoogleLogin } from "@react-oauth/google";
 import {RegisterFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {register, resendConfirmationEmail} from "@/redux/auth/authSlice";
+import {register, loginWithGoogle, resendConfirmationEmail} from "@/redux/auth/authSlice";
 import ControlledInput from "@/components/shared/ControlledInput";
 import {toast} from "sonner";
 import {useRouter} from "next/router";
 import Link from "next/link";
 import {normalizeErrors} from "@/util";
+import { addToCarts, addToCartsLocal } from "@/redux/product/productSlice";
 import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 // Rate limiting constants
@@ -34,6 +36,7 @@ function RegisterForm() {
     const dispatch = useAppDispatch()
 
     const {isLoading, message} = useAppSelector(state => state.auth)
+    const {localCart} = useAppSelector(state => state.products)
 
     const terms = useWatch({
         control, name: 'terms',
@@ -499,18 +502,59 @@ function RegisterForm() {
             {!regSuccess && <div className={'pt-16 px-8 md:px-0 flex flex-col gap-8 w-full'}>
                 <h2 className="text-xl text-center font-bold text-[#435a8c]">Use Social Network Account</h2>
                 <div className={'flex flex-col gap-4'}>
+                    {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                        <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                                const token = credentialResponse.credential;
+                                if (!token) return;
+                                const res = await dispatch(loginWithGoogle(token));
+                                if (res?.type?.includes?.("fulfilled")) {
+                                    toast.success("Welcome to HAWOLA");
+                                    if (localCart?.items?.length > 0) {
+                                        dispatch(addToCarts({
+                                            items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
+                                                qty: cart.qty,
+                                                product: cart?.product?.id,
+                                            })),
+                                        }));
+                                        dispatch(addToCartsLocal({ items: [] }));
+                                    }
+                                    router.push("/");
+                                } else if (res?.type?.includes?.("rejected") && res?.payload) {
+                                    toast.error(String(res.payload), {
+                                        style: { background: "#ef4444", color: "white" },
+                                    });
+                                }
+                            }}
+                            onError={() => {
+                                toast.error("Google sign-in failed. Please try again.", {
+                                    style: { background: "#ef4444", color: "white" },
+                                });
+                            }}
+                            useOneTap={false}
+                            theme="outline"
+                            size="large"
+                            text="signup_with"
+                            shape="rectangular"
+                            width="100%"
+                        />
+                    )}
+                    {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                        <button
+                            className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0]">Sign
+                            up with <img src={'/imgs/page/account/google.svg'} alt={'google'}/>
+                        </button>
+                    )}
                     <button
-                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0]">Sign
-                        up with <img src={'/imgs/page/account/google.svg'} alt={'google'}/>
-                    </button>
-                    <button
-                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0]">Sign
+                        disabled
+                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0] opacity-60 cursor-not-allowed">Sign
                         up with <span className="text-[#3AA1FF] text-[16px] font-bold">Facebook</span>
                         {/*<img src={'/imgs/page/account/google.svg'} alt={'google'}/>*/}
                     </button>
                     <button
-                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0]">Sign
-                        up with <img src={'/imgs/page/account/amazon.svg'} alt={'google'}/>
+                        disabled
+                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0] opacity-60 cursor-not-allowed">Sign
+                        up with <img src={'/imgs/page/account/amazon.svg'} alt={'amazon'}/>
                     </button>
 
                     <p className="text-center text-xs text-primary mt-4">

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import Link from "next/link";
+import { GoogleLogin } from "@react-oauth/google";
 import ControlledInput from "@/components/shared/ControlledInput";
 import {useForm} from "react-hook-form";
 import {LoginFormType} from "@/types/auth";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {login, requestLoginCode} from "@/redux/auth/authSlice";
+import {login, loginWithGoogle, requestLoginCode} from "@/redux/auth/authSlice";
 import {toast} from "sonner";
 import {useRouter} from "next/router";
 import {addToCarts, addToCartsLocal} from "@/redux/product/productSlice";
@@ -268,6 +269,46 @@ export default function LoginForm() {
                 <p className="text-[#435a8c] mb-6 mt-2">Welcome back!</p>
 
                 {/* Primary section: either magic-link login or password login */}
+
+                {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                    <div className="mb-6">
+                        <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                                const token = credentialResponse.credential;
+                                if (!token) return;
+                                const res = await dispatch(loginWithGoogle(token));
+                                if (res?.type?.includes?.("fulfilled")) {
+                                    toast.success("Welcome Back to HAWOLA");
+                                    if (localCart?.items?.length > 0) {
+                                        dispatch(addToCarts({
+                                            items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
+                                                qty: cart.qty,
+                                                product: cart?.product?.id,
+                                            })),
+                                        }));
+                                        dispatch(addToCartsLocal({ items: [] }));
+                                    }
+                                    router.push("/");
+                                } else if (res?.type?.includes?.("rejected") && res?.payload) {
+                                    toast.error(String(res.payload), {
+                                        style: { background: "#ef4444", color: "white" },
+                                    });
+                                }
+                            }}
+                            onError={() => {
+                                toast.error("Google sign-in failed. Please try again.", {
+                                    style: { background: "#ef4444", color: "white" },
+                                });
+                            }}
+                            useOneTap={false}
+                            theme="outline"
+                            size="large"
+                            text="continue_with"
+                            shape="rectangular"
+                            width="100%"
+                        />
+                    </div>
+                )}
 
                 {!showPasswordLogin && (
                     <div className="flex flex-col gap-4 mt-8">

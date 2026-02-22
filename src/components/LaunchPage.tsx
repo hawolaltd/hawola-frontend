@@ -56,8 +56,18 @@ function pad(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
+/** Get countdown target datetime from API (backend uses snake_case date_time_till) */
+function getDateTimeTill(settings: SiteSettingsData): string {
+  const raw =
+    (settings as Record<string, unknown>).date_time_till ??
+    (settings as Record<string, unknown>).dateTimeTill;
+  if (raw == null || raw === "") return "";
+  if (typeof raw === "string") return raw;
+  return "";
+}
+
 export default function LaunchPage({ siteSettings }: LaunchPageProps) {
-  const dateTimeTill = siteSettings.date_time_till || "";
+  const dateTimeTill = getDateTimeTill(siteSettings);
   const appName = siteSettings.app_name || "Hawola";
   const appSlogan = siteSettings.app_slogan || "Everything you need, at better prices";
 

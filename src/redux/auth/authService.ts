@@ -193,13 +193,42 @@ const getCarts = async () => {
 const addToCarts = async (data: AddToCartType) => {
   const response = await axiosInstance.post("products/" + `cart/add/`, data);
   console.log("addcarts:", response);
-  return response.data;
+    return response.data;
+};
+
+// Google social login - POST auth_token (Google ID token) to backend
+const googleLogin = async (authToken: string) => {
+  const response = await axios.post(
+    API + "social-login/google/",
+    { auth_token: authToken }
+  );
+
+  const data = response.data;
+  const access = data.access || data.tokens?.access_token;
+  const refresh = data.refresh || data.tokens?.refresh_token;
+
+  if (access) {
+    Cookies.set(authTokenStorageKeyName as string, access);
+  }
+  if (refresh) {
+    Cookies.set(
+      authRefreshTokenStorageKeyName as string,
+      refresh
+    );
+  }
+
+  return {
+    ...data,
+    access,
+    refresh,
+  };
 };
 
 const authService = {
   register,
   logout,
   login,
+  googleLogin,
   requestLoginCode,
   verifyLoginCode,
   changePassword,

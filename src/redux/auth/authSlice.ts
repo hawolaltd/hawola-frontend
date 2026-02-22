@@ -106,6 +106,27 @@ export const login = createAsyncThunk(
   }
 );
 
+// Google social login
+export const loginWithGoogle = createAsyncThunk(
+  "auth/loginWithGoogle",
+  async (authToken: string, thunkAPI) => {
+    try {
+      const result = await authService.googleLogin(authToken);
+      return result;
+    } catch (error: any) {
+      let message = "Google sign-in failed. Please try again.";
+      if (error?.response?.data) {
+        const d = error.response.data;
+        message =
+          d.detail || d.error || (Array.isArray(d.error) ? d.error[0] : null) || message;
+      } else if (error?.message) {
+        message = error.message;
+      }
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // register user
 export const register = createAsyncThunk(
   "auth/register",
@@ -346,6 +367,25 @@ const authSlice = createSlice({
         // but fall back gracefully if shape differs
         // @ts-ignore
         state.user = action.payload?.user || action.payload;
+      })
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        // @ts-ignore
+        state.user = action.payload?.user || action.payload;
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = true;
+        state.message =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Google sign-in failed.";
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
