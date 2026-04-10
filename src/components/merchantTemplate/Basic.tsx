@@ -283,7 +283,7 @@ const BasicTemplate = () => {
                 ))}
               </div>
 
-              {/* Featured Categories */}
+              {/* Featured Categories - commented out
               {merchant_categories?.filter((c) => c?.name).length > 0 && (
                 <section>
                   <div className="flex items-center justify-between mb-8">
@@ -337,6 +337,7 @@ const BasicTemplate = () => {
                   })()}
                 </section>
               )}
+              */}
 
               {/* Featured Products */}
               {recent_products && recent_products.length > 0 && (

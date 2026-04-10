@@ -563,7 +563,7 @@ const StandardTemplate = () => {
           <div className="mb-12">
             {activeTab === "products" && (
               <>
-                {/* Categories */}
+                {/* Categories - commented out
                 {merchant_categories?.filter((cat) => cat.name).length > 0 && (
                   <section className="mb-12">
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -581,6 +581,7 @@ const StandardTemplate = () => {
                     </div>
                   </section>
                 )}
+                */}
 
                 {/* Recent Products */}
                 <section>

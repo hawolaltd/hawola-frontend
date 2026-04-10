@@ -1,20 +1,24 @@
 import {useCallback, useEffect, useState} from 'react';
 import Head from 'next/head';
+import { useRouter } from "next/router";
 import AuthLayout from "@/components/layout/AuthLayout";
 import {getAddress, getOrderHistory, getWishList} from "@/redux/product/productSlice";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {getUserProfile, updateProfile} from "@/redux/auth/authSlice";
 import Wishlist from "@/components/account/Wishlist";
 import Orders from "@/components/account/Orders";
+import BuyingRequests from "@/components/account/BuyingRequests";
 import Settings from "@/components/account/Settings";
 import {getDisputes} from "@/redux/disputes/disputeSlice";
 
 export default function AccountPage() {
+    const router = useRouter();
     const {profile: user} = useAppSelector(state => state.auth);
     console.log("user:", user)
     const [loading, setLoading] = useState(false)
 
-    const [tab, setTab] = useState('orders');
+    const initialTab = (typeof window !== "undefined" && (router.query.tab as string)) || 'orders';
+    const [tab, setTab] = useState<string>(initialTab);
 
     const tabs = [
         {
@@ -24,6 +28,10 @@ export default function AccountPage() {
         {
             id: 'wish',
             name: 'Wishlist',
+        },
+        {
+            id: 'buying_requests',
+            name: 'My Buying Requests',
         },
         {
             id: 'profile',
@@ -104,9 +112,19 @@ export default function AccountPage() {
                         </p>
                         <nav className={`mb-8 flex space-x-6 text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer`}>
                             {tabs.map(ta => (
-                                <span key={ta.id} onClick={()=>{
-                                    setTab(ta.id)
-                                }} className={`pb-2 font-semibold ${tab === ta.id ? "border-b-2 border-white text-white" : ""}`}>{ta.name}</span>
+                                <span
+                                    key={ta.id}
+                                    onClick={() => {
+                                        setTab(ta.id);
+                                        router.push({
+                                            pathname: "/account",
+                                            query: { tab: ta.id },
+                                        }, undefined, { shallow: true });
+                                    }}
+                                    className={`pb-2 font-semibold ${tab === ta.id ? "border-b-2 border-white text-white" : ""}`}
+                                >
+                                    {ta.name}
+                                </span>
                             ))}
                         </nav>
                     </header>
@@ -119,9 +137,8 @@ export default function AccountPage() {
                         ) : (
                             <div className={'container h-screen overflow-x-hidden mx-auto mb-12'}>
                                 {tab === 'wish' && <Wishlist />}
-
                                 {tab === 'orders' && <Orders />}
-
+                                {tab === 'buying_requests' && <BuyingRequests />}
                                 {tab === 'profile' && <Settings />}
                             </div>
                         )

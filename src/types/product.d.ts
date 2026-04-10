@@ -85,6 +85,7 @@ export interface Product {
     slug: string;
     search_vector: string | null;
     product_variant: any[];
+    tags?: Array<{ id: number; name: string; slug: string }>;
 }
 
 export interface ProductResponse {

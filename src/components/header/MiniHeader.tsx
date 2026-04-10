@@ -46,9 +46,19 @@ function MiniHeader() {
               router.pathname !== "/"
                 ? "text-white text-xs"
                 : "text-white text-xs font-medium"
-            }`}
+            } border-r px-2`}
           >
             Open a Shop
+          </Link>
+          <Link
+            href="/looking-for-product"
+            className={`${
+              router.pathname !== "/"
+                ? "text-secondaryTextColor text-xs font-semibold"
+                : "text-secondaryTextColor text-xs font-semibold"
+            }`}
+          >
+            I am looking for this product
           </Link>
         </div>
 

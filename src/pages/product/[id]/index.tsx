@@ -256,6 +256,9 @@ const ProductPage = () => {
         ? `Hawola | ${product.product.name}`
         : 'Hawola | Product Details';
 
+    const tagNames = product?.product?.tags?.map((t) => t?.name).filter(Boolean) || [];
+    const keywordsMeta = tagNames.length ? tagNames.join(', ') : undefined;
+
     return (<AuthLayout>
         <Head>
             <title>{pageTitle}</title>
@@ -265,6 +268,7 @@ const ProductPage = () => {
                     ? `${product.product.description.substring(0, 160)}...` 
                     : `View ${product?.product?.name || 'this product'} on Hawola`} 
             />
+            {keywordsMeta && <meta name="keywords" content={keywordsMeta} />}
             {product?.product?.featured_image?.[0]?.image_url && (
                 <meta property="og:image" content={product.product.featured_image[0].image_url} />
             )}
@@ -429,6 +433,21 @@ const ProductPage = () => {
                                 </svg>
                                 Condition: {(product.product as any).product_condition}
                             </span>
+                        </div>
+                    )}
+
+                    {/* Product tags / keywords for SEO and discoverability */}
+                    {tagNames.length > 0 && (
+                        <div className="mb-4 flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-semibold text-[#8c9ec5]">Tags:</span>
+                            {tagNames.map((name: string, idx: number) => (
+                                <span
+                                    key={`tag-${idx}`}
+                                    className="inline-flex px-2 py-1 rounded-md bg-gray-100 text-primary text-xs font-medium"
+                                >
+                                    {name}
+                                </span>
+                            ))}
                         </div>
                     )}
                    
