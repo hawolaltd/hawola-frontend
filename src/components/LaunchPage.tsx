@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
+import BrandAtmosphereBackdrop from "@/components/BrandAtmosphereBackdrop";
 
 const API_BASE = typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
   ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "")
@@ -100,15 +101,11 @@ export default function LaunchPage({ siteSettings }: LaunchPageProps) {
   }) : "";
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 py-12 text-center"
-      style={{
-        background:
-          "linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #0f172a 100%)",
-        color: "#f8fafc",
-      }}
-    >
-      <div className="max-w-xl w-full space-y-8">
+    <div className="relative min-h-screen overflow-hidden text-slate-50">
+      <BrandAtmosphereBackdrop showOrbitRings orbitSize="lg" />
+
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-12 text-center">
+        <div className="w-full max-w-xl space-y-8">
         {/* Logo / Brand */}
         <div className="space-y-4">
           {logoUrl ? (
@@ -121,19 +118,37 @@ export default function LaunchPage({ siteSettings }: LaunchPageProps) {
               />
             </div>
           ) : (
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
+            <h1
+              className="bg-[length:200%_auto] bg-clip-text text-4xl font-bold tracking-[0.12em] text-transparent sm:text-5xl motion-safe:animate-preloader-shimmer motion-reduce:animate-none"
+              style={{
+                fontFamily: '"Kanit", system-ui, sans-serif',
+                backgroundImage:
+                  "linear-gradient(105deg, #94a8c8 0%, #f8fafc 25%, #5bc694 50%, #f8fafc 75%, #94a8c8 100%)",
+              }}
+            >
               {appName}
             </h1>
           )}
-          <p className="text-slate-400 text-lg">{appSlogan}</p>
+          <p
+            className="text-lg text-slate-400"
+            style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+          >
+            {appSlogan}
+          </p>
         </div>
 
         {/* Headline */}
         <div className="space-y-1">
-          <p className="text-2xl sm:text-3xl font-semibold text-white">
+          <p
+            className="text-2xl font-semibold text-white sm:text-3xl"
+            style={{ fontFamily: '"Kanit", system-ui, sans-serif' }}
+          >
             We&apos;re launching soon
           </p>
-          <p className="text-slate-400">
+          <p
+            className="text-slate-400"
+            style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+          >
             Our platform is under construction. Check back at the time below.
           </p>
         </div>
@@ -191,11 +206,12 @@ export default function LaunchPage({ siteSettings }: LaunchPageProps) {
           </p>
         )}
 
-        {/* Decorative line */}
+        {/* Decorative line — matches preloader accent */}
         <div
-          className="h-px w-24 mx-auto opacity-50"
-          style={{ background: "linear-gradient(90deg, transparent, #64748b, transparent)" }}
+          className="mx-auto h-px w-28 bg-gradient-to-r from-transparent via-secondaryTextColor/70 to-transparent"
+          aria-hidden
         />
+        </div>
       </div>
     </div>
   );
