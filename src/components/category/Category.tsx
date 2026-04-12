@@ -1,8 +1,7 @@
 import type { NextPage } from "next";
 import CategoryCard from "@/components/category/CategoryCard";
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import { getAllCategories } from "@/redux/product/productSlice";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import { PopularCategory } from "@/types/home";
 
 // Category Slider Component
@@ -160,14 +159,7 @@ function CategorySlider({ categories }: CategorySliderProps) {
 }
 
 const Category: NextPage = () => {
-  const { categories } = useAppSelector((state) => state.products);
   const { homePage } = useAppSelector((state) => state.general);
-
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    dispatch(getAllCategories());
-  }, [dispatch]);
 
   // Filter and prepare categories data
   const filteredCategories =

@@ -56,7 +56,8 @@ const CartItemRow = ({
             type="checkbox"
             checked={isSelected}
             onChange={(e) => onSelect(cartId, e.target.checked)}
-            className="h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded"
+            className="cart-checkbox"
+            aria-label={`Select ${cart?.product?.name || "item"}`}
           />
           <div className="w-20 h-20 bg-gray-200 rounded-md flex-shrink-0 overflow-hidden">
             <img

@@ -1,5 +1,6 @@
 import axiosInstance from '@/libs/api/axiosInstance';
 import { API } from '@/constant';
+import { STOREFRONT_PREVIEW_LS_KEY } from '@/lib/storefrontPreview';
 
 const API_URL = 'authy';
 
@@ -51,7 +52,15 @@ const getStateLocations = async (id: string) => {
 
 // Public site settings (e.g. site_under_construction, date_time_till)
 const getSiteSettings = async () => {
-    const response = await axiosInstance.get(API + "site/settings/");
+    let path = API + "site/settings/";
+    if (typeof window !== "undefined") {
+        const pt = localStorage.getItem(STOREFRONT_PREVIEW_LS_KEY);
+        if (pt) {
+            const sep = path.includes("?") ? "&" : "?";
+            path += `${sep}preview_token=${encodeURIComponent(pt)}`;
+        }
+    }
+    const response = await axiosInstance.get(path);
     return response.data;
 };
 

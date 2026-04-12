@@ -22,26 +22,37 @@ export default function BrandAtmosphereBackdrop({
     <>
       <div className="pointer-events-none absolute inset-0 bg-[#060b14]" aria-hidden />
 
+      {/* Soft center glow — kept subtle so the scene feels faded */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(66,90,139,0.22),transparent_65%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_65%_at_50%_38%,rgba(66,90,139,0.11),transparent_62%)]"
         aria-hidden
       />
 
       <div
-        className="pointer-events-none absolute -left-[18%] -top-[22%] h-[min(92vw,560px)] w-[min(92vw,560px)] rounded-full bg-primary/45 blur-[110px] motion-safe:animate-preloader-drift"
+        className="pointer-events-none absolute -left-[18%] -top-[22%] h-[min(92vw,560px)] w-[min(92vw,560px)] rounded-full bg-primary/28 blur-[110px] motion-safe:animate-preloader-drift"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-[12%] top-[28%] h-[min(85vw,500px)] w-[min(85vw,500px)] rounded-full bg-secondaryTextColor/40 blur-[100px] motion-safe:animate-preloader-drift-reverse"
+        className="pointer-events-none absolute -right-[12%] top-[28%] h-[min(85vw,500px)] w-[min(85vw,500px)] rounded-full bg-secondaryTextColor/24 blur-[100px] motion-safe:animate-preloader-drift-reverse"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute bottom-[-12%] left-[22%] h-[min(75vw,420px)] w-[min(75vw,420px)] rounded-full bg-orange/35 blur-[95px] motion-safe:animate-preloader-drift-slow"
+        className="pointer-events-none absolute bottom-[-12%] left-[22%] h-[min(75vw,420px)] w-[min(75vw,420px)] rounded-full bg-orange/20 blur-[95px] motion-safe:animate-preloader-drift-slow"
+        aria-hidden
+      />
+
+      {/* Edge / corner fade — pulls color back into the deep base */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_95%_90%_at_50%_42%,rgba(6,11,20,0)_0%,rgba(6,11,20,0.38)_58%,rgba(6,11,20,0.78)_100%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#060b14]/55 via-transparent to-[#060b14]/70"
         aria-hidden
       />
 
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.12] mix-blend-soft-light"
+        className="pointer-events-none absolute inset-0 opacity-[0.09] mix-blend-soft-light"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
         }}

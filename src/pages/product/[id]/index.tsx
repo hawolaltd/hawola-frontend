@@ -12,13 +12,13 @@ import {
     getMerchantReviews,
     getProductBySlug, getWishList
 } from "@/redux/product/productSlice";
-import {useRouter} from "next/router";
+import { useRouter } from "next/router";
 import {amountFormatter, formatCurrency} from "@/util";
 import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
-import {router} from "next/client";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import { TagIcon } from '@heroicons/react/24/outline';
 
 const ProductPage = () => {
@@ -28,7 +28,8 @@ const ProductPage = () => {
     const [isHovered, setIsHovered] = useState(false);
     const [loadingProduct, setLoadingProduct] = useState(false);
     const [loadingReview, setLoadingReview] = useState(false);
-    const {query} = useRouter()
+    const router = useRouter();
+    const { query } = router;
 
     const dispatch = useAppDispatch()
 
@@ -385,13 +386,9 @@ const ProductPage = () => {
                                 <p className={'text-primary font-[500] text-xs cursor-pointer'}>Add to Wish List</p>
                             </div>
 
-                            {/*<div className={'flex items-center gap-2'}>*/}
-                            {/*<span*/}
-                            {/*    className={'flex items-center justify-center border border-[#dde4f0] p-1 rounded-[4px]'}>*/}
-                            {/*     <img src="/assets/compare.svg" alt="compare" className="w-6 h-6"/>*/}
-                            {/*</span>*/}
-                            {/*    <p className={'text-primary font-[500]'}>Add to Compare</p>*/}
-                            {/*</div>*/}
+                            {product?.product && (
+                                <AddToCompareButton product={product.product} variant="inline" />
+                            )}
 
                             <div onClick={()=>{
                                 router.push(`/merchants/${product?.product?.merchant?.slug}`)

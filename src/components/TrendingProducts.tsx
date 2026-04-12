@@ -105,6 +105,7 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
                     <ProductCard2
                       product={homePage?.data?.best_selling_products}
                       key={key}
+                      index={key}
                       item={item}
                     />
                   );

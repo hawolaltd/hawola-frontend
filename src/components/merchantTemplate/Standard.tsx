@@ -206,7 +206,9 @@ const StandardTemplate = () => {
       <div className="relative overflow-hidden">
         <img
           src={
-            product.featured_image[0]?.image?.full_size || "/placeholder.jpg"
+            product.featured_image?.[0]?.image_url ||
+            product.featured_image?.[0]?.image?.full_size ||
+            "/placeholder.jpg"
           }
           alt={product.name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"

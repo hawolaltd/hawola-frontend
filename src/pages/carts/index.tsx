@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import ProductCard from "@/components/product/ProductCard";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import { toast } from "sonner";
 import {
@@ -33,9 +32,7 @@ interface OrderItem {
 }
 
 const CartPage = () => {
-  const { products, carts, addresses, localCart } = useAppSelector(
-    (state) => state.products
-  );
+  const { carts, addresses, localCart } = useAppSelector((state) => state.products);
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
   console.log("carts", carts);
   const dispatch = useAppDispatch();
@@ -556,7 +553,8 @@ const CartPage = () => {
                     type="checkbox"
                     checked={allSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded"
+                    className="cart-checkbox"
+                    aria-label="Select all items in cart"
                   />
                   <span>Product</span>
                 </div>
@@ -701,20 +699,6 @@ const CartPage = () => {
               isAuthenticated={isAuthenticated}
             />
           </div>
-        </div>
-      </div>
-
-      {/* Recommended Products */}
-      <div className={"m-8"}>
-        <div className={"flex justify-between items-center"}>
-          <h4 className={"font-bold text-2xl text-primary py-6"}>
-            You May Also Like
-          </h4>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-          {products?.results?.slice(0, 8)?.map((product, key) => (
-            <ProductCard key={key} product={product} />
-          ))}
         </div>
       </div>
 

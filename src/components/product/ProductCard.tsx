@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useRouter } from "next/router";
 import { amountFormatter, formatCurrency } from "@/util";
 import { LocalCartItem, Product, ProductByIdResponse } from "@/types/product";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
@@ -11,6 +10,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductFull } from "@/types/home";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
 
 function ProductCard({
   product,
@@ -23,8 +23,6 @@ function ProductCard({
   viewMode?: "grid" | "list";
   isPromoted?: boolean;
 }) {
-  const router = useRouter();
-
   const [quantity, setQuantity] = useState(1);
 
   // State for selected variants
@@ -129,35 +127,30 @@ function ProductCard({
   };
 
   return (
-    <Link href={`product/${product?.slug}`}>
-      <div
-        className={`relative bg-white border cursor-pointer ${
-          margin ? margin : ""
-        } border-solid border-[#D5DFE4] rounded-lg overflow-hidden p-4 ${
-          viewMode === "list" ? "flex items-center gap-4" : ""
-        }`}
+    <div
+      className={`relative bg-white border cursor-pointer ${
+        margin ? margin : ""
+      } border-solid border-[#D5DFE4] rounded-lg overflow-hidden ${
+        viewMode === "list" ? "" : ""
+      }`}
+    >
+      <AddToCompareButton product={product} className="absolute top-3 left-3" />
+
+      {isPromoted && (
+        <span className="absolute top-3 right-3 z-10 text-[10px] flex items-center justify-center bg-yellow-500 w-16 h-4 rounded-full text-white font-semibold">
+          Promoted
+        </span>
+      )}
+
+      <Link
+        href={`product/${product?.slug}`}
+        className={`block p-4 ${viewMode === "list" ? "flex items-center gap-4" : ""}`}
       >
-        {/* <span
-          className={
-            "absolute top-3 left-3 text-[10px] flex items-center justify-center bg-deepOrange w-10 h-4 rounded-full text-white"
-          }
-        >
-          -17%
-        </span> */}
-
-        {/* Promoted badge */}
-        {isPromoted && (
-          <span className="absolute top-3 right-3 text-[10px] flex items-center justify-center bg-yellow-500 w-16 h-4 rounded-full text-white font-semibold">
-            Promoted
-          </span>
-        )}
-
         <div className={"w-full flex items-center justify-center"}>
           <img
             src={product.featured_image?.[0]?.image_url}
             alt={product.name}
             style={{
-              // width: "200px",
               height: "150px",
             }}
           />
@@ -166,18 +159,11 @@ function ProductCard({
           <h3 className="text-[10px] text-textPadded font-semibold">
             {product.merchant?.store_name}
           </h3>
-          <Link href={`product/${product?.slug}`}>
-            <h3
-              className="text-xs font-semibold text-primary"
-              onClick={() => {
-                // router.push(`product/${product?.slug}`)
-              }}
-            >
-              {product.name?.length > 50
-                ? product.name?.slice(0, 50) + "..."
-                : product.name}
-            </h3>
-          </Link>
+          <h3 className="text-xs font-semibold text-primary">
+            {product.name?.length > 50
+              ? product.name?.slice(0, 50) + "..."
+              : product.name}
+          </h3>
           <div className={"flex items-center gap-1"}>
             {Array.from(product?.rating ?? 0).map((star, key) => (
               <svg
@@ -208,14 +194,9 @@ function ProductCard({
               {formatCurrency(product?.price)}
             </span>
           </p>
-          {/*<button*/}
-          {/*    className="border border-textPadded text-primary font-bold  py-2 px-4 mt-4 rounded w-full" onClick={()=>{*/}
-          {/*    handleAddToCart(product)*/}
-          {/*}}>Add to Cart*/}
-          {/*</button>*/}
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
 

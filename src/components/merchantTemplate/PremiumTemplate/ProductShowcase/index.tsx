@@ -89,7 +89,8 @@ const ProductShowcase = ({
             <div className="relative h-48 bg-gray-100 overflow-hidden">
               <Image
                 src={
-                  product.featured_image[0]?.image.thumbnail ||
+                  product.featured_image?.[0]?.image_url ||
+                  product.featured_image?.[0]?.image?.thumbnail ||
                   "/images/products/product-1-sm-1.png"
                 }
                 alt={product.name}

@@ -55,6 +55,7 @@ const TopRateProducts = ({ products }: TopRateProductsProps) => {
                     <ProductCard2
                       product={homePage?.data?.top_selling_products}
                       key={key}
+                      index={key}
                       item={item}
                     />
                   );

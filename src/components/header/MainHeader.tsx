@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useCompareNavBump } from "@/hook/useCompareNavBump";
 import CartModal from "@/components/shared/CartModal";
 import { useRouter } from "next/router";
 import { CartResponse } from "@/types/product";
@@ -16,9 +17,9 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [dropdownOpenCat, setDropdownOpenCat] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { carts, localCart, wishLists, categories } = useAppSelector(
-    (state) => state.products
-  );
+  const { carts, localCart, wishLists, categories, compareProducts } =
+    useAppSelector((state) => state.products);
+  const compareNavBump = useCompareNavBump();
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
   const [submenuTimeout, setSubmenuTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -662,15 +663,23 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6" />
             </div>
 
-            {/* Compare */}
-            <div className="relative flex items-center gap-2 text-primary text-[16px]">
-              <img
-                src="/assets/compare.svg"
-                alt="compare"
-                className="w-6 h-6"
-              />{" "}
-              <span className={"hidden lg:flex"}>Compare</span>
-            </div>
+            {compareProducts.length > 0 && (
+              <Link
+                href="/compare"
+                className={`relative flex cursor-pointer items-center gap-2 rounded-lg px-0.5 text-primary ${
+                  compareNavBump
+                    ? "motion-safe:animate-compare-nav-bump"
+                    : "motion-safe:animate-compare-nav-pulse"
+                }`}
+                aria-label={`Compare ${compareProducts.length} products`}
+              >
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-headerBg text-[10px] font-bold text-white">
+                  {compareProducts.length}
+                </span>
+                <img src="/assets/compare.svg" alt="" className="h-6 w-6" />
+                <span className="hidden text-[16px] lg:flex">Compare</span>
+              </Link>
+            )}
 
             <div
               onClick={() => {

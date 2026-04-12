@@ -6,22 +6,22 @@ import { ProductFull } from "@/types/home";
 
 function ProductCard2({
   product,
-  key,
+  index,
   item,
 }: {
   product: ProductFull[];
-  key: number;
+  /** Row index in list (for borders); not React's `key` */
+  index: number;
   item: ProductFull;
 }) {
   const router = useRouter();
   return (
     <div
-      key={key}
       onClick={() => {
         router.push(`product/${item?.slug}`);
       }}
       className={`bg-white cursor-pointer relative flex ${
-        key + 1 !== product.length ? "border-b-[#dde4f0] border-b" : " "
+        index + 1 !== product.length ? "border-b-[#dde4f0] border-b" : " "
       } pb-1 pt-4 pl-4 pr-4 overflow-hidden`}
     >
       <div className="relative">

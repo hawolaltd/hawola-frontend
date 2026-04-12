@@ -548,7 +548,11 @@ export default function NormalMerchantPage() {
                         >
                           <div className="relative h-56 bg-gray-100 overflow-hidden">
                             <img
-                              src={item?.featured_image?.[0]?.image?.full_size}
+                              src={
+                                item?.featured_image?.[0]?.image_url ||
+                                item?.featured_image?.[0]?.image?.full_size ||
+                                "/placeholder.jpg"
+                              }
                               alt={item?.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />

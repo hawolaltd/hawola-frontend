@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
 import BrandAtmosphereBackdrop from "@/components/BrandAtmosphereBackdrop";
+import ConstructionFloatingIcons from "@/components/ConstructionFloatingIcons";
 
 const API_BASE = typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
   ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "")
@@ -103,6 +104,7 @@ export default function LaunchPage({ siteSettings }: LaunchPageProps) {
   return (
     <div className="relative min-h-screen overflow-hidden text-slate-50">
       <BrandAtmosphereBackdrop showOrbitRings orbitSize="lg" />
+      <ConstructionFloatingIcons />
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-12 text-center">
         <div className="w-full max-w-xl space-y-8">

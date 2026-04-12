@@ -4,6 +4,7 @@ import {
   authRefreshTokenStorageKeyName,
   authTokenStorageKeyName,
 } from "@/constant";
+import { STOREFRONT_PREVIEW_LS_KEY } from "@/lib/storefrontPreview";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -91,6 +92,7 @@ export const clearAllStorage = () => {
   
   cartItems = localStorage.getItem("cartItems");
   sessionId = localStorage.getItem("hawola_session_id");
+  const storefrontPreviewToken = localStorage.getItem(STOREFRONT_PREVIEW_LS_KEY);
 
   // Clear cookies
   Cookies.remove(authRefreshTokenStorageKeyName as string);
@@ -105,6 +107,9 @@ export const clearAllStorage = () => {
   }
   if (sessionId) {
     localStorage.setItem("hawola_session_id", sessionId);
+  }
+  if (storefrontPreviewToken) {
+    localStorage.setItem(STOREFRONT_PREVIEW_LS_KEY, storefrontPreviewToken);
   }
 
   // Clear Redux persist storage
@@ -128,6 +133,7 @@ export const clearAllStorageWithPersistor = async (persistor: any) => {
   
   cartItems = localStorage.getItem("cartItems");
   sessionId = localStorage.getItem("hawola_session_id");
+  const storefrontPreviewToken = localStorage.getItem(STOREFRONT_PREVIEW_LS_KEY);
 
   // Clear cookies
   Cookies.remove(authRefreshTokenStorageKeyName as string);
@@ -142,6 +148,9 @@ export const clearAllStorageWithPersistor = async (persistor: any) => {
   }
   if (sessionId) {
     localStorage.setItem("hawola_session_id", sessionId);
+  }
+  if (storefrontPreviewToken) {
+    localStorage.setItem(STOREFRONT_PREVIEW_LS_KEY, storefrontPreviewToken);
   }
 
   // Purge Redux persist storage using persistor

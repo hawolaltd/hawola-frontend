@@ -17,12 +17,19 @@ import { Toaster } from "sonner";
 import { useEffect } from "react";
 import { checkTokenValidity, clearAllStorage } from "@/util";
 import { clearAuthState } from "@/redux/auth/authSlice";
-import { syncLocalCartFromStorage } from "@/redux/product/productSlice";
+import {
+  getAllCategories,
+  syncLocalCartFromStorage,
+} from "@/redux/product/productSlice";
 import { getSiteSettings } from "@/redux/general/generalSlice";
 import { RootState } from "@/store/store";
 import { useAppDispatch } from "@/hook/useReduxTypes";
 import LaunchPage from "@/components/LaunchPage";
 import SiteSettingsPreloader from "@/components/SiteSettingsPreloader";
+import {
+  STOREFRONT_PREVIEW_LS_KEY,
+  STOREFRONT_PREVIEW_URL_PARAM,
+} from "@/lib/storefrontPreview";
 
 function AppContent({ Component, pageProps }: AppProps) {
   const dispatch = useAppDispatch();
@@ -30,6 +37,20 @@ function AppContent({ Component, pageProps }: AppProps) {
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const preview = params.get(STOREFRONT_PREVIEW_URL_PARAM);
+      if (preview) {
+        localStorage.setItem(STOREFRONT_PREVIEW_LS_KEY, preview);
+        params.delete(STOREFRONT_PREVIEW_URL_PARAM);
+        const q = params.toString();
+        const next =
+          window.location.pathname +
+          (q ? `?${q}` : "") +
+          window.location.hash;
+        window.history.replaceState({}, "", next);
+      }
+    }
     dispatch(getSiteSettings());
   }, [dispatch]);
 
@@ -43,6 +64,8 @@ function AppContent({ Component, pageProps }: AppProps) {
     
     // Sync cart from localStorage on app start
     dispatch(syncLocalCartFromStorage());
+    // Categories for header mega-menu / mobile nav on every route (not only home)
+    dispatch(getAllCategories());
 
     // Global error handler for unhandled promise rejections
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {

@@ -21,6 +21,21 @@ import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import Header from "@/components/header";
 import AuthLayout from "@/components/layout/AuthLayout";
 
+/** API may return a plain URL (CategorySerializer) or a versatile-image dict (sub/subsec). */
+function searchCategoryImageUrl(category: { image?: unknown }): string | null {
+  const img = category?.image;
+  if (!img) return null;
+  if (typeof img === "string") return img;
+  if (typeof img === "object" && img !== null) {
+    const o = img as Record<string, unknown>;
+    const direct = o.full_size ?? o.thumbnail ?? o.url;
+    if (typeof direct === "string") return direct;
+    const first = Object.values(o).find((v) => typeof v === "string");
+    if (typeof first === "string") return first;
+  }
+  return null;
+}
+
 const SearchPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -456,10 +471,7 @@ const SearchPage = () => {
                               ...searchResults.results.subcategories.items,
                               ...searchResults.results.subsec_categories.items,
                             ].map((category: any) => {
-                              // Handle image - it might be a string URL or an object with url property
-                              const imageUrl = typeof category.image === 'string' 
-                                ? category.image 
-                                : category.image?.url || null;
+                              const imageUrl = searchCategoryImageUrl(category);
                               
                               return (
                                 <Link

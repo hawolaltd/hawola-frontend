@@ -360,7 +360,11 @@ const BasicTemplate = () => {
                     >
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
-                          src={product.featured_image[0]?.image?.full_size || "/placeholder.jpg"}
+                          src={
+                            product.featured_image?.[0]?.image_url ||
+                            product.featured_image?.[0]?.image?.full_size ||
+                            "/placeholder.jpg"
+                          }
                           alt={product.name || "Product"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -440,7 +444,11 @@ const BasicTemplate = () => {
                   >
                     <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
-                          src={product.featured_image[0]?.image?.full_size || "/placeholder.jpg"}
+                          src={
+                            product.featured_image?.[0]?.image_url ||
+                            product.featured_image?.[0]?.image?.full_size ||
+                            "/placeholder.jpg"
+                          }
                           alt={product.name || "Product"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />

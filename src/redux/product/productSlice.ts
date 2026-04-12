@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import productService from '@/redux/product/productService';
 import {
     AddressResponse,
@@ -16,6 +16,9 @@ import {
     WishlistResponse,
 } from '@/types/product';
 import { RootState } from '@/store/store';
+
+/** Max items in the compare list (UI + Redux). */
+export const MAX_COMPARE_PRODUCTS = 20;
 
 interface ProductsState {
     products: ProductResponse;
@@ -42,6 +45,10 @@ interface ProductsState {
     isLoading: boolean;
     error: string | null | unknown;
     message: string | null | unknown;
+    /** Compare list (persisted); max MAX_COMPARE_PRODUCTS */
+    compareProducts: Product[];
+    /** Incremented when an item is added to compare (header glow; reset on rehydrate). */
+    compareNavFlashCount: number;
 }
 
 const initialState: ProductsState = {
@@ -69,6 +76,8 @@ const initialState: ProductsState = {
     isLoading: false,
     error: null,
     message: '',
+    compareProducts: [],
+    compareNavFlashCount: 0,
 };
 
 export const getProducts = createAsyncThunk(
@@ -666,6 +675,8 @@ const productSlice = createSlice({
             state.isLoading = false;
             state.error = null;
             state.products = {} as ProductResponse;
+            state.compareProducts = [];
+            state.compareNavFlashCount = 0;
         },
         syncLocalCartFromStorage: (state) => {
             // Sync localCart from localStorage on app start
@@ -684,12 +695,42 @@ const productSlice = createSlice({
                 }
             }
         },
+        addToCompare: (state, action: PayloadAction<Product>) => {
+            const p = action.payload;
+            if (state.compareProducts.some((x) => x.id === p.id)) return;
+            if (state.compareProducts.length >= MAX_COMPARE_PRODUCTS) return;
+            state.compareProducts.push(p);
+            state.compareNavFlashCount =
+                (state.compareNavFlashCount ?? 0) + 1;
+        },
+        removeFromCompare: (state, action: PayloadAction<number>) => {
+            state.compareProducts = state.compareProducts.filter(
+                (x) => x.id !== action.payload
+            );
+        },
+        toggleCompareProduct: (state, action: PayloadAction<Product>) => {
+            const p = action.payload;
+            const i = state.compareProducts.findIndex((x) => x.id === p.id);
+            if (i >= 0) {
+                state.compareProducts.splice(i, 1);
+            } else if (state.compareProducts.length < MAX_COMPARE_PRODUCTS) {
+                state.compareProducts.push(p);
+                state.compareNavFlashCount =
+                    (state.compareNavFlashCount ?? 0) + 1;
+            }
+        },
+        clearCompare: (state) => {
+            state.compareProducts = [];
+        },
     },
     extraReducers: (builder) => {
         builder
             // Handle Redux Persist REHYDRATE to sync localStorage
             .addCase('persist/REHYDRATE' as any, (state: any, action: any) => {
                 // After rehydration, sync from localStorage
+                if (state) {
+                    state.compareNavFlashCount = 0;
+                }
                 if (typeof window !== 'undefined') {
                     try {
                         const cartItems = localStorage.getItem('cartItems');
@@ -1090,5 +1131,12 @@ const productSlice = createSlice({
     },
 });
 
-export const { reset, syncLocalCartFromStorage } = productSlice.actions;
+export const {
+    reset,
+    syncLocalCartFromStorage,
+    addToCompare,
+    removeFromCompare,
+    toggleCompareProduct,
+    clearCompare,
+} = productSlice.actions;
 export default productSlice.reducer;
