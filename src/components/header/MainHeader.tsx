@@ -8,13 +8,14 @@ import { useRouter } from "next/router";
 import { CartResponse } from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import Navigation from "./Navigation";
+// import Navigation from "./Navigation";
 
 const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [userInfo, setUserInfo] = useState(false);
   const [cart, setCart] = useState(false);
   const [items, setItems] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  // Used only by top nav (Home / Shop / Vendors / …); hidden below.
+  // const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [dropdownOpenCat, setDropdownOpenCat] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { carts, localCart, wishLists, categories, compareProducts } =
@@ -45,9 +46,9 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  const toggleDropdown = (menu: string) => {
-    setDropdownOpen(dropdownOpen === menu ? null : menu);
-  };
+  // const toggleDropdown = (menu: string) => {
+  //   setDropdownOpen(dropdownOpen === menu ? null : menu);
+  // };
 
   const toggleDropdownOpenCat = () => {
     setDropdownOpenCat(!dropdownOpenCat);
@@ -118,11 +119,11 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
     <div className={"relative "}>
       {/* Top Component Start*/}
       <div className="bg-white border-b border-gray-300">
-        <div className="w-full relative px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="relative mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-6 py-4 xl:px-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
             {/* Logo */}
-            <Link href="/">
-              <div className="flex items-center space-x-2 cursor-pointer">
+            <Link href="/" className="shrink-0">
+              <div className="flex cursor-pointer items-center space-x-2">
                 <img src="/assets/hawola.png" alt="Logo" className="w-50 h-10" />
               </div>
             </Link>
@@ -580,34 +581,39 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             </div>
             {/* ========== END NEW MEGA MENU ========== */}
 
-            {/* Search Bar */}
-            <div className="hidden lg:flex items-center">
-              <form onSubmit={handleSearchSubmit} className="flex items-center border rounded-md">
+            {/* Search Bar (visible on all breakpoints; shares row with logo on mobile) */}
+            <div className="flex min-w-0 flex-1 items-center lg:max-w-none">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex w-full min-w-0 items-center rounded-md border"
+              >
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for items"
-                  className="p-2 rounded-l-md w-64 text-sm text-primary outline-none"
+                  className="min-w-0 flex-1 rounded-l-md p-2 text-sm text-primary outline-none lg:w-64 lg:flex-none"
                 />
                 <button
                   type="submit"
-                  className="bg-[#FF5733] text-white px-4 py-2 rounded-r-md hover:bg-[#E64A2E] transition-colors text-sm font-medium"
+                  aria-label="Search"
+                  className="shrink-0 rounded-r-md bg-[#FF5733] px-2 py-2 text-xs font-medium text-white transition-colors hover:bg-[#E64A2E] sm:px-4 sm:text-sm"
                 >
-                  Search
+                  <span className="sm:hidden">Go</span>
+                  <span className="hidden sm:inline">Search</span>
                 </button>
               </form>
             </div>
 
-            {/* Navigation Links with Dropdowns */}
-            <Navigation 
+            {/* Navigation Links with Dropdowns (Home, Shop, Vendors, Pages, …) — off; categories unchanged above */}
+            {/* <Navigation
               dropdownOpen={dropdownOpen}
               toggleDropdown={toggleDropdown}
-            />
+            /> */}
           </div>
 
           {/* Icons (User, Wishlist, Cart, Settings) */}
-          <div className="flex relative space-x-6 items-center">
+          <div className="relative flex shrink-0 items-center space-x-4 sm:space-x-6">
             <div className="relative">
               <div
                 onClick={() => {

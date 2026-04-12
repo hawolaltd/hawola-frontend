@@ -17,7 +17,7 @@ interface DrawerProps {
 }
 
 const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) => {
-    const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+    // const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null>(null);
     const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState<boolean>(false);
@@ -28,34 +28,35 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
 
     const displayEmail = profile?.email || user?.email || '';
 
-    const toggleExpand = (label: string) => {
-        setExpandedItems(prev => ({
-            ...prev,
-            [label]: !prev[label]
-        }));
-    };
+    // const toggleExpand = (label: string) => {
+    //     setExpandedItems(prev => ({
+    //         ...prev,
+    //         [label]: !prev[label]
+    //     }));
+    // };
 
-    const navigationLinks: DrawerLinkProps[] = [
-        { href: '/', label: 'Home' },
-        { href: '/shop', label: 'Shop' },
-        {
-            label: 'Vendors',
-            children: [
-                { href: '/vendors', label: 'All Vendors' },
-                { href: '/vendors/listing', label: 'Vendors Listing' },
-                { href: '/vendors/single', label: 'Vendor Single' }
-            ]
-        },
-        {
-            label: 'Pages',
-            children: [
-                { href: '/pages/about', label: 'About Us' },
-                { href: '/pages/faq', label: 'FAQ' }
-            ]
-        },
-        { href: '/blog', label: 'Blog' },
-        { href: '/contact', label: 'Contact' }
-    ];
+    // Top drawer links (Home, Shop, Vendors, …) — hidden; "Shop by categories" unchanged below.
+    // const navigationLinks: DrawerLinkProps[] = [
+    //     { href: '/', label: 'Home' },
+    //     { href: '/shop', label: 'Shop' },
+    //     {
+    //         label: 'Vendors',
+    //         children: [
+    //             { href: '/vendors', label: 'All Vendors' },
+    //             { href: '/vendors/listing', label: 'Vendors Listing' },
+    //             { href: '/vendors/single', label: 'Vendor Single' }
+    //         ]
+    //     },
+    //     {
+    //         label: 'Pages',
+    //         children: [
+    //             { href: '/pages/about', label: 'About Us' },
+    //             { href: '/pages/faq', label: 'FAQ' }
+    //         ]
+    //     },
+    //     { href: '/blog', label: 'Blog' },
+    //     { href: '/contact', label: 'Contact' }
+    // ];
 
     const accountLinks: DrawerLinkProps[] = [
         { href: '/account', label: 'My Account' },
@@ -91,16 +92,16 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                     <svg onClick={onClose} width={'35'} height={'35'} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h24v24h-24z" fill="#fff" opacity="0" transform="matrix(-1 0 0 -1 24 24)"/><path d="m13.41 12 4.3-4.29a1 1 0 1 0 -1.42-1.42l-4.29 4.3-4.29-4.3a1 1 0 0 0 -1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z" fill="#8C9EC5"/></svg>
                 </div>
                 <div className="h-full flex flex-col overflow-hidden">
-                    {/* Navigation Links */}
+                    {/* Navigation Links (Home / Shop / Vendors / …) — off; categories entry below */}
                     <div className="p-4 space-y-2">
-                        {navigationLinks.map((item) => (
+                        {/* {navigationLinks.map((item) => (
                             <DrawerLink
                                 key={item.label}
                                 item={item}
                                 isExpanded={expandedItems[item.label] || false}
                                 onToggleExpand={() => toggleExpand(item.label)}
                             />
-                        ))}
+                        ))} */}
 
                         {/* Entry point for categories drawer */}
                         {categories?.categories && categories.categories.length > 0 && (
@@ -417,7 +418,7 @@ const CategoriesDrawer: React.FC<{
     );
 };
 
-// Helper component for drawer links
+// Helper component for drawer links (used when top nav map above is re-enabled).
 const DrawerLink: React.FC<{
     item: DrawerLinkProps;
     isExpanded?: boolean;

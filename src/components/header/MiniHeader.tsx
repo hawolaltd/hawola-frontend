@@ -16,7 +16,7 @@ function MiniHeader() {
       } hidden xl:block`}
     >
       <div
-        className={`w-full px-6 flex items-center justify-center lg:justify-between `}
+        className={`mx-auto flex w-full max-w-screen-xl items-center justify-center px-6 lg:justify-between xl:px-0`}
       >
         {/* Left section: Navigation Links */}
         <div className="lg:flex gap-2 text-sm hidden">
