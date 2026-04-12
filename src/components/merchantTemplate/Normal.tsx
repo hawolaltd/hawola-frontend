@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useAppSelector } from "@/hook/useReduxTypes";
-import { capitalize, formatCurrency } from "@/util";
+import { capitalize, formatCurrency, featuredImageCardUrl } from "@/util";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
@@ -549,9 +549,7 @@ export default function NormalMerchantPage() {
                           <div className="relative h-56 bg-gray-100 overflow-hidden">
                             <img
                               src={
-                                item?.featured_image?.[0]?.image_url ||
-                                item?.featured_image?.[0]?.image?.full_size ||
-                                "/placeholder.jpg"
+                                featuredImageCardUrl(item?.featured_image?.[0])
                               }
                               alt={item?.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"

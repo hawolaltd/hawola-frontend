@@ -1,6 +1,10 @@
 import React from "react";
 import { useRouter } from "next/router";
-import { amountFormatter, formatCurrency } from "@/util";
+import {
+  amountFormatter,
+  formatCurrency,
+  featuredImageCardUrl,
+} from "@/util";
 import { MerchantOtherProduct } from "@/types/product";
 
 function MerchantOtherItemsCard({
@@ -25,7 +29,7 @@ function MerchantOtherItemsCard({
       </span> */}
       <div className={"w-full flex items-center justify-center"}>
         <img
-          src={product?.featured_image?.[0]?.image?.thumbnail}
+          src={featuredImageCardUrl(product?.featured_image?.[0])}
           alt={product.name}
           style={{
             // width: "200px",

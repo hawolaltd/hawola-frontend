@@ -4,7 +4,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import ProductCard from "@/components/product/ProductCard";
 import ProductCard2 from "@/components/product/ProductCard2";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardSrc } from "@/util";
 import type { AdvertBanner, PopularCategory, ProductFull } from "@/types/home";
 
 function dedupeCategories(cats: PopularCategory[] | undefined): PopularCategory[] {
@@ -281,10 +281,7 @@ function StatsBand({
 }
 
 function EditorialSpotlight({ product }: { product: ProductFull }) {
-  const img =
-    product.featured_image?.[0]?.image_url ||
-    product.featured_image?.[0]?.image?.thumbnail ||
-    product.featured_image?.[0]?.image?.full_size;
+  const img = featuredImageCardSrc(product.featured_image?.[0]);
   const pct = discountPct(product.price, product.discount_price);
   return (
     <section id="spotlight" className="scroll-mt-24 border-b border-slate-200 bg-white py-16 sm:py-24">

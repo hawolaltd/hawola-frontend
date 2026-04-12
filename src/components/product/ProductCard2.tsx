@@ -1,7 +1,7 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { Product, ProductResponse } from "@/types/product";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { ProductFull } from "@/types/home";
 
 function ProductCard2({
@@ -38,12 +38,7 @@ function ProductCard2({
           </span>
         )}
         <img
-          src={
-            item.featured_image?.[0]?.image_url ||
-            item.featured_image?.[0]?.image?.thumbnail ||
-            item.featured_image?.[0]?.image?.full_size ||
-            "/placeholder.jpg"
-          }
+          src={featuredImageCardUrl(item.featured_image?.[0])}
           alt={item.name}
           className="w-full h-16 object-cover"
         />

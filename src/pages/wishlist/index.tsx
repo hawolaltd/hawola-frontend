@@ -14,7 +14,7 @@ import RelatedProduct from "@/components/product/RelatedProduct";
 import moment from "moment";
 import { LocalCartItem, ProductByIdResponse } from "@/types/product";
 import { toast } from "sonner";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
 
 type Product = {
   id: string;
@@ -239,10 +239,9 @@ export default function WishlistPage() {
                               <div className="flex-shrink-0 h-16 w-16">
                                 <img
                                   className="h-16 w-16 rounded-md object-cover"
-                                  src={
-                                    product?.product?.featured_image?.[0]?.image
-                                      ?.thumbnail
-                                  }
+                                  src={featuredImageCardUrl(
+                                    product?.product?.featured_image?.[0]
+                                  )}
                                   alt={product?.product.name}
                                 />
                               </div>

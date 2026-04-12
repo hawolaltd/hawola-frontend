@@ -6,7 +6,7 @@ import {LocalCartItem, Product} from "@/types/product";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
 import {toast} from "sonner";
 import Link from "next/link";
-import {formatCurrency} from "@/util";
+import {formatCurrency, featuredImageCardUrl} from "@/util";
 
 const Wishlist: NextPage = () => {
     const {wishLists, isLoading} = useAppSelector(state => state.products)
@@ -157,7 +157,7 @@ const Wishlist: NextPage = () => {
                             </td>
                             <td className="p-4 flex items-center">
                                 <img
-                                    src={item?.product?.featured_image[0]?.image?.thumbnail}
+                                    src={featuredImageCardUrl(item?.product?.featured_image?.[0])}
                                     alt={item?.product?.name}
                                     className="w-16 h-16 object-contain mr-4"
                                 />

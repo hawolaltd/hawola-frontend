@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { amountFormatter, formatCurrency } from "@/util";
+import { amountFormatter, formatCurrency, featuredImageCardUrl } from "@/util";
 import { LocalCartItem, Product, ProductByIdResponse } from "@/types/product";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
@@ -148,12 +148,7 @@ function ProductCard({
       >
         <div className={"w-full flex items-center justify-center"}>
           <img
-            src={
-              product.featured_image?.[0]?.image_url ||
-              product.featured_image?.[0]?.image?.thumbnail ||
-              product.featured_image?.[0]?.image?.full_size ||
-              "/placeholder.jpg"
-            }
+            src={featuredImageCardUrl(product.featured_image?.[0])}
             alt={product.name}
             style={{
               height: "150px",

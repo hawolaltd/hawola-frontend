@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { toast } from "sonner";
 import { updatePayment } from "@/redux/product/productSlice";
 import dynamic from "next/dynamic";
@@ -193,7 +193,7 @@ const CheckoutPage = () => {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-gray-200 rounded-md">
                         <img
-                          src={item?.product?.featured_image?.[0]?.image_url}
+                          src={featuredImageCardUrl(item?.product?.featured_image?.[0])}
                           alt={item?.product?.name}
                           className="w-full h-full object-cover"
                         />

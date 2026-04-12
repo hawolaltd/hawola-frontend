@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import AuthLayout from "../layout/AuthLayout";
 import Head from "next/head";
 import { Product } from "@/types/product";
+import { featuredImageCardUrl } from "@/util";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -206,9 +207,7 @@ const StandardTemplate = () => {
       <div className="relative overflow-hidden">
         <img
           src={
-            product.featured_image?.[0]?.image_url ||
-            product.featured_image?.[0]?.image?.full_size ||
-            "/placeholder.jpg"
+            featuredImageCardUrl(product.featured_image?.[0])
           }
           alt={product.name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"

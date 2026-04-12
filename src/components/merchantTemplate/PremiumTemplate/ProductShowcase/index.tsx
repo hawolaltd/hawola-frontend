@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { featuredImageCardUrl } from "@/util";
 
 interface Product {
   id: number;
@@ -90,11 +91,10 @@ const ProductShowcase = ({
             {/* Product Image */}
             <div className="relative h-48 bg-gray-100 overflow-hidden">
               <Image
-                src={
-                  product.featured_image?.[0]?.image_url ||
-                  product.featured_image?.[0]?.image?.thumbnail ||
+                src={featuredImageCardUrl(
+                  product.featured_image?.[0],
                   "/images/products/product-1-sm-1.png"
-                }
+                )}
                 alt={product.name}
                 width={300}
                 height={200}

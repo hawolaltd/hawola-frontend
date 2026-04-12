@@ -362,3 +362,9 @@ export const getLatestStatus = (statusArray: any) => {
     return currentDate.isAfter(latestDate) ? current : latest;
   });
 };
+
+export {
+  featuredImageCardSrc,
+  featuredImageCardUrl,
+} from "./featuredImage";
+export type { FeaturedImageCardEntry } from "./featuredImage";

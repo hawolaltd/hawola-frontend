@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import AuthLayout from "../layout/AuthLayout";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
@@ -361,9 +361,7 @@ const BasicTemplate = () => {
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
                           src={
-                            product.featured_image?.[0]?.image_url ||
-                            product.featured_image?.[0]?.image?.full_size ||
-                            "/placeholder.jpg"
+                            featuredImageCardUrl(product.featured_image?.[0])
                           }
                           alt={product.name || "Product"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -445,9 +443,7 @@ const BasicTemplate = () => {
                     <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
                           src={
-                            product.featured_image?.[0]?.image_url ||
-                            product.featured_image?.[0]?.image?.full_size ||
-                            "/placeholder.jpg"
+                            featuredImageCardUrl(product.featured_image?.[0])
                           }
                           alt={product.name || "Product"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

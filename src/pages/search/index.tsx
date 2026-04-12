@@ -28,7 +28,7 @@ function searchCategoryImageUrl(category: { image?: unknown }): string | null {
   if (typeof img === "string") return img;
   if (typeof img === "object" && img !== null) {
     const o = img as Record<string, unknown>;
-    const direct = o.full_size ?? o.thumbnail ?? o.url;
+    const direct = o.thumbnail ?? o.thumbnail_100 ?? o.full_size ?? o.url;
     if (typeof direct === "string") return direct;
     const first = Object.values(o).find((v) => typeof v === "string");
     if (typeof first === "string") return first;

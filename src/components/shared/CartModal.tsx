@@ -1,7 +1,7 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { useAppSelector } from "@/hook/useReduxTypes";
-import { amountFormatter } from "@/util";
+import { amountFormatter, featuredImageCardUrl } from "@/util";
 
 const CartModal = () => {
   const router = useRouter();
@@ -34,24 +34,11 @@ const CartModal = () => {
   const hasAuthenticatedCart = isAuthenticated && carts?.cart_items && carts.cart_items.length > 0;
   const hasLocalCart = localCart?.items && localCart.items.length > 0;
 
-  // Handle different image structures for authenticated vs local cart
-  const getImageUrl = (item: any) => {
-    const featuredImage = item?.product?.featured_image?.[0];
-    if (!featuredImage) return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%23e5e7eb" width="60" height="60"/%3E%3C/svg%3E';
-    
-    // For authenticated cart items
-    if (featuredImage.image?.thumbnail) {
-      return featuredImage.image.thumbnail;
-    }
-    
-    // For local cart items (also has image.thumbnail structure)
-    if (featuredImage.image_url) {
-      return featuredImage.image_url;
-    }
-    
-    // Fallback to empty SVG
-    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%23e5e7eb" width="60" height="60"/%3E%3C/svg%3E';
-  };
+  const emptyImg =
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%23e5e7eb" width="60" height="60"/%3E%3C/svg%3E';
+
+  const getImageUrl = (item: any) =>
+    featuredImageCardUrl(item?.product?.featured_image?.[0], emptyImg);
 
   return (
     <div

@@ -3,6 +3,7 @@ import { useAppDispatch } from '@/hook/useReduxTypes';
 import { removeFromMemoryBank, updateMemoryBankItemNotes } from '@/redux/memoryBank/memoryBankSlice';
 import { MemoryBankItem as MemoryBankItemType } from '@/types/memoryBank';
 import Link from 'next/link';
+import { featuredImageCardSrc } from '@/util';
 
 interface MemoryBankItemProps {
     item: MemoryBankItemType;
@@ -28,13 +29,15 @@ const MemoryBankItem: React.FC<MemoryBankItemProps> = ({ item }) => {
         day: 'numeric',
     });
     
+    const memoryImg = featuredImageCardSrc(item.product.featured_image?.[0]);
+
     return (
         <div className="border rounded-lg p-4 mb-4 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="w-full md:w-1/4">
-                    {item.product.featured_image && item.product.featured_image.length > 0 ? (
+                    {memoryImg ? (
                         <img
-                            src={item.product.featured_image[0]?.image_url || item.product.featured_image[0]?.image?.full_size || "/placeholder.jpg"}
+                            src={memoryImg}
                             alt={item.product.name}
                             className="w-full h-40 object-cover rounded-md"
                         />

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useAppDispatch, useAppSelector} from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
-import {amountFormatter} from '@/util';
+import {amountFormatter, featuredImageCardUrl} from '@/util';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
@@ -258,7 +258,7 @@ const OrderHistoryPage = () => {
                                                         {/* Product Image */}
                                                         <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                                                             <img
-                                                                src={order.product?.featured_image?.[0]?.image_url || '/placeholder.png'}
+                                                                src={featuredImageCardUrl(order.product?.featured_image?.[0], '/placeholder.png')}
                                                                 alt={order.product?.name}
                                                                 className="w-full h-full object-cover"
                                                             />

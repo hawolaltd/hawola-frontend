@@ -12,7 +12,7 @@ import {
   removeFromCompare,
 } from "@/redux/product/productSlice";
 import { LocalCartItem, Product } from "@/types/product";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardSrc } from "@/util";
 import { toast } from "sonner";
 
 export default function ComparePage() {
@@ -161,49 +161,52 @@ export default function ComparePage() {
                       >
                         Product
                       </th>
-                      {compareProducts.map((p) => (
-                        <th
-                          key={p.id}
-                          scope="col"
-                          className="min-w-[220px] px-4 py-3 text-left align-top"
-                        >
-                          <div className="flex flex-col gap-3">
-                            <Link
-                              href={`/product/${p.slug}`}
-                              className="block shrink-0"
-                            >
-                              {p.featured_image?.[0]?.image_url ||
-                              p.featured_image?.[0]?.image?.thumbnail ? (
-                                <img
-                                  src={
-                                    p.featured_image[0].image_url ||
-                                    p.featured_image[0].image?.thumbnail
-                                  }
-                                  alt=""
-                                  className="mx-auto h-28 w-28 rounded-md object-contain"
-                                />
-                              ) : (
-                                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">
-                                  No image
-                                </div>
-                              )}
-                            </Link>
-                            <Link
-                              href={`/product/${p.slug}`}
-                              className="text-sm font-semibold text-primary hover:underline"
-                            >
-                              {p.name}
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => dispatch(removeFromCompare(p.id))}
-                              className="text-left text-xs font-medium text-red-600 hover:text-red-800"
-                            >
-                              Remove from compare
-                            </button>
-                          </div>
-                        </th>
-                      ))}
+                      {compareProducts.map((p) => {
+                        const cardImg = featuredImageCardSrc(
+                          p.featured_image?.[0]
+                        );
+                        return (
+                          <th
+                            key={p.id}
+                            scope="col"
+                            className="min-w-[220px] px-4 py-3 text-left align-top"
+                          >
+                            <div className="flex flex-col gap-3">
+                              <Link
+                                href={`/product/${p.slug}`}
+                                className="block shrink-0"
+                              >
+                                {cardImg ? (
+                                  <img
+                                    src={cardImg}
+                                    alt=""
+                                    className="mx-auto h-28 w-28 rounded-md object-contain"
+                                  />
+                                ) : (
+                                  <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">
+                                    No image
+                                  </div>
+                                )}
+                              </Link>
+                              <Link
+                                href={`/product/${p.slug}`}
+                                className="text-sm font-semibold text-primary hover:underline"
+                              >
+                                {p.name}
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  dispatch(removeFromCompare(p.id))
+                                }
+                                className="text-left text-xs font-medium text-red-600 hover:text-red-800"
+                              >
+                                Remove from compare
+                              </button>
+                            </div>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">

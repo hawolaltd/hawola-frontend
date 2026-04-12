@@ -1,5 +1,9 @@
 import { CartItem } from "@/types/product";
-import { amountFormatter, formatCurrency } from "@/util";
+import {
+  amountFormatter,
+  formatCurrency,
+  featuredImageCardUrl,
+} from "@/util";
 
 const CartItemRow = ({
   cart,
@@ -28,24 +32,11 @@ const CartItemRow = ({
   const cartId = cart.id || cart.product?.id;
   const effectiveQty = Math.max(1, cart.qty + (pendingUpdates[cartId] || 0));
   
-  // Handle different image structures for authenticated vs local cart
-  const getImageUrl = () => {
-    const featuredImage = cart?.product?.featured_image?.[0];
-    if (!featuredImage) return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23e5e7eb" width="80" height="80"/%3E%3C/svg%3E';
-    
-    // For authenticated cart items
-    if (featuredImage.image_url) {
-      return featuredImage.image_url;
-    }
-    
-    // For local cart items
-    if (featuredImage.image?.thumbnail) {
-      return featuredImage.image.thumbnail;
-    }
-    
-    // Fallback to main image or empty SVG
-    return featuredImage.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23e5e7eb" width="80" height="80"/%3E%3C/svg%3E';
-  };
+  const emptyImg =
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23e5e7eb" width="80" height="80"/%3E%3C/svg%3E';
+
+  const getImageUrl = () =>
+    featuredImageCardUrl(cart?.product?.featured_image?.[0], emptyImg);
 
   return (
     <div key={cartId} className="p-4 border-b last:border-b-0">

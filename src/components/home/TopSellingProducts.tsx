@@ -6,7 +6,7 @@ import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import SubscribeSection from "@/components/home/SubscribeSection";
 import { ProductResponse } from "@/types/product";
-import { formatCurrency } from "@/util";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import { AdvertBanner } from "@/types/home";
 
@@ -217,12 +217,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
                       </span>
                     )}
                     <img
-                      src={
-                        item.featured_image?.[0]?.image_url ||
-                        item.featured_image?.[0]?.image?.thumbnail ||
-                        item.featured_image?.[0]?.image?.full_size ||
-                        "/placeholder.jpg"
-                      }
+                      src={featuredImageCardUrl(item.featured_image?.[0])}
                       alt={item.name}
                       className="w-full h-16 object-cover"
                     />
