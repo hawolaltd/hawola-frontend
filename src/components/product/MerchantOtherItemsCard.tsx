@@ -46,6 +46,7 @@ function MerchantOtherItemsCard({
             ? product.name?.slice(0, 100) + "..."
             : product.name}
         </h3>
+        {/* Ratings hidden on product cards
         <div className={"flex items-center gap-1"}>
           {Array.from(product?.rating ?? 0).map((star, key) => (
             <svg
@@ -70,6 +71,7 @@ function MerchantOtherItemsCard({
             {product?.numReviews}
           </span>
         </div>
+        */}
         <p className="text-lg font-bold text-primary">
           {formatCurrency(product.discount_price)}{" "}
           <span className={"line-through text-xs text-textPadded"}>

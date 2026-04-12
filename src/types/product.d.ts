@@ -16,6 +16,8 @@ export interface Merchant {
     store_page_title: string;
     store_page_subtitle: string;
     logo: string;
+    /** Small JPEG URL from API (product detail); prefer over `logo` for avatars. */
+    logo_thumbnail?: string | null;
     default_banner: string;
     image_ppoi: string;
     primary_color: string;
@@ -199,6 +201,8 @@ export interface MerchantOtherProduct {
 
 export interface ProductByIdResponse {
     product: Product;
+    /** Full merchant profile from product detail API (merged with `product.merchant` in UI). */
+    merchant?: Merchant;
     product_images: ProductImage[];
     product_variant: any[];
     re_images: ReImage[];

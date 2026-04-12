@@ -15,6 +15,7 @@ function dedupeCategories(cats: PopularCategory[] | undefined): PopularCategory[
   );
 }
 
+/* Product card star row — disabled while ratings are hidden on cards
 function StarRow({ rating }: { rating: string }) {
   const n = Math.min(5, Math.max(0, Math.round(parseFloat(rating) || 0)));
   return (
@@ -27,6 +28,7 @@ function StarRow({ rating }: { rating: string }) {
     </div>
   );
 }
+*/
 
 function discountPct(price: string, discount: string): number | null {
   const p = parseFloat(price);
@@ -324,10 +326,12 @@ function EditorialSpotlight({ product }: { product: ProductFull }) {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-textPadded">{product.merchant?.store_name}</p>
               <h3 className="mt-3 font-[family-name:Kanit] text-2xl font-bold leading-tight text-headerBg sm:text-3xl">{product.name}</h3>
+              {/* Ratings hidden on product cards
               <div className="mt-4 flex items-center gap-3">
                 <StarRow rating={product.rating} />
                 <span className="text-xs text-slate-500">({product.numReviews ?? 0} reviews)</span>
               </div>
+              */}
               <div className="mt-8 flex flex-wrap items-baseline gap-3">
                 <span className="font-[family-name:Kanit] text-3xl font-bold text-headerBg">
                   {formatCurrency(product.discount_price || product.price)}

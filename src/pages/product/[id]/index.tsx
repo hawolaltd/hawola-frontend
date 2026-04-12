@@ -1,5 +1,6 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import Head from 'next/head';
+import type { GetServerSideProps } from "next";
 import AuthLayout from "@/components/layout/AuthLayout";
 import {FaFacebookF, FaLinkedinIn, FaTwitter, FaWhatsapp} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
@@ -18,23 +19,48 @@ import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
+import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import { TagIcon } from '@heroicons/react/24/outline';
+import { buildProductSeo } from "@/util/storefrontSeo";
 
-const ProductPage = () => {
+type ProductPageProps = {
+    serverNotFound?: boolean;
+};
+
+const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const [quantity, setQuantity] = useState(1);
     const [currentImage, setCurrentImage] = useState<string | null>(null);
     const [position, setPosition] = useState({x: "50%", y: "50%"});
     const [isHovered, setIsHovered] = useState(false);
-    const [loadingProduct, setLoadingProduct] = useState(false);
-    const [loadingReview, setLoadingReview] = useState(false);
+    const [clientNotFound, setClientNotFound] = useState(false);
+    const [loadingProduct, setLoadingProduct] = useState(!serverNotFound);
+    const [loadingReview, setLoadingReview] = useState(!serverNotFound);
     const router = useRouter();
-    const { query } = router;
+    const { query, isReady: routerIsReady } = router;
 
     const dispatch = useAppDispatch()
 
     const {product, isLoading, reviews, merchantReviews} = useAppSelector(state => state.products)
     const {isAuthenticated} = useAppSelector(state => state.auth)
+    const siteSettings = useAppSelector((state) => state.general.siteSettings)
+
+    const productSlug =
+        typeof query.id === "string"
+            ? query.id
+            : Array.isArray(query.id)
+              ? query.id[0] ?? ""
+              : "";
+
+    const productSeo = useMemo(() => {
+        const p = product?.product;
+        if (!p?.id || !productSlug) return null;
+        return buildProductSeo({
+            siteSettings,
+            product: p,
+            pathSlug: productSlug,
+        });
+    }, [siteSettings, product?.product, productSlug]);
 
     const [mainImage, setMainImage] = useState("");
 
@@ -210,33 +236,51 @@ const ProductPage = () => {
         }
     }
 
-    console.log("product--", product);
-// Update your init function to clear previous product data:
     const init = useCallback(async () => {
+        const slug = query.id;
+        if (!slug || typeof slug !== "string") return;
+
         setLoadingProduct(true);
         setLoadingReview(true);
+        setClientNotFound(false);
         try {
-            // Clear previous product data before loading new one
-            dispatch(clearProductById());
-
-
-            const res = await dispatch(getProductBySlug(query.id as string));
-            if (!res.type.includes('rejected')) {
-                setLoadingProduct(false);
-                const response = await dispatch(getMerchantReviews(query.id as string));
-                if (!response.type.includes('rejected')) {
-                    setLoadingReview(false);
-                }
+            await dispatch(clearProductById());
+            const res = await dispatch(getProductBySlug(slug));
+            if (getProductBySlug.rejected.match(res)) {
+                setClientNotFound(true);
+                return;
             }
-        } catch (e) {
+            const payload = res.payload as ProductByIdResponse;
+            if (!payload?.product?.id) {
+                setClientNotFound(true);
+                return;
+            }
+            setClientNotFound(false);
+            await dispatch(getMerchantReviews(slug));
+        } catch {
+            setClientNotFound(true);
+        } finally {
             setLoadingProduct(false);
             setLoadingReview(false);
         }
     }, [dispatch, query.id]);
 
     useEffect(() => {
-       init()
-    }, [init]);
+        if (serverNotFound) {
+            setLoadingProduct(false);
+            setLoadingReview(false);
+            return;
+        }
+        if (!routerIsReady) return;
+        const slug = query.id;
+        if (!slug || typeof slug !== "string") {
+            setClientNotFound(true);
+            setLoadingProduct(false);
+            setLoadingReview(false);
+            return;
+        }
+        void init();
+    }, [serverNotFound, routerIsReady, query.id, init]);
 
     useEffect(() => {
         if (product?.product?.featured_image?.[0]?.image_url) {
@@ -248,33 +292,88 @@ const ProductPage = () => {
     }, [product?.product?.featured_image, product?.product_images]);
 
 
+    const notFound = serverNotFound || clientNotFound;
+    const slugForMessage =
+        typeof query.id === "string" ? query.id : Array.isArray(query.id) ? query.id[0] : null;
+
+    if (notFound) {
+        return (
+            <AuthLayout>
+                <Head>
+                    <title>Hawola | Product not found</title>
+                    <meta name="robots" content="noindex,nofollow" />
+                </Head>
+                <ProductDetailNotFound slug={slugForMessage} />
+            </AuthLayout>
+        );
+    }
+
     if (loadingProduct) {
         return <AuthLayout><ProductSkeleton /></AuthLayout>;
     }
 
     // Generate dynamic title
-    const pageTitle = product?.product?.name 
-        ? `Hawola | ${product.product.name}`
-        : 'Hawola | Product Details';
+    if (!product?.product?.id) {
+        return (
+            <AuthLayout>
+                <Head>
+                    <title>Hawola | Product not found</title>
+                    <meta name="robots" content="noindex,nofollow" />
+                </Head>
+                <ProductDetailNotFound slug={slugForMessage} />
+            </AuthLayout>
+        );
+    }
 
     const tagNames = product?.product?.tags?.map((t) => t?.name).filter(Boolean) || [];
-    const keywordsMeta = tagNames.length ? tagNames.join(', ') : undefined;
+    const keywordsCombined = [productSeo?.keywords, tagNames.join(", ")]
+        .filter(Boolean)
+        .join(", ");
+
+    const ogLocale = (siteSettings?.seo_og_locale as string) || "en_US";
+    const twitterSite = (siteSettings?.seo_twitter_site as string)?.trim();
 
     return (<AuthLayout>
         <Head>
-            <title>{pageTitle}</title>
-            <meta 
-                name="description" 
-                content={product?.product?.description 
-                    ? `${product.product.description.substring(0, 160)}...` 
-                    : `View ${product?.product?.name || 'this product'} on Hawola`} 
-            />
-            {keywordsMeta && <meta name="keywords" content={keywordsMeta} />}
-            {product?.product?.featured_image?.[0]?.image_url && (
-                <meta property="og:image" content={product.product.featured_image[0].image_url} />
-            )}
-            <meta property="og:title" content={pageTitle} />
-            <meta property="og:type" content="product" />
+            <title>{productSeo?.title || "Hawola | Product"}</title>
+            <meta name="description" content={productSeo?.description || ""} />
+            {keywordsCombined ? (
+                <meta name="keywords" content={keywordsCombined.slice(0, 512)} />
+            ) : null}
+            <meta name="robots" content={productSeo?.robots || "index,follow"} />
+            {productSeo?.canonicalUrl ? (
+                <link rel="canonical" href={productSeo.canonicalUrl} />
+            ) : null}
+            <meta property="og:title" content={productSeo?.ogTitle || ""} />
+            <meta property="og:description" content={productSeo?.ogDescription || ""} />
+            <meta property="og:type" content={productSeo?.ogType || "product"} />
+            <meta property="og:locale" content={ogLocale} />
+            {siteSettings?.app_name ? (
+                <meta property="og:site_name" content={String(siteSettings.app_name)} />
+            ) : null}
+            {productSeo?.canonicalUrl ? (
+                <meta property="og:url" content={productSeo.canonicalUrl} />
+            ) : null}
+            {productSeo?.ogImage ? (
+                <meta property="og:image" content={productSeo.ogImage} />
+            ) : null}
+            <meta name="twitter:card" content="summary_large_image" />
+            {twitterSite ? <meta name="twitter:site" content={twitterSite} /> : null}
+            {productSeo?.ogTitle ? (
+                <meta name="twitter:title" content={productSeo.ogTitle} />
+            ) : null}
+            {productSeo?.ogDescription ? (
+                <meta name="twitter:description" content={productSeo.ogDescription} />
+            ) : null}
+            {productSeo?.ogImage ? (
+                <meta name="twitter:image" content={productSeo.ogImage} />
+            ) : null}
+            {productSeo?.jsonLd ? (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(productSeo.jsonLd) }}
+                />
+            ) : null}
         </Head>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
             {/* Product Image start*/}
@@ -395,7 +494,14 @@ const ProductPage = () => {
                             }} className={'flex items-center gap-2'}>
                             <span
                                 className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
-                                 <img src={product?.product?.merchant?.logo} alt={'Merchant Logo'} className={'w-4 h-4 rounded-full'}/>
+                                 <img
+                                     src={
+                                         product?.product?.merchant?.logo_thumbnail ||
+                                         product?.product?.merchant?.logo
+                                     }
+                                     alt="Store logo"
+                                     className="h-4 w-4 rounded-full object-cover"
+                                 />
                             </span>
                             <p className={'text-primary font-[500] text-xs cursor-pointer'}>View Merchant Profile</p>
                         </div>
@@ -825,5 +931,32 @@ const ProductPage = () => {
     </AuthLayout>);
 };
 
+export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (context) => {
+    const raw = context.params?.id;
+    const slug = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] ?? "" : "";
+    if (!slug) {
+        context.res.statusCode = 404;
+        return { props: { serverNotFound: true } };
+    }
+    const envBase = process.env.NEXT_PUBLIC_API_URL || "";
+    const base = envBase.replace(/\/?$/, "/");
+    if (!base || base === "/") {
+        return { props: { serverNotFound: false } };
+    }
+    try {
+        const url = `${base}products/detail/${encodeURIComponent(slug)}/`;
+        const res = await fetch(url, {
+            headers: { Accept: "application/json" },
+            redirect: "manual",
+        });
+        if (res.status === 404) {
+            context.res.statusCode = 404;
+            return { props: { serverNotFound: true } };
+        }
+    } catch {
+        /* allow client retry if SSR fetch fails */
+    }
+    return { props: { serverNotFound: false } };
+};
 
 export default ProductPage;

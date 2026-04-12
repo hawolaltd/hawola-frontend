@@ -4,7 +4,11 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import AuthLayout from "../layout/AuthLayout";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
+import type { Product } from "@/types/product";
+import { stripHtmlForMeta } from "@/util/merchantRichText";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
@@ -121,7 +125,7 @@ const BasicTemplate = () => {
         <title>{merchant_details?.store_name} | Professional Store</title>
         <meta
           name="description"
-          content={merchant_details?.about?.substring(0, 160)}
+          content={stripHtmlForMeta(merchant_details?.about, 160)}
         />
         <style>
           {`
@@ -235,12 +239,21 @@ const BasicTemplate = () => {
           <div className="absolute inset-0 flex items-center">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
               <div className="max-w-2xl text-white">
-                <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-                  {merchant_details?.store_page_subtitle || merchant_details?.store_name || "Welcome to Our Store"}
-                </h2>
+                <div className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg prose prose-invert max-w-none prose-p:mb-2 prose-headings:text-white prose-p:text-gray-100">
+                  <MerchantRichHtml
+                    html={
+                      merchant_details?.store_page_subtitle ||
+                      merchant_details?.store_name ||
+                      "<p>Welcome to Our Store</p>"
+                    }
+                  />
+                </div>
                 <p className="text-lg md:text-xl text-gray-200 mb-6 drop-shadow-md">
-                  {merchant_details?.about?.substring(0, 150) || "Discover amazing products at great prices"}
-                  {merchant_details?.about && merchant_details.about.length > 150 && "..."}
+                  {(() => {
+                    const plain = stripHtmlForMeta(merchant_details?.about, 2000);
+                    if (!plain) return "Discover amazing products at great prices";
+                    return plain.length > 150 ? `${plain.slice(0, 150)}…` : plain;
+                  })()}
                 </p>
                 <button
                   onClick={() => setActiveSection("products")}
@@ -353,11 +366,12 @@ const BasicTemplate = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {recent_products.slice(0, 8).map((product) => (
-                    <Link
+                    <div
                       key={product.id}
-                      href={`/product/${product.slug}`}
-                      className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
+                      className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
                     >
+                      <AddToCompareButton product={product as Product} className="absolute top-3 right-3 z-20" />
+                      <Link href={`/product/${product.slug}`} className="block">
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
                           src={
@@ -376,6 +390,7 @@ const BasicTemplate = () => {
                         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm group-hover:text-gray-700">
                           {product.name}
                         </h3>
+                        {/* Ratings hidden on product cards
                         <div className="flex items-center gap-1 mb-2">
                           <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
                             <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
@@ -384,6 +399,7 @@ const BasicTemplate = () => {
                             {product.rating || "0"} ({product.numReviews || 0})
                           </span>
                         </div>
+                        */}
                         <div className="flex items-baseline gap-2">
                           <span className="text-lg font-bold text-gray-900">
                             {formatCurrency(product.discount_price || product.price)}
@@ -395,7 +411,8 @@ const BasicTemplate = () => {
                           )}
                         </div>
                       </div>
-                    </Link>
+                      </Link>
+                    </div>
                   ))}
                 </div>
               </section>
@@ -406,9 +423,9 @@ const BasicTemplate = () => {
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
                   About {merchant_details?.store_name}
                 </h2>
-                <p className="text-gray-700 leading-relaxed mb-6 text-lg">
-                  {merchant_details?.about?.split("\r\n\r\n")[0] || merchant_details?.about?.substring(0, 300)}
-                </p>
+                <div className="text-gray-700 leading-relaxed mb-6 text-lg prose prose-neutral max-w-none">
+                  <MerchantRichHtml html={merchant_details?.about} />
+                </div>
                 <button
                   onClick={() => setActiveSection("about")}
                   className="px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105"
@@ -435,11 +452,12 @@ const BasicTemplate = () => {
               {recent_products && recent_products.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {recent_products.map((product) => (
-                  <Link
+                  <div
                     key={product.id}
-                    href={`/product/${product.slug}`}
-                    className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
+                    className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
                   >
+                    <AddToCompareButton product={product as Product} className="absolute top-3 right-3 z-20" />
+                    <Link href={`/product/${product.slug}`} className="block">
                     <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
                           src={
@@ -458,6 +476,7 @@ const BasicTemplate = () => {
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
                         {product.name}
                       </h3>
+                      {/* Ratings hidden on product cards
                       <div className="flex items-center gap-1 mb-2">
                         <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
                           <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
@@ -466,6 +485,7 @@ const BasicTemplate = () => {
                           {product.rating || "0"} ({product.numReviews || 0})
                         </span>
                       </div>
+                      */}
                       <div className="flex items-baseline gap-2">
                         <span className="text-lg font-bold text-gray-900">
                           {formatCurrency(product.discount_price || product.price)}
@@ -477,8 +497,9 @@ const BasicTemplate = () => {
                         )}
                       </div>
                     </div>
-                  </Link>
-                ))}
+                    </Link>
+                  </div>
+                  ))}
               </div>
               ) : (
                 <div className="text-center py-12">
@@ -555,14 +576,8 @@ const BasicTemplate = () => {
                   <h2 className="text-4xl font-bold text-gray-900 mb-6">
                     {merchant_details?.about_title || `About ${merchant_details?.store_name}`}
                   </h2>
-                  <div className="prose prose-lg max-w-none text-gray-700 space-y-4">
-                    {merchant_details?.about
-                      ?.split("\r\n\r\n")
-                      .map((paragraph: string, index: number) => (
-                        <p key={index} className="leading-relaxed">
-                          {paragraph}
-                        </p>
-                      ))}
+                  <div className="prose prose-lg max-w-none text-gray-700">
+                    <MerchantRichHtml html={merchant_details?.about} />
                   </div>
 
                   {/* Contact Information */}
@@ -624,7 +639,7 @@ const BasicTemplate = () => {
               <div>
                 <h3 className="text-lg font-bold mb-4">{merchant_details?.store_name}</h3>
                 <p className="text-gray-400 text-sm">
-                  {merchant_details?.about?.substring(0, 150)}...
+                  {stripHtmlForMeta(merchant_details?.about, 150)}
                 </p>
               </div>
               <div>

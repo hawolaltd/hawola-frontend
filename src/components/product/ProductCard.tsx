@@ -164,6 +164,7 @@ function ProductCard({
               ? product.name?.slice(0, 50) + "..."
               : product.name}
           </h3>
+          {/* Ratings hidden on product cards (per product policy)
           <div className={"flex items-center gap-1"}>
             {Array.from({
               length: Math.min(5, Math.max(0, Math.round(Number(product?.rating) || 0))),
@@ -190,6 +191,7 @@ function ProductCard({
               {product?.numReviews}
             </span>
           </div>
+          */}
           <p className="text-lg font-bold text-primary">
             {formatCurrency(product.discount_price)}{" "}
             <span className={"line-through text-xs text-textPadded"}>

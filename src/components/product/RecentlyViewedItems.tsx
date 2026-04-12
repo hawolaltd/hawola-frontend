@@ -43,6 +43,7 @@ function RecentlyViewedItems() {
                             </div>
                             <div className="p-4">
                                 <h3 className="text-sm font-semibold text-primary">{item.title}</h3>
+                                {/* Ratings hidden on product cards
                                 <div className={'flex items-center gap-1'}>
                                     {[1, 2, 3, 4, 5].map(star => (
                                         <svg className={'w-4 h-4'} key={star} viewBox="0 0 24 24"
@@ -56,6 +57,7 @@ function RecentlyViewedItems() {
                                     className={'text-[10px] text-textPadded font-normal'}>(65)</span>
                                 </div>
                                 <p className="text-sm text-primary">{item.reviews} reviews</p>
+                                */}
                                 <div className="flex gap-2 items-center">
                                         <span
                                             className="text-sm font-bold text-primary ">{formatCurrency(item.discountedPrice)}</span>

@@ -4,7 +4,10 @@ import { useRouter } from "next/router";
 import AuthLayout from "../layout/AuthLayout";
 import Head from "next/head";
 import { Product } from "@/types/product";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { featuredImageCardUrl } from "@/util";
+import { stripHtmlForMeta } from "@/util/merchantRichText";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -205,6 +208,7 @@ const StandardTemplate = () => {
   const ProductCard = ({ product }: { product: Product }) => (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
       <div className="relative overflow-hidden">
+        <AddToCompareButton product={product} className="absolute top-3 right-3 z-20" />
         <img
           src={
             featuredImageCardUrl(product.featured_image?.[0])
@@ -241,6 +245,7 @@ const StandardTemplate = () => {
                 </span>
               )}
           </div>
+          {/* Ratings hidden on product cards
           <div className="flex items-center space-x-1">
             <span className="text-yellow-400">★</span>
             <span className="text-sm text-gray-600">{product.rating}</span>
@@ -248,6 +253,7 @@ const StandardTemplate = () => {
               ({product.numReviews})
             </span>
           </div>
+          */}
         </div>
       </div>
     </div>
@@ -292,7 +298,7 @@ const StandardTemplate = () => {
         <title>{data?.merchant_details?.store_name} | Minimalist Store</title>
         <meta
           name="description"
-          content={data?.merchant_details?.about?.substring(0, 160)}
+          content={stripHtmlForMeta(data?.merchant_details?.about, 160)}
         />
         <style>
           {`
@@ -419,9 +425,9 @@ const StandardTemplate = () => {
                 <h1 className="text-5xl md:text-6xl font-extrabold mb-4 drop-shadow-2xl">
                   {merchant_details?.store_name}
                 </h1>
-                <p className="text-xl md:text-2xl opacity-95 drop-shadow-lg">
-                  {merchant_details?.store_page_subtitle}
-                </p>
+                <div className="text-xl md:text-2xl opacity-95 drop-shadow-lg prose prose-invert max-w-none prose-p:mb-2 prose-p:last:mb-0">
+                  <MerchantRichHtml html={merchant_details?.store_page_subtitle} />
+                </div>
               </div>
             </div>
           )}
@@ -500,9 +506,9 @@ const StandardTemplate = () => {
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-4">
-                  {merchant_details?.store_page_subtitle}
-                </p>
+                <div className="text-gray-600 mb-4 prose prose-neutral max-w-none prose-p:mb-2 prose-p:last:mb-0">
+                  <MerchantRichHtml html={merchant_details?.store_page_subtitle} />
+                </div>
 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   <div className="flex items-center space-x-1">
@@ -607,13 +613,7 @@ const StandardTemplate = () => {
                   {merchant_details?.about_title}
                 </h2>
                 <div className="prose prose-lg max-w-none text-gray-700">
-                  {merchant_details?.about
-                    ?.split("\r\n\r\n")
-                    .map((paragraph, index) => (
-                      <p key={index} className="mb-4 leading-relaxed">
-                        {paragraph}
-                      </p>
-                    ))}
+                  <MerchantRichHtml html={merchant_details?.about} />
                 </div>
 
                 <div className="mt-8 p-6 bg-gray-50 rounded-xl">

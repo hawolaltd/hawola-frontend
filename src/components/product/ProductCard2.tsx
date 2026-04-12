@@ -47,6 +47,7 @@ function ProductCard2({
         <h3 className="text-sm font-semibold text-primary">
           {item.name?.length > 40 ? item.name?.slice(0, 40) + "..." : item.name}
         </h3>
+        {/* Ratings hidden on product cards
         <div className={"flex items-center gap-1"}>
           {Array.from({ length: Math.min(5, Math.max(0, Math.round(Number(item?.rating) || 0))) }).map((_, key) => (
             <svg
@@ -72,6 +73,7 @@ function ProductCard2({
           </span>
         </div>
         <p className="text-sm text-primary">{item.numReviews} reviews</p>
+        */}
         <div className="flex gap-2 items-center">
           <span className="text-sm font-semibold text-gray-800">
             {formatCurrency(item.discount_price)}

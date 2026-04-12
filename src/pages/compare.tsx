@@ -296,6 +296,7 @@ export default function ComparePage() {
                         </td>
                       ))}
                     </tr>
+                    {/* Ratings row hidden on compare
                     <tr>
                       <td className="sticky left-0 z-10 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]">
                         Rating
@@ -306,6 +307,7 @@ export default function ComparePage() {
                         </td>
                       ))}
                     </tr>
+                    */}
                     <tr className="bg-gray-50">
                       <td className="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]">
                         Add to cart

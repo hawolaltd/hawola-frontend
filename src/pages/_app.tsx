@@ -116,10 +116,56 @@ function AppContent({ Component, pageProps }: AppProps) {
     );
   }
 
+  const defaultTitle = siteSettings?.app_name
+    ? String(siteSettings.app_name)
+    : "Hawola";
+  const defaultDesc =
+    (siteSettings?.seo_site_default_description as string)?.trim() ||
+    (siteSettings?.app_slogan as string)?.trim() ||
+    "";
+  const defaultRobots =
+    (siteSettings?.seo_default_robots as string)?.trim() || "index,follow";
+  const canonicalBase =
+    (siteSettings?.seo_canonical_base_url as string)?.replace(/\/+$/, "") ||
+    (typeof process !== "undefined" &&
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "")) ||
+    "";
+
   return (
     <>
       <Head>
-        <title>Hawola</title>
+        <title>{defaultTitle}</title>
+        {defaultDesc ? (
+          <meta name="description" content={defaultDesc.slice(0, 320)} />
+        ) : null}
+        {(siteSettings?.seo_site_default_keywords as string)?.trim() ? (
+          <meta
+            name="keywords"
+            content={String(siteSettings?.seo_site_default_keywords).slice(0, 512)}
+          />
+        ) : null}
+        <meta name="robots" content={defaultRobots} />
+        {canonicalBase ? <link rel="canonical" href={canonicalBase} /> : null}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={defaultTitle} />
+        {defaultDesc ? (
+          <meta property="og:description" content={defaultDesc.slice(0, 320)} />
+        ) : null}
+        {siteSettings?.app_name ? (
+          <meta property="og:site_name" content={String(siteSettings?.app_name)} />
+        ) : null}
+        {(siteSettings?.seo_og_locale as string)?.trim() ? (
+          <meta property="og:locale" content={String(siteSettings?.seo_og_locale)} />
+        ) : (
+          <meta property="og:locale" content="en_US" />
+        )}
+        {canonicalBase ? <meta property="og:url" content={canonicalBase} /> : null}
+        {(siteSettings?.logo as { full_size?: string })?.full_size ? (
+          <meta
+            property="og:image"
+            content={String((siteSettings?.logo as { full_size?: string }).full_size)}
+          />
+        ) : null}
       </Head>
       <Component {...pageProps} />
       <ToastContainer />

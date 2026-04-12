@@ -2,8 +2,12 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { useAppSelector } from "@/hook/useReduxTypes";
+import type { Product } from "@/types/product";
 import { capitalize, formatCurrency, featuredImageCardUrl } from "@/util";
+import { stripHtmlForMeta } from "@/util/merchantRichText";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
@@ -166,7 +170,7 @@ export default function NormalMerchantPage() {
           </title>
           <meta
             name="description"
-            content={merchantData?.merchant_details?.about?.substring(0, 160) || ''}
+            content={stripHtmlForMeta(merchantData?.merchant_details?.about, 160)}
           />
           <style>
             {`
@@ -273,9 +277,9 @@ export default function NormalMerchantPage() {
               <h1 className="text-4xl font-bold text-white">
                 {merchantData?.merchant_details?.store_name}
               </h1>
-              <p className="text-xl text-white mt-2">
-                {merchants?.merchant_details?.store_page_subtitle}
-              </p>
+              <div className="text-xl text-white mt-2 prose prose-invert max-w-none prose-p:mb-2 prose-p:last:mb-0">
+                <MerchantRichHtml html={merchantData?.merchant_details?.store_page_subtitle} />
+              </div>
             </div>
           </div>
         </div>
@@ -466,9 +470,9 @@ export default function NormalMerchantPage() {
                 <h3 className="text-lg font-bold merchant-heading-text mb-3">
                   {merchantData?.merchant_details?.about_title}
                 </h3>
-                <p className="text-gray-700">
-                  {merchantData?.merchant_details?.about}
-                </p>
+                <div className="prose prose-neutral max-w-none text-gray-700">
+                  <MerchantRichHtml html={merchantData?.merchant_details?.about} />
+                </div>
               </div>
             </div>
 
@@ -537,9 +541,9 @@ export default function NormalMerchantPage() {
               <div className="mt-6 h-[900px] overflow-x-hidden">
                 {activeTab === "products" && (
                   <div>
-                    <h2 className="text-2xl font-bold merchant-heading-text mb-6">
-                      {merchantData?.merchant_details?.store_page_title}
-                    </h2>
+                    <div className="text-2xl font-bold merchant-heading-text mb-6 prose prose-neutral max-w-none">
+                      <MerchantRichHtml html={merchantData?.merchant_details?.store_page_title} />
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {merchantData?.recent_products?.map((item, index) => (
                         <div
@@ -547,6 +551,10 @@ export default function NormalMerchantPage() {
                           className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl overflow-hidden border border-gray-100 transition-all duration-300 transform hover:-translate-y-2"
                         >
                           <div className="relative h-56 bg-gray-100 overflow-hidden">
+                            <AddToCompareButton
+                              product={item as Product}
+                              className="absolute top-3 right-3 z-20"
+                            />
                             <img
                               src={
                                 featuredImageCardUrl(item?.featured_image?.[0])

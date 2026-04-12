@@ -13,6 +13,17 @@ export interface SiteSettingsData {
   date_time_till?: string | null;
   app_name?: string;
   app_slogan?: string;
+  /** Public site origin, no trailing slash — used for canonical / og:url */
+  seo_canonical_base_url?: string | null;
+  seo_default_robots?: string | null;
+  seo_site_default_description?: string | null;
+  seo_site_default_keywords?: string | null;
+  seo_twitter_site?: string | null;
+  seo_og_locale?: string | null;
+  seo_product_meta_title_template?: string | null;
+  seo_product_meta_description_template?: string | null;
+  seo_merchant_meta_title_template?: string | null;
+  seo_merchant_meta_description_template?: string | null;
   [key: string]: unknown;
 }
 

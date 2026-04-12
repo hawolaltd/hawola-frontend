@@ -1,7 +1,10 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { featuredImageCardUrl } from "@/util";
+import type { Product as StoreProduct } from "@/types/product";
 
 interface Product {
   id: number;
@@ -24,8 +27,8 @@ interface Product {
 
 interface ProductShowcaseProps {
   products: Product[];
-  title: string;
-  subtitle: string;
+  title?: string | null;
+  subtitle?: string | null;
 }
 
 const ProductShowcase = ({
@@ -40,26 +43,6 @@ const ProductShowcase = ({
       currency: "NGN",
       minimumFractionDigits: 0,
     }).format(numPrice);
-  };
-
-  const renderStars = (rating: string) => {
-    const numRating = parseFloat(rating);
-    const stars = [];
-    for (let i = 0; i < 5; i++) {
-      stars.push(
-        <svg
-          key={i}
-          className={`w-4 h-4 ${
-            i < Math.floor(numRating) ? "text-yellow-400" : "text-gray-300"
-          }`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      );
-    }
-    return stars;
   };
 
   if (!products?.length) return null;
@@ -77,9 +60,13 @@ const ProductShowcase = ({
               <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold merchant-heading-text">{title}</h2>
+          <div className="text-2xl font-bold merchant-heading-text prose prose-neutral max-w-none prose-headings:mb-0 prose-p:mb-0">
+            <MerchantRichHtml html={title} />
+          </div>
         </div>
-        <p className="text-gray-600 text-sm">{subtitle}</p>
+        <div className="text-gray-600 text-sm prose prose-sm prose-neutral max-w-none prose-p:mb-1 prose-p:last:mb-0">
+          <MerchantRichHtml html={subtitle} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -90,6 +77,10 @@ const ProductShowcase = ({
           >
             {/* Product Image */}
             <div className="relative h-48 bg-gray-100 overflow-hidden">
+              <AddToCompareButton
+                product={product as unknown as StoreProduct}
+                className="absolute bottom-3 left-3 z-30"
+              />
               <Image
                 src={featuredImageCardUrl(
                   product.featured_image?.[0],
@@ -166,15 +157,7 @@ const ProductShowcase = ({
 
             {/* Product Info */}
             <div className="p-4">
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center gap-1">
-                  {renderStars(product.rating)}
-                </div>
-                <span className="text-sm text-gray-500">
-                  ({product.numReviews})
-                </span>
-              </div>
+              {/* Product ratings / review counts intentionally hidden on cards */}
 
               {/* Product Name */}
               <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">

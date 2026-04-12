@@ -9,7 +9,9 @@ import SocialMedia from "./SocialMedia";
 import Newsletter from "@/components/Newsletter";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import AuthLayout from "@/components/layout/AuthLayout";
+import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import Head from "next/head";
+import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { useRouter } from "next/router";
 
 const DashboardTemplate = () => {
@@ -210,7 +212,7 @@ const DashboardTemplate = () => {
         <title>{merchantData?.merchant_details?.store_name} | Store Dashboard</title>
         <meta
           name="description"
-          content={merchantData?.merchant_details?.about.substring(0, 160)}
+          content={stripHtmlForMeta(merchantData?.merchant_details?.about, 160)}
         />
         <style>
           {`
@@ -455,14 +457,9 @@ const DashboardTemplate = () => {
                       {merchantData?.merchant_details?.about_title}
                     </h2>
                   </div>
-                  <div
-                    className="prose prose-lg max-w-none text-gray-600 leading-relaxed"
-                    dangerouslySetInnerHTML={{
-                      __html: merchantData?.merchant_details?.about
-                        .replace(/\r\n/g, "<br>")
-                        .replace(/\n/g, "<br>"),
-                    }}
-                  />
+                  <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed">
+                    <MerchantRichHtml html={merchantData?.merchant_details?.about} />
+                  </div>
                 </div>
               </div>
             </div>

@@ -165,6 +165,7 @@ const Wishlist: NextPage = () => {
                                     <p className="text-sm font-semibold text-blue-900">
                                         {item?.product?.name}
                                     </p>
+                                    {/* Ratings hidden on product cards
                                     <div className="flex items-center mt-1">
                                         <div className="flex">
                                             {[...Array(5)].map((_, i) => (
@@ -188,6 +189,7 @@ const Wishlist: NextPage = () => {
                                     ({item?.product?.numReviews})
                                 </span>
                                     </div>
+                                    */}
                                 </div>
                             </td>
                             <td className="p-4 text-sm text-gray-900">{formatCurrency((+(item?.product?.price)).toFixed(2))}</td>

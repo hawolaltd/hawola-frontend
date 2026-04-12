@@ -798,6 +798,7 @@ const productSlice = createSlice({
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;
+                state.product = {} as ProductByIdResponse;
             })
             .addCase(getAllCategories.pending, (state) => {
                 state.isLoading = true;

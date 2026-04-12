@@ -226,6 +226,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
                     <h3 className="text-sm font-semibold text-primary">
                       {item.name}
                     </h3>
+                    {/* Ratings hidden on product cards
                     <div className={"flex items-center gap-1"}>
                       {[1, 2, 3, 4, 5].map((star) => (
                         <svg
@@ -255,6 +256,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
                     <p className="text-sm text-primary">
                       {item.numReviews} reviews
                     </p>
+                    */}
                     <div className="flex gap-2 items-center">
                       <span className="text-sm font-semibold text-gray-800">
                         {formatCurrency(item.discount_price)}
