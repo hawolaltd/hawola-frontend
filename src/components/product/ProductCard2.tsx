@@ -9,19 +9,21 @@ function ProductCard2({
   index,
   item,
 }: {
-  product: ProductFull[];
+  /** Full list this row belongs to (for bottom border). May be undefined before home data loads. */
+  product?: ProductFull[] | null;
   /** Row index in list (for borders); not React's `key` */
   index: number;
   item: ProductFull;
 }) {
   const router = useRouter();
+  const listLen = product?.length ?? 0;
   return (
     <div
       onClick={() => {
         router.push(`product/${item?.slug}`);
       }}
       className={`bg-white cursor-pointer relative flex ${
-        index + 1 !== product.length ? "border-b-[#dde4f0] border-b" : " "
+        index + 1 !== listLen ? "border-b-[#dde4f0] border-b" : " "
       } pb-1 pt-4 pl-4 pr-4 overflow-hidden`}
     >
       <div className="relative">
@@ -51,7 +53,7 @@ function ProductCard2({
           {item.name?.length > 40 ? item.name?.slice(0, 40) + "..." : item.name}
         </h3>
         <div className={"flex items-center gap-1"}>
-          {Array.from(item?.rating ?? 0).map((star, key) => (
+          {Array.from({ length: Math.min(5, Math.max(0, Math.round(Number(item?.rating) || 0))) }).map((_, key) => (
             <svg
               className={"w-4 h-4"}
               key={key}

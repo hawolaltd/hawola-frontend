@@ -170,7 +170,9 @@ function ProductCard({
               : product.name}
           </h3>
           <div className={"flex items-center gap-1"}>
-            {Array.from(product?.rating ?? 0).map((star, key) => (
+            {Array.from({
+              length: Math.min(5, Math.max(0, Math.round(Number(product?.rating) || 0))),
+            }).map((_, key) => (
               <svg
                 className={"w-4 h-4"}
                 key={key}

@@ -11,6 +11,7 @@ interface TrendingProductsProps {
 
 const TrendingProducts = ({ products }: TrendingProductsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
+  const bestSellingList = homePage?.data?.best_selling_products ?? [];
 
   return (
     <section className="max-w-screen-xl px-6 xl:px-0 mx-auto flex gap-4 bg-[#f1f3f9] py-4">
@@ -98,18 +99,9 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
               </h4>
             </div>
             <div className="bg-white rounded gap-2 ">
-              {homePage?.data?.best_selling_products
-                ?.slice(0, 4)
-                ?.map((item, key) => {
-                  return (
-                    <ProductCard2
-                      product={homePage?.data?.best_selling_products}
-                      key={key}
-                      index={key}
-                      item={item}
-                    />
-                  );
-                })}
+              {bestSellingList.slice(0, 4).map((item, key) => (
+                <ProductCard2 key={key} product={bestSellingList} index={key} item={item} />
+              ))}
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ interface TopRateProductsProps {
 
 const TopRateProducts = ({ products }: TopRateProductsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
+  const topSellingList = homePage?.data?.top_selling_products ?? [];
 
   return (
     <section className="max-w-screen-xl px-6 xl:px-0 mx-auto flex gap-4 bg-[#f1f3f9] py-4">
@@ -48,18 +49,9 @@ const TopRateProducts = ({ products }: TopRateProductsProps) => {
               </h4>
             </div>
             <div className="bg-white rounded gap-2 ">
-              {homePage?.data?.top_selling_products
-                ?.slice(0, 4)
-                ?.map((item, key) => {
-                  return (
-                    <ProductCard2
-                      product={homePage?.data?.top_selling_products}
-                      key={key}
-                      index={key}
-                      item={item}
-                    />
-                  );
-                })}
+              {topSellingList.slice(0, 4).map((item, key) => (
+                <ProductCard2 key={key} product={topSellingList} index={key} item={item} />
+              ))}
             </div>
           </div>
         </div>
