@@ -1,10 +1,9 @@
 import Head from "next/head";
-import Hero from "@/components/Hero";
+import HomeTopRegion from "@/components/home/HomeTopRegion";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
 import React, { useEffect, useState } from "react";
-import Category from "@/components/category/Category";
 import TrendingProducts from "@/components/TrendingProducts";
 import Partner from "@/components/partner/Partner";
 import TopRateProducts from "@/components/home/TopRateProducts";
@@ -62,9 +61,8 @@ export default function Home() {
       <div className={"mb-4"}>
         <Header />
       </div>
-      <Hero />
+      <HomeTopRegion />
       {/* <Partner /> */}
-      <Category />
       {/* <ProductList products={products} /> */}
       <TrendingProducts products={products} />
       <TopRateProducts products={products} />

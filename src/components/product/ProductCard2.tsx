@@ -36,7 +36,12 @@ function ProductCard2({
           </span>
         )}
         <img
-          src={item.featured_image?.[0]?.image_url}
+          src={
+            item.featured_image?.[0]?.image_url ||
+            item.featured_image?.[0]?.image?.thumbnail ||
+            item.featured_image?.[0]?.image?.full_size ||
+            "/placeholder.jpg"
+          }
           alt={item.name}
           className="w-full h-16 object-cover"
         />

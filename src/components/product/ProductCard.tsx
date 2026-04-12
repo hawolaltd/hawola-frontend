@@ -148,7 +148,12 @@ function ProductCard({
       >
         <div className={"w-full flex items-center justify-center"}>
           <img
-            src={product.featured_image?.[0]?.image_url}
+            src={
+              product.featured_image?.[0]?.image_url ||
+              product.featured_image?.[0]?.image?.thumbnail ||
+              product.featured_image?.[0]?.image?.full_size ||
+              "/placeholder.jpg"
+            }
             alt={product.name}
             style={{
               height: "150px",

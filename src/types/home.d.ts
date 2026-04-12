@@ -46,7 +46,22 @@ type Banner = {
   mobile_banner_image: string;
   web_banner_image: string;
   id: number;
-  product: ProductFull;
+  product: ProductFull | null;
+  url?: string | null;
+  appear_in_carousel?: boolean;
+  appear_in_masonry?: boolean;
+  appear_in_showcase?: boolean;
+};
+
+/** Storefront home hero layout (chosen randomly per API response). */
+type HeroLayoutVariant = "carousel" | "masonry" | "showcase";
+
+/** Normalized tile for carousel / masonry / showcase heroes. */
+type HeroCreativeSlide = {
+  key: string;
+  image: string;
+  href: string | null;
+  external: boolean;
 };
 
 // Category types
@@ -79,7 +94,9 @@ type AdvertBanner = {
 // Main home data type
 interface HomeData {
   data: {
+    hero_layout_variant?: HeroLayoutVariant;
     banners: Banner[];
+    hero_adverts?: AdvertBanner[];
     popular_categories: PopularCategory[];
     recommended_products: ProductFull[];
     advert_banner: AdvertBanner[];
@@ -99,4 +116,6 @@ export type {
   MerchantFull,
   FeaturedImage,
   AdvertBanner,
+  HeroLayoutVariant,
+  HeroCreativeSlide,
 };
