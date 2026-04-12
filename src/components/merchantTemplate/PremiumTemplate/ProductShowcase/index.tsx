@@ -10,9 +10,11 @@ interface Product {
   rating: string;
   numReviews: number;
   featured_image: Array<{
-    image: {
-      thumbnail: string;
-      full_size: string;
+    image_url?: string | null;
+    image?: {
+      thumbnail?: string;
+      full_size?: string;
+      thumbnail_100?: string;
     };
   }>;
   slug: string;
