@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Mousewheel } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import Category from "@/components/category/Category";
@@ -9,7 +7,6 @@ import type { AdvertBanner, Banner, HeroCreativeSlide } from "@/types/home";
 
 /** Stable empty refs so `?? []` does not allocate a new array every render. */
 const EMPTY_BANNERS: Banner[] = [];
-const EMPTY_ADVERTS: AdvertBanner[] = [];
 
 function isExternalHref(href: string | null): boolean {
   if (!href) return false;
@@ -150,33 +147,64 @@ function HeroCarousel({ slides }: { slides: HeroCreativeSlide[] }) {
   );
 }
 
-function AdvertRail({ adverts }: { adverts: AdvertBanner[] }) {
-  const slides = adverts.map(advertToSlide).filter((s) => s.image);
-  if (!slides.length) return null;
+/** Fixed ~297×156 slots beside hero (admin: Advert position Hero top / Hero bottom). */
+function HeroSidebarHalves({ slots }: { slots: (AdvertBanner | null)[] }) {
+  const top = slots[0] ?? null;
+  const bottom = slots[1] ?? null;
+  const topSlide = top ? advertToSlide(top) : null;
+  const bottomSlide = bottom ? advertToSlide(bottom) : null;
+  const hasAny = Boolean(topSlide?.image || bottomSlide?.image);
+
   return (
-    <div className="hidden xl:block w-full p-2 rounded-xl border-2 border-solid border-[#fe9636]">
-      <Swiper direction="vertical" spaceBetween={8} slidesPerView={5} freeMode mousewheel modules={[Mousewheel]} className="h-[320px] md:h-[380px] w-full">
-        {slides.map((slide) => (
-          <SwiperSlide key={slide.key} className="!h-auto">
-            <div className="relative rounded-lg overflow-hidden bg-slate-50 h-[120px] w-full">
-              <OptimizedImage src={slide.image} alt="" width={400} height={200} className="w-full h-full object-contain" />
-              <SlideLink slide={slide} className="absolute inset-0 z-10" />
+    <div
+      className={`hidden xl:flex w-[297px] shrink-0 flex-col overflow-hidden rounded-xl border-2 border-solid border-[#fe9636] bg-slate-50 dark:bg-gray-900/40 ${
+        hasAny ? "" : "opacity-90"
+      }`}
+      style={{ height: 312 }}
+    >
+      {[topSlide, bottomSlide].map((slide, idx) => (
+        <div
+          key={idx}
+          className="relative flex w-[297px] shrink-0 items-stretch justify-center bg-slate-100 dark:bg-gray-800/50"
+          style={{ height: 156 }}
+        >
+          {slide?.image ? (
+            <>
+              <OptimizedImage
+                src={slide.image}
+                alt=""
+                width={297}
+                height={156}
+                className="h-[156px] w-[297px] object-cover"
+                priority={idx === 0}
+              />
+              <SlideLink slide={slide} className="absolute inset-0 z-10" ariaLabel={idx === 0 ? "Upper sidebar promo" : "Lower sidebar promo"} />
+            </>
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-3 text-center text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-slate-600 dark:text-slate-300">
+                {idx === 0 ? "Hero top slot" : "Hero bottom slot"}
+              </span>
+              <span>Add an advert in Hawola Admin → Home Creator with position &quot;{idx === 0 ? "Hero top" : "Hero bottom"}&quot; (for home + active).</span>
             </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
 
 /**
- * Storefront home top: classic carousel (home banners only) + optional advert rail + categories.
+ * Storefront home top: classic carousel (home banners only) + fixed hero sidebar ad halves + categories.
  * Masonry/showcase and random layout switching are disabled until revisited.
  */
 export default function HomeTopRegion() {
   const { homePage } = useAppSelector((state) => state.general);
   const banners = (homePage?.data?.banners ?? EMPTY_BANNERS) as Banner[];
-  const heroAdverts = (homePage?.data?.hero_adverts ?? EMPTY_ADVERTS) as AdvertBanner[];
+  const heroSidebarSlots = (homePage?.data?.hero_sidebar_slots ?? [
+    null,
+    null,
+  ]) as (AdvertBanner | null)[];
 
   const carouselSlides = useMemo(
     () => banners.map(bannerToSlide).filter((s) => s.image),
@@ -193,8 +221,8 @@ export default function HomeTopRegion() {
             <div className="xl:col-span-9 rounded-xl">
               <HeroCarousel slides={carouselSlides} />
             </div>
-            <div className="xl:col-span-3 flex flex-col w-full">
-              <AdvertRail adverts={heroAdverts} />
+            <div className="xl:col-span-3 flex w-full flex-col items-end justify-stretch">
+              <HeroSidebarHalves slots={heroSidebarSlots} />
             </div>
           </div>
         </section>

@@ -96,7 +96,8 @@ interface HomeData {
   data: {
     hero_layout_variant?: HeroLayoutVariant;
     banners: Banner[];
-    hero_adverts?: AdvertBanner[];
+    /** [upper, lower] fixed slots beside carousel; null if no advert for that slot. */
+    hero_sidebar_slots?: (AdvertBanner | null)[];
     popular_categories: PopularCategory[];
     recommended_products: ProductFull[];
     advert_banner: AdvertBanner[];
