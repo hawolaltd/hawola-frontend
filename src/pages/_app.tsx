@@ -14,7 +14,7 @@ import { persistor, store } from "@/store/store";
 import { Provider, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { Toaster } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { checkTokenValidity, clearAllStorage } from "@/util";
 import { clearAuthState } from "@/redux/auth/authSlice";
 import {
@@ -31,10 +31,25 @@ import {
   STOREFRONT_PREVIEW_URL_PARAM,
 } from "@/lib/storefrontPreview";
 
+const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
+
 function AppContent({ Component, pageProps }: AppProps) {
   const dispatch = useAppDispatch();
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
+  const [showLaunchConfetti, setShowLaunchConfetti] = useState(false);
+  const [confettiPieces] = useState(() =>
+    Array.from({ length: 120 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 0.9}s`,
+      duration: `${2.8 + Math.random() * 2.2}s`,
+      size: `${6 + Math.random() * 8}px`,
+      rotate: `${Math.random() * 360}deg`,
+      color: ["#FD9636", "#5BC694", "#425A8B", "#FFB067", "#8C9EC5"][i % 5],
+      opacity: 0.75 + Math.random() * 0.25,
+    }))
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -53,6 +68,16 @@ function AppContent({ Component, pageProps }: AppProps) {
     }
     dispatch(getSiteSettings());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !siteSettingsLoaded) return;
+    const shouldBurst = window.sessionStorage.getItem(LAUNCH_CONFETTI_FLAG) === "1";
+    if (!shouldBurst) return;
+    window.sessionStorage.removeItem(LAUNCH_CONFETTI_FLAG);
+    setShowLaunchConfetti(true);
+    const timer = window.setTimeout(() => setShowLaunchConfetti(false), 5200);
+    return () => window.clearTimeout(timer);
+  }, [siteSettingsLoaded]);
 
   useEffect(() => {
     // Check if tokens exist on app initialization
@@ -95,10 +120,34 @@ function AppContent({ Component, pageProps }: AppProps) {
   const dateTimeTill = siteSettings
     ? (siteSettings.date_time_till ?? (siteSettings as Record<string, unknown>).dateTimeTill)
     : null;
+  const launchCountdownActive =
+    typeof dateTimeTill === "string" &&
+    dateTimeTill.trim() !== "" &&
+    new Date(dateTimeTill).getTime() > Date.now();
   const showLaunchPage =
     siteSettingsLoaded &&
     siteSettings?.site_under_construction === true &&
-    dateTimeTill;
+    launchCountdownActive;
+
+  // Auto-refresh exactly when launch countdown ends so storefront goes live without manual reload.
+  useEffect(() => {
+    if (!showLaunchPage || typeof dateTimeTill !== "string" || typeof window === "undefined") {
+      return;
+    }
+    const targetMs = new Date(dateTimeTill).getTime();
+    if (!Number.isFinite(targetMs)) return;
+    const delay = targetMs - Date.now() + 250;
+    if (delay <= 0) {
+      window.sessionStorage.setItem(LAUNCH_CONFETTI_FLAG, "1");
+      window.location.reload();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.setItem(LAUNCH_CONFETTI_FLAG, "1");
+      window.location.reload();
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [showLaunchPage, dateTimeTill]);
 
   // Show loader with blur until site settings check has finished (prevents flashing the site before under-construction is known)
   if (!siteSettingsLoaded) {
@@ -170,6 +219,40 @@ function AppContent({ Component, pageProps }: AppProps) {
       <Component {...pageProps} />
       <ToastContainer />
       <Toaster position={"top-right"} />
+      {showLaunchConfetti ? (
+        <>
+          <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden>
+            {confettiPieces.map((piece) => (
+              <span
+                key={piece.id}
+                className="absolute top-[-20px] inline-block launch-confetti-piece"
+                style={{
+                  left: piece.left,
+                  width: piece.size,
+                  height: piece.size,
+                  backgroundColor: piece.color,
+                  opacity: piece.opacity,
+                  transform: `rotate(${piece.rotate})`,
+                  animationDelay: piece.delay,
+                  animationDuration: piece.duration,
+                }}
+              />
+            ))}
+          </div>
+          <style jsx global>{`
+            @keyframes launchConfettiFall {
+              0% { transform: translate3d(0, -20px, 0) rotate(0deg); }
+              100% { transform: translate3d(0, 110vh, 0) rotate(720deg); }
+            }
+            .launch-confetti-piece {
+              animation-name: launchConfettiFall;
+              animation-timing-function: linear;
+              animation-fill-mode: forwards;
+              border-radius: 2px;
+            }
+          `}</style>
+        </>
+      ) : null}
     </>
   );
 }

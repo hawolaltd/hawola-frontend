@@ -21,6 +21,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const { carts, localCart, wishLists, categories, compareProducts } =
     useAppSelector((state) => state.products);
   const compareNavBump = useCompareNavBump();
+  const compareList = Array.isArray(compareProducts) ? compareProducts : [];
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
   const [submenuTimeout, setSubmenuTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -669,7 +670,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6" />
             </div>
 
-            {compareProducts.length > 0 && (
+            {compareList.length > 0 && (
               <Link
                 href="/compare"
                 className={`relative flex cursor-pointer items-center gap-2 rounded-lg px-0.5 text-primary ${
@@ -677,10 +678,10 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                     ? "motion-safe:animate-compare-nav-bump"
                     : "motion-safe:animate-compare-nav-pulse"
                 }`}
-                aria-label={`Compare ${compareProducts.length} products`}
+                aria-label={`Compare ${compareList.length} products`}
               >
                 <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-headerBg text-[10px] font-bold text-white">
-                  {compareProducts.length}
+                  {compareList.length}
                 </span>
                 <img src="/assets/compare.svg" alt="" className="h-6 w-6" />
                 <span className="hidden text-[16px] lg:flex">Compare</span>

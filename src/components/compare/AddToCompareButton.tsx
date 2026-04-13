@@ -27,9 +27,10 @@ export default function AddToCompareButton({
 }: Props) {
   const dispatch = useAppDispatch();
   const compareProducts = useAppSelector((s) => s.products.compareProducts);
+  const compareList = Array.isArray(compareProducts) ? compareProducts : [];
   const id = product.id;
-  const isIn = compareProducts.some((p) => p.id === id);
-  const count = compareProducts.length;
+  const isIn = compareList.some((p) => p.id === id);
+  const count = compareList.length;
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
