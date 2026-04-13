@@ -36,6 +36,15 @@ export interface SiteSettingsData {
   youtube_support_link?: string | null;
   email_support_link?: string | null;
   support_phone_number?: string | null;
+  footer_config?: {
+    intro_text?: string;
+    columns?: {
+      shop?: Array<{ label?: string; href?: string; enabled?: boolean }>;
+      support?: Array<{ label?: string; href?: string; enabled?: boolean }>;
+      company?: Array<{ label?: string; href?: string; enabled?: boolean }>;
+    };
+    legal_links?: Array<{ label?: string; href?: string; enabled?: boolean }>;
+  } | null;
   [key: string]: unknown;
 }
 

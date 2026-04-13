@@ -4,6 +4,47 @@ import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
 
+type FooterLink = { label: string; href: string; enabled?: boolean };
+type FooterConfig = {
+  intro_text?: string;
+  columns?: {
+    shop?: FooterLink[];
+    support?: FooterLink[];
+    company?: FooterLink[];
+  };
+  legal_links?: FooterLink[];
+};
+
+const FOOTER_DEFAULT_CONFIG: FooterConfig = {
+  intro_text:
+    "Everything you need in one marketplace—discover stores, compare products, and shop with confidence.",
+  columns: {
+    shop: [
+      { label: "Search", href: "/search", enabled: true },
+      { label: "Compare", href: "/compare", enabled: true },
+      { label: "Wishlist", href: "/wishlist", enabled: true },
+      { label: "Cart", href: "/carts", enabled: true },
+    ],
+    support: [
+      { label: "Help center", href: "#", enabled: true },
+      { label: "FAQs", href: "#", enabled: true },
+      { label: "Contact us", href: "#", enabled: true },
+      { label: "Shipping", href: "#", enabled: true },
+    ],
+    company: [
+      { label: "About Hawola", href: "#", enabled: true },
+      { label: "Careers", href: "#", enabled: true },
+      { label: "Privacy", href: "#", enabled: true },
+      { label: "Terms of use", href: "#", enabled: true },
+    ],
+  },
+  legal_links: [
+    { label: "Conditions of use", href: "#", enabled: true },
+    { label: "Privacy notice", href: "#", enabled: true },
+    { label: "Cookies", href: "#", enabled: true },
+  ],
+};
+
 const FOOTER_NAV = {
   shop: [
     { label: "Search", href: "/search" },
@@ -30,8 +71,42 @@ function trimUrl(s: string | null | undefined): string {
   return s.trim();
 }
 
+function normalizeLinks(raw: unknown, fallback: FooterLink[]): FooterLink[] {
+  if (!Array.isArray(raw)) return fallback;
+  const parsed = raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const label = typeof (item as { label?: unknown }).label === "string" ? (item as { label: string }).label.trim() : "";
+      const href = typeof (item as { href?: unknown }).href === "string" ? (item as { href: string }).href.trim() : "";
+      const enabledRaw = (item as { enabled?: unknown }).enabled;
+      const enabled = typeof enabledRaw === "boolean" ? enabledRaw : true;
+      if (!label || !href || !enabled) return null;
+      return { label, href, enabled };
+    })
+    .filter(Boolean) as FooterLink[];
+  return parsed.length > 0 ? parsed : fallback;
+}
+
 const Footer = () => {
   const siteSettings = useAppSelector((s) => s.general.siteSettings) as SiteSettingsData | null;
+
+  const footerConfig = useMemo(() => {
+    const raw = siteSettings?.footer_config;
+    if (!raw || typeof raw !== "object") return FOOTER_DEFAULT_CONFIG;
+    const cfg = raw as FooterConfig;
+    return {
+      intro_text:
+        typeof cfg.intro_text === "string" && cfg.intro_text.trim()
+          ? cfg.intro_text.trim()
+          : FOOTER_DEFAULT_CONFIG.intro_text,
+      columns: {
+        shop: normalizeLinks(cfg.columns?.shop, FOOTER_DEFAULT_CONFIG.columns?.shop || []),
+        support: normalizeLinks(cfg.columns?.support, FOOTER_DEFAULT_CONFIG.columns?.support || []),
+        company: normalizeLinks(cfg.columns?.company, FOOTER_DEFAULT_CONFIG.columns?.company || []),
+      },
+      legal_links: normalizeLinks(cfg.legal_links, FOOTER_DEFAULT_CONFIG.legal_links || []),
+    };
+  }, [siteSettings?.footer_config]);
 
   const socialEntries = useMemo(() => {
     if (!siteSettings) return [];
@@ -76,7 +151,7 @@ const Footer = () => {
               />
             </Link>
             <p className="text-sm text-white/85 leading-relaxed max-w-sm">
-              Everything you need in one marketplace—discover stores, compare products, and shop with confidence.
+              {footerConfig.intro_text}
             </p>
             {socialEntries.length > 0 && (
               <div className="flex flex-wrap gap-3">
@@ -101,14 +176,11 @@ const Footer = () => {
               Shop
             </h4>
             <ul className="space-y-3 text-sm">
-              {FOOTER_NAV.shop.map((item) => (
+              {(footerConfig.columns?.shop || FOOTER_NAV.shop).map((item) => (
                 <li key={item.href + item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-white hover:text-deepOrange transition-colors"
-                  >
+                  <a href={item.href} className="text-white hover:text-deepOrange transition-colors">
                     {item.label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -119,7 +191,7 @@ const Footer = () => {
               Support
             </h4>
             <ul className="space-y-3 text-sm">
-              {FOOTER_NAV.support.map((item) => (
+              {(footerConfig.columns?.support || FOOTER_NAV.support).map((item) => (
                 <li key={item.label}>
                   <a href={item.href} className="text-white hover:text-deepOrange transition-colors">
                     {item.label}
@@ -134,7 +206,7 @@ const Footer = () => {
               Company
             </h4>
             <ul className="space-y-3 text-sm">
-              {FOOTER_NAV.company.map((item) => (
+              {(footerConfig.columns?.company || FOOTER_NAV.company).map((item) => (
                 <li key={item.label}>
                   <a href={item.href} className="text-white hover:text-deepOrange transition-colors">
                     {item.label}
@@ -210,15 +282,11 @@ const Footer = () => {
         <div className="mt-10 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/70">
           <p className="text-white/90">© {new Date().getFullYear()} Hawola. All rights reserved.</p>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-            <a href="#" className="text-white hover:text-deepOrange transition-colors">
-              Conditions of use
-            </a>
-            <a href="#" className="text-white hover:text-deepOrange transition-colors">
-              Privacy notice
-            </a>
-            <a href="#" className="text-white hover:text-deepOrange transition-colors">
-              Cookies
-            </a>
+            {(footerConfig.legal_links || FOOTER_DEFAULT_CONFIG.legal_links || []).map((item) => (
+              <a key={item.label} href={item.href} className="text-white hover:text-deepOrange transition-colors">
+                {item.label}
+              </a>
+            ))}
           </div>
         </div>
       </div>
