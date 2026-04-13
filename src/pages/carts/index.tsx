@@ -1,4 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import {
+  DEFAULT_NON_ESCROW_CART_NOTICE_HTML,
+  sanitizeRichNotice,
+} from "@/util/sanitizeRichNotice";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -34,6 +38,15 @@ interface OrderItem {
 const CartPage = () => {
   const { carts, addresses, localCart } = useAppSelector((state) => state.products);
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
+  const siteSettings = useAppSelector((state) => state.general.siteSettings);
+  const escrowDisabled =
+    siteSettings != null && siteSettings.accept_escrow_payment === false;
+  const noticeSource = escrowDisabled
+    ? (siteSettings?.non_escrow_cart_notice_html?.trim()
+        ? String(siteSettings.non_escrow_cart_notice_html)
+        : DEFAULT_NON_ESCROW_CART_NOTICE_HTML)
+    : "";
+  const [cartNoticeSafe, setCartNoticeSafe] = useState("");
   console.log("carts", carts);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -477,6 +490,14 @@ const CartPage = () => {
     dispatch(getCarts());
   }, [dispatch, isAuthenticated, authLoading]);
 
+  useEffect(() => {
+    if (!noticeSource) {
+      setCartNoticeSafe("");
+      return;
+    }
+    setCartNoticeSafe(sanitizeRichNotice(noticeSource));
+  }, [noticeSource]);
+
   // Update cart items when carts change
   useEffect(() => {
     const newCartItems = isAuthenticated ? (carts["cart_items"] || []) : (localCart?.items || []);
@@ -637,6 +658,7 @@ const CartPage = () => {
                       <CartItemRow
                         key={cartId}
                         cart={cart}
+                        directMerchantMode={escrowDisabled}
                         updateQuantity={updateQuantity}
                         onDelete={() => {
                           setSelectedPro(cart);
@@ -697,6 +719,8 @@ const CartPage = () => {
               loading={creatingOrder}
               shippingError={shippingError}
               isAuthenticated={isAuthenticated}
+              directMerchantMode={escrowDisabled}
+              directMerchantNoticeHtml={cartNoticeSafe}
             />
           </div>
         </div>

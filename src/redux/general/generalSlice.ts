@@ -13,6 +13,12 @@ export interface SiteSettingsData {
   date_time_till?: string | null;
   app_name?: string;
   app_slogan?: string;
+  /** When false, storefront skips Paystack and shows direct-merchant cart notice */
+  accept_escrow_payment?: boolean;
+  /** Rich HTML (sanitized client-side) shown on cart when escrow is off */
+  non_escrow_cart_notice_html?: string | null;
+  /** Shown on checkout (plain or simple HTML) */
+  offline_payment_disclaimer?: string | null;
   /** Public site origin, no trailing slash — used for canonical / og:url */
   seo_canonical_base_url?: string | null;
   seo_default_robots?: string | null;
@@ -24,6 +30,12 @@ export interface SiteSettingsData {
   seo_product_meta_description_template?: string | null;
   seo_merchant_meta_title_template?: string | null;
   seo_merchant_meta_description_template?: string | null;
+  facebook_support_link?: string | null;
+  instagram_support_link?: string | null;
+  twitter_support_link?: string | null;
+  youtube_support_link?: string | null;
+  email_support_link?: string | null;
+  support_phone_number?: string | null;
   [key: string]: unknown;
 }
 

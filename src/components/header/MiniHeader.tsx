@@ -1,142 +1,24 @@
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { formatCurrency } from "@/util";
 
 function MiniHeader() {
-  const router = useRouter();
   return (
-    <div
-      className={`${
-        router.pathname !== "/"
-          ? "bg-headerBg text-white"
-          : "bg-headerBg text-white"
-      }  ${
-        router.pathname !== "/" ? "border-b border-b-[#D5DFE4] py-2" : "border-b border-b-[#D5DFE4] py-2"
-      } hidden xl:block`}
-    >
-      <div
-        className={`mx-auto flex w-full max-w-screen-xl items-center justify-center px-6 lg:justify-between xl:px-0`}
-      >
-        {/* Left section: Navigation Links */}
-        <div className="lg:flex gap-2 text-sm hidden">
-          <Link
-            href="#"
-            className={`${
-              router.pathname !== "/"
-                ? "text-white text-xs"
-                : "text-white text-xs"
-            } border-r px-2`}
-          >
-            About Us
-          </Link>
-          <Link
-            href="#"
-            className={`${
-              router.pathname !== "/"
-                ? "text-white text-xs"
-                : "text-white text-xs font-medium"
-            } border-r px-2`}
-          >
-            Careers
-          </Link>
-          <Link
-            href="#"
-            className={`${
-              router.pathname !== "/"
-                ? "text-white text-xs"
-                : "text-white text-xs font-medium"
-            } border-r px-2`}
-          >
-            Open a Shop
-          </Link>
-          <Link
-            href="/looking-for-product"
-            className={`${
-              router.pathname !== "/"
-                ? "text-secondaryTextColor text-xs font-semibold"
-                : "text-secondaryTextColor text-xs font-semibold"
-            }`}
-          >
-            I am looking for this product
-          </Link>
-        </div>
-
-        {/* Middle section: Promo Text */}
-        <div className="text-xs font-medium hidden lg:flex items-center">
-          <span
-            className={`${
-              router.pathname !== "/"
-                ? "text-white text-xs"
-                : "text-white text-xs font-medium"
-            }`}
-          >
-            Free shipping for all orders over{" "}
-          </span>
-          <span
-            className={`ml-1 ${
-              router.pathname !== "/" ? "font-bold" : "font-bold"
-            } text-secondaryTextColor text-sm`}
-          >
-            {formatCurrency(75.0)}
-          </span>
-        </div>
-
-        {/* Right section: Contact & Language/Currency Selector */}
-        <div className="flex items-center  space-x-8 text-xs font-medium">
-          <p
-            className={`${
-              router.pathname !== "/" ? "text-primary text-xs" : "text-white"
-            }`}
-          >
-            Need help? Call Us:{" "}
-            <span className={"text-secondaryTextColor"}> +1800 900 </span>{" "}
-          </p>
-          <div className="flex items-center space-x-4">
-            <span
-              className={`flex items-center ${
-                router.pathname !== "/"
-                  ? "text-white text-xs"
-                  : "text-white text-xs"
-              }`}
-            >
-              English
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="24"
-                viewBox="0 0 24 24"
-                width="24"
-              >
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                  d="M8.71 11.71l2.59 2.59c.39.39 1.02.39 1.41 0l2.59-2.59c.63-.63.18-1.71-.71-1.71H9.41c-.89 0-1.33 1.08-.7 1.71z"
-                  fill={router.pathname !== "/" ? "#8C9EC5" : "#fff"}
-                />
-              </svg>
-            </span>
-            <span
-              className={`flex items-center ${
-                router.pathname !== "/"
-                  ? "text-white text-xs"
-                  : "text-white text-xs"
-              }`}
-            >
-              NGN
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="24"
-                viewBox="0 0 24 24"
-                width="24"
-              >
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                  d="M8.71 11.71l2.59 2.59c.39.39 1.02.39 1.41 0l2.59-2.59c.63-.63.18-1.71-.71-1.71H9.41c-.89 0-1.33 1.08-.7 1.71z"
-                  fill={router.pathname !== "/" ? "#8C9EC5" : "#fff"}
-                />
-              </svg>{" "}
-            </span>
-          </div>
-        </div>
+    <div className="hidden border-b border-b-[#D5DFE4] bg-headerBg py-2 text-white xl:block">
+      <div className="mx-auto flex w-full max-w-screen-xl items-center justify-end gap-8 px-6 xl:px-0">
+        <Link
+          href="https://merchant.hawola.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="border-r border-white/30 pr-8 text-xs font-medium text-white"
+        >
+          Create your own store
+        </Link>
+        <Link
+          href="/looking-for-product"
+          className="text-xs font-semibold text-secondaryTextColor"
+        >
+          I am looking for this product
+        </Link>
       </div>
     </div>
   );

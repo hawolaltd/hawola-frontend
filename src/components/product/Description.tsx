@@ -1,77 +1,63 @@
-import React from 'react';
-import {Product, ProductByIdResponse} from "@/types/product";
+import React, { useEffect, useMemo, useState } from "react";
+import { ProductByIdResponse } from "@/types/product";
+import { sanitizeProductDescriptionHtml } from "@/util/sanitizeRichNotice";
 
 interface DescriptionProps {
-    showMore: boolean;
-    setShowMore: React.Dispatch<React.SetStateAction<boolean>>;
-    product:  ProductByIdResponse
+  product: ProductByIdResponse;
 }
 
-function Description({showMore, setShowMore,product}:DescriptionProps) {
-    return (
-        <div>
-            <p className="mt-4 text-textPadded text-xs">
-                {product?.product?.description}
-            </p>
+const DESCRIPTION_BODY =
+  "mt-4 text-sm text-slate-700 leading-relaxed [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h1,&_h2,&_h3,&_h4]:font-semibold [&_h1,&_h2,&_h3,&_h4]:mt-4 [&_h1,&_h2,&_h3,&_h4]:mb-2 [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md [&_table]:w-full [&_table]:my-3 [&_table]:text-xs [&_th,&_td]:border [&_th,&_td]:border-slate-200 [&_th,&_td]:p-2 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-200 [&_blockquote]:pl-3 [&_blockquote]:italic";
 
+function Description({ product }: DescriptionProps) {
+  const [safeDescriptionHtml, setSafeDescriptionHtml] = useState("");
 
-            {/*<p className="mt-4 text-textPadded text-xs">*/}
-            {/*    When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her*/}
-            {/*    hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line*/}
-            {/*    Lane. Pityful a rethoric question ran over her cheek, then she continued her way. On her way she met a*/}
-            {/*    copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a*/}
-            {/*    thousand times and everything that was left from its origin would be the word “and” and the Little Blind*/}
-            {/*    Text should turn around and return to its own, safe country. It is a paradisematic country, in which*/}
-            {/*    roasted parts of sentences fly into your mouth. Even the all-powerful Pointing has no control about the*/}
-            {/*    blind texts it is an almost unorthographic life One day however a small line of blind text by the name*/}
-            {/*    of Lorem Ipsum decided to leave for the far World of Grammar.*/}
+  const rawDescription = product?.product?.description;
 
-            {/*</p>*/}
+  useEffect(() => {
+    setSafeDescriptionHtml(sanitizeProductDescriptionHtml(rawDescription));
+  }, [rawDescription]);
 
-            {/*{*/}
-            {/*    showMore && <>*/}
-            {/*        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 mt-6">*/}
-            {/*            <img src="/assets/product-banner.jpg" alt="Phone 1" className="w-full"/>*/}
-            {/*        </div>*/}
+  const displayTags = useMemo(() => {
+    const names =
+      product?.product?.tags?.map((t) => t?.name).filter(Boolean) as string[];
+    return (names || []).slice(0, 6);
+  }, [product?.product?.tags]);
 
-            {/*        <p className="mt-4 text-textPadded text-xs">*/}
-            {/*            It is a paradisematic country, in which roasted parts of sentences fly into your mouth. Even the*/}
-            {/*            all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One*/}
-            {/*            day*/}
-            {/*            however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of*/}
-            {/*            Grammar. The Big Oxmox advised her not to do so, because there were thousands of bad Commas, wild*/}
-            {/*            Question Marks and devious Semikoli, but the Little Blind Text didn’t listen. She packed her seven*/}
-            {/*            versalia, put her initial into the belt and made herself on the way.*/}
-            {/*        </p>*/}
+  return (
+    <div>
+      {safeDescriptionHtml ? (
+        <div
+          className={DESCRIPTION_BODY}
+          dangerouslySetInnerHTML={{ __html: safeDescriptionHtml }}
+        />
+      ) : rawDescription && String(rawDescription).trim() ? (
+        <div
+          className="mt-4 h-20 max-w-md rounded-md bg-slate-100/80 animate-pulse"
+          aria-hidden
+        />
+      ) : (
+        <p className="mt-4 text-textPadded text-xs">No description provided.</p>
+      )}
 
-            {/*        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 mt-6">*/}
-            {/*            <img src="/assets/product-banner-2.jpg" alt="Phone 1" className="w-full"/>*/}
-            {/*        </div>*/}
-
-            {/*        <p className="mt-4 text-textPadded text-xs">*/}
-            {/*            When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of*/}
-            {/*            her*/}
-            {/*            hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line*/}
-            {/*            Lane. Pityful a rethoric question ran over her cheek, then she continued her way. On her way she met*/}
-            {/*            a*/}
-            {/*            copy. The copy warned the Little Blind Text, that where it came from it would have been rewritten a*/}
-            {/*            thousand times and everything that was left from its origin would be the word “and” and the Little*/}
-            {/*            Blind*/}
-            {/*            Text should turn around and return to its own, safe country.*/}
-            {/*        </p>*/}
-            {/*    </>*/}
-            {/*}*/}
-
-            {/*<div onClick={() => {*/}
-            {/*    setShowMore(!showMore)*/}
-            {/*}} className={'flex items-center justify-center'}>*/}
-            {/*    <button*/}
-            {/*        className="mt-8 font-bold block bg-inherit text-primary border border-textPadded hover:bg-textPadded hover:border-none hover:text-white px-[5rem] py-1 rounded-lg">{showMore ? "Less" : "More Details"}*/}
-            {/*    </button>*/}
-            {/*</div>*/}
-
-        </div>
-    );
+      {displayTags.length > 0 && (
+        <>
+          <div className="mt-8 border-t border-slate-200/90" aria-hidden />
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-[#8c9ec5]">Tags:</span>
+            {displayTags.map((name: string, idx: number) => (
+              <span
+                key={`tag-${idx}`}
+                className="inline-flex px-2 py-1 rounded-md bg-gray-100 text-primary text-xs font-medium"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default Description;

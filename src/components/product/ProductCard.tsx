@@ -35,6 +35,12 @@ function ProductCard({
 
   const dispatch = useAppDispatch();
 
+  const hasDiscount =
+    product?.discount_price != null &&
+    product?.price != null &&
+    String(product.discount_price).trim() !== "" &&
+    String(product.discount_price) !== String(product.price);
+
   const handleAddToCart = async (product: Product) => {
     try {
       // Convert selected variants to the format expected by backend
@@ -192,12 +198,22 @@ function ProductCard({
             </span>
           </div>
           */}
-          <p className="text-lg font-bold text-primary">
-            {formatCurrency(product.discount_price)}{" "}
-            <span className={"line-through text-xs text-textPadded"}>
-              {formatCurrency(product?.price)}
-            </span>
-          </p>
+          <div className="mt-1 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
+            {hasDiscount ? (
+              <>
+                <p className="text-xs text-textPadded line-through leading-tight">
+                  {formatCurrency(product.price)}
+                </p>
+                <p className="text-lg font-bold text-primary leading-tight">
+                  {formatCurrency(product.discount_price)}
+                </p>
+              </>
+            ) : (
+              <p className="text-lg font-bold text-primary leading-tight">
+                {formatCurrency(product.price)}
+              </p>
+            )}
+          </div>
         </div>
       </Link>
     </div>

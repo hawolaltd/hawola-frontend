@@ -22,7 +22,6 @@ function normalizeHex(color: string | null | undefined, fallback = "#0f172a"): s
 
 function ProductInfo({ product }: { product: ProductByIdResponse }) {
     const [tab, setTab] = useState("description");
-    const [showMore, setShowMore] = useState(false);
 
     const { merchantReviews } = useAppSelector((state) => state.products);
     const reviews = merchantReviews?.results || [];
@@ -95,9 +94,7 @@ function ProductInfo({ product }: { product: ProductByIdResponse }) {
                 })}
             </div>
 
-            {tab === "description" && (
-                <Description product={product} showMore={showMore} setShowMore={setShowMore}/>
-            )}
+            {tab === "description" && <Description product={product} />}
 
 
             {tab === "specification" && (

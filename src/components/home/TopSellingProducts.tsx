@@ -4,7 +4,6 @@ import OptimizedImage from "@/components/common/OptimizedImage";
 import Ads3 from "@/components/svg/ads3";
 import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import SubscribeSection from "@/components/home/SubscribeSection";
 import { ProductResponse } from "@/types/product";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { useAppSelector } from "@/hook/useReduxTypes";

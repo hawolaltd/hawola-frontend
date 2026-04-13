@@ -3,7 +3,6 @@ import Header from "@/components/header";
 import Sidebar from "@/components/auth/Sidebar";
 import MainHeader from "@/components/auth/MainHeader";
 import LoginForm from "@/components/auth/LoginForm";
-import SubscribeSection from "@/components/home/SubscribeSection";
 import Footer from "@/components/home/Footer";
 
 function AuthLayout({children}: { children: ReactNode }) {
@@ -15,7 +14,6 @@ function AuthLayout({children}: { children: ReactNode }) {
                 {/*</div>*/}
                 <div className={'w-[100%]'}>
                     {children}
-                    <SubscribeSection/>
                     <Footer/>
                 </div>
             </div>

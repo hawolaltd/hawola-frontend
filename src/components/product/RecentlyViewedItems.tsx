@@ -3,7 +3,6 @@ import Ads2 from "@/components/svg/ads2";
 import Ads3 from "@/components/svg/ads3";
 import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import SubscribeSection from "@/components/home/SubscribeSection";
 import {formatCurrency} from "@/util";
 
 interface ProductCardProps {

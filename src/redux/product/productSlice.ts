@@ -947,6 +947,10 @@ const productSlice = createSlice({
             })
             .addCase(updatePayment.fulfilled, (state, action) => {
                 state.isLoading = false;
+                const payload = action.payload as { order?: OrderDetailsResponse } | undefined;
+                if (payload?.order) {
+                    state.orders = payload.order;
+                }
             })
             .addCase(updatePayment.rejected, (state, action) => {
                 state.isLoading = false;

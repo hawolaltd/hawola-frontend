@@ -17,6 +17,12 @@ function ProductCard2({
 }) {
   const router = useRouter();
   const listLen = product?.length ?? 0;
+  const hasDiscount =
+    item?.discount_price != null &&
+    item?.price != null &&
+    String(item.discount_price).trim() !== "" &&
+    String(item.discount_price) !== String(item.price);
+
   return (
     <div
       onClick={() => {
@@ -74,13 +80,21 @@ function ProductCard2({
         </div>
         <p className="text-sm text-primary">{item.numReviews} reviews</p>
         */}
-        <div className="flex gap-2 items-center">
-          <span className="text-sm font-semibold text-gray-800">
-            {formatCurrency(item.discount_price)}
-          </span>
-          <span className="text-sm line-through text-textPadded">
-            {formatCurrency(item.price)}
-          </span>
+        <div className="mt-2 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
+          {hasDiscount ? (
+            <>
+              <span className="text-xs line-through text-textPadded leading-tight">
+                {formatCurrency(item.price)}
+              </span>
+              <span className="text-sm font-semibold text-gray-800 leading-tight">
+                {formatCurrency(item.discount_price)}
+              </span>
+            </>
+          ) : (
+            <span className="text-sm font-semibold text-gray-800 leading-tight">
+              {formatCurrency(item.price)}
+            </span>
+          )}
         </div>
       </div>
     </div>

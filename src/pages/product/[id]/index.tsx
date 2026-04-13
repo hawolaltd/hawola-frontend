@@ -539,21 +539,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     )}
 
-                    {/* Product tags / keywords for SEO and discoverability */}
-                    {tagNames.length > 0 && (
-                        <div className="mb-4 flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-semibold text-[#8c9ec5]">Tags:</span>
-                            {tagNames.map((name: string, idx: number) => (
-                                <span
-                                    key={`tag-${idx}`}
-                                    className="inline-flex px-2 py-1 rounded-md bg-gray-100 text-primary text-xs font-medium"
-                                >
-                                    {name}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                   
+                    {(product?.product?.accept_payment_on_delivery ||
+                        !(siteSettings != null && siteSettings.accept_escrow_payment === false)) && (
                     <div className={`self-start w-fit inline-flex items-center gap-3 ${
                         product?.product?.accept_payment_on_delivery 
                             ? 'bg-green-50 border-green-200 text-green-700' 
@@ -598,6 +585,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             </div>
                         )}
                     </div>
+                    )}
                     {/* Info strip: delivery, returns, warranty - commented out for now */}
                     {/* <div className="mt-4 flex flex-wrap gap-3">
                         <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">

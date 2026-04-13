@@ -4,14 +4,13 @@ import { useAppSelector } from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { amountFormatter } from '@/util';
 import Link from 'next/link';
-import { CheckCircleIcon, TruckIcon, ShoppingBagIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, TruckIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import FeaturesSection from "@/components/home/FeaturesSection";
-import ProductCard from "@/components/product/ProductCard";
 
 const OrderConfirmationPage = () => {
     const router = useRouter();
     const { id } = router.query;
-    const { orders, products } = useAppSelector(state => state.products);
+    const { orders } = useAppSelector(state => state.products);
     const { profile } = useAppSelector(state => state.auth);
 
     // Track conversion in analytics
@@ -41,6 +40,9 @@ const OrderConfirmationPage = () => {
 
     console.log("orders--", orders)
 
+    const orderDetailsSlug =
+        orders.orderItems?.[0]?.orderitem_number?.trim() || String(orders.id);
+
     return (
         <AuthLayout>
             <div className="container mx-auto px-4 py-8">
@@ -65,8 +67,20 @@ const OrderConfirmationPage = () => {
                                     Placed on {new Date(orders?.createdAt).toLocaleDateString()}
                                 </p>
                             </div>
-                            <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full">
-                                Payment Successful
+                            <div
+                                className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                                    orders?.isPaid
+                                        ? 'bg-green-100 text-green-800'
+                                        : orders?.is_offline_payment
+                                          ? 'bg-amber-100 text-amber-900'
+                                          : 'bg-gray-100 text-gray-800'
+                                }`}
+                            >
+                                {orders?.isPaid
+                                    ? 'Payment successful'
+                                    : orders?.is_offline_payment
+                                      ? 'Pay merchant directly — not paid through Hawola'
+                                      : 'Payment pending'}
                             </div>
                         </div>
 
@@ -131,19 +145,6 @@ const OrderConfirmationPage = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className="bg-purple-100 p-2 rounded-full">
-                                    <EnvelopeIcon className="w-6 h-6 text-purple-600"/>
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-gray-800">Need Help?</h4>
-                                    <p className="text-gray-600 text-sm">
-                                        Contact our <a href="/support" className="text-primary hover:underline">support
-                                        team</a>
-                                        or call +1 (800) 123-4567
-                                    </p>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -156,36 +157,11 @@ const OrderConfirmationPage = () => {
                             Continue Shopping
                         </Link>
                         <Link
-                            href={`/order/${orders.id}`}
+                            href={`/order/details/${orderDetailsSlug}`}
                             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition flex items-center justify-center gap-2"
                         >
                             View Order Details
                         </Link>
-                    </div>
-
-                    {/* Trust Badges */}
-                    <div className="mt-8 pt-8 border-t text-center">
-                        <div className="flex flex-wrap justify-center gap-6 mb-4">
-                            <img src="/assets/secure-checkout.jpg" alt="Secure Checkout" className="h-12"/>
-                            <img src="/assets/money-back.jpg" alt="30-Day Money Back" className="h-12"/>
-                            <img src="/assets/ssl-secure.jpg" alt="SSL Secure" className="h-12"/>
-                        </div>
-                        <p className="text-sm text-gray-500">
-                            Your purchase is protected by our 100% satisfaction guarantee
-                        </p>
-                    </div>
-                </div>
-
-
-                {/* Recommended Products */}
-                <div className={'m-8'}>
-                    <div className={'flex justify-between items-center'}>
-                        <h4 className={'font-bold text-2xl text-primary py-6'}>You May Also Like</h4>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                        {products?.results?.slice(0, 8)?.map((product, key) => (
-                            <ProductCard key={key} product={product}/>
-                        ))}
                     </div>
                 </div>
 

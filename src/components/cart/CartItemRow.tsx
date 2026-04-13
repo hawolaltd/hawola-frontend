@@ -16,6 +16,7 @@ const CartItemRow = ({
   shippingType,
   canShip,
   shippingBlockReason,
+  directMerchantMode,
 }: {
   cart: CartItem | any;
   updateQuantity: (id: number, change: number) => void;
@@ -27,6 +28,8 @@ const CartItemRow = ({
   shippingType?: string;
   canShip?: boolean;
   shippingBlockReason?: string;
+  /** Site escrow off — Hawola does not collect payment */
+  directMerchantMode?: boolean;
 }) => {
   // Calculate the effective quantity (including pending updates)
   const cartId = cart.id || cart.product?.id;
@@ -63,8 +66,13 @@ const CartItemRow = ({
             />
           </div>
           <div>
-            <h3 className="font-medium flex items-center gap-2">
+            <h3 className="font-medium flex flex-wrap items-center gap-2">
               {cart.product.name}
+              {directMerchantMode && (
+                <span className="inline-flex items-center gap-1 border border-yellow-300/90 bg-yellow-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-950 dark:border-yellow-300/90 dark:bg-yellow-50 dark:text-yellow-950">
+                  Unpaid — pay merchant
+                </span>
+              )}
               {cart?.product?.accept_payment_on_delivery && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-wide bg-green-50 text-green-700 border border-green-200">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">

@@ -29,6 +29,8 @@ const OrderSummary = ({
   onCheckout,
   shippingError,
   isAuthenticated = true,
+  directMerchantMode,
+  directMerchantNoticeHtml,
 }: {
   subtotal: number;
   shippingCost: number;
@@ -45,6 +47,10 @@ const OrderSummary = ({
   loading: boolean;
   shippingError: string | null;
   isAuthenticated?: boolean;
+  /** Site has escrow disabled — show notice and unpaid-through-Hawola copy */
+  directMerchantMode?: boolean;
+  /** Sanitized HTML from site settings (or default) */
+  directMerchantNoticeHtml?: string;
 }) => {
   const [openDelete, setOpenDelete] = useState<boolean | string | null>(null);
 
@@ -158,6 +164,13 @@ const OrderSummary = ({
         </div>
       </div>
 
+      {directMerchantMode && directMerchantNoticeHtml ? (
+        <div
+          className="mt-4 rounded-lg border border-yellow-300/90 bg-yellow-50 p-4 text-sm font-medium text-yellow-950 shadow-sm ring-1 ring-yellow-900/[0.07] dark:border-yellow-300/90 dark:bg-yellow-50 dark:text-yellow-950 dark:ring-yellow-900/10 [&_a]:font-semibold [&_a]:text-yellow-900 [&_a]:underline dark:[&_a]:text-yellow-900"
+          dangerouslySetInnerHTML={{ __html: directMerchantNoticeHtml }}
+        />
+      ) : null}
+
       {/* Show shipping error if exists */}
       {shippingError && (
         <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
@@ -215,6 +228,8 @@ const OrderSummary = ({
           </>
         ) : !isAuthenticated ? (
           "Login to Checkout"
+        ) : directMerchantMode ? (
+          "Proceed to checkout"
         ) : (
           "Proceed To Checkout"
         )}
