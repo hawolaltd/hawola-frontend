@@ -329,6 +329,18 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const keywordsCombined = [productSeo?.keywords, tagNames.join(", ")]
         .filter(Boolean)
         .join(", ");
+    const outsideVicinityShippingCost =
+        product?.product?.shipping_cost_outside?.shipping_cost;
+    const hasOutsideVicinityShippingCost =
+        outsideVicinityShippingCost !== null &&
+        outsideVicinityShippingCost !== undefined &&
+        String(outsideVicinityShippingCost).trim() !== "";
+    const outsideStateShippingCost =
+        product?.product?.shipping_cost_outside_state?.shipping_cost;
+    const hasOutsideStateShippingCost =
+        outsideStateShippingCost !== null &&
+        outsideStateShippingCost !== undefined &&
+        String(outsideStateShippingCost).trim() !== "";
 
     const ogLocale = (siteSettings?.seo_og_locale as string) || "en_US";
     const twitterSite = (siteSettings?.seo_twitter_site as string)?.trim();
@@ -698,7 +710,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
 
 
-                        {product?.product?.ship_outside_vicinity && product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
+                        {product?.product?.ship_outside_vicinity && hasOutsideVicinityShippingCost && product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
                                 <svg className={'w-6 h-6'} height="8" viewBox="0 0 100 100" width="8"
                                      xmlns="http://www.w3.org/2000/svg">
@@ -709,7 +721,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                         fill="#fff"/>
                                 </svg>
                                 Shipping
-                                outside {product?.product?.merchant?.location?.name} cost {amountFormatter(product?.product?.shipping_cost_outside?.shipping_cost)}
+                                outside {product?.product?.merchant?.location?.name} cost {amountFormatter(outsideVicinityShippingCost)}
                             </li>
                         )}
 
@@ -768,7 +780,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             </li>
                         )}
 
-                        {product?.product?.ship_outside_state && product?.product?.merchant?.state?.name && (
+                        {product?.product?.ship_outside_state && hasOutsideStateShippingCost && product?.product?.merchant?.state?.name && (
                             <li className={'flex items-center text-sm text-primary'}>
                                 <svg className={'w-6 h-6'} height="6" viewBox="0 0 100 100" width="6"
                                      xmlns="http://www.w3.org/2000/svg">
@@ -779,7 +791,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                         fill="#fff"/>
                                 </svg>
                                 Shipping
-                                outside {product?.product?.merchant?.state?.name} cost {amountFormatter(product?.product?.shipping_cost_outside_state?.shipping_cost)}
+                                outside {product?.product?.merchant?.state?.name} cost {amountFormatter(outsideStateShippingCost)}
                             </li>
                         )}
 
