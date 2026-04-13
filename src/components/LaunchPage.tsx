@@ -71,7 +71,7 @@ function getDateTimeTill(settings: SiteSettingsData): string {
 export default function LaunchPage({ siteSettings }: LaunchPageProps) {
   const dateTimeTill = getDateTimeTill(siteSettings);
   const appName = siteSettings.app_name || "Hawola";
-  const appSlogan = siteSettings.app_slogan || "Everything you need, at better prices";
+  const appSlogan = siteSettings.app_slogan || "Find it, Own it!";
 
   // Prefer white/SVG logos for dark background, then main logo; resolve relative URLs to backend origin
   const rawLogoUrl =

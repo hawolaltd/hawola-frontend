@@ -636,7 +636,7 @@ export default function HomeModernExperience() {
   const advertMid = (homePage?.data?.advert_banner_middle ?? []) as AdvertBanner[];
 
   const appName = siteSettings?.app_name ?? "Hawola";
-  const slogan = siteSettings?.app_slogan ?? "Everything you need, at better prices";
+  const slogan = siteSettings?.app_slogan ?? "Find it, Own it!";
 
   return (
     <main className="bg-white text-slate-800">

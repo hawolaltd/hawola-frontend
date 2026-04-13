@@ -20,6 +20,7 @@ import { getHomeInsight, getHomePage } from "@/redux/general/generalSlice";
 
 export default function Home() {
   const { products, carts } = useAppSelector((state) => state.products);
+  const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
 
@@ -41,16 +42,21 @@ export default function Home() {
     }
   }, [dispatch, isAuthenticated]);
 
+  const appName = String(siteSettings?.app_name || "Hawola");
+  const appSlogan = String(siteSettings?.app_slogan || "Find it, Own it!");
+  const metaTitle = `${appName} | ${appSlogan}`;
+  const metaDescription = `${appName} - ${appSlogan}`;
+
   return (
     <div>
       <Head>
-        <title>Hawola | Everything you need, at better prices</title>
+        <title>{metaTitle}</title>
         <meta 
           name="description" 
-          content="Hawola - Everything you need, at better prices. Your trusted marketplace with amazing deals on thousands of products." 
+          content={metaDescription}
         />
-        <meta property="og:title" content="Hawola | Everything you need, at better prices" />
-        <meta property="og:description" content="Hawola - Everything you need, at better prices" />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
         <meta property="og:type" content="website" />
       </Head>
       <Drawer
