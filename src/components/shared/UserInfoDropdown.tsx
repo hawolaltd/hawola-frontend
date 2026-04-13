@@ -9,15 +9,10 @@ function UserInfoDropdown() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useAppDispatch();
-  console.log("isAuthenticateduserInfoDropdown:", isAuthenticated);
   return (
     <>
       {isAuthenticated ? (
-        <ul
-          className={`absolute -right-20 ${
-            isAuthenticated ? "-bottom-[14.5rem]" : "bottom-0"
-          } z-10 mt-2 w-48 bg-white shadow-lg border rounded-md`}
-        >
+        <ul className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-md border bg-white shadow-lg">
           <li>
             <Link
               href="/account"
@@ -29,7 +24,7 @@ function UserInfoDropdown() {
 
           <li>
             <Link
-              href="#"
+              href="/order/order-history"
               className="block text-primary px-4 py-2 hover:text-deepOrange"
             >
               Order Tracking
@@ -47,7 +42,7 @@ function UserInfoDropdown() {
 
           <li>
             <Link
-              href="#"
+              href={{ pathname: "/account", query: { tab: "profile" } }}
               className="block text-primary px-4 py-2 hover:text-deepOrange"
             >
               Settings
@@ -55,8 +50,9 @@ function UserInfoDropdown() {
           </li>
 
           <li
-            onClick={() => {
-              // setUserCart({} as CartResponse)
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               dispatch(addToCartsLocal({ items: [] }));
               dispatch(logout());
             }}
@@ -68,11 +64,7 @@ function UserInfoDropdown() {
           </li>
         </ul>
       ) : (
-        <ul
-          className={`absolute -right-20 ${
-            isAuthenticated ? "-bottom-[17.2rem]" : "-bottom-[75px]"
-          }  z-10 mt-2 w-48 bg-white shadow-lg border rounded-md`}
-        >
+        <ul className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-md border bg-white shadow-lg">
           <li
             onClick={() => {
               router.push("/auth/login");

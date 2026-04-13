@@ -61,8 +61,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
     const accountLinks: DrawerLinkProps[] = [
         { href: '/account', label: 'My Account' },
         { href: '/wishlist', label: 'My Wishlist' },
-        { href: '/tracking', label: 'Order Tracking' },
-        { href: '/settings', label: 'Settings' },
+        { href: '/order/order-history', label: 'Order Tracking' },
+        { href: '/account?tab=profile', label: 'Settings' },
     ];
 
     return (
