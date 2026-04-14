@@ -145,7 +145,7 @@ const Footer = () => {
           <div className="lg:col-span-4 flex flex-col gap-5">
             <Link href="/" className="inline-flex items-center gap-2">
               <img
-                src="/assets/hawola.png"
+                src="/hawola_Logo.png"
                 alt="Hawola"
                 className="h-8 brightness-0 invert opacity-95"
               />

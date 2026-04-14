@@ -87,7 +87,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                 <div className="flex items-center justify-between p-4">
                     {/* Logo */}
                     <div className="flex items-center ">
-                        <img src="/assets/hawola.png" alt="Logo" className="w-30 h-10"/>
+                        <img src="/hawola_Logo.png" alt="Logo" className="w-30 h-10"/>
                     </div>
                     <svg onClick={onClose} width={'35'} height={'35'} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h24v24h-24z" fill="#fff" opacity="0" transform="matrix(-1 0 0 -1 24 24)"/><path d="m13.41 12 4.3-4.29a1 1 0 1 0 -1.42-1.42l-4.29 4.3-4.29-4.3a1 1 0 0 0 -1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z" fill="#8C9EC5"/></svg>
                 </div>

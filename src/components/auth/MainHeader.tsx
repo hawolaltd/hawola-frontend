@@ -70,7 +70,7 @@ function MainHeader() {
             {/* Logo */}
             <Link href={"/"}>
               <div className="flex items-center cursor-pointer">
-                <img src="/assets/hawola.png" alt="Logo" className="w-30 h-8" />
+                <img src="/hawola_Logo.png" alt="Logo" className="w-30 h-8" />
               </div>
             </Link>
 

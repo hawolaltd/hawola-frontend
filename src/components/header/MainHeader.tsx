@@ -125,7 +125,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             {/* Logo */}
             <Link href="/" className="shrink-0">
               <div className="flex cursor-pointer items-center space-x-2">
-                <img src="/assets/hawola.png" alt="Logo" className="w-50 h-10" />
+                <img src="/hawola_Logo.png" alt="Logo" className="w-50 h-10" />
               </div>
             </Link>
 
