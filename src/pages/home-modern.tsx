@@ -4,6 +4,7 @@ import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
 import Drawer from "@/components/header/MobileMenuDrawer";
 import HomeModernExperience from "@/components/home-modern/HomeModernExperience";
+import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   getCarts,
@@ -60,6 +61,7 @@ export default function HomeModernPage() {
       </div>
       <HomeModernExperience />
       <div className="bg-[#f1f3f9]">
+        <RecentlyViewedSection />
         <Footer />
       </div>
     </div>

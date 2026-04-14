@@ -314,8 +314,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         const p = (product as any)?.product;
         if (!p?.id || !p?.slug) return;
         const imageUrl =
-            p?.featured_image?.[0]?.image_url ||
+            product?.product_images?.[0]?.image_url ||
             p?.featured_image?.[0]?.image?.full_size ||
+            p?.featured_image?.[0]?.image_url ||
             null;
         saveLocalRecentlyViewedProduct({
             id: Number(p.id),

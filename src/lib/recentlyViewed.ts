@@ -28,6 +28,7 @@ export function saveLocalRecentlyViewedProduct(snapshot: RecentlyViewedSnapshot)
   const current = getLocalRecentlyViewedProducts().filter((item) => Number(item.id) !== Number(snapshot.id));
   current.unshift(snapshot);
   localStorage.setItem(LS_KEY, JSON.stringify(current.slice(0, MAX_ITEMS)));
+  window.dispatchEvent(new Event("hawola:recently-viewed-updated"));
 }
 
 export function getLocalRecentlyViewedProductIds(limit = 20): number[] {
@@ -40,4 +41,5 @@ export function getLocalRecentlyViewedProductIds(limit = 20): number[] {
 export function clearLocalRecentlyViewedProducts() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(LS_KEY);
+  window.dispatchEvent(new Event("hawola:recently-viewed-updated"));
 }
