@@ -6,7 +6,23 @@ const API_URL = 'authy';
 
 // get Home Page
 const getHomePage = async () => {
-    const response = await axiosInstance.get(API + 'home/');
+    let items: number[] = [];
+    if (typeof window !== "undefined") {
+        try {
+            const raw = localStorage.getItem("homePersonalizationSubsecIds");
+            const parsed = raw ? JSON.parse(raw) : [];
+            if (Array.isArray(parsed)) {
+                items = parsed
+                    .map((v) => Number(v))
+                    .filter((v) => Number.isInteger(v) && v > 0)
+                    .slice(0, 20);
+            }
+        } catch {
+            items = [];
+        }
+    }
+
+    const response = await axiosInstance.post(API + 'home/', { items });
     console.log('getHomePage:', response.data);
     // Wrap response in data object to match HomeData type structure
     return { data: response.data };

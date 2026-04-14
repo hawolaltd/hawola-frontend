@@ -30,6 +30,8 @@ import {
   STOREFRONT_PREVIEW_LS_KEY,
   STOREFRONT_PREVIEW_URL_PARAM,
 } from "@/lib/storefrontPreview";
+import { clearLocalRecentlyViewedProducts, getLocalRecentlyViewedProductIds } from "@/lib/recentlyViewed";
+import productService from "@/redux/product/productService";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
@@ -37,6 +39,7 @@ function AppContent({ Component, pageProps }: AppProps) {
   const dispatch = useAppDispatch();
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [showLaunchConfetti, setShowLaunchConfetti] = useState(false);
   const [confettiPieces] = useState(() =>
     Array.from({ length: 120 }, (_, i) => ({
@@ -68,6 +71,21 @@ function AppContent({ Component, pageProps }: AppProps) {
     }
     dispatch(getSiteSettings());
   }, [dispatch]);
+
+  useEffect(() => {
+    const syncRecentlyViewed = async () => {
+      if (!isAuthenticated) return;
+      const ids = getLocalRecentlyViewedProductIds(20);
+      if (ids.length === 0) return;
+      try {
+        await productService.syncRecentlyViewedProducts(ids);
+        clearLocalRecentlyViewedProducts();
+      } catch {
+        // Non-blocking; try on next app load/login.
+      }
+    };
+    void syncRecentlyViewed();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !siteSettingsLoaded) return;

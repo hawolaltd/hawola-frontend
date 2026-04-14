@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
@@ -8,9 +8,24 @@ import { useRouter } from "next/router";
 import { CartResponse } from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
+import productService from "@/redux/product/productService";
 // import Navigation from "./Navigation";
 
 const Header = ({ isScrolled }: { isScrolled?: any }) => {
+  type HeaderSubcategory = {
+    id: number;
+    name: string;
+    slug: string;
+    product_count: number;
+    image_url?: string | null;
+    second_subcategories?: Array<{
+      id: number;
+      name: string;
+      slug: string;
+      product_count: number;
+      image_url?: string | null;
+    }>;
+  };
   const [userInfo, setUserInfo] = useState(false);
   const [cart, setCart] = useState(false);
   const [items, setItems] = useState([]);
@@ -42,6 +57,8 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [clickedCategoryId, setClickedCategoryId] = useState<number | null>(null);
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null>(null);
   const [clickedSubCategoryId, setClickedSubCategoryId] = useState<number | null>(null);
+  const [headerSubcategories, setHeaderSubcategories] = useState<HeaderSubcategory[]>([]);
+  const [activeMegaSubcategoryId, setActiveMegaSubcategoryId] = useState<number | null>(null);
 
   const [userCart, setUserCart] = useState<CartResponse>(carts);
 
@@ -89,6 +106,23 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
     return () => window.removeEventListener("storage", getCartCount);
   }, []);
 
+  const subcategoryParentIconMap = useMemo(() => {
+    const map = new Map<number, { icon?: string; icon_code?: string }>();
+    const categoryRows = Array.isArray(categories?.categories) ? categories.categories : [];
+    categoryRows.forEach((cat: any) => {
+      const subRows = Array.isArray(cat?.subcategory) ? cat.subcategory : [];
+      subRows.forEach((sub: any) => {
+        if (sub?.id) {
+          map.set(sub.id, {
+            icon: typeof cat?.icon === "string" ? cat.icon : undefined,
+            icon_code: typeof cat?.icon_code === "string" ? cat.icon_code : undefined,
+          });
+        }
+      });
+    });
+    return map;
+  }, [categories]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -116,16 +150,47 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
     };
   }, [dropdownOpenCat]);
 
+  useEffect(() => {
+    const loadSubcategoriesWithProducts = async () => {
+      try {
+        let hintSubsecIds: number[] = [];
+        if (typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("homePersonalizationSubsecIds");
+            const parsed = raw ? JSON.parse(raw) : [];
+            if (Array.isArray(parsed)) {
+              hintSubsecIds = parsed
+                .map((v) => Number(v))
+                .filter((v) => Number.isInteger(v) && v > 0)
+                .slice(0, 20);
+            }
+          } catch {
+            hintSubsecIds = [];
+          }
+        }
+
+        const res = await productService.getSubcategoriesWithProducts({
+          hint_subsec_ids: hintSubsecIds,
+        });
+        const list = Array.isArray(res?.subcategories) ? res.subcategories : [];
+        setHeaderSubcategories(list);
+      } catch (error) {
+        setHeaderSubcategories([]);
+      }
+    };
+    void loadSubcategoriesWithProducts();
+  }, []);
+
   return (
     <div className={"relative "}>
       {/* Top Component Start*/}
       <div className="bg-white border-b border-gray-300">
-        <div className="relative mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-6 py-4 xl:px-0">
+        <div className="relative mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-6 py-5 lg:py-6 xl:px-0">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
             {/* Logo */}
-            <Link href="/" className="shrink-0">
+            <Link href="/" className="shrink-0 py-1">
               <div className="flex cursor-pointer items-center space-x-2">
-                <img src="/hawola_Logo.png" alt="Logo" className="w-50 h-10" />
+                <img src="/hawola_Logo.png" alt="Logo" className="h-12 w-auto lg:h-14" />
               </div>
             </Link>
 
@@ -293,7 +358,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             {/* ========== END OLD CATEGORY DROPDOWN ========== */}
 
             {/* ========== NEW MEGA MENU - MOBILE FRIENDLY WITH IMAGES ========== */}
-            <div className="relative">
+            <div className="relative hidden">
               {/* Desktop Mega Menu Button */}
               <div className="hidden lg:block">
                 <button
@@ -583,22 +648,22 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             {/* ========== END NEW MEGA MENU ========== */}
 
             {/* Search Bar (visible on all breakpoints; shares row with logo on mobile) */}
-            <div className="flex min-w-0 flex-1 items-center lg:max-w-none">
+            <div className="flex min-w-0 flex-1 items-center justify-center px-2 sm:px-4">
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex w-full min-w-0 items-center rounded-md border"
+                className="flex w-full min-w-0 max-w-[920px] items-center rounded-md border"
               >
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for items"
-                  className="min-w-0 flex-1 rounded-l-md p-2 text-sm text-primary outline-none lg:w-64 lg:flex-none"
+                  className="min-w-0 flex-1 rounded-l-md px-3 py-3 text-base text-primary outline-none"
                 />
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="shrink-0 rounded-r-md bg-[#FF5733] px-2 py-2 text-xs font-medium text-white transition-colors hover:bg-[#E64A2E] sm:px-4 sm:text-sm"
+                  className="shrink-0 rounded-r-md bg-[#FF5733] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#E64A2E] sm:px-6"
                 >
                   <span className="sm:hidden">Go</span>
                   <span className="hidden sm:inline">Search</span>
@@ -618,7 +683,11 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             <div className="relative">
               <div
                 onClick={() => {
-                  setUserInfo(!userInfo);
+                  if (isAuthenticated) {
+                    setUserInfo(!userInfo);
+                  } else {
+                    router.push("/auth/login");
+                  }
                 }}
                 className="cursor-pointer"
               >
@@ -713,6 +782,141 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
           {cart && <CartModal />}
         </div>
       </div>
+
+      {headerSubcategories.length > 0 && (
+        <div
+          className="relative border-b border-[#bbf7d0] bg-[#ecfccb]"
+          onMouseLeave={() => setActiveMegaSubcategoryId(null)}
+        >
+          <div className="mx-auto flex w-full max-w-screen-xl flex-wrap items-center gap-2 px-6 py-2 xl:px-0">
+            {headerSubcategories.slice(0, 9).map((subcat) => (
+              <button
+                key={subcat.id}
+                type="button"
+                onMouseEnter={() => setActiveMegaSubcategoryId(subcat.id)}
+                onFocus={() => setActiveMegaSubcategoryId(subcat.id)}
+                onClick={() => router.push(`/categories?type=subcat&slug=${subcat.slug}`)}
+                className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  activeMegaSubcategoryId === subcat.id
+                    ? "border-[#84cc16] bg-white text-[#365314]"
+                    : "border-[#a3e635] bg-white/90 text-[#365314] hover:bg-white"
+                }`}
+              >
+                {(() => {
+                  const iconData = subcategoryParentIconMap.get(subcat.id);
+                  if (iconData?.icon) {
+                    return (
+                      <img
+                        src={iconData.icon}
+                        alt=""
+                        className="mr-1.5 h-4 w-4 rounded object-cover"
+                      />
+                    );
+                  }
+                  if (iconData?.icon_code) {
+                    return (
+                      <span className="mr-1.5 text-sm leading-none">{iconData.icon_code}</span>
+                    );
+                  }
+                  return null;
+                })()}
+                <span>{subcat.name}</span>
+              </button>
+            ))}
+            <Link
+              href="/categories"
+              className="inline-flex shrink-0 items-center rounded-full border border-[#a3e635] bg-white px-3 py-1.5 text-xs font-semibold text-[#365314] transition hover:bg-[#f7fee7]"
+            >
+              View All
+            </Link>
+          </div>
+
+          {(() => {
+            const activeSubcat = headerSubcategories.find(
+              (item) => item.id === activeMegaSubcategoryId
+            );
+            if (!activeSubcat) return null;
+
+            const secondLevelItems = Array.isArray(activeSubcat.second_subcategories)
+              ? activeSubcat.second_subcategories
+              : [];
+
+            if (secondLevelItems.length === 0) return null;
+
+            return (
+              <div className="absolute inset-x-0 top-full z-[70] bg-transparent px-3 pt-2">
+                <div className="mx-auto w-full max-w-screen-xl rounded-2xl border border-lime-200/80 bg-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.45)] ring-1 ring-lime-100/80">
+                  <div className="px-5 py-5 md:px-6">
+                    <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
+                      <p className="flex items-center text-lg font-bold tracking-tight text-gray-900 md:text-xl">
+                        {(() => {
+                          const iconData = subcategoryParentIconMap.get(activeSubcat.id);
+                          if (iconData?.icon) {
+                            return (
+                              <img
+                                src={iconData.icon}
+                                alt=""
+                                className="mr-2 h-5 w-5 rounded object-cover"
+                              />
+                            );
+                          }
+                          if (iconData?.icon_code) {
+                            return (
+                              <span className="mr-2 text-base leading-none">{iconData.icon_code}</span>
+                            );
+                          }
+                          return null;
+                        })()}
+                        <span>{activeSubcat.name}</span>
+                      </p>
+                      <Link
+                        href={`/categories?type=subcat&slug=${activeSubcat.slug}`}
+                        className="inline-flex items-center rounded-full border border-lime-200 bg-lime-50 px-3 py-1 text-xs font-semibold text-lime-800 transition hover:border-lime-300 hover:bg-lime-100"
+                      >
+                        View all
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+                      <div className="md:col-span-8">
+                        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {secondLevelItems.slice(0, 14).map((second) => (
+                            <li key={second.id}>
+                              <Link
+                                href={`/categories?type=subsubcat&slug=${second.slug}`}
+                                className="group flex items-center justify-between rounded-xl border border-transparent bg-gray-50/70 px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:border-lime-200 hover:bg-lime-50 hover:text-lime-900"
+                              >
+                                <span className="line-clamp-1">{second.name}</span>
+                                <span className="ml-3 text-gray-300 transition group-hover:text-lime-600">→</span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="hidden md:col-span-4 md:block">
+                        <div className="relative h-48 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+                          <img
+                            src={activeSubcat.image_url || secondLevelItems[0]?.image_url || "/imgs/page/blog/img-big5.png"}
+                            alt={activeSubcat.name}
+                            className="h-full w-full object-cover"
+                          />
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
+                          <div className="absolute bottom-3 left-3 right-3">
+                            <p className="line-clamp-2 text-sm font-semibold text-white drop-shadow">
+                              Discover {activeSubcat.name}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Top Component End */}
     </div>

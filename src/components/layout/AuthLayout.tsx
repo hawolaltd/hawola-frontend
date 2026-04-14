@@ -4,6 +4,7 @@ import Sidebar from "@/components/auth/Sidebar";
 import MainHeader from "@/components/auth/MainHeader";
 import LoginForm from "@/components/auth/LoginForm";
 import Footer from "@/components/home/Footer";
+import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 
 function AuthLayout({children}: { children: ReactNode }) {
     return (<>
@@ -14,6 +15,7 @@ function AuthLayout({children}: { children: ReactNode }) {
                 {/*</div>*/}
                 <div className={'w-[100%]'}>
                     {children}
+                    <RecentlyViewedSection/>
                     <Footer/>
                 </div>
             </div>

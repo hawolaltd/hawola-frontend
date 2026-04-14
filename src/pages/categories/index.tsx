@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
 import ProductSlider from "@/components/categories/ProductSlider";
 import Ads2 from "@/components/svg/ads2";
@@ -16,12 +16,15 @@ import {
   getAllProductBaseOnSubCategories,
   getProducts,
 } from "@/redux/product/productSlice";
+import { getHomePage } from "@/redux/general/generalSlice";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 function Categories() {
   const {
     products,
     carts,
+    categories,
     productBaseOnCategories,
     productBaseOnSubCategories,
     productBaseOnSecLevelSubCategories,
@@ -36,11 +39,16 @@ function Categories() {
 
   const type = router.query.type as string;
   const slug = router.query.slug as string;
+  const isExpandedCategoriesPage = !type || !slug;
+  const { homePage } = useAppSelector((state) => state.general);
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const [activeSubCategoryId, setActiveSubCategoryId] = useState<number | null>(null);
 
   const dispatch = useAppDispatch();
 
   const init = useCallback(async () => {
     try {
+      if (!type || !slug) return;
       const page = Number(router.query.page) || 1;
       if (type === "cat") {
         dispatch(getAllProductBaseOnCategories({ slug, page: String(page) }));
@@ -62,6 +70,185 @@ function Categories() {
   useEffect(() => {
     init();
   }, [init]);
+
+  useEffect(() => {
+    if (!isExpandedCategoriesPage) return;
+    dispatch(getAllCategories());
+    dispatch(getHomePage());
+  }, [dispatch, isExpandedCategoriesPage]);
+
+  const categoriesTree = useMemo(() => {
+    const list = categories?.categories || [];
+    const sorted = [...list].sort((a: any, b: any) => {
+      const aScore = (a?.subcategory || []).reduce(
+        (sum: number, sub: any) => sum + ((sub?.second_subcategory || []).length > 0 ? 2 : 0),
+        0
+      );
+      const bScore = (b?.subcategory || []).reduce(
+        (sum: number, sub: any) => sum + ((sub?.second_subcategory || []).length > 0 ? 2 : 0),
+        0
+      );
+      if (aScore !== bScore) return bScore - aScore;
+      return String(a?.name || "").localeCompare(String(b?.name || ""));
+    });
+    return sorted;
+  }, [categories?.categories]);
+
+  useEffect(() => {
+    if (!isExpandedCategoriesPage || categoriesTree.length === 0) return;
+    if (activeCategoryId && categoriesTree.some((cat: any) => cat.id === activeCategoryId)) return;
+    const firstCategory = categoriesTree[0];
+    setActiveCategoryId(firstCategory?.id || null);
+    const firstSub = (firstCategory?.subcategory || [])[0];
+    setActiveSubCategoryId(firstSub?.id || null);
+  }, [isExpandedCategoriesPage, categoriesTree, activeCategoryId]);
+
+  if (isExpandedCategoriesPage) {
+    const recommendedProducts = homePage?.data?.recommended_products || [];
+    const activeCategory =
+      categoriesTree.find((cat: any) => cat.id === activeCategoryId) || categoriesTree[0];
+    const subcategories = activeCategory?.subcategory || [];
+    const activeSubcategory =
+      subcategories.find((sub: any) => sub.id === activeSubCategoryId) || subcategories[0];
+    const thirdLevel = activeSubcategory?.second_subcategory || [];
+
+    return (
+      <AuthLayout>
+        <div className="pb-20">
+          <section className="mx-auto w-full max-w-screen-xl px-6 py-8 xl:px-0">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-primary">Shop by Categories</h1>
+              <p className="mt-1 text-sm text-gray-600">
+                Explore all categories and subcategories in one expanded view.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+              <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm lg:col-span-4 xl:col-span-3">
+                <div className="mb-2 border-b border-gray-100 px-2 pb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Categories</p>
+                </div>
+                <div className="max-h-[520px] space-y-1 overflow-y-auto pr-1">
+                  {categoriesTree.map((category: any) => {
+                    const isActive = category.id === activeCategory?.id;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveCategoryId(category.id);
+                          setActiveSubCategoryId((category?.subcategory || [])[0]?.id || null);
+                        }}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
+                          isActive
+                            ? "bg-amber-50 text-deepOrange ring-1 ring-amber-200"
+                            : "text-primary hover:bg-gray-50"
+                        }`}
+                      >
+                        <img
+                          src={category?.icon || category?.image || "/imgs/page/blog/img-big5.png"}
+                          alt={category?.name || "Category"}
+                          className="h-9 w-9 rounded-md object-cover"
+                        />
+                        <span className="text-sm font-semibold">{category?.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:col-span-4 xl:col-span-4">
+                <div className="mb-2 flex items-center justify-between border-b border-gray-100 pb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {activeCategory?.name || "Subcategories"}
+                  </p>
+                  {activeCategory?.slug ? (
+                    <Link
+                      href={`/categories?type=cat&slug=${activeCategory.slug}`}
+                      className="text-xs font-semibold text-deepOrange hover:underline"
+                    >
+                      View category
+                    </Link>
+                  ) : null}
+                </div>
+                <div className="max-h-[520px] space-y-1 overflow-y-auto pr-1">
+                  {subcategories.map((sub: any) => {
+                    const isActive = sub.id === activeSubcategory?.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => setActiveSubCategoryId(sub.id)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition ${
+                          isActive
+                            ? "bg-amber-50 text-deepOrange ring-1 ring-amber-200"
+                            : "text-primary hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="text-sm font-medium">{sub.name}</span>
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 6L15 12L9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:col-span-4 xl:col-span-5">
+                <div className="mb-2 flex items-center justify-between border-b border-gray-100 pb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {activeSubcategory?.name || "Third level"}
+                  </p>
+                  {activeSubcategory?.slug ? (
+                    <Link
+                      href={`/categories?type=subcat&slug=${activeSubcategory.slug}`}
+                      className="text-xs font-semibold text-deepOrange hover:underline"
+                    >
+                      View subcategory products
+                    </Link>
+                  ) : null}
+                </div>
+                <div className="max-h-[520px] overflow-y-auto pr-1">
+                  {thirdLevel.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {thirdLevel.map((third: any) => (
+                        <Link
+                          key={third.id}
+                          href={`/categories?type=subsubcat&slug=${third.slug}`}
+                          className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-primary transition hover:border-[#f59e0b] hover:text-deepOrange"
+                        >
+                          {third.name}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                      Select a subcategory to view third-level categories.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mx-auto w-full max-w-screen-xl px-6 py-2 xl:px-0">
+            <div className="mb-4 flex items-center justify-between border-b border-[#CAD6EC] pb-3">
+              <h2 className="text-xl font-semibold text-primary">Recommended for you</h2>
+              <Link href="/" className="text-sm font-semibold text-deepOrange hover:underline">
+                Back to Home
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {recommendedProducts.slice(0, 8).map((product: any) => (
+                <ProductCard key={product?.id} product={product} />
+              ))}
+            </div>
+          </section>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   // Get current products based on type
   const getCurrentProducts = () => {
@@ -125,12 +312,12 @@ function Categories() {
           </div>
 
           {/* Filter bar skeleton */}
-          <div className="container mx-auto w-full max-w-screen-full flex py-8">
+          <div className="mx-auto flex w-full max-w-screen-xl px-6 py-8 xl:px-0">
             <div className="w-full h-16 bg-gray-200 rounded-lg animate-pulse"></div>
           </div>
 
           {/* Products skeleton */}
-          <div className="container mx-auto w-full max-w-screen-full py-8">
+          <div className="mx-auto w-full max-w-screen-xl px-6 py-8 xl:px-0">
             <ProductSkeleton
               count={10}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4"
@@ -165,7 +352,7 @@ function Categories() {
           )}
 
           {/* Filter bar */}
-          <div className="container mx-auto w-full max-w-screen-full flex py-8">
+          <div className="mx-auto flex w-full max-w-screen-xl px-6 py-8 xl:px-0">
             <FilterBar
               products={
                 type === "cat"
@@ -219,7 +406,7 @@ function Categories() {
   return (
     <AuthLayout>
       <div className={`h-fit pb-28`}>
-        <div className="container mx-auto max-w-screen-full flex justify-center py-8">
+        <div className="mx-auto flex w-full max-w-screen-xl justify-center px-6 py-8 xl:px-0">
           <img
             src={bannerSrc}
             alt={"category banner"}
@@ -235,7 +422,7 @@ function Categories() {
         {/*    <Ads2/>*/}
         {/*</div>*/}
 
-        <div className="container mx-auto w-full max-w-screen-full flex  py-8">
+        <div className="mx-auto flex w-full max-w-screen-xl px-6 py-8 xl:px-0">
           <FilterBar
             products={
               type === "cat"
@@ -248,11 +435,11 @@ function Categories() {
         </div>
 
         <div
-          className={`container mx-auto ${
+          className={`mx-auto w-full max-w-screen-xl px-6 xl:px-0 ${
             viewMode === "grid"
               ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4"
               : "space-y-4"
-          } w-full`}
+          }`}
         >
           {allProducts?.map((product: any) => (
             <ProductCard
@@ -323,7 +510,7 @@ function Categories() {
           }
 
           return (
-            <div className="flex justify-start items-center gap-2 my-8 container mx-auto">
+            <div className="mx-auto my-8 flex w-full max-w-screen-xl items-center justify-start gap-2 px-6 xl:px-0">
               <button
                 className="px-2 py-1 rounded text-gray-400 hover:text-primary disabled:opacity-50"
                 onClick={() => handlePageChange(currentPage - 1)}

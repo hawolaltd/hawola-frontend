@@ -23,6 +23,7 @@ import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import { TagIcon } from '@heroicons/react/24/outline';
 import { buildProductSeo } from "@/util/storefrontSeo";
+import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
 
 type ProductPageProps = {
     serverNotFound?: boolean;
@@ -290,6 +291,41 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             setMainImage(product?.product_images?.[0]?.image_url);
         }
     }, [product?.product?.featured_image, product?.product_images]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const subsecId = Number((product as any)?.product?.product_subseccategory?.id);
+        if (!Number.isInteger(subsecId) || subsecId <= 0) return;
+        try {
+            const key = "homePersonalizationSubsecIds";
+            const raw = localStorage.getItem(key);
+            const existing = raw ? JSON.parse(raw) : [];
+            const next = Array.isArray(existing)
+                ? existing.filter((v: unknown) => Number(v) !== subsecId)
+                : [];
+            next.unshift(subsecId);
+            localStorage.setItem(key, JSON.stringify(next.slice(0, 20)));
+        } catch {
+            // Ignore personalization cache write errors.
+        }
+    }, [(product as any)?.product?.product_subseccategory?.id]);
+
+    useEffect(() => {
+        const p = (product as any)?.product;
+        if (!p?.id || !p?.slug) return;
+        const imageUrl =
+            p?.featured_image?.[0]?.image_url ||
+            p?.featured_image?.[0]?.image?.full_size ||
+            null;
+        saveLocalRecentlyViewedProduct({
+            id: Number(p.id),
+            slug: String(p.slug),
+            name: String(p.name || "Product"),
+            price: p.price,
+            discount_price: p.discount_price,
+            image_url: imageUrl,
+        });
+    }, [(product as any)?.product?.id, (product as any)?.product?.slug]);
 
 
     const notFound = serverNotFound || clientNotFound;

@@ -10,6 +10,7 @@ import Orders from "@/components/account/Orders";
 import BuyingRequests from "@/components/account/BuyingRequests";
 import Settings from "@/components/account/Settings";
 import {getDisputes} from "@/redux/disputes/disputeSlice";
+import RecentlyViewed from "@/components/account/RecentlyViewed";
 
 export default function AccountPage() {
     const router = useRouter();
@@ -36,6 +37,10 @@ export default function AccountPage() {
         {
             id: 'profile',
             name: 'Profile',
+        },
+        {
+            id: 'recently_viewed',
+            name: 'Recently Viewed',
         },
     ]
 
@@ -140,6 +145,7 @@ export default function AccountPage() {
                                 {tab === 'orders' && <Orders />}
                                 {tab === 'buying_requests' && <BuyingRequests />}
                                 {tab === 'profile' && <Settings />}
+                                {tab === 'recently_viewed' && <RecentlyViewed />}
                             </div>
                         )
                     }

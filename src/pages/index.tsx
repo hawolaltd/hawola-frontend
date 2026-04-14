@@ -8,6 +8,7 @@ import TrendingProducts from "@/components/TrendingProducts";
 import Partner from "@/components/partner/Partner";
 import TopRateProducts from "@/components/home/TopRateProducts";
 import TopSellingProducts from "@/components/home/TopSellingProducts";
+import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   getCarts,
@@ -73,6 +74,7 @@ export default function Home() {
       <TrendingProducts products={products} />
       <TopRateProducts products={products} />
       <TopSellingProducts products={products} />
+      <RecentlyViewedSection />
       <Footer />
     </div>
   );

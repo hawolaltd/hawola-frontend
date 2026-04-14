@@ -58,6 +58,30 @@ const getAllSubSecCategories = async (slug: string) => {
     return response.data;
 };
 
+// get subcategories that have products (for header quick strip)
+const getSubcategoriesWithProducts = async (params?: { hint_subsec_ids?: number[] }) => {
+    const query: Record<string, string> = {};
+    if (params?.hint_subsec_ids && params.hint_subsec_ids.length > 0) {
+        query.hint_subsec_ids = params.hint_subsec_ids.join(",");
+    }
+    const response = await axios.get(API + `categories/subcategories/with-products/`, { params: query });
+    return response.data;
+};
+
+const getRecentlyViewedProducts = async (limit = 12) => {
+    const response = await axiosInstance.get(API + `products/recently-viewed/`, {
+        params: { limit },
+    });
+    return response.data as { products: any[] };
+};
+
+const syncRecentlyViewedProducts = async (productIds: number[]) => {
+    const response = await axiosInstance.post(API + `products/recently-viewed/`, {
+        product_ids: productIds,
+    });
+    return response.data as { synced: number };
+};
+
 // Get all produts unique to a category.
 const getAllProductBaseOnCategories = async (slug: string, page?: string) => {
     const params: Record<string, any> = {};
@@ -316,6 +340,9 @@ const productService = {
     getAllCategories,
     getAllSubCategories,
     getAllSubSecCategories,
+    getSubcategoriesWithProducts,
+    getRecentlyViewedProducts,
+    syncRecentlyViewedProducts,
     getProductBySlug,
     getCarts,
     addToCarts,
