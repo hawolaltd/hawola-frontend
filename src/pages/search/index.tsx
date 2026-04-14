@@ -15,8 +15,6 @@ import { AiOutlineProduct } from "react-icons/ai";
 import ProductCard from "@/components/product/ProductCard";
 import MiniHeader from "@/components/header/MiniHeader";
 import MainHeader from "@/components/header/MainHeader";
-import Footer from "@/components/home/Footer";
-import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 import Drawer from "@/components/header/MobileMenuDrawer";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import Header from "@/components/header";
@@ -517,9 +515,6 @@ const SearchPage = () => {
           {!isLoading && !searchResults && renderEmptyState()}
         </div>
         
-        {/* Footer */}
-        <RecentlyViewedSection />
-        <Footer />
       </div>
     </AuthLayout>
   );

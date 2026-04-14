@@ -7,6 +7,7 @@ import {
 import type { Product } from "@/types/product";
 import type { ProductFull } from "@/types/home";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/config";
 
 /** Store listing/detail payloads in compare list (Redux expects Product shape). */
 export function normalizeProductForCompare(p: ProductFull | Product): Product {
@@ -44,6 +45,12 @@ export default function AddToCompareButton({
     }
     dispatch(toggleCompareProduct(payload));
     if (!isIn) {
+      // Fire-and-forget compare tracking for merchant engagement updates.
+      fetch(`${getApiUrl()}/api/products/track-compare/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: id }),
+      }).catch(() => undefined);
       toast.success("Added to compare");
     } else {
       toast.message("Removed from compare");

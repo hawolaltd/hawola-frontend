@@ -263,10 +263,10 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="relative flex w-full pt-16 mb-28 md:px-28 bg-white">
-            <div className="w-full max-w-xl px-8 bg-white ">
-                <h2 className="text-4xl font-bold text-[#435a8c]">Member Login</h2>
-                <p className="text-[#435a8c] mb-6 mt-2">Welcome back!</p>
+        <div className="relative mx-auto w-full max-w-screen-xl bg-white px-6 pt-8 mb-12 xl:px-0">
+            <div className="w-full max-w-2xl rounded-2xl border border-[#e2e8f2] bg-white p-5 shadow-sm md:p-6">
+                <h2 className="text-2xl font-bold text-[#435a8c] lg:text-4xl">Member Login</h2>
+                <p className="text-[#435a8c] mb-5 mt-2">Welcome back!</p>
                 {router.query.confirmed === "true" && (
                     <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
                         Your account has been activated. You can now login.
@@ -276,42 +276,47 @@ export default function LoginForm() {
                 {/* Primary section: either magic-link login or password login */}
 
                 {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-                    <div className="mb-6">
-                        <GoogleLogin
-                            onSuccess={async (credentialResponse) => {
-                                const token = credentialResponse.credential;
-                                if (!token) return;
-                                const res = await dispatch(loginWithGoogle(token));
-                                if (res?.type?.includes?.("fulfilled")) {
-                                    toast.success("Welcome Back to HAWOLA");
-                                    if (localCart?.items?.length > 0) {
-                                        dispatch(addToCarts({
-                                            items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
-                                                qty: cart.qty,
-                                                product: cart?.product?.id,
-                                            })),
-                                        }));
-                                        dispatch(addToCartsLocal({ items: [] }));
+                    <div className="mb-5 rounded-xl border-2 border-[#d7e1f3] bg-[#f7f9fe] p-3 shadow-sm">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#435a8c]">
+                            Quick sign in
+                        </p>
+                        <div className="rounded-lg bg-white p-1.5 ring-1 ring-[#d3def4]">
+                            <GoogleLogin
+                                onSuccess={async (credentialResponse) => {
+                                    const token = credentialResponse.credential;
+                                    if (!token) return;
+                                    const res = await dispatch(loginWithGoogle(token));
+                                    if (res?.type?.includes?.("fulfilled")) {
+                                        toast.success("Welcome Back to HAWOLA");
+                                        if (localCart?.items?.length > 0) {
+                                            dispatch(addToCarts({
+                                                items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
+                                                    qty: cart.qty,
+                                                    product: cart?.product?.id,
+                                                })),
+                                            }));
+                                            dispatch(addToCartsLocal({ items: [] }));
+                                        }
+                                        router.push("/");
+                                    } else if (res?.type?.includes?.("rejected") && res?.payload) {
+                                        toast.error(String(res.payload), {
+                                            style: { background: "#ef4444", color: "white" },
+                                        });
                                     }
-                                    router.push("/");
-                                } else if (res?.type?.includes?.("rejected") && res?.payload) {
-                                    toast.error(String(res.payload), {
+                                }}
+                                onError={() => {
+                                    toast.error("Google sign-in failed. Please try again.", {
                                         style: { background: "#ef4444", color: "white" },
                                     });
-                                }
-                            }}
-                            onError={() => {
-                                toast.error("Google sign-in failed. Please try again.", {
-                                    style: { background: "#ef4444", color: "white" },
-                                });
-                            }}
-                            useOneTap={false}
-                            theme="outline"
-                            size="large"
-                            text="continue_with"
-                            shape="rectangular"
-                            width="100%"
-                        />
+                                }}
+                                useOneTap={false}
+                                theme="filled_blue"
+                                size="large"
+                                text="continue_with"
+                                shape="rectangular"
+                                width="100%"
+                            />
+                        </div>
                     </div>
                 )}
 

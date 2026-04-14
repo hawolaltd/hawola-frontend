@@ -7,21 +7,23 @@ import Footer from "@/components/home/Footer";
 import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 
 function AuthLayout({children}: { children: ReactNode }) {
-    return (<>
+    return (
+        <div className="min-h-screen flex flex-col">
             <Header/>
-            <div className={'flex'}>
+            <div className="flex flex-1">
                 {/*<div className={'w-[4%]  border-r border-r-[#D5DFE4] overflow-x-hidden'}>*/}
                 {/*    <Sidebar/>*/}
                 {/*</div>*/}
-                <div className={'w-[100%]'}>
-                    {children}
+                <div className="w-full flex flex-col">
+                    <div className="flex-1">
+                        {children}
+                    </div>
                     <RecentlyViewedSection/>
                     <Footer/>
                 </div>
             </div>
-
-
-        </>);
+        </div>
+    );
 }
 
 export default AuthLayout;

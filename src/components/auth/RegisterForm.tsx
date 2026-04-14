@@ -202,7 +202,7 @@ function RegisterForm() {
 
     return (
 
-        <div className="mx-auto w-full max-w-screen-xl bg-white px-6 pt-16 mb-28 xl:px-0">
+        <div className="mx-auto w-full max-w-screen-xl bg-white px-6 pt-8 mb-12 xl:px-0">
 
             {regSuccess && (
                 <div className="flex items-center justify-center w-full min-h-[60vh] px-4">
@@ -373,14 +373,65 @@ function RegisterForm() {
             )}
 
             {!regSuccess && (
-                <div className="grid w-full grid-cols-1 gap-10 px-4 md:px-12 lg:grid-cols-2 lg:gap-16">
-                    <div className="w-full rounded-2xl border border-[#e2e8f2] bg-white p-6 shadow-sm md:p-8">
+                <div className="grid w-full grid-cols-1 gap-6 px-4 md:px-8 lg:grid-cols-2 lg:gap-10">
+                    <div className="w-full rounded-2xl border border-[#e2e8f2] bg-white p-5 shadow-sm md:p-6">
                         <h2 className="text-2xl font-bold text-[#435a8c] lg:text-4xl">Create an Account</h2>
                         <p className="mt-2 text-sm text-[#435a8c] lg:text-base">
                             Your data is secure, protected, and handled with care.
                         </p>
 
-                        <form className={'flex flex-col gap-4 mt-8'} onSubmit={handleSubmit(onSubmit)}>
+                        <div className="mt-4 rounded-xl border-2 border-[#d7e1f3] bg-[#f7f9fe] p-3 shadow-sm">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#435a8c]">
+                                Quick sign up
+                            </p>
+                            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                                <div className="rounded-lg bg-white p-1.5 ring-1 ring-[#d3def4]">
+                                    <GoogleLogin
+                                        onSuccess={async (credentialResponse) => {
+                                            const token = credentialResponse.credential;
+                                            if (!token) return;
+                                            const res = await dispatch(loginWithGoogle(token));
+                                            if (res?.type?.includes?.("fulfilled")) {
+                                                toast.success("Welcome to HAWOLA");
+                                                if (localCart?.items?.length > 0) {
+                                                    dispatch(addToCarts({
+                                                        items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
+                                                            qty: cart.qty,
+                                                            product: cart?.product?.id,
+                                                        })),
+                                                    }));
+                                                    dispatch(addToCartsLocal({ items: [] }));
+                                                }
+                                                router.push("/");
+                                            } else if (res?.type?.includes?.("rejected") && res?.payload) {
+                                                toast.error(String(res.payload), {
+                                                    style: { background: "#ef4444", color: "white" },
+                                                });
+                                            }
+                                        }}
+                                        onError={() => {
+                                            toast.error("Google sign-in failed. Please try again.", {
+                                                style: { background: "#ef4444", color: "white" },
+                                            });
+                                        }}
+                                        useOneTap={false}
+                                        theme="filled_blue"
+                                        size="large"
+                                        text="signup_with"
+                                        shape="rectangular"
+                                        width="100%"
+                                    />
+                                </div>
+                            )}
+                            {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                                <button
+                                    className="text-sm flex w-full items-center justify-center gap-2 font-bold text-white p-4 border rounded-md bg-[#435a8c] border-[#435a8c] hover:bg-[#354a73] transition-colors">Sign
+                                    up with <img src={'/imgs/page/account/google.svg'} alt={'google'}/>
+                                </button>
+                            )}
+                        </div>
+
+                        <form className={'flex flex-col gap-3 mt-5'} onSubmit={handleSubmit(onSubmit)}>
                             <div>
                                 <ControlledInput<RegisterFormType>
                                     control={control}
@@ -451,7 +502,7 @@ function RegisterForm() {
                                     className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                                 />
                             </div>
-                            <div className="flex justify-between items-center mt-4">
+                            <div className="flex justify-between items-center mt-2">
                                 <label className="flex items-center text-xs text-[#435a8c]">
                                     <Controller
                                         name="terms"
@@ -474,7 +525,7 @@ function RegisterForm() {
                                 </label>
                             </div>
                             <button disabled={isLoading || !terms}
-                                    className={`w-full mt-6 ${isLoading || !terms ? 'bg-blue-300 cursor-not-allowed' : "bg-[#435a8c]"} text-white py-3 rounded-md text-lg font-semibold`}
+                                    className={`w-full mt-3 ${isLoading || !terms ? 'bg-blue-300 cursor-not-allowed' : "bg-[#435a8c]"} text-white py-3 rounded-md text-lg font-semibold`}
                                     type="submit">
                                 {isLoading ? <div className={'flex items-center justify-center w-full'}>
                                     <span role="status">
@@ -494,58 +545,14 @@ function RegisterForm() {
                             </button>
 
                             <Link href={'/auth/login'}>
-                                <p className="text-left text-xs text-[#435a8c] mt-4">
+                                <p className="text-left text-xs text-[#435a8c] mt-2">
                                     Already have an account? <span className="text-blue-900 font-semibold">Sign In</span>
                                 </p>
                             </Link>
                         </form>
 
-                        <div className="mt-8 border-t border-[#e6ecf5] pt-6">
-                            <h2 className="text-lg text-center font-bold text-[#435a8c]">Use Social Network Account</h2>
-                            <div className={'mt-4 flex flex-col gap-4'}>
-                                {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-                                    <GoogleLogin
-                                        onSuccess={async (credentialResponse) => {
-                                            const token = credentialResponse.credential;
-                                            if (!token) return;
-                                            const res = await dispatch(loginWithGoogle(token));
-                                            if (res?.type?.includes?.("fulfilled")) {
-                                                toast.success("Welcome to HAWOLA");
-                                                if (localCart?.items?.length > 0) {
-                                                    dispatch(addToCarts({
-                                                        items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
-                                                            qty: cart.qty,
-                                                            product: cart?.product?.id,
-                                                        })),
-                                                    }));
-                                                    dispatch(addToCartsLocal({ items: [] }));
-                                                }
-                                                router.push("/");
-                                            } else if (res?.type?.includes?.("rejected") && res?.payload) {
-                                                toast.error(String(res.payload), {
-                                                    style: { background: "#ef4444", color: "white" },
-                                                });
-                                            }
-                                        }}
-                                        onError={() => {
-                                            toast.error("Google sign-in failed. Please try again.", {
-                                                style: { background: "#ef4444", color: "white" },
-                                            });
-                                        }}
-                                        useOneTap={false}
-                                        theme="outline"
-                                        size="large"
-                                        text="signup_with"
-                                        shape="rectangular"
-                                        width="100%"
-                                    />
-                                )}
-                                {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-                                    <button
-                                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0]">Sign
-                                        up with <img src={'/imgs/page/account/google.svg'} alt={'google'}/>
-                                    </button>
-                                )}
+                        <div className="mt-4 pt-2">
+                            <div className={'flex flex-col gap-2'}>
                                 <p className="text-center text-xs text-primary mt-2">
                                     You can also create a merchant account{" "}
                                     <a

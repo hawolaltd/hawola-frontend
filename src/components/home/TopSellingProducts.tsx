@@ -8,6 +8,7 @@ import { ProductResponse } from "@/types/product";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import { AdvertBanner } from "@/types/home";
+import Link from "next/link";
 
 interface ProductCardProps {
   image: string;
@@ -200,8 +201,9 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
             ?.slice(0, 8)
             ?.map((item, key) => {
               return (
-                <div
+                <Link
                   key={key}
+                  href={`/product/${item.slug}`}
                   className={`bg-white relative flex border-[#dde4f0] border pb-1 pt-4 pl-4 pr-4 overflow-hidden`}
                 >
                   <div className="relative">
@@ -265,7 +267,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
         </div>

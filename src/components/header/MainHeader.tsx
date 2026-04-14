@@ -784,68 +784,69 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
       </div>
 
       {headerSubcategories.length > 0 && (
-        <div
-          className="relative border-b border-[#bbf7d0] bg-[#ecfccb]"
-          onMouseLeave={() => setActiveMegaSubcategoryId(null)}
-        >
-          <div className="mx-auto flex w-full max-w-screen-xl flex-wrap items-center gap-2 px-6 py-2 xl:px-0">
-            {headerSubcategories.slice(0, 9).map((subcat) => (
-              <button
-                key={subcat.id}
-                type="button"
-                onMouseEnter={() => setActiveMegaSubcategoryId(subcat.id)}
-                onFocus={() => setActiveMegaSubcategoryId(subcat.id)}
-                onClick={() => router.push(`/categories?type=subcat&slug=${subcat.slug}`)}
-                className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                  activeMegaSubcategoryId === subcat.id
-                    ? "border-[#84cc16] bg-white text-[#365314]"
-                    : "border-[#a3e635] bg-white/90 text-[#365314] hover:bg-white"
-                }`}
+        <div className="border-b border-[#bbf7d0] bg-[#ecfccb]">
+          <div
+            className="relative mx-auto w-full max-w-screen-xl px-6 xl:px-0"
+            onMouseLeave={() => setActiveMegaSubcategoryId(null)}
+          >
+            <div className="flex flex-wrap items-center gap-2 py-2">
+              {headerSubcategories.slice(0, 9).map((subcat) => (
+                <button
+                  key={subcat.id}
+                  type="button"
+                  onMouseEnter={() => setActiveMegaSubcategoryId(subcat.id)}
+                  onFocus={() => setActiveMegaSubcategoryId(subcat.id)}
+                  onClick={() => router.push(`/categories?type=subcat&slug=${subcat.slug}`)}
+                  className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    activeMegaSubcategoryId === subcat.id
+                      ? "border-[#84cc16] bg-white text-[#365314]"
+                      : "border-[#a3e635] bg-white/90 text-[#365314] hover:bg-white"
+                  }`}
+                >
+                  {(() => {
+                    const iconData = subcategoryParentIconMap.get(subcat.id);
+                    if (iconData?.icon) {
+                      return (
+                        <img
+                          src={iconData.icon}
+                          alt=""
+                          className="mr-1.5 h-4 w-4 rounded object-cover"
+                        />
+                      );
+                    }
+                    if (iconData?.icon_code) {
+                      return (
+                        <span className="mr-1.5 text-sm leading-none">{iconData.icon_code}</span>
+                      );
+                    }
+                    return null;
+                  })()}
+                  <span>{subcat.name}</span>
+                </button>
+              ))}
+              <Link
+                href="/categories"
+                className="inline-flex shrink-0 items-center rounded-full border border-[#a3e635] bg-white px-3 py-1.5 text-xs font-semibold text-[#365314] transition hover:bg-[#f7fee7]"
               >
-                {(() => {
-                  const iconData = subcategoryParentIconMap.get(subcat.id);
-                  if (iconData?.icon) {
-                    return (
-                      <img
-                        src={iconData.icon}
-                        alt=""
-                        className="mr-1.5 h-4 w-4 rounded object-cover"
-                      />
-                    );
-                  }
-                  if (iconData?.icon_code) {
-                    return (
-                      <span className="mr-1.5 text-sm leading-none">{iconData.icon_code}</span>
-                    );
-                  }
-                  return null;
-                })()}
-                <span>{subcat.name}</span>
-              </button>
-            ))}
-            <Link
-              href="/categories"
-              className="inline-flex shrink-0 items-center rounded-full border border-[#a3e635] bg-white px-3 py-1.5 text-xs font-semibold text-[#365314] transition hover:bg-[#f7fee7]"
-            >
-              View All
-            </Link>
-          </div>
+                View All
+              </Link>
+            </div>
 
-          {(() => {
-            const activeSubcat = headerSubcategories.find(
-              (item) => item.id === activeMegaSubcategoryId
-            );
-            if (!activeSubcat) return null;
+            {(() => {
+              const activeSubcat = headerSubcategories.find(
+                (item) => item.id === activeMegaSubcategoryId
+              );
+              if (!activeSubcat) return null;
 
-            const secondLevelItems = Array.isArray(activeSubcat.second_subcategories)
-              ? activeSubcat.second_subcategories
-              : [];
+              const secondLevelItems = Array.isArray(activeSubcat.second_subcategories)
+                ? activeSubcat.second_subcategories
+                : [];
 
-            if (secondLevelItems.length === 0) return null;
+              if (secondLevelItems.length === 0) return null;
 
-            return (
-              <div className="absolute inset-x-0 top-full z-[70] bg-transparent px-3 pt-2">
-                <div className="mx-auto w-full max-w-screen-xl rounded-2xl border border-lime-200/80 bg-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.45)] ring-1 ring-lime-100/80">
+              return (
+                <div className="absolute left-0 right-0 top-full z-[70] bg-transparent pt-2">
+                  <div className="w-full rounded-2xl border border-lime-200/80 bg-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.45)] ring-1 ring-lime-100/80">
                   <div className="px-5 py-5 md:px-6">
                     <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
                       <p className="flex items-center text-lg font-bold tracking-tight text-gray-900 md:text-xl">
@@ -911,10 +912,11 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                       </div>
                     </div>
                   </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
         </div>
       )}
 
