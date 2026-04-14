@@ -545,18 +545,6 @@ function RegisterForm() {
                             up with <img src={'/imgs/page/account/google.svg'} alt={'google'}/>
                         </button>
                     )}
-                    <button
-                        disabled
-                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0] opacity-60 cursor-not-allowed">Sign
-                        up with <span className="text-[#3AA1FF] text-[16px] font-bold">Facebook</span>
-                        {/*<img src={'/imgs/page/account/google.svg'} alt={'google'}/>*/}
-                    </button>
-                    <button
-                        disabled
-                        className="text-sm flex items-center justify-center font-bold text-primary p-4 border rounded-md bg-white border-[#dde4f0] opacity-60 cursor-not-allowed">Sign
-                        up with <img src={'/imgs/page/account/amazon.svg'} alt={'amazon'}/>
-                    </button>
-
                     <p className="text-center text-xs text-primary mt-4">
                         Buying for work? <a href="#" className="text-blue-900 font-semibold">Create a free business
                         account</a>

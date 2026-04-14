@@ -14,7 +14,7 @@ import {normalizeErrors} from "@/util";
 export default function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
     const [magicEmail, setMagicEmail] = useState("");
-    const [showPasswordLogin, setShowPasswordLogin] = useState(false);
+    const [showPasswordLogin, setShowPasswordLogin] = useState(true);
 
     const router = useRouter()
 
@@ -267,6 +267,11 @@ export default function LoginForm() {
             <div className="w-full max-w-xl px-8 bg-white ">
                 <h2 className="text-4xl font-bold text-[#435a8c]">Member Login</h2>
                 <p className="text-[#435a8c] mb-6 mt-2">Welcome back!</p>
+                {router.query.confirmed === "true" && (
+                    <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                        Your account has been activated. You can now login.
+                    </div>
+                )}
 
                 {/* Primary section: either magic-link login or password login */}
 

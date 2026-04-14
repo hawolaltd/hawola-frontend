@@ -35,13 +35,17 @@ export default function VerifyEmailRedirectPage() {
       return;
     }
 
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+
     const confirmFromFrontend = async () => {
       try {
         await axios.post(`${base}authy/account-confirm-email/`, {
           key: trimmed,
         });
         setIsConfirmed(true);
-        router.replace("/auth/login?confirmed=true");
+        redirectTimer = setTimeout(() => {
+          router.replace("/auth/login?confirmed=true");
+        }, 2500);
       } catch (err: any) {
         const apiMessage =
           err?.response?.data?.detail ||
@@ -57,6 +61,12 @@ export default function VerifyEmailRedirectPage() {
     };
 
     void confirmFromFrontend();
+
+    return () => {
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+      }
+    };
   }, [router.isReady, router.query.key]);
 
   return (
@@ -81,9 +91,12 @@ export default function VerifyEmailRedirectPage() {
         ) : isConfirmed ? (
           <>
             <h1 className="mb-2 text-xl font-semibold text-primary">
-              Email confirmed
+              Account activated
             </h1>
             <p className="text-sm text-gray-600">
+              Your account has been activated. You can now log in.
+            </p>
+            <p className="mt-2 text-xs text-gray-500">
               Redirecting you to sign in...
             </p>
           </>
