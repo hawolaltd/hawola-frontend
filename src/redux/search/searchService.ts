@@ -26,6 +26,7 @@ const generalSearch = async (params: SearchParams) => {
             threshold,
             session_id: getSessionId(),
         },
+        timeout: 45000,
     });
 
     return response.data;

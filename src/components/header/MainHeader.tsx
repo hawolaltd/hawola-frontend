@@ -651,19 +651,19 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             <div className="flex min-w-0 flex-1 items-center justify-center px-2 sm:px-4">
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex w-full min-w-0 max-w-[920px] items-center rounded-md border"
+                className="flex w-full min-w-0 max-w-[920px] items-stretch rounded-lg shadow-sm"
               >
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for items"
-                  className="min-w-0 flex-1 rounded-l-md px-3 py-3 text-base text-primary outline-none"
+                  placeholder="Search products, merchants, categories..."
+                  className="min-w-0 flex-1 rounded-l-lg rounded-r-none border-2 border-r-0 border-gray-300 px-3.5 py-2.5 text-base text-primary placeholder:text-gray-500 outline-none focus:border-[#FF5733]"
                 />
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="shrink-0 rounded-r-md bg-[#FF5733] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#E64A2E] sm:px-6"
+                  className="shrink-0 rounded-r-lg rounded-l-none border-2 border-l-0 border-[#FF5733] bg-[#FF5733] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E64A2E] hover:border-[#E64A2E] sm:px-5"
                 >
                   <span className="sm:hidden">Go</span>
                   <span className="hidden sm:inline">Search</span>
@@ -790,7 +790,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             onMouseLeave={() => setActiveMegaSubcategoryId(null)}
           >
             <div className="flex flex-wrap items-center gap-2 py-2">
-              {headerSubcategories.slice(0, 9).map((subcat) => (
+              {headerSubcategories.slice(0, 14).map((subcat) => (
                 <button
                   key={subcat.id}
                   type="button"

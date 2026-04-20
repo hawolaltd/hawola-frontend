@@ -568,7 +568,7 @@ const CartPage = () => {
           <div className="lg:w-2/3">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               {/* Table Header with Select All */}
-              <div className="hidden md:grid grid-cols-12 bg-[#f1f3f9] p-4 border-b">
+              <div className="hidden md:grid grid-cols-12 p-4 border-b">
                 <div className="col-span-5 font-semibold flex items-center gap-4">
                   <input
                     type="checkbox"

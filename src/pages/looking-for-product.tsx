@@ -249,10 +249,7 @@ const LookingForProductPage = () => {
                       Optionally paste a video link from YouTube, Vimeo, Alibaba,
                       Instagram, Facebook, Twitter/X, LinkedIn or TikTok.
                     </li>
-                    <li>
-                      Merchants who are allowed to see buying requests can click
-                      &quot;Interested&quot; and send you a short message.
-                    </li>
+                    <li>Interested merchants send you a message.</li>
                     <li>
                       You decide which merchant to share your contact details with
                       before any merchant can see your phone or email.

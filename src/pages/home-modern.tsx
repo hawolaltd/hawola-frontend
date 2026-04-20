@@ -60,7 +60,7 @@ export default function HomeModernPage() {
         <Header />
       </div>
       <HomeModernExperience />
-      <div className="bg-[#f1f3f9]">
+      <div>
         <RecentlyViewedSection />
         <Footer />
       </div>

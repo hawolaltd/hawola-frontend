@@ -14,7 +14,8 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
   const bestSellingList = homePage?.data?.best_selling_products ?? [];
 
   return (
-    <section className="max-w-screen-xl px-6 xl:px-0 mx-auto flex gap-4 bg-[#f1f3f9] py-4">
+    <section className="w-full py-4">
+      <div className="mx-auto flex max-w-screen-xl gap-4 px-6 xl:px-0">
       <div className={"w-full flex flex-col xl:flex-row gap-4"}>
         <div className="w-full">
           <div className="mx-auto text-left mb-8 w-full">
@@ -105,6 +106,7 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

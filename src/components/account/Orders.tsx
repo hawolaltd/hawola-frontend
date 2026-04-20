@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import { useState } from "react";
 import { useAppSelector } from "@/hook/useReduxTypes";
-import { formatCurrency, TruncatedTextWithTooltip } from "@/util";
+import { formatCurrency } from "@/util";
 import { useRouter } from "next/router";
 import {
   CheckCircleIcon,
@@ -25,6 +25,9 @@ const Orders: NextPage = () => {
     currentPage * itemsPerPage
   );
 
+  const isPaymentSettled = (order: any) =>
+    Boolean(order?.payment_confirmed || order?.isPaid);
+
   const getStatusConfig = (order: any) => {
     if (order?.isDelivered) {
       return {
@@ -32,6 +35,13 @@ const Orders: NextPage = () => {
         text: "Delivered",
         color: "text-green-600",
         bg: "bg-green-50",
+      };
+    } else if (!isPaymentSettled(order)) {
+      return {
+        icon: <ClockIcon className="w-4 h-4" />,
+        text: "Pending Payment",
+        color: "text-amber-600",
+        bg: "bg-amber-50",
       };
     } else if (order?.isShipped) {
       return {
@@ -92,13 +102,13 @@ const Orders: NextPage = () => {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
             <span className="text-gray-600">
-              {ordersHistory?.detail?.filter((o: any) => o.isShipped && !o.isDelivered).length || 0} Shipped
+              {ordersHistory?.detail?.filter((o: any) => o.isShipped && !o.isDelivered && isPaymentSettled(o)).length || 0} Shipped
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gray-400"></div>
             <span className="text-gray-600">
-              {ordersHistory?.detail?.filter((o: any) => !o.isShipped && !o.isDelivered).length || 0} Processing
+              {ordersHistory?.detail?.filter((o: any) => !o.isDelivered && (!o.isShipped || !isPaymentSettled(o))).length || 0} Processing
             </span>
           </div>
         </div>
@@ -202,6 +212,11 @@ const Orders: NextPage = () => {
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 border border-green-200 w-full md:w-auto">
                       <CheckCircleIcon className="w-4 h-4" />
                       <span className="text-sm font-medium">Delivered</span>
+                    </div>
+                  ) : !isPaymentSettled(order) ? (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 border border-amber-200 w-full md:w-auto">
+                      <ClockIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Pending Payment</span>
                     </div>
                   ) : order?.isShipped ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 border border-blue-200 w-full md:w-auto">

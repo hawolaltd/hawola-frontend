@@ -116,13 +116,13 @@ const Navigation: React.FC<NavigationProps> = ({ dropdownOpen, toggleDropdown })
               </Link>
             </li>
             <li>
-              <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">
-                Flash Deals
+              <Link href="/deals-today" className="block text-primary px-4 py-2 hover:text-deepOrange">
+                Deals Today
               </Link>
             </li>
             <li>
-              <Link href="#" className="block text-primary px-4 py-2 hover:text-deepOrange">
-                Top Sellers
+              <Link href="/recommended-today" className="block text-primary px-4 py-2 hover:text-deepOrange">
+                Recommended Today
               </Link>
             </li>
           </ul>

@@ -112,9 +112,24 @@ const OrderDetails: NextPage = () => {
     const [disputeReplyFiles, setDisputeReplyFiles] = useState<File[]>([]);
 
     const {singleOrder, isLoading} = useAppSelector(state => state.products)
+    const { profile: userProfile } = useAppSelector((state) => state.auth);
 
     const orderLatestStatus = getLatestStatus(singleOrder?.shipping_info?.flatMap(i => i.shipping_status
     ))
+    const isPaymentSettled = Boolean(singleOrder?.payment_confirmed || singleOrder?.isPaid);
+    const displayOrderStatus = singleOrder?.isDelivered
+        ? { text: 'Delivered', className: 'bg-green-100 text-green-800' }
+        : !isPaymentSettled
+            ? { text: 'Pending Payment', className: 'bg-amber-100 text-amber-800' }
+            : orderLatestStatus?.status === 'received'
+                ? { text: 'Received', className: 'bg-green-100 text-green-800' }
+                : orderLatestStatus?.status === 'delivered'
+                    ? { text: 'Delivered', className: 'bg-blue-100 text-blue-800' }
+                    : orderLatestStatus?.status === 'in-transit'
+                        ? { text: 'In Transit', className: 'bg-yellow-100 text-yellow-800' }
+                        : singleOrder?.isShipped
+                            ? { text: 'Shipped', className: 'bg-purple-100 text-purple-800' }
+                            : { text: 'Processing', className: 'bg-gray-100 text-gray-800' };
 
     const router = useRouter();
 
@@ -359,7 +374,7 @@ const OrderDetails: NextPage = () => {
                    (
                        <>
                            <header className="mb-6 bg-headerBg px-20 pt-4 h-[150px] flex flex-col">
-                               <h1 className="text-3xl font-semibold text-white">Hello Steven</h1>
+                               <h1 className="text-3xl font-semibold text-white">Hello {userProfile?.first_name || userProfile?.username || 'Customer'}</h1>
                                <p className="text-sm text-white font-medium mt-2 ">
                                    From your account dashboard, you can easily check & view your recent orders, <br/> manage your shipping and billing addresses and edit your password and account details.
                                </p>
@@ -428,15 +443,8 @@ const OrderDetails: NextPage = () => {
                                                    <h2 className="text-sm font-semibold text-gray-700 mt-1">{singleOrder?.product?.name}</h2>
                                                </div>
                                                <div className="text-right">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                        orderLatestStatus?.status === 'received' ? 'bg-green-100 text-green-800' :
-                                            orderLatestStatus?.status === 'delivered' ? 'bg-blue-100 text-blue-800' :
-                                                orderLatestStatus?.status === 'in-transit' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-purple-100 text-purple-800'
-                                    }`}>
-                                        {orderLatestStatus?.status === 'received' ? 'Received' :
-                                            orderLatestStatus?.status === 'delivered' ? 'Delivered' :
-                                                orderLatestStatus?.status === 'in-transit' ? 'In Transit' : 'Shipped'}
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${displayOrderStatus.className}`}>
+                                        {displayOrderStatus.text}
                                     </span>
                                                </div>
                                            </div>

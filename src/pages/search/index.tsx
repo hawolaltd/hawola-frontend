@@ -10,9 +10,10 @@ import {
   clearSearchResults,
 } from "@/redux/search/searchSlice";
 import { FiSearch, FiX, FiTrendingUp, FiClock } from "react-icons/fi";
-import { BiCategory, BiStore } from "react-icons/bi";
+import { BiStore } from "react-icons/bi";
 import { AiOutlineProduct } from "react-icons/ai";
 import ProductCard from "@/components/product/ProductCard";
+import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import MiniHeader from "@/components/header/MiniHeader";
 import MainHeader from "@/components/header/MainHeader";
 import Drawer from "@/components/header/MobileMenuDrawer";
@@ -20,31 +21,16 @@ import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import Header from "@/components/header";
 import AuthLayout from "@/components/layout/AuthLayout";
 
-/** API may return a plain URL (CategorySerializer) or a versatile-image dict (sub/subsec). */
-function searchCategoryImageUrl(category: { image?: unknown }): string | null {
-  const img = category?.image;
-  if (!img) return null;
-  if (typeof img === "string") return img;
-  if (typeof img === "object" && img !== null) {
-    const o = img as Record<string, unknown>;
-    const direct = o.thumbnail ?? o.thumbnail_100 ?? o.full_size ?? o.url;
-    if (typeof direct === "string") return direct;
-    const first = Object.values(o).find((v) => typeof v === "string");
-    if (typeof first === "string") return first;
-  }
-  return null;
-}
-
 const SearchPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { searchResults, suggestions, isLoading, currentQuery } = useAppSelector(
+  const { searchResults, suggestions, isLoading, currentQuery, error } = useAppSelector(
     (state) => state.search
   );
   const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
 
   const [searchInput, setSearchInput] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "products" | "merchants" | "categories">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "products" | "merchants">("all");
 
   const handleSearch = useCallback(
     (query: string, page: number = 1) => {
@@ -72,11 +58,13 @@ const SearchPage = () => {
   );
 
   useEffect(() => {
+    if (!router.isReady) return;
+
     // Get query from URL
     const query = router.query.q as string;
     const page = Number(router.query.page) || 1;
-    
-    if (query && query !== currentQuery) {
+
+    if (query && query.trim()) {
       setSearchInput(query);
       dispatch(
         performSearch({
@@ -89,7 +77,7 @@ const SearchPage = () => {
       // Fetch suggestions if no query
       dispatch(fetchSuggestions(10));
     }
-  }, [router.query.q, router.query.page, dispatch, currentQuery]);
+  }, [router.isReady, router.query.q, router.query.page, dispatch, currentQuery]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,8 +201,12 @@ const SearchPage = () => {
 
   // Calculate total results for each category
   const totalProducts = searchResults?.results.products.count || 0;
-  const totalMerchants = searchResults?.total_merchants || 0;
-  const totalCategories = searchResults?.total_categories || 0;
+  const merchantItems = searchResults?.results?.merchants?.items || [];
+  const merchantItemsCount = merchantItems.length || 0;
+  const totalMerchants = searchResults?.total_merchants || merchantItemsCount;
+  const hasMerchantResults = totalMerchants > 0 || merchantItemsCount > 0;
+  // Categories block is intentionally hidden for now.
+  // const totalCategories = searchResults?.total_categories || 0;
 
   return (
     
@@ -240,25 +232,33 @@ const SearchPage = () => {
           {/* Additional Search Bar for better UX on search page */}
           <div className="mb-8">
             <form onSubmit={handleSubmit} className="relative">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search products, merchants, categories..."
-                  className="w-full px-12 py-4 text-lg border-2 border-gray-200 rounded-lg focus:border-[#FF5733] focus:outline-none transition-colors"
-                  autoFocus
-                />
-                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
-                {searchInput && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <FiX className="w-6 h-6" />
-                  </button>
-                )}
+              <div className="flex w-full items-stretch rounded-lg shadow-sm">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search products, merchants, categories..."
+                    className="w-full rounded-l-lg rounded-r-none border-2 border-r-0 border-gray-300 pl-12 pr-12 py-4 text-lg focus:border-[#FF5733] focus:outline-none transition-colors"
+                    autoFocus
+                  />
+                  <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
+                  {searchInput && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <FiX className="w-6 h-6" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-r-lg rounded-l-none border-2 border-l-0 border-[#FF5733] bg-[#FF5733] px-5 py-4 text-sm font-semibold text-white transition-colors hover:bg-[#e44a28] hover:border-[#e44a28]"
+                >
+                  Search
+                </button>
               </div>
             </form>
           </div>
@@ -288,18 +288,13 @@ const SearchPage = () => {
                         <span>{totalProducts} Products</span>
                       </div>
                     )}
-                    {totalMerchants > 0 && (
+                    {hasMerchantResults && (
                       <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-gray-200">
                         <BiStore className="w-4 h-4" />
                         <span>{totalMerchants} Merchants</span>
                       </div>
                     )}
-                    {totalCategories > 0 && (
-                      <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-gray-200">
-                        <BiCategory className="w-4 h-4" />
-                        <span>{totalCategories} Categories</span>
-                      </div>
-                    )}
+                    {/* Categories quick stat hidden for now */}
                     {searchResults.total_promoted_products > 0 && (
                       <div className="flex items-center gap-1 px-3 py-1 bg-[#FF5733] text-white rounded-full">
                         <FiTrendingUp className="w-4 h-4" />
@@ -333,19 +328,18 @@ const SearchPage = () => {
                       Products ({totalProducts})
                     </button>
                   )}
-                  {totalMerchants > 0 && (
-                    <button
-                      onClick={() => setActiveTab("merchants")}
-                      className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
-                        activeTab === "merchants"
-                          ? "text-[#FF5733] border-b-2 border-[#FF5733]"
-                          : "text-gray-600 hover:text-gray-900"
-                      }`}
-                    >
-                      Merchants ({totalMerchants})
-                    </button>
-                  )}
-                  {totalCategories > 0 && (
+                  <button
+                    onClick={() => setActiveTab("merchants")}
+                    className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
+                      activeTab === "merchants"
+                        ? "text-[#FF5733] border-b-2 border-[#FF5733]"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Merchants ({totalMerchants})
+                  </button>
+                  {/* Categories tab hidden for now */}
+                  {/* {totalCategories > 0 && (
                     <button
                       onClick={() => setActiveTab("categories")}
                       className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
@@ -356,7 +350,7 @@ const SearchPage = () => {
                     >
                       Categories ({totalCategories})
                     </button>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Results Content */}
@@ -404,8 +398,7 @@ const SearchPage = () => {
                     )}
 
                     {/* Merchants Section */}
-                    {(activeTab === "all" || activeTab === "merchants") &&
-                      totalMerchants > 0 && (
+                    {(activeTab === "all" || activeTab === "merchants") && (
                         <div>
                           {activeTab === "all" && (
                             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -413,48 +406,56 @@ const SearchPage = () => {
                               Merchants
                             </h2>
                           )}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {searchResults.results.merchants.items.map((merchant: any) => (
-                              <Link
-                                key={merchant.id}
-                                href={`/merchants/${merchant.slug}`}
-                                className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-[#FF5733] hover:shadow-md transition-all"
-                              >
-                                <div className="flex items-start gap-4">
-                                  {merchant.logo ? (
-                                    <img
-                                      src={merchant.logo}
-                                      alt={merchant.store_name}
-                                      className="w-16 h-16 rounded-lg object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                                      <BiStore className="w-8 h-8 text-gray-400" />
+                          {merchantItems.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {merchantItems.map((merchant: any) => (
+                                <Link
+                                  key={merchant.id}
+                                  href={`/merchants/${merchant.slug}`}
+                                  className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-[#FF5733] hover:shadow-md transition-all"
+                                >
+                                  <div className="flex items-start gap-4">
+                                    {merchant.logo ? (
+                                      <img
+                                        src={merchant.logo}
+                                        alt={merchant.store_name}
+                                        className="w-16 h-16 rounded-lg object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        <BiStore className="w-8 h-8 text-gray-400" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <h3 className="font-semibold text-lg mb-1">
+                                        {merchant.store_name}
+                                      </h3>
+                                      {merchant.about && (
+                                        <MerchantRichHtml
+                                          html={merchant.about}
+                                          className="text-gray-600 text-sm line-clamp-2"
+                                        />
+                                      )}
+                                      {merchant.store_address && (
+                                        <p className="text-gray-500 text-xs mt-2">
+                                          {merchant.store_address}
+                                        </p>
+                                      )}
                                     </div>
-                                  )}
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-lg mb-1">
-                                      {merchant.store_name}
-                                    </h3>
-                                    {merchant.about && (
-                                      <p className="text-gray-600 text-sm line-clamp-2">
-                                        {merchant.about}
-                                      </p>
-                                    )}
-                                    {merchant.store_address && (
-                                      <p className="text-gray-500 text-xs mt-2">
-                                        {merchant.store_address}
-                                      </p>
-                                    )}
                                   </div>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
+                                </Link>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-gray-200 bg-white px-4 py-5 text-sm text-gray-600">
+                              No merchants found for this search.
+                            </div>
+                          )}
                         </div>
                       )}
 
-                    {/* Categories Section */}
+                    {/* Categories Section hidden for now */}
+                    {/*
                     {(activeTab === "all" || activeTab === "categories") &&
                       totalCategories > 0 && (
                         <div>
@@ -506,13 +507,20 @@ const SearchPage = () => {
                           </div>
                         </div>
                       )}
+                    */}
                   </div>
                 )}
               </>
             )}
 
+          {!isLoading && error && !searchResults && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Search could not be completed. Please try again.
+            </div>
+          )}
+
           {/* Empty State (No search yet) */}
-          {!isLoading && !searchResults && renderEmptyState()}
+          {!isLoading && !searchResults && !error && renderEmptyState()}
         </div>
         
       </div>
