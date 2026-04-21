@@ -613,7 +613,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     : 'text-gray-600'
                             }`}>
                                 {product?.product?.accept_payment_on_delivery 
-                                    ? 'Payment on Delivery Available' 
+                                    ? 'Payment on Delivery Available (Within Seller Location)' 
                                     : 'Online Payment Only'
                                 }
                             </p>
@@ -623,7 +623,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     : 'text-gray-500'
                             }`}>
                                 {product?.product?.accept_payment_on_delivery 
-                                    ? 'Pay when your order arrives' 
+                                    ? `Pay when your order arrives${product?.product?.merchant?.location?.name ? ` in ${product.product.merchant.location.name}` : ''}` 
                                     : 'Secure online payment required'
                                 }
                             </p>

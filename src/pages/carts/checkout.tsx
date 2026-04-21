@@ -31,6 +31,7 @@ const PaystackOpenOnce = dynamic(
 
 type PaymentChoice = "pod" | "card";
 
+
 const CheckoutPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -51,6 +52,7 @@ const CheckoutPage = () => {
   const [paymentConfirming, setPaymentConfirming] = useState(false);
   /** Bumps when we open Paystack so the dynamic component remounts and runs `initializePayment` exactly once. */
   const [paystackMountKey, setPaystackMountKey] = useState(0);
+
 
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string;
 
