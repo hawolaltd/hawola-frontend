@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
-import Category from "@/components/category/Category";
 import type { AdvertBanner, Banner, HeroCreativeSlide } from "@/types/home";
 
 /** Stable empty refs so `?? []` does not allocate a new array every render. */
@@ -75,6 +74,45 @@ function SlideLink({
     <Link href={slide.href} className={className} aria-label={ariaLabel}>
       {children}
     </Link>
+  );
+}
+
+function AdvertSlotGrid({
+  slots,
+  columns,
+  sectionClassName = "",
+}: {
+  slots: (AdvertBanner | null)[];
+  columns: 2 | 3;
+  sectionClassName?: string;
+}) {
+  const validSlots = slots.filter(Boolean) as AdvertBanner[];
+  if (!validSlots.length) return null;
+  const gridClass =
+    columns === 3
+      ? "grid grid-cols-1 gap-4 md:grid-cols-3"
+      : "grid grid-cols-1 gap-4 md:grid-cols-2";
+  return (
+    <section className={`max-w-screen-xl mx-auto px-6 xl:px-0 ${sectionClassName}`}>
+      <div className={gridClass}>
+        {validSlots.map((slot) => {
+          const slide = advertToSlide(slot);
+          if (!slide?.image) return null;
+          return (
+            <div key={slide.key} className="relative overflow-hidden rounded-xl bg-slate-100 shadow-sm">
+              <OptimizedImage
+                src={slide.image}
+                alt=""
+                width={1200}
+                height={280}
+                className="h-32 w-full object-cover sm:h-40"
+              />
+              <SlideLink slide={slide} className="absolute inset-0 z-10" />
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -205,6 +243,7 @@ export default function HomeTopRegion() {
     null,
     null,
   ]) as (AdvertBanner | null)[];
+  const topAdvertSlots = (homePage?.data?.advert_banner ?? []) as (AdvertBanner | null)[];
 
   const carouselSlides = useMemo(
     () => banners.map(bannerToSlide).filter((s) => s.image),
@@ -227,7 +266,8 @@ export default function HomeTopRegion() {
           </div>
         </section>
       )}
-      <Category />
+      {/* <Category /> */}
+      <AdvertSlotGrid slots={topAdvertSlots} columns={3} sectionClassName="mb-6" />
     </>
   );
 }

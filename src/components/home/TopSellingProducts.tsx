@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import React from "react";
 import OptimizedImage from "@/components/common/OptimizedImage";
-import Ads3 from "@/components/svg/ads3";
-import NewsSection from "@/components/home/NewsSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import { ProductResponse } from "@/types/product";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
@@ -10,179 +7,86 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import { AdvertBanner } from "@/types/home";
 import Link from "next/link";
 
-interface ProductCardProps {
-  image: string;
-  title: string;
-  rating: number;
-  reviews: number;
-  originalPrice: string;
-  discountedPrice: string;
-  discountPercentage: number;
-}
-
 interface TopSellingProductsProps {
   products: ProductResponse;
 }
 
 // Image Slider Component
 interface ImageSliderProps {
-  banners: AdvertBanner[];
+  banners: (AdvertBanner | null)[];
 }
 
 function ImageSlider({ banners }: ImageSliderProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlay, setIsAutoPlay] = useState(true);
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (!isAutoPlay || banners.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) =>
-        prevIndex === banners.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 5000); // Change slide every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [isAutoPlay, banners.length]);
-
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
-  };
-
-  const goToPrevious = () => {
-    setCurrentIndex(currentIndex === 0 ? banners.length - 1 : currentIndex - 1);
-  };
-
-  const goToNext = () => {
-    setCurrentIndex(currentIndex === banners.length - 1 ? 0 : currentIndex + 1);
-  };
-
-  if (!banners || banners.length === 0) {
+  const validBanners = (banners || []).filter(Boolean) as AdvertBanner[];
+  if (!validBanners.length) {
     return null;
   }
 
   return (
-    <div className="relative w-full group">
-      {/* Main slider container */}
-      <div className="relative overflow-hidden rounded-lg w-full">
-        <div
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        >
-          {banners.map((banner, index) => (
-            <div key={banner.id} className="w-full flex-shrink-0 relative">
-              <OptimizedImage
-                src={banner.web_image || banner.image}
-                alt={`Advertisement ${index + 1}`}
-                width={1200}
-                height={300}
-                className="w-full h-48 md:h- object-cover"
-                priority={index === 0}
-              />
-              {banner.url && (
-                <a
-                  href={banner.url}
-                  className="absolute inset-0 z-10"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Navigation arrows */}
-      {banners.length > 1 && (
-        <>
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity opacity-0 group-hover:opacity-100"
-            aria-label="Previous slide"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity opacity-0 group-hover:opacity-100"
-            aria-label="Next slide"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </>
-      )}
-
-      {/* Dots indicator */}
-      {banners.length > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentIndex
-                  ? "bg-primary"
-                  : "bg-gray-300 hover:bg-gray-400"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
+    <div className="w-full">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {validBanners.map((banner) => (
+          <div key={banner.id} className="relative overflow-hidden rounded-xl bg-slate-100 shadow-sm">
+            <OptimizedImage
+              src={banner.web_image || banner.image || banner.web_banner_image || banner.banner_image}
+              alt="Advertisement"
+              width={1200}
+              height={300}
+              className="h-32 w-full object-cover sm:h-40"
             />
-          ))}
-        </div>
-      )}
-
-      {/* Auto-play toggle */}
-      {banners.length > 1 && (
-        <button
-          onClick={() => setIsAutoPlay(!isAutoPlay)}
-          className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
-          aria-label={isAutoPlay ? "Pause slideshow" : "Play slideshow"}
-        >
-          {isAutoPlay ? (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          )}
-        </button>
-      )}
+            {banner.url && (
+              <a
+                href={banner.url}
+                className="absolute inset-0 z-10"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function TopSellingProducts({ products }: TopSellingProductsProps) {
+function TwoColumnAdvertGrid({ banners }: ImageSliderProps) {
+  const validBanners = (banners || []).filter(Boolean) as AdvertBanner[];
+  if (!validBanners.length) {
+    return null;
+  }
+  return (
+    <div className="w-full">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {validBanners.map((banner) => (
+          <div key={banner.id} className="relative overflow-hidden rounded-xl bg-slate-100 shadow-sm">
+            <OptimizedImage
+              src={banner.web_image || banner.image || banner.web_banner_image || banner.banner_image}
+              alt="Advertisement"
+              width={1200}
+              height={300}
+              className="h-36 w-full object-cover sm:h-44"
+            />
+            {banner.url && (
+              <a
+                href={banner.url}
+                className="absolute inset-0 z-10"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopSellingProducts({ products: _products }: TopSellingProductsProps) {
   const { homePage } = useAppSelector((state) => state.general);
   return (
     <section className="max-w-screen-xl px-6 xl:px-0 mx-auto flex flex-col gap-4 py-4">
       <div className="w-full flex justify-center py-4">
-        <ImageSlider banners={homePage?.data?.advert_banner || []} />
+        <ImageSlider banners={(homePage?.data?.advert_banner_middle || []) as (AdvertBanner | null)[]} />
       </div>
 
       <div className="w-full flex flex-col justify-center py-4">
@@ -274,7 +178,7 @@ function TopSellingProducts({ products }: TopSellingProductsProps) {
       </div>
 
       <div className="w-full flex justify-center py-4">
-        <ImageSlider banners={homePage?.data?.advert_banner_middle || []} />
+        <TwoColumnAdvertGrid banners={(homePage?.data?.advert_banner_bottom || []) as (AdvertBanner | null)[]} />
       </div>
 
       {/* <NewsSection /> */}

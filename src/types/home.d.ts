@@ -100,8 +100,9 @@ interface HomeData {
     hero_sidebar_slots?: (AdvertBanner | null)[];
     popular_categories: PopularCategory[];
     recommended_products: ProductFull[];
-    advert_banner: AdvertBanner[];
-    advert_banner_middle: AdvertBanner[];
+    advert_banner: (AdvertBanner | null)[];
+    advert_banner_middle: (AdvertBanner | null)[];
+    advert_banner_bottom?: (AdvertBanner | null)[];
     hawola_specials: ProductFull[];
     top_rated_products: ProductFull[];
     top_selling_products: ProductFull[];
