@@ -38,6 +38,7 @@ type ProductFull = ProductBasic & {
   numReviews: number;
   price: string;
   discount_price: string;
+  contact_merchant_only?: boolean;
 };
 
 // Banner types

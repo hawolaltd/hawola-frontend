@@ -20,7 +20,13 @@ function normalizeHex(color: string | null | undefined, fallback = "#0f172a"): s
     return fallback;
 }
 
-function ProductInfo({ product }: { product: ProductByIdResponse }) {
+function ProductInfo({
+    product,
+    embedded = false,
+}: {
+    product: ProductByIdResponse;
+    embedded?: boolean;
+}) {
     const [tab, setTab] = useState("description");
 
     const { merchantReviews } = useAppSelector((state) => state.products);
@@ -60,13 +66,21 @@ function ProductInfo({ product }: { product: ProductByIdResponse }) {
 
     return (
         <div
-            className="mt-8 max-w-[1320px] border-b border-b-[#dde4f0] pb-10"
+            className={
+                embedded
+                    ? "mt-2 rounded-2xl border border-[#e8edf6] bg-[#fbfcff] p-3 sm:p-4"
+                    : "mt-8 max-w-[1320px] border-b border-b-[#dde4f0] pb-10"
+            }
             style={{ ["--tab-brand" as string]: brand } as React.CSSProperties}
         >
             <div
                 role="tablist"
                 aria-label="Product information"
-                className="flex flex-col gap-1 border-b border-slate-200/90 pb-0 sm:flex-row sm:flex-wrap sm:items-end sm:gap-0"
+                className={
+                    embedded
+                        ? "flex flex-wrap items-center gap-2 rounded-xl border border-[#e5ebf5] bg-white p-2"
+                        : "flex flex-col gap-1 border-b border-slate-200/90 pb-0 sm:flex-row sm:flex-wrap sm:items-end sm:gap-0"
+                }
             >
                 {productInfoHeaders.map((header, key) => {
                     const active = tab === header.value;
@@ -77,18 +91,28 @@ function ProductInfo({ product }: { product: ProductByIdResponse }) {
                             aria-selected={active}
                             key={key}
                             onClick={() => setTab(header.value)}
-                            className={`relative cursor-pointer px-1 py-3 text-left text-sm font-bold transition-colors sm:px-4 sm:py-3.5 md:text-base lg:text-lg ${
-                                active ? "text-slate-900" : "text-slate-500 hover:text-slate-800"
-                            }`}
+                            className={
+                                embedded
+                                    ? `relative cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
+                                        active
+                                            ? "bg-[color:var(--tab-brand)] text-white shadow-sm"
+                                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                    }`
+                                    : `relative cursor-pointer px-1 py-3 text-left text-sm font-bold transition-colors sm:px-4 sm:py-3.5 md:text-base lg:text-lg ${
+                                        active ? "text-slate-900" : "text-slate-500 hover:text-slate-800"
+                                    }`
+                            }
                         >
                             {header.title}
-                            <span
-                                className="pointer-events-none absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full transition-opacity duration-200"
-                                style={{
-                                    background: "var(--tab-brand)",
-                                    opacity: active ? 1 : 0,
-                                }}
-                            />
+                            {!embedded ? (
+                                <span
+                                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full transition-opacity duration-200"
+                                    style={{
+                                        background: "var(--tab-brand)",
+                                        opacity: active ? 1 : 0,
+                                    }}
+                                />
+                            ) : null}
                         </button>
                     );
                 })}

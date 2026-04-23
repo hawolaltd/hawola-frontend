@@ -12,9 +12,16 @@ import {
 } from "@/redux/product/productSlice";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import moment from "moment";
+import Link from "next/link";
 import { LocalCartItem, ProductByIdResponse } from "@/types/product";
 import { toast } from "sonner";
-import { formatCurrency, featuredImageCardUrl } from "@/util";
+import {
+  buildWhatsAppLink,
+  formatCurrency,
+  featuredImageCardUrl,
+  isContactMerchantOnlyProduct,
+} from "@/util";
+import DirectContactActions from "@/components/product/DirectContactActions";
 
 type Product = {
   id: string;
@@ -277,23 +284,36 @@ export default function WishlistPage() {
                           <td
                             className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium`}
                           >
-                            <button
-                              onClick={() =>
-                                handleAddToCart(
-                                  product?.product as unknown as ProductByIdResponse
-                                )
-                              }
-                              disabled={adding}
-                              className={`mr-3 ${
-                                adding ? "cursor-not-allowed bg-blue-200" : ""
-                              } ${
-                                product?.product?.name === "Out of Stock"
-                                  ? "bg-gray-300 cursor-not-allowed"
-                                  : "bg-primary"
-                              } text-white px-3 py-1 rounded-md text-sm`}
-                            >
-                              Add to Cart
-                            </button>
+                            {isContactMerchantOnlyProduct(product?.product) ? (
+                              <DirectContactActions
+                                merchantSlug={product?.product?.merchant?.slug}
+                                whatsappLink={buildWhatsAppLink(
+                                  product?.product?.merchant?.support_phone_number,
+                                  product?.product?.name,
+                                  product?.product?.merchant?.store_name
+                                )}
+                                compact
+                                showBadge={false}
+                              />
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  handleAddToCart(
+                                    product?.product as unknown as ProductByIdResponse
+                                  )
+                                }
+                                disabled={adding}
+                                className={`mr-3 ${
+                                  adding ? "cursor-not-allowed bg-blue-200" : ""
+                                } ${
+                                  product?.product?.name === "Out of Stock"
+                                    ? "bg-gray-300 cursor-not-allowed"
+                                    : "bg-primary"
+                                } text-white px-3 py-1 rounded-md text-sm`}
+                              >
+                                Add to Cart
+                              </button>
+                            )}
                             <button
                               disabled={deleting}
                               onClick={() => handleDeleteWishlist(product)}

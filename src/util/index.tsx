@@ -363,6 +363,27 @@ export const getLatestStatus = (statusArray: any) => {
   });
 };
 
+export const buildWhatsAppLink = (phone?: string | null, productName?: string, storeName?: string) => {
+  const trimmed = phone?.trim();
+  if (!trimmed) return null;
+  const normalizedPhone = trimmed.replace(/[^\d+]/g, "");
+  const waPhone = normalizedPhone.startsWith("+")
+    ? normalizedPhone.slice(1)
+    : normalizedPhone;
+  if (!waPhone) return null;
+  const message = `Hello ${storeName || "Merchant"}, I want to ask about ${productName || "this product"}.`;
+  return `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
+};
+
+export const isContactMerchantOnlyProduct = (product: any): boolean => {
+  return Boolean(
+    product?.contact_merchant_only ||
+      product?.category?.contact_merchant_only ||
+      product?.product_subcategory?.contact_merchant_only ||
+      product?.product_subseccategory?.contact_merchant_only
+  );
+};
+
 export {
   featuredImageCardSrc,
   featuredImageCardUrl,

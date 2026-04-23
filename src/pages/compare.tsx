@@ -12,8 +12,14 @@ import {
   removeFromCompare,
 } from "@/redux/product/productSlice";
 import { LocalCartItem, Product } from "@/types/product";
-import { formatCurrency, featuredImageCardSrc } from "@/util";
+import {
+  buildWhatsAppLink,
+  formatCurrency,
+  featuredImageCardSrc,
+  isContactMerchantOnlyProduct,
+} from "@/util";
 import { toast } from "sonner";
+import DirectContactActions from "@/components/product/DirectContactActions";
 
 export default function ComparePage() {
   const router = useRouter();
@@ -314,14 +320,27 @@ export default function ComparePage() {
                       </td>
                       {compareProducts.map((p) => (
                         <td key={p.id} className="px-4 py-3">
-                          <button
-                            type="button"
-                            disabled={addingId === p.id}
-                            onClick={() => void handleAddToCart(p)}
-                            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {addingId === p.id ? "Adding…" : "Add to cart"}
-                          </button>
+                          {isContactMerchantOnlyProduct(p) ? (
+                            <DirectContactActions
+                              merchantSlug={p?.merchant?.slug}
+                              whatsappLink={buildWhatsAppLink(
+                                p?.merchant?.support_phone_number,
+                                p?.name,
+                                p?.merchant?.store_name
+                              )}
+                              compact
+                              showBadge={false}
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={addingId === p.id}
+                              onClick={() => void handleAddToCart(p)}
+                              className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {addingId === p.id ? "Adding…" : "Add to cart"}
+                            </button>
+                          )}
                         </td>
                       ))}
                     </tr>

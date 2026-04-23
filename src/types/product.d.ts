@@ -88,6 +88,7 @@ export interface Product {
     search_vector: string | null;
     product_variant: any[];
     tags?: Array<{ id: number; name: string; slug: string }>;
+    contact_merchant_only?: boolean;
 }
 
 export interface ProductResponse {
@@ -136,6 +137,7 @@ export interface Category {
     icon: string;
     icon_code: string;
     slug: string | null;
+    contact_merchant_only?: boolean;
     search_vector: string | null;
 }
 
@@ -144,6 +146,7 @@ export interface SubCategory {
     name: string;
     image: CategoryImage;
     slug: string;
+    contact_merchant_only?: boolean;
     second_subcategory: SecondSubCategory[];
 }
 export interface MerchantLevel {
@@ -222,6 +225,7 @@ export interface SecondSubCategory {
     name: string;
     image: CategoryImage;
     slug: string;
+    contact_merchant_only?: boolean;
     second_category_banner_images: unknown[];
 }
 

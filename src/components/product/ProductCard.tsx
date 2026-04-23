@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { amountFormatter, formatCurrency, featuredImageCardUrl } from "@/util";
+import { buildWhatsAppLink, formatCurrency, featuredImageCardUrl, isContactMerchantOnlyProduct } from "@/util";
 import { LocalCartItem, Product, ProductByIdResponse } from "@/types/product";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
@@ -11,6 +11,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { ProductFull } from "@/types/home";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import DirectContactActions from "@/components/product/DirectContactActions";
 
 function ProductCard({
   product,
@@ -40,6 +41,12 @@ function ProductCard({
     product?.price != null &&
     String(product.discount_price).trim() !== "" &&
     String(product.discount_price) !== String(product.price);
+  const contactOnly = isContactMerchantOnlyProduct(product);
+  const whatsappLink = buildWhatsAppLink(
+    product?.merchant?.support_phone_number,
+    product?.name,
+    product?.merchant?.store_name
+  );
 
   const handleAddToCart = async (product: Product) => {
     try {
@@ -216,6 +223,14 @@ function ProductCard({
           </div>
         </div>
       </Link>
+      {contactOnly && (
+        <DirectContactActions
+          merchantSlug={product?.merchant?.slug}
+          whatsappLink={whatsappLink}
+          compact
+          className="border-0 border-t border-[#dde4f0] rounded-none"
+        />
+      )}
     </div>
   );
 }

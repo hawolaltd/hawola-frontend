@@ -17,6 +17,10 @@ export interface SiteSettingsData {
   accept_escrow_payment?: boolean;
   /** Rich HTML (sanitized client-side) shown on cart when escrow is off */
   non_escrow_cart_notice_html?: string | null;
+  /** Rich HTML disclaimer shown on contact-merchant-only listing pages */
+  contact_merchant_disclaimer_html?: string | null;
+  /** Rich HTML buyer protection tips shown on contact-merchant-only listing pages */
+  contact_merchant_buyer_protection_html?: string | null;
   /** Shown on checkout (plain or simple HTML) */
   offline_payment_disclaimer?: string | null;
   /** Public site origin, no trailing slash — used for canonical / og:url */

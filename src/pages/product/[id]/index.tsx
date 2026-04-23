@@ -14,16 +14,22 @@ import {
     getProductBySlug, getWishList
 } from "@/redux/product/productSlice";
 import { useRouter } from "next/router";
-import {amountFormatter, formatCurrency} from "@/util";
+import {amountFormatter, buildWhatsAppLink, formatCurrency, isContactMerchantOnlyProduct} from "@/util";
 import Link from "next/link";
 import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import DirectContactActions from "@/components/product/DirectContactActions";
 import { TagIcon } from '@heroicons/react/24/outline';
 import { buildProductSeo } from "@/util/storefrontSeo";
 import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
+import {
+    DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML,
+    DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML,
+    sanitizeRichNotice,
+} from "@/util/sanitizeRichNotice";
 
 type ProductPageProps = {
     serverNotFound?: boolean;
@@ -37,6 +43,10 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const [clientNotFound, setClientNotFound] = useState(false);
     const [loadingProduct, setLoadingProduct] = useState(!serverNotFound);
     const [loadingReview, setLoadingReview] = useState(!serverNotFound);
+    const [showMerchantContact, setShowMerchantContact] = useState(false);
+    const [contactRevealFx, setContactRevealFx] = useState(false);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
     const router = useRouter();
     const { query, isReady: routerIsReady } = router;
 
@@ -45,6 +55,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const {product, isLoading, reviews, merchantReviews} = useAppSelector(state => state.products)
     const {isAuthenticated} = useAppSelector(state => state.auth)
     const siteSettings = useAppSelector((state) => state.general.siteSettings)
+    const contactMerchantOnly = isContactMerchantOnlyProduct(product?.product);
+    const [contactDisclaimerSafe, setContactDisclaimerSafe] = useState("");
+    const [buyerProtectionSafe, setBuyerProtectionSafe] = useState("");
 
     const productSlug =
         typeof query.id === "string"
@@ -328,6 +341,36 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         });
     }, [(product as any)?.product?.id, (product as any)?.product?.slug]);
 
+    useEffect(() => {
+        if (!contactMerchantOnly) {
+            setContactDisclaimerSafe("");
+            setBuyerProtectionSafe("");
+            return;
+        }
+        const buyerProtectionSource = siteSettings?.contact_merchant_buyer_protection_html?.trim()
+            ? String(siteSettings.contact_merchant_buyer_protection_html)
+            : DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML;
+        const source = siteSettings?.contact_merchant_disclaimer_html?.trim()
+            ? String(siteSettings.contact_merchant_disclaimer_html)
+            : DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML;
+        setBuyerProtectionSafe(sanitizeRichNotice(buyerProtectionSource));
+        setContactDisclaimerSafe(sanitizeRichNotice(source));
+    }, [
+        contactMerchantOnly,
+        siteSettings?.contact_merchant_buyer_protection_html,
+        siteSettings?.contact_merchant_disclaimer_html,
+    ]);
+
+    useEffect(() => {
+        if (!showMerchantContact) {
+            setContactRevealFx(false);
+            return;
+        }
+        setContactRevealFx(true);
+        const timer = setTimeout(() => setContactRevealFx(false), 750);
+        return () => clearTimeout(timer);
+    }, [showMerchantContact]);
+
 
     const notFound = serverNotFound || clientNotFound;
     const slugForMessage =
@@ -381,6 +424,287 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const ogLocale = (siteSettings?.seo_og_locale as string) || "en_US";
     const twitterSite = (siteSettings?.seo_twitter_site as string)?.trim();
+    const merchantPhoneNumber = product?.product?.merchant?.support_phone_number?.trim();
+    const whatsappLink = buildWhatsAppLink(
+        merchantPhoneNumber,
+        product?.product?.name,
+        product?.product?.merchant?.store_name
+    );
+    const plainListingDescription = (product?.product?.description || "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, " ")
+        .trim();
+    const galleryImages = (product?.product_images || [])
+        .map((img) => img?.image_url)
+        .filter(Boolean) as string[];
+    const effectiveGalleryImages =
+        galleryImages.length > 0
+            ? galleryImages
+            : (product?.product?.featured_image?.[0]?.image_url
+                ? [product.product.featured_image[0].image_url]
+                : []);
+
+    const openLightboxAt = (src: string) => {
+        const idx = effectiveGalleryImages.findIndex((url) => url === src);
+        setLightboxIndex(idx >= 0 ? idx : 0);
+        setLightboxOpen(true);
+    };
+    const closeLightbox = () => setLightboxOpen(false);
+    const showPrevImage = () => {
+        if (!effectiveGalleryImages.length) return;
+        setLightboxIndex((prev) =>
+            (prev - 1 + effectiveGalleryImages.length) % effectiveGalleryImages.length
+        );
+    };
+    const showNextImage = () => {
+        if (!effectiveGalleryImages.length) return;
+        setLightboxIndex((prev) => (prev + 1) % effectiveGalleryImages.length);
+    };
+    if (contactMerchantOnly) {
+        return (
+            <AuthLayout>
+                <Head>
+                    <title>{productSeo?.title || "Hawola | Product"}</title>
+                    <meta name="description" content={productSeo?.description || ""} />
+                    {keywordsCombined ? (
+                        <meta name="keywords" content={keywordsCombined.slice(0, 512)} />
+                    ) : null}
+                    <meta name="robots" content={productSeo?.robots || "index,follow"} />
+                </Head>
+                <div className="w-full pt-0">
+                    <div className="w-full bg-[#0b1f4d] text-white shadow-[0_2px_10px_rgba(11,31,77,0.25)]">
+                        <div className="mx-auto flex max-w-[1320px] flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-xs uppercase tracking-[0.18em] text-[#b9c7ea]">Direct Merchant Listing</p>
+                            </div>
+                            <nav className="text-xs sm:text-sm text-[#d6def2]">
+                                <span>Home</span>
+                                <span className="mx-2 text-[#9fb2e3]">/</span>
+                                <span>{product?.product?.category?.name || "Listings"}</span>
+                                <span className="mx-2 text-[#9fb2e3]">/</span>
+                                <span className="text-white">{product?.product?.name}</span>
+                            </nav>
+                        </div>
+                    </div>
+                    <div className="mx-auto max-w-[1320px] px-4 pb-8 pt-4">
+                        <div className="rounded-[26px] border border-[#e2e8f2] bg-white shadow-[0_3px_10px_rgba(16,24,40,0.04)] overflow-hidden">
+                        <div className="grid grid-cols-1 lg:grid-cols-12">
+                            <div className="lg:col-span-8 p-5 lg:p-7 border-b lg:border-b-0 lg:border-r border-[#edf1f7]">
+                                <div className="aspect-[16/10] w-full rounded-2xl border border-[#e6ecf5] bg-[#f8fafc] flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(15,23,42,0.05)]">
+                                    <img
+                                        src={mainImage || product?.product?.featured_image?.[0]?.image_url}
+                                        alt={product?.product?.name || "Listing image"}
+                                        className="w-full h-full object-contain cursor-zoom-in"
+                                        onClick={() =>
+                                            openLightboxAt(
+                                                mainImage || product?.product?.featured_image?.[0]?.image_url || ""
+                                            )
+                                        }
+                                    />
+                                </div>
+                                {product?.product_images?.length > 1 ? (
+                                    <div className="mt-4 grid grid-cols-5 gap-2 rounded-xl bg-[#f8fbff] border border-[#e7edf7] p-2">
+                                        {product.product_images.slice(0, 10).map((item, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setMainImage(item?.image_url)}
+                                                className={`h-16 rounded-lg border overflow-hidden transition ${
+                                                    mainImage === item?.image_url ? "border-primary ring-1 ring-primary/20" : "border-[#e4e9f2]"
+                                                }`}
+                                            >
+                                                <img
+                                                    src={item?.image_url}
+                                                    alt="Listing preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : null}
+                            </div>
+
+                            <div className="lg:col-span-4 p-6 lg:p-7 bg-gradient-to-b from-white to-[#f8fbff]">
+                                <span className="inline-flex items-center rounded-full border border-[#d9e4f5] bg-[#f5f9ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                                    Direct Merchant Listing
+                                </span>
+                                <h1 className="text-2xl lg:text-3xl font-bold text-primary leading-tight">
+                                    {product?.product?.name}
+                                </h1>
+                                <p className="mt-2 text-sm text-textPadded leading-relaxed">
+                                    Listed by{" "}
+                                    <Link
+                                        href={`/merchants/${product?.product?.merchant?.slug}`}
+                                        className="font-semibold text-primary underline-offset-2 hover:underline"
+                                    >
+                                        {product?.product?.merchant?.store_name}
+                                    </Link>
+                                </p>
+
+                                <div className="mt-6 rounded-2xl border border-[#e4e9f2] bg-white p-4 shadow-[0_1px_6px_rgba(15,23,42,0.05)]">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-textPadded">Listing Price</p>
+                                    <p className="mt-1 text-3xl font-bold text-primary">
+                                        {formatCurrency(product.product?.discount_price)}
+                                    </p>
+                                    {product?.product?.price && product?.product?.discount_price && Number(product?.product?.price) > Number(product?.product?.discount_price) ? (
+                                        <span className="mt-1 inline-block line-through text-sm text-[#8c9ec5]">
+                                            {formatCurrency(product?.product?.price)}
+                                        </span>
+                                    ) : null}
+                                </div>
+
+                                <div className="mt-5 grid grid-cols-1 gap-2 text-sm">
+                                    {product?.product?.category?.name ? (
+                                        <div className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2">
+                                            <span className="text-textPadded">Category</span>
+                                            <span className="font-medium text-primary">{product.product.category.name}</span>
+                                        </div>
+                                    ) : null}
+                                    {product?.product?.product_subcategory?.name ? (
+                                        <div className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2">
+                                            <span className="text-textPadded">Type</span>
+                                            <span className="font-medium text-primary">{product.product.product_subcategory.name}</span>
+                                        </div>
+                                    ) : null}
+                                    {product?.product?.merchant?.location?.name ? (
+                                        <div className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2">
+                                            <span className="text-textPadded">Location</span>
+                                            <span className="font-medium text-primary">{product.product.merchant.location.name}</span>
+                                        </div>
+                                    ) : null}
+                                    {merchantPhoneNumber ? (
+                                        <div
+                                            className={`overflow-hidden ${showMerchantContact ? "" : "pointer-events-none"}`}
+                                            style={{
+                                                maxHeight: showMerchantContact ? "72px" : "0px",
+                                                opacity: showMerchantContact ? 1 : 0,
+                                                transform: showMerchantContact ? "translateY(0)" : "translateY(-6px)",
+                                                transition: "max-height 320ms ease, opacity 260ms ease, transform 260ms ease",
+                                            }}
+                                        >
+                                            <div
+                                                className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2"
+                                                style={{
+                                                    animation: contactRevealFx
+                                                        ? "contactGlowPulse 700ms ease-out"
+                                                        : "none",
+                                                }}
+                                            >
+                                                <span className="text-textPadded">Phone</span>
+                                                <span className="font-medium text-primary">{merchantPhoneNumber}</span>
+                                            </div>
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                <DirectContactActions
+                                    merchantSlug={product?.product?.merchant?.slug}
+                                    whatsappLink={whatsappLink}
+                                    onContactClick={() => setShowMerchantContact(true)}
+                                    className="mt-6"
+                                />
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <div className="lg:col-span-8 rounded-3xl border border-[#dde4f0] bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
+                            <ProductInfo product={product} embedded />
+                        </div>
+                        <div className="lg:col-span-4 rounded-3xl border border-[#dde4f0] bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
+                            <h3 className="text-lg font-semibold text-primary">Buyer Protection & Disclaimer</h3>
+                            <p className="mt-2 text-xs uppercase tracking-wide text-[#8c9ec5]">Content managed from backend settings.</p>
+                            <div
+                                className="mt-3 text-sm text-textPadded leading-6 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_a]:text-primary [&_a]:underline"
+                                dangerouslySetInnerHTML={{
+                                    __html: buyerProtectionSafe || DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML,
+                                }}
+                            />
+                            <hr className="my-4 border-[#e8edf5]" />
+                            <div
+                                className="text-sm text-textPadded leading-6 [&_a]:text-primary [&_a]:underline"
+                                dangerouslySetInnerHTML={{
+                                    __html: contactDisclaimerSafe || DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML,
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="p-6">
+                        <RelatedProduct product={product} />
+                    </div>
+                    </div>
+                </div>
+
+                {lightboxOpen && effectiveGalleryImages.length > 0 ? (
+                    <div
+                        className="fixed inset-0 z-[120] bg-black/85 flex items-center justify-center p-4"
+                        onClick={closeLightbox}
+                    >
+                        <button
+                            type="button"
+                            onClick={closeLightbox}
+                            className="absolute top-4 right-4 text-white text-3xl leading-none"
+                            aria-label="Close image viewer"
+                        >
+                            &times;
+                        </button>
+                        {effectiveGalleryImages.length > 1 ? (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        showPrevImage();
+                                    }}
+                                    className="absolute left-4 md:left-8 text-white text-4xl px-3 py-2"
+                                    aria-label="Previous image"
+                                >
+                                    &#8249;
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        showNextImage();
+                                    }}
+                                    className="absolute right-4 md:right-8 text-white text-4xl px-3 py-2"
+                                    aria-label="Next image"
+                                >
+                                    &#8250;
+                                </button>
+                            </>
+                        ) : null}
+                        <img
+                            src={effectiveGalleryImages[lightboxIndex]}
+                            alt={`${product?.product?.name || "Listing"} image ${lightboxIndex + 1}`}
+                            className="max-h-[90vh] max-w-[92vw] object-contain rounded-lg shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                ) : null}
+                <style jsx>{`
+                  @keyframes contactGlowPulse {
+                    0% {
+                      box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+                    }
+                    50% {
+                      box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.18);
+                    }
+                    100% {
+                      box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+                    }
+                  }
+                `}</style>
+            </AuthLayout>
+        );
+    }
 
     return (<AuthLayout>
         <Head>
@@ -424,32 +748,44 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                 />
             ) : null}
         </Head>
+        <div className="w-full bg-[#0b1f4d] text-white shadow-[0_2px_10px_rgba(11,31,77,0.25)]">
+            <div className="mx-auto flex max-w-[1320px] flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#b9c7ea]">Product Listing</p>
+                <nav className="text-xs sm:text-sm text-[#d6def2]">
+                    <span>Home</span>
+                    <span className="mx-2 text-[#9fb2e3]">/</span>
+                    <span>{product?.product?.category?.name || "Products"}</span>
+                    <span className="mx-2 text-[#9fb2e3]">/</span>
+                    <span className="text-white">{product?.product?.name}</span>
+                </nav>
+            </div>
+        </div>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
             {/* Product Image start*/}
-            <div className="flex flex-col md:flex-row gap-4 border-b border-b-[#dde4f0] pb-16">
+            <div className="flex flex-col md:flex-row gap-4 rounded-3xl border border-[#e2e8f2] bg-white p-4 md:p-5 shadow-[0_3px_10px_rgba(16,24,40,0.04)]">
                 {/* Image Display */}
 
-                <div style={{flex: 3}} className="flex gap-4 h-4/5">
+                <div style={{flex: 3}} className="flex gap-4">
 
                     {/* Thumbnail Gallery */}
-                    <div className={'hidden lg:flex flex-col gap-4 h-[75vh] w-fit overflow-y-auto'}>
+                    <div className={'hidden lg:flex flex-col gap-3 h-[75vh] w-fit overflow-y-auto rounded-2xl border border-[#e7edf7] bg-[#f8fbff] p-2'}>
                         {product?.product_images?.map((item, key) => (
                             <div
                                 key={key}
                                 onClick={() => setMainImage(item?.image_url)}
-                                className={`border cursor-pointer transition-all duration-300 ${mainImage === item?.image_url ? 'border-orange' : 'border-[#dde4f0]'} px-2 py-2 flex items-center justify-center rounded-lg h-[100px]`}
+                                className={`border cursor-pointer transition-all duration-300 ${mainImage === item?.image_url ? 'border-primary ring-1 ring-primary/20' : 'border-[#dde4f0]'} flex items-center justify-center rounded-lg h-[96px] w-[96px] bg-white overflow-hidden`}
                             >
                                 <img
                                     src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
                                     alt="Product Thumbnail"
-                                    className="w-[100px] object-contain"
+                                    className="h-full w-full object-cover"
                                 />
                             </div>
                         ))}
                     </div>
 
                     {/* Main Image Display */}
-                    <div className="flex-1 flex flex-col items-center justify-center border-4 border-[#dde4f0] h-[75vh] rounded-md relative">
+                    <div className="flex-1 flex flex-col items-center justify-center border border-[#e2e8f2] bg-[#f8fafc] h-[75vh] rounded-2xl relative overflow-hidden">
 
                         {/* Mobile Thumbnail Navigation */}
                         <div className="lg:hidden flex gap-2 overflow-x-auto py-2 w-full justify-center absolute bottom-2 left-0 right-0">
@@ -457,7 +793,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                 <div
                                     key={key}
                                     onClick={() => setMainImage(item?.image_url)}
-                                    className={`w-12 h-12 rounded border cursor-pointer ${mainImage === item?.image_url ? 'border-orange' : 'border-[#dde4f0]'}`}
+                                    className={`w-12 h-12 rounded border cursor-pointer overflow-hidden ${mainImage === item?.image_url ? 'border-primary' : 'border-[#dde4f0]'}`}
                                 >
                                     <img
                                         src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
@@ -492,9 +828,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                 </div>
 
                 {/* Product Image ends */}
-                <div style={{flex: 4}} className=" p-1 flex flex-col mt-8 lg:mt-0">
+                <div style={{flex: 4}} className="p-3 lg:p-4 flex flex-col rounded-2xl border border-[#e7edf7] bg-gradient-to-b from-white to-[#f9fbff]">
                     {/* Product Details */}
-                    <h1 className="text-xl lg:text-3xl font-bold text-primary mb-6 capitalize">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-primary mb-4 capitalize leading-tight">
                         {/*{ product?.product?.name}*/}
                         {loadingProduct ? (
                         <div className="h-8 w-3/4 bg-gray-200 rounded animate-pulse"></div>
@@ -504,14 +840,19 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     </h1>
 
                     <div
-                        className={'flex flex-col lg:flex-row lg:items-center mb-4  lg:justify-between w-full border-b border-b-[#dde4f0] pb-4'}>
+                        className={'flex flex-col lg:flex-row lg:items-center mb-5 lg:justify-between w-full border-b border-b-[#e6ecf6] pb-4'}>
                         <div>
                             <p className="text-primary text-sm font-bold">
                                 <span className="text-[#8c9ec5] text-xs font-bold">by</span>{" "}
                                 {loadingProduct ? (
                                     <span className="inline-block h-4 w-32 bg-gray-200 rounded animate-pulse"></span>
                                 ) : (
-                                    product?.product?.merchant?.store_name
+                                    <Link
+                                        href={`/merchants/${product?.product?.merchant?.slug}`}
+                                        className="underline-offset-2 hover:underline"
+                                    >
+                                        {product?.product?.merchant?.store_name}
+                                    </Link>
                                 )}
 
                                 {/*{product?.product?.merchant?.store_name}*/}
@@ -525,7 +866,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                 {/*{<span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>}*/}
                             </div>
                         </div>
-                        <div className={'flex items-center gap-4 lg:justify-end'}>
+                        <div className={'flex items-center gap-4 lg:justify-end flex-wrap'}>
 
                             <div onClick={handleWishList} className={'flex items-center gap-2'}>
                                 <span className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
@@ -558,7 +899,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     </div>
 
 
-                    <div className="flex items-end gap-3 mb-4">
+                    <div className="flex items-end gap-3 mb-5 rounded-2xl border border-[#e4e9f2] bg-white p-4">
                         <p className="text-2xl lg:text-4xl font-bold text-primary">
                             {formatCurrency(product.product?.discount_price)}
                         </p>
@@ -665,7 +1006,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             </div>
                         </div>
                     </div> */}
-                    <ul className={'flex flex-col gap-2 text-sm mt-6 mb-6 px-5 font-medium'}>
+                    <ul className={'flex flex-col gap-2 text-sm mt-2 mb-6 px-4 font-medium rounded-2xl border border-[#e8edf6] bg-[#fbfcff] py-4'}>
                         {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
                                 <svg className={'w-4 h-4'} width="8" height="8" viewBox="0 0 16 17" fill="none"
@@ -873,31 +1214,73 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
                         {/* Quantity */}
                         <div className={'mt-6'}>
-                            <p className="text-gray-500 mb-2">Quantity</p>
+                            {!contactMerchantOnly ? (
+                                <p className="text-gray-500 mb-2">Quantity</p>
+                            ) : null}
                             <div className={'flex flex-col lg:flex-row lg:items-center gap-4'}>
-                                <div className="flex items-center w-fit space-x-3 border-b-[#dde4f0] pb-2 border-b-4">
-                                    <button onClick={() => handleQuantityChange(-1)}
-                                            className="font-normal text-primary w-8 h-8 flex items-center justify-center text-4xl">-
-                                    </button>
-                                    <span className="text-primary w-8 text-3xl h-8 text-center">{quantity}</span>
-                                    <button onClick={() => handleQuantityChange(1)}
-                                            className="font-normal text-primary w-8 h-8 flex items-center justify-center text-4xl"> +
-                                    </button>
-                                </div>
+                                {!contactMerchantOnly ? (
+                                    <div className="flex items-center w-fit space-x-3 border-b-[#dde4f0] pb-2 border-b-4">
+                                        <button onClick={() => handleQuantityChange(-1)}
+                                                className="font-normal text-primary w-8 h-8 flex items-center justify-center text-4xl">-
+                                        </button>
+                                        <span className="text-primary w-8 text-3xl h-8 text-center">{quantity}</span>
+                                        <button onClick={() => handleQuantityChange(1)}
+                                                className="font-normal text-primary w-8 h-8 flex items-center justify-center text-4xl"> +
+                                        </button>
+                                    </div>
+                                ) : null}
                                 {/* Buttons */}
-                                <div onClick={()=>{
-                                    handleAddToCart(product as ProductByIdResponse)
-                                }} className="flex flex-col sm:flex-row lg:items-center gap-4">
-                                    <button className="px-6 py-2 border border-primary text-primary hover:bg-primary/5 transition-colors">Add to cart</button>
-                                    <button className="px-6 py-2 bg-primary text-white hover:bg-primary/90 transition-colors">Buy now</button>
-                                </div>
+                                {contactMerchantOnly ? (
+                                    <div className="flex flex-col gap-3">
+                                        <DirectContactActions
+                                            merchantSlug={product?.product?.merchant?.slug}
+                                            whatsappLink={whatsappLink}
+                                            onContactClick={() => setShowMerchantContact(true)}
+                                        />
+                                        {showMerchantContact && (
+                                            <div className="rounded-md border border-[#dde4f0] p-4 bg-[#f8fafc]">
+                                                <p className="text-sm text-primary font-semibold">
+                                                    Merchant Phone: {merchantPhoneNumber || "Not available"}
+                                                </p>
+                                                <p className="text-xs text-textPadded mt-1">
+                                                    Want to chat with the merchant? Use WhatsApp or open the merchant profile to continue the conversation.
+                                                </p>
+                                                <div className="flex flex-wrap gap-3 mt-3">
+                                                    {whatsappLink ? (
+                                                        <a
+                                                            href={whatsappLink}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="px-4 py-2 bg-[#25D366] text-white text-sm rounded hover:bg-[#20ba57] transition-colors"
+                                                        >
+                                                            Chat on WhatsApp
+                                                        </a>
+                                                    ) : null}
+                                                    <Link
+                                                        href={`/merchants/${product?.product?.merchant?.slug}`}
+                                                        className="px-4 py-2 border border-primary text-primary text-sm rounded hover:bg-primary/5 transition-colors"
+                                                    >
+                                                        Open Merchant Profile
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div onClick={()=>{
+                                        handleAddToCart(product as ProductByIdResponse)
+                                    }} className="flex flex-col sm:flex-row lg:items-center gap-4">
+                                        <button className="px-6 py-2.5 border border-primary rounded-xl text-primary hover:bg-primary/5 transition-colors font-semibold">Add to cart</button>
+                                        <button className="px-6 py-2.5 bg-primary rounded-xl text-white hover:bg-primary/90 transition-colors font-semibold">Buy now</button>
+                                    </div>
+                                )}
 
                             </div>
                         </div>
 
 
                         {/* Additional info */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-12">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-8 border-t border-[#e8edf6] pt-6">
                             {/* <div>
                                 <p className="font-bold text-primary flex items-center gap-0 text-sm">Free
                                     Delivery</p>
@@ -958,7 +1341,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
             {/* Frequently Bought Together */}
 
-            <div className="p-6">
+            <div className="mt-6 rounded-3xl border border-[#e2e8f2] bg-white p-6 shadow-[0_3px_10px_rgba(16,24,40,0.04)]">
              <ProductInfo product={product}/>
 
              <RelatedProduct product={product}/>

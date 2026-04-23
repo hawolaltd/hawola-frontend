@@ -4,7 +4,8 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import ProductCard from "@/components/product/ProductCard";
 import ProductCard2 from "@/components/product/ProductCard2";
-import { formatCurrency, featuredImageCardSrc } from "@/util";
+import DirectContactActions from "@/components/product/DirectContactActions";
+import { buildWhatsAppLink, formatCurrency, featuredImageCardSrc, isContactMerchantOnlyProduct } from "@/util";
 import type { AdvertBanner, PopularCategory, ProductFull } from "@/types/home";
 
 function dedupeCategories(cats: PopularCategory[] | undefined): PopularCategory[] {
@@ -285,6 +286,12 @@ function StatsBand({
 function EditorialSpotlight({ product }: { product: ProductFull }) {
   const img = featuredImageCardSrc(product.featured_image?.[0]);
   const pct = discountPct(product.price, product.discount_price);
+  const contactOnly = isContactMerchantOnlyProduct(product);
+  const whatsappLink = buildWhatsAppLink(
+    product?.merchant?.support_phone_number,
+    product?.name,
+    product?.merchant?.store_name
+  );
   return (
     <section id="spotlight" className="scroll-mt-24 border-b border-slate-200 bg-white py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-6 sm:px-10">
@@ -341,12 +348,20 @@ function EditorialSpotlight({ product }: { product: ProductFull }) {
                 )}
               </div>
             </div>
-            <Link
-              href={`/product/${product.slug}`}
-              className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-secondaryTextColor py-4 text-center text-sm font-bold text-white transition hover:brightness-105 sm:w-auto sm:px-12"
-            >
-              Add to cart flow →
-            </Link>
+            {contactOnly ? (
+              <DirectContactActions
+                merchantSlug={product?.merchant?.slug}
+                whatsappLink={whatsappLink}
+                className="mt-8 sm:w-[420px]"
+              />
+            ) : (
+              <Link
+                href={`/product/${product.slug}`}
+                className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-secondaryTextColor py-4 text-center text-sm font-bold text-white transition hover:brightness-105 sm:w-auto sm:px-12"
+              >
+                Add to cart flow →
+              </Link>
+            )}
           </div>
         </div>
       </div>

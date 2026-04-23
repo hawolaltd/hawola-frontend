@@ -6,7 +6,13 @@ import {LocalCartItem, Product} from "@/types/product";
 import {addToCarts, addToCartsLocal, getCarts} from "@/redux/product/productSlice";
 import {toast} from "sonner";
 import Link from "next/link";
-import {formatCurrency, featuredImageCardUrl} from "@/util";
+import {
+    buildWhatsAppLink,
+    formatCurrency,
+    featuredImageCardUrl,
+    isContactMerchantOnlyProduct
+} from "@/util";
+import DirectContactActions from "@/components/product/DirectContactActions";
 
 const Wishlist: NextPage = () => {
     const {wishLists, isLoading} = useAppSelector(state => state.products)
@@ -199,12 +205,25 @@ const Wishlist: NextPage = () => {
                             {/*</span>*/}
                             {/*    </td>*/}
                             <td className="p-4">
-                                <button disabled={isLoading} onClick={() => {
-                                    handleAddToCart(item?.product as Product)
-                                }}
-                                        className={`${isLoading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} text-white px-4 py-2 rounded text-sm`}>
-                                    Add to Cart
-                                </button>
+                                {isContactMerchantOnlyProduct(item?.product) ? (
+                                    <DirectContactActions
+                                        merchantSlug={item?.product?.merchant?.slug}
+                                        whatsappLink={buildWhatsAppLink(
+                                            item?.product?.merchant?.support_phone_number,
+                                            item?.product?.name,
+                                            item?.product?.merchant?.store_name
+                                        )}
+                                        compact
+                                        showBadge={false}
+                                    />
+                                ) : (
+                                    <button disabled={isLoading} onClick={() => {
+                                        handleAddToCart(item?.product as Product)
+                                    }}
+                                            className={`${isLoading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} text-white px-4 py-2 rounded text-sm`}>
+                                        Add to Cart
+                                    </button>
+                                )}
                             </td>
                             <td className="p-4">
                                 <button

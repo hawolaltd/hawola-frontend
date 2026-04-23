@@ -1,8 +1,9 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { Product, ProductResponse } from "@/types/product";
-import { formatCurrency, featuredImageCardUrl } from "@/util";
+import { buildWhatsAppLink, formatCurrency, featuredImageCardUrl, isContactMerchantOnlyProduct } from "@/util";
 import { ProductFull } from "@/types/home";
+import DirectContactActions from "@/components/product/DirectContactActions";
 
 function ProductCard2({
   product,
@@ -22,6 +23,12 @@ function ProductCard2({
     item?.price != null &&
     String(item.discount_price).trim() !== "" &&
     String(item.discount_price) !== String(item.price);
+  const contactOnly = isContactMerchantOnlyProduct(item);
+  const whatsappLink = buildWhatsAppLink(
+    item?.merchant?.support_phone_number,
+    item?.name,
+    item?.merchant?.store_name
+  );
 
   return (
     <div
@@ -96,6 +103,16 @@ function ProductCard2({
             </span>
           )}
         </div>
+        {contactOnly && (
+          <DirectContactActions
+            merchantSlug={item?.merchant?.slug}
+            whatsappLink={whatsappLink}
+            compact
+            showBadge={false}
+            className="mt-2"
+            stopPropagation
+          />
+        )}
       </div>
     </div>
   );

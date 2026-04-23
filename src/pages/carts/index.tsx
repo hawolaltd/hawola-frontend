@@ -711,9 +711,14 @@ const CartPage = () => {
               selectedAdd={selectedAdd}
               onAddNewAddress={handleAddNewAddress}
               onEditAddress={handleEditAddress}
-              onSelectAddress={(address) => setSelectedAdd(address)}
+              onSelectAddress={(address) => {
+                setSelectedAdd(address);
+                setShowForm(false);
+                setEditingAddress(false);
+              }}
               showForm={showForm}
               editingAddress={editingAddress}
+              onShowForm={() => setShowForm(true)}
               onCancelForm={handleCancelForm}
               onCheckout={handleProceedToCheckout}
               loading={creatingOrder}
