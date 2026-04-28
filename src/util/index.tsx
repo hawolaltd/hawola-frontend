@@ -376,11 +376,22 @@ export const buildWhatsAppLink = (phone?: string | null, productName?: string, s
 };
 
 export const isContactMerchantOnlyProduct = (product: any): boolean => {
+  const vehicleKeyword = /(vehicle|cars?)/i;
+  const vehicleLikeCategory = [
+    product?.category?.name,
+    product?.category?.slug,
+    product?.product_subcategory?.name,
+    product?.product_subcategory?.slug,
+    product?.product_subseccategory?.name,
+    product?.product_subseccategory?.slug,
+  ].some((v) => typeof v === "string" && vehicleKeyword.test(v));
+
   return Boolean(
     product?.contact_merchant_only ||
       product?.category?.contact_merchant_only ||
       product?.product_subcategory?.contact_merchant_only ||
-      product?.product_subseccategory?.contact_merchant_only
+      product?.product_subseccategory?.contact_merchant_only ||
+      vehicleLikeCategory
   );
 };
 

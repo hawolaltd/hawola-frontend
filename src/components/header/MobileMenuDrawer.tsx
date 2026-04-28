@@ -94,6 +94,23 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                 <div className="h-full flex flex-col overflow-hidden">
                     {/* Navigation Links (Home / Shop / Vendors / …) — off; categories entry below */}
                     <div className="p-4 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Link
+                                href="/cars"
+                                onClick={onClose}
+                                className="rounded-md border border-slate-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-700"
+                            >
+                                Cars
+                            </Link>
+                            <Link
+                                href="/real-estate"
+                                onClick={onClose}
+                                className="rounded-md border border-emerald-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-emerald-700"
+                            >
+                                Real Estate
+                            </Link>
+                        </div>
+
                         {/* {navigationLinks.map((item) => (
                             <DrawerLink
                                 key={item.label}

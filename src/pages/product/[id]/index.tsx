@@ -480,9 +480,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                 <div className="w-full pt-0">
                     <div className="w-full bg-[#0b1f4d] text-white shadow-[0_2px_10px_rgba(11,31,77,0.25)]">
                         <div className="mx-auto flex max-w-[1320px] flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-xs uppercase tracking-[0.18em] text-[#b9c7ea]">Direct Merchant Listing</p>
-                            </div>
+                            <div />
                             <nav className="text-xs sm:text-sm text-[#d6def2]">
                                 <span>Home</span>
                                 <span className="mx-2 text-[#9fb2e3]">/</span>
@@ -493,10 +491,10 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     </div>
                     <div className="mx-auto max-w-[1320px] px-4 pb-8 pt-4">
-                        <div className="rounded-[26px] border border-[#e2e8f2] bg-white shadow-[0_3px_10px_rgba(16,24,40,0.04)] overflow-hidden">
+                        <div className="overflow-hidden rounded-[26px] border border-slate-700/70 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-[0_20px_45px_rgba(2,6,23,0.6)]">
                         <div className="grid grid-cols-1 lg:grid-cols-12">
-                            <div className="lg:col-span-8 p-5 lg:p-7 border-b lg:border-b-0 lg:border-r border-[#edf1f7]">
-                                <div className="aspect-[16/10] w-full rounded-2xl border border-[#e6ecf5] bg-[#f8fafc] flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(15,23,42,0.05)]">
+                            <div className="border-b border-slate-800 lg:col-span-8 lg:border-b-0 lg:border-r lg:border-slate-800 p-5 lg:p-7">
+                                <div className="aspect-[16/10] w-full rounded-2xl border border-slate-700 bg-slate-900 flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
                                     <img
                                         src={mainImage || product?.product?.featured_image?.[0]?.image_url}
                                         alt={product?.product?.name || "Listing image"}
@@ -509,13 +507,13 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     />
                                 </div>
                                 {product?.product_images?.length > 1 ? (
-                                    <div className="mt-4 grid grid-cols-5 gap-2 rounded-xl bg-[#f8fbff] border border-[#e7edf7] p-2">
+                                    <div className="mt-4 grid grid-cols-5 gap-2 rounded-xl bg-slate-900/80 border border-slate-700 p-2">
                                         {product.product_images.slice(0, 10).map((item, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => setMainImage(item?.image_url)}
                                                 className={`h-16 rounded-lg border overflow-hidden transition ${
-                                                    mainImage === item?.image_url ? "border-primary ring-1 ring-primary/20" : "border-[#e4e9f2]"
+                                                    mainImage === item?.image_url ? "border-amber-400 ring-1 ring-amber-400/30" : "border-slate-700"
                                                 }`}
                                             >
                                                 <img
@@ -529,30 +527,27 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                 ) : null}
                             </div>
 
-                            <div className="lg:col-span-4 p-6 lg:p-7 bg-gradient-to-b from-white to-[#f8fbff]">
-                                <span className="inline-flex items-center rounded-full border border-[#d9e4f5] bg-[#f5f9ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                                    Direct Merchant Listing
-                                </span>
-                                <h1 className="text-2xl lg:text-3xl font-bold text-primary leading-tight">
+                            <div className="lg:col-span-4 p-6 lg:p-7 bg-gradient-to-b from-slate-900/50 to-black">
+                                <h1 className="text-2xl lg:text-3xl font-bold text-white leading-tight">
                                     {product?.product?.name}
                                 </h1>
-                                <p className="mt-2 text-sm text-textPadded leading-relaxed">
+                                <p className="mt-2 text-sm text-slate-300 leading-relaxed">
                                     Listed by{" "}
                                     <Link
                                         href={`/merchants/${product?.product?.merchant?.slug}`}
-                                        className="font-semibold text-primary underline-offset-2 hover:underline"
+                                        className="font-semibold text-cyan-300 underline-offset-2 hover:underline"
                                     >
                                         {product?.product?.merchant?.store_name}
                                     </Link>
                                 </p>
 
-                                <div className="mt-6 rounded-2xl border border-[#e4e9f2] bg-white p-4 shadow-[0_1px_6px_rgba(15,23,42,0.05)]">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-textPadded">Listing Price</p>
-                                    <p className="mt-1 text-3xl font-bold text-primary">
+                                <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-900/70 p-4 shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Listing Price</p>
+                                    <p className="mt-1 text-3xl font-bold text-amber-300">
                                         {formatCurrency(product.product?.discount_price)}
                                     </p>
                                     {product?.product?.price && product?.product?.discount_price && Number(product?.product?.price) > Number(product?.product?.discount_price) ? (
-                                        <span className="mt-1 inline-block line-through text-sm text-[#8c9ec5]">
+                                        <span className="mt-1 inline-block line-through text-sm text-slate-400">
                                             {formatCurrency(product?.product?.price)}
                                         </span>
                                     ) : null}
@@ -560,21 +555,21 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
                                 <div className="mt-5 grid grid-cols-1 gap-2 text-sm">
                                     {product?.product?.category?.name ? (
-                                        <div className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2">
-                                            <span className="text-textPadded">Category</span>
-                                            <span className="font-medium text-primary">{product.product.category.name}</span>
+                                        <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2">
+                                            <span className="text-slate-400">Category</span>
+                                            <span className="font-medium text-white">{product.product.category.name}</span>
                                         </div>
                                     ) : null}
                                     {product?.product?.product_subcategory?.name ? (
-                                        <div className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2">
-                                            <span className="text-textPadded">Type</span>
-                                            <span className="font-medium text-primary">{product.product.product_subcategory.name}</span>
+                                        <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2">
+                                            <span className="text-slate-400">Type</span>
+                                            <span className="font-medium text-white">{product.product.product_subcategory.name}</span>
                                         </div>
                                     ) : null}
                                     {product?.product?.merchant?.location?.name ? (
-                                        <div className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2">
-                                            <span className="text-textPadded">Location</span>
-                                            <span className="font-medium text-primary">{product.product.merchant.location.name}</span>
+                                        <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2">
+                                            <span className="text-slate-400">Location</span>
+                                            <span className="font-medium text-white">{product.product.merchant.location.name}</span>
                                         </div>
                                     ) : null}
                                     {merchantPhoneNumber ? (
@@ -588,15 +583,15 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                             }}
                                         >
                                             <div
-                                                className="flex items-center justify-between rounded-xl border border-[#e4e9f2] bg-white px-3 py-2"
+                                                className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2"
                                                 style={{
                                                     animation: contactRevealFx
                                                         ? "contactGlowPulse 700ms ease-out"
                                                         : "none",
                                                 }}
                                             >
-                                                <span className="text-textPadded">Phone</span>
-                                                <span className="font-medium text-primary">{merchantPhoneNumber}</span>
+                                                <span className="text-slate-400">Phone</span>
+                                                <span className="font-medium text-white">{merchantPhoneNumber}</span>
                                             </div>
                                         </div>
                                     ) : null}
@@ -619,7 +614,6 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                         <div className="lg:col-span-4 rounded-3xl border border-[#dde4f0] bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
                             <h3 className="text-lg font-semibold text-primary">Buyer Protection & Disclaimer</h3>
-                            <p className="mt-2 text-xs uppercase tracking-wide text-[#8c9ec5]">Content managed from backend settings.</p>
                             <div
                                 className="mt-3 text-sm text-textPadded leading-6 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_a]:text-primary [&_a]:underline"
                                 dangerouslySetInnerHTML={{
@@ -1011,7 +1005,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
                                 <svg className={'w-4 h-4'} width="8" height="8" viewBox="0 0 16 17" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
-                                    <g clip-path="url(#clip0)">
+                                    <g clipPath="url(#clip0)">
                                         <path
                                             d="M8.00001 16.7564L7.53334 16.3564C6.89001 15.8178 1.27267 10.9664 1.27267 7.41776C1.27267 5.63356 1.98145 3.92244 3.24306 2.66082C4.50468 1.3992 6.21581 0.69043 8.00001 0.69043C9.78421 0.69043 11.4953 1.3992 12.757 2.66082C14.0186 3.92244 14.7273 5.63356 14.7273 7.41776C14.7273 10.9664 9.11001 15.8178 8.46934 16.3591L8.00001 16.7564ZM8.00001 2.1451C6.6021 2.14668 5.2619 2.70271 4.27342 3.69118C3.28495 4.67965 2.72893 6.01985 2.72734 7.41776C2.72734 9.6471 6.18334 13.2084 8.00001 14.8384C9.81667 13.2078 13.2727 9.64443 13.2727 7.41776C13.2711 6.01985 12.7151 4.67965 11.7266 3.69118C10.7381 2.70271 9.39792 2.14668 8.00001 2.1451Z"
                                             fill="#425A8B"/>
@@ -1033,21 +1027,21 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
                         {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
-                                <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
+                                <svg className={'w-4 h-4'} enableBackground="new 0 0 128 128" viewBox="0 0 128 128"
                                     xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                                     <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
                                                     y2="101.26">
-                                        <stop offset=".0074201" stop-color="#fff8e1"/>
-                                        <stop offset=".1774" stop-color="#fff6da"/>
-                                        <stop offset=".4164" stop-color="#fff2c8"/>
-                                        <stop offset=".6962" stop-color="#ffeaaa"/>
-                                        <stop offset=".9948" stop-color="#ffe082"/>
+                                        <stop offset=".0074201" stopColor="#fff8e1"/>
+                                        <stop offset=".1774" stopColor="#fff6da"/>
+                                        <stop offset=".4164" stopColor="#fff2c8"/>
+                                        <stop offset=".6962" stopColor="#ffeaaa"/>
+                                        <stop offset=".9948" stopColor="#ffe082"/>
                                     </linearGradient>
                                     <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
                                                     y1="29.333" y2="90.334">
-                                        <stop offset=".0048889" stop-color="#bcaaa4"/>
-                                        <stop offset=".3916" stop-color="#ac958e"/>
-                                        <stop offset=".9986" stop-color="#8d6e63"/>
+                                        <stop offset=".0048889" stopColor="#bcaaa4"/>
+                                        <stop offset=".3916" stopColor="#ac958e"/>
+                                        <stop offset=".9986" stopColor="#8d6e63"/>
                                     </linearGradient>
                                     <path
                                         d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"
@@ -1105,21 +1099,21 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
                         {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && product?.product?.merchant?.state?.name && (
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
-                                <svg className={'w-4 h-4'} enable-background="new 0 0 128 128" viewBox="0 0 128 128"
+                                <svg className={'w-4 h-4'} enableBackground="new 0 0 128 128" viewBox="0 0 128 128"
                                     xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
                                     <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="64.039" x2="64.039" y1="39"
                                                     y2="101.26">
-                                        <stop offset=".0074201" stop-color="#fff8e1"/>
-                                        <stop offset=".1774" stop-color="#fff6da"/>
-                                        <stop offset=".4164" stop-color="#fff2c8"/>
-                                        <stop offset=".6962" stop-color="#ffeaaa"/>
-                                        <stop offset=".9948" stop-color="#ffe082"/>
+                                        <stop offset=".0074201" stopColor="#fff8e1"/>
+                                        <stop offset=".1774" stopColor="#fff6da"/>
+                                        <stop offset=".4164" stopColor="#fff2c8"/>
+                                        <stop offset=".6962" stopColor="#ffeaaa"/>
+                                        <stop offset=".9948" stopColor="#ffe082"/>
                                     </linearGradient>
                                     <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="80.097" x2="80.097"
                                                     y1="29.333" y2="90.334">
-                                        <stop offset=".0048889" stop-color="#bcaaa4"/>
-                                        <stop offset=".3916" stop-color="#ac958e"/>
-                                        <stop offset=".9986" stop-color="#8d6e63"/>
+                                        <stop offset=".0048889" stopColor="#bcaaa4"/>
+                                        <stop offset=".3916" stopColor="#ac958e"/>
+                                        <stop offset=".9986" stopColor="#8d6e63"/>
                                     </linearGradient>
                                     <path
                                         d="m124.19 53.28c0-5.11-4.18-9.28-9.28-9.28h-97.58c-5.11 0-9.28 4.18-9.28 9.28l-4.17 38.22h120.31z"

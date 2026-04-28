@@ -15,6 +15,21 @@ import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
 import { API } from "@/constant";
 
+/** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
+const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
+
+const tinymceInitBase = {
+    height: 220,
+    menubar: false,
+    license_key: 'gpl',
+    promotion: false,
+    plugins: 'lists link',
+    toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link',
+    content_style: 'body { font-family: inherit; font-size: 14px; }',
+    base_url: '/tinymce',
+    suffix: '.min',
+} as const;
+
 const TinyMCEEditor = dynamic(
     () => import('@tinymce/tinymce-react').then((mod) => mod.Editor),
     { ssr: false }
@@ -682,16 +697,10 @@ const OrderDetails: NextPage = () => {
                                                                rules={{ required: 'Dispute reason is required', validate: (v) => !isRichTextEmpty(v) || 'Dispute reason is required' }}
                                                                render={({ field }) => (
                                                                    <TinyMCEEditor
-                                                                       apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+                                                                       tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
                                                                        value={field.value}
                                                                        onEditorChange={(content) => field.onChange(content ?? '')}
-                                                                       init={{
-                                                                           height: 220,
-                                                                           menubar: false,
-                                                                           plugins: 'lists link',
-                                                                           toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link',
-                                                                           content_style: 'body { font-family: inherit; font-size: 14px; }',
-                                                                       }}
+                                                                       init={{ ...tinymceInitBase }}
                                                                        disabled={!isFormActive}
                                                                    />
                                                                )}
@@ -865,16 +874,10 @@ const OrderDetails: NextPage = () => {
                                                    <div className="space-y-3">
                                                        <div className="rounded border border-gray-300 overflow-hidden">
                                                            <TinyMCEEditor
-                                                               apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+                                                               tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
                                                                value={disputeReplyText}
                                                                onEditorChange={(content) => setDisputeReplyText(content ?? '')}
-                                                               init={{
-                                                                   height: 220,
-                                                                   menubar: false,
-                                                                   plugins: 'lists link',
-                                                                   toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link',
-                                                                   content_style: 'body { font-family: inherit; font-size: 14px; }',
-                                                               }}
+                                                               init={{ ...tinymceInitBase }}
                                                                disabled={sendingDisputeComment}
                                                            />
                                                        </div>
