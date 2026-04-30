@@ -21,7 +21,6 @@ const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
 const tinymceInitBase = {
     height: 220,
     menubar: false,
-    license_key: 'gpl',
     promotion: false,
     plugins: 'lists link',
     toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link',
@@ -698,6 +697,7 @@ const OrderDetails: NextPage = () => {
                                                                render={({ field }) => (
                                                                    <TinyMCEEditor
                                                                        tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
+                                                                       licenseKey="gpl"
                                                                        value={field.value}
                                                                        onEditorChange={(content) => field.onChange(content ?? '')}
                                                                        init={{ ...tinymceInitBase }}
@@ -875,6 +875,7 @@ const OrderDetails: NextPage = () => {
                                                        <div className="rounded border border-gray-300 overflow-hidden">
                                                            <TinyMCEEditor
                                                                tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
+                                                               licenseKey="gpl"
                                                                value={disputeReplyText}
                                                                onEditorChange={(content) => setDisputeReplyText(content ?? '')}
                                                                init={{ ...tinymceInitBase }}
