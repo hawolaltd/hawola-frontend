@@ -701,7 +701,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                   if (isAuthenticated) {
                     setUserInfo(!userInfo);
                   } else {
-                    router.push("/auth/login");
+                    router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
                   }
                 }}
                 className="cursor-pointer"
@@ -712,7 +712,13 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             </div>
 
             {/* Wishlist */}
-            <Link href={isAuthenticated ? `/wishlist` : `/auth/login`}>
+            <Link
+              href={
+                isAuthenticated
+                  ? `/wishlist`
+                  : `/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`
+              }
+            >
               <div
                 onClick={() => {
                   // if (isAuthenticated) {

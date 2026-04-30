@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
 import { addToCartsLocal } from '@/redux/product/productSlice';
 import { logout } from '@/redux/auth/authSlice';
@@ -23,6 +24,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
     const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState<boolean>(false);
 
     const dispatch = useAppDispatch();
+    const router = useRouter();
     const { categories } = useAppSelector((state) => state.products);
     const { isAuthenticated, user, profile } = useAppSelector((state) => state.auth);
 
@@ -170,7 +172,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                         </div>
                         {!isAuthenticated && (
                             <Link
-                                href="/auth/login"
+                                href={`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`}
                                 onClick={onClose}
                                 className="text-xs font-semibold text-white bg-deepOrange px-3 py-1.5 rounded-md"
                             >

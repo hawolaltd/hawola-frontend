@@ -17,6 +17,10 @@ export default function LoginForm() {
     const [showPasswordLogin, setShowPasswordLogin] = useState(true);
 
     const router = useRouter()
+    const redirectTarget =
+      typeof router.query.redirect === "string" && router.query.redirect.startsWith("/")
+        ? router.query.redirect
+        : "/";
 
     const { control, handleSubmit,  formState: { errors }, } = useForm<LoginFormType>();
 
@@ -114,7 +118,7 @@ export default function LoginForm() {
                     }))
                     dispatch(addToCartsLocal({items: []}))
                 }
-                router.push('/')
+                router.push(redirectTarget)
             } else if (isRejected) {
                 // Login failed - extract error from the rejected action
                 let errorMessage = 'Unable to log in. Please check your email and password.';
@@ -297,7 +301,7 @@ export default function LoginForm() {
                                             }));
                                             dispatch(addToCartsLocal({ items: [] }));
                                         }
-                                        router.push("/");
+                                        router.push(redirectTarget);
                                     } else if (res?.type?.includes?.("rejected") && res?.payload) {
                                         toast.error(String(res.payload), {
                                             style: { background: "#ef4444", color: "white" },

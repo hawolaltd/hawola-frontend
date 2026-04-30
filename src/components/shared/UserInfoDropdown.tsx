@@ -67,7 +67,7 @@ function UserInfoDropdown() {
         <ul className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-md border bg-white shadow-lg">
           <li
             onClick={() => {
-              router.push("/auth/login");
+              router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
             }}
             className={"px-4 py-2 w-full"}
           >
