@@ -49,43 +49,28 @@ export default function CarsCuratedPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const catRes = await productService.getAllCategories();
-        const categories = catRes?.categories || [];
-        const vehicleCategories = categories.filter(
-          (c: any) =>
-            (/(vehicle|cars?)/i.test(c?.name || "") || /(vehicle|cars?)/i.test(c?.slug || "")) &&
-            Boolean(c?.slug)
-        );
-        if (vehicleCategories.length === 0) {
+        const data = await productService.getCuratedSurfaceProducts("vehicles");
+        if (!data) {
           setProducts([]);
           return;
         }
 
-        setCategoryLabel(
-          vehicleCategories.length > 1 ? "Cars & Vehicles" : vehicleCategories[0]?.name || "Vehicles"
-        );
-
-        const responses = await Promise.all(
-          vehicleCategories.map((c: any) => productService.getAllProductBaseOnCategories(c.slug))
-        );
-
         const promotedMap = new Map<number, ProductFull>();
         const regularMap = new Map<number, ProductFull>();
-        for (const data of responses) {
-          const promoted: ProductFull[] = (data?.promoted_products || [])
-            .map((row: any) => toProduct(row))
-            .filter(Boolean) as ProductFull[];
-          const regular: ProductFull[] = (data?.products || [])
-            .map((row: any) => toProduct(row))
-            .filter(Boolean) as ProductFull[];
-          for (const p of promoted) promotedMap.set(p.id, p);
-          for (const p of regular) {
-            if (!promotedMap.has(p.id)) regularMap.set(p.id, p);
-          }
+        const promotedItems: ProductFull[] = (data?.promoted_products || [])
+          .map((row: any) => toProduct(row))
+          .filter(Boolean) as ProductFull[];
+        const regularItems: ProductFull[] = (data?.products || [])
+          .map((row: any) => toProduct(row))
+          .filter(Boolean) as ProductFull[];
+        for (const p of promotedItems) promotedMap.set(p.id, p);
+        for (const p of regularItems) {
+          if (!promotedMap.has(p.id)) regularMap.set(p.id, p);
         }
 
         const promoted = Array.from(promotedMap.values());
         const regular = Array.from(regularMap.values());
+        setCategoryLabel(data?.surface?.name || "Vehicles");
         setPromotedIds(new Set(promoted.map((p) => p.id)));
         setProducts(orderPromotedFirst(promoted, regular));
       } catch {

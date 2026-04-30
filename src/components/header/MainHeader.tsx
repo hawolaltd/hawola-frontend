@@ -672,7 +672,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             </div>
 
             <div className="hidden items-center gap-2 lg:flex">
-              {/* <Link
+              <Link
                 href="/cars"
                 className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 transition hover:border-slate-800 hover:text-slate-900"
               >
@@ -683,7 +683,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                 className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 transition hover:border-emerald-600 hover:text-emerald-800"
               >
                 Real Estate
-              </Link> */}
+              </Link>
             </div>
 
             {/* Navigation Links with Dropdowns (Home, Shop, Vendors, Pages, …) — off; categories unchanged above */}

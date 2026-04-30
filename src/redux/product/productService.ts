@@ -99,6 +99,11 @@ const getAllProductBaseOnCategories = async (slug: string, page?: string) => {
     }
 };
 
+const getCuratedSurfaceProducts = async (surfaceSlug: string) => {
+    const response = await axios.get(API + `products/curated/${surfaceSlug}/`);
+    return response.data;
+};
+
 // Get all produts unique to a Sub-category.
 const getAllProductBaseOnSubCategories = async (
     slug: string,
@@ -368,6 +373,7 @@ const productService = {
     getWishListById,
     getMerchants,
     getAllProductBaseOnCategories,
+    getCuratedSurfaceProducts,
     getAllProductBaseOnSubCategories,
     getAllProductBaseOnSecondLevelSubCategories,
     getMerchantsProducts,
