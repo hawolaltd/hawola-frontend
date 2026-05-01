@@ -231,6 +231,14 @@ const confirmOrderItem = async (orderitemNumber: string) => {
     return response.data;
 };
 
+const cancelCustomerOrderItem = async (orderitemNumber: string, reason?: string) => {
+    const response = await axiosInstance.post(
+        API + `orders/order-item/${orderitemNumber}/cancel/`,
+        reason ? { reason } : {}
+    );
+    return response.data;
+};
+
 // update payment
 const updatePayment = async (data: any) => {
     const response = await axiosInstance.post(
@@ -364,6 +372,7 @@ const productService = {
     getOrderItemMessages,
     sendOrderItemMessage,
     confirmOrderItem,
+    cancelCustomerOrderItem,
     getReviews,
     getMerchantReviews,
     clearProductById,

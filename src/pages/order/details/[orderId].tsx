@@ -130,8 +130,13 @@ const OrderDetails: NextPage = () => {
 
     const orderLatestStatus = getLatestStatus(singleOrder?.shipping_info?.flatMap(i => i.shipping_status
     ))
+    const lineCancelled = Boolean(
+        singleOrder?.is_cancelled || singleOrder?.orderitem_status === 'cancelled'
+    );
     const isPaymentSettled = Boolean(singleOrder?.payment_confirmed || singleOrder?.isPaid);
-    const displayOrderStatus = singleOrder?.isDelivered
+    const displayOrderStatus = lineCancelled
+        ? { text: 'Cancelled', className: 'bg-slate-200 text-slate-900' }
+        : singleOrder?.isDelivered
         ? { text: 'Delivered', className: 'bg-green-100 text-green-800' }
         : !isPaymentSettled
             ? { text: 'Pending Payment', className: 'bg-amber-100 text-amber-800' }
@@ -189,6 +194,10 @@ const OrderDetails: NextPage = () => {
 
 
     const onSubmitDispute = async (data: DisputeFormData) => {
+        if (lineCancelled) {
+            toast.error('This order line was cancelled.');
+            return;
+        }
         if (!isFormActive) {
             toast.error('You can submit a dispute only after the order is marked received or delivered.');
             return;
@@ -231,9 +240,17 @@ const OrderDetails: NextPage = () => {
         }
     };
 
-    const isFormActive = singleOrder?.isDelivered === true || orderLatestStatus?.status === 'received';
-    const isDeliveredAwaitingConfirmation = singleOrder?.isDelivered === true && singleOrder?.user_confirm_order !== true;
-    const messagingClosed = singleOrder?.isDelivered === true || singleOrder?.user_confirm_order === true;
+    const isFormActive =
+        !lineCancelled &&
+        (singleOrder?.isDelivered === true || orderLatestStatus?.status === 'received');
+    const isDeliveredAwaitingConfirmation =
+        !lineCancelled &&
+        singleOrder?.isDelivered === true &&
+        singleOrder?.user_confirm_order !== true;
+    const messagingClosed =
+        lineCancelled ||
+        singleOrder?.isDelivered === true ||
+        singleOrder?.user_confirm_order === true;
 
     useEffect(() => {
         const orderId = router?.query?.orderId;
@@ -306,6 +323,29 @@ const OrderDetails: NextPage = () => {
     };
 
     const [confirmingOrder, setConfirmingOrder] = useState(false);
+    const [cancellingOrder, setCancellingOrder] = useState(false);
+    const handleCancelOrderCustomer = async () => {
+        if (!orderitemNumber || orderitemNumber === 'undefined' || lineCancelled) return;
+        // eslint-disable-next-line no-alert
+        if (
+            !confirm(
+                'Cancel this order line? You can only cancel before payment is confirmed and before the item ships.'
+            )
+        ) {
+            return;
+        }
+        setCancellingOrder(true);
+        try {
+            await productService.cancelCustomerOrderItem(orderitemNumber);
+            toast.success('Order cancelled.');
+            dispatch(getSingleOrder(orderitemNumber));
+        } catch (err: any) {
+            const detail = err?.response?.data?.detail;
+            toast.error(typeof detail === 'string' ? detail : 'Could not cancel this order.');
+        } finally {
+            setCancellingOrder(false);
+        }
+    };
     const handleConfirmDelivery = async () => {
         if (!orderitemNumber) return;
         setConfirmingOrder(true);
@@ -417,8 +457,22 @@ const OrderDetails: NextPage = () => {
                                    Back to Orders
                                </button>
 
-                               {/* Disputed notification only (no button) */}
-                               {(singleOrder?.user_open_dispute || singleOrder?.dispute_id != null || (singleOrder as any)?.orderitem_status === 'cancelled') && (
+                               {lineCancelled && (
+                                   <div
+                                       role="status"
+                                       className="container mx-auto mb-6 flex items-center gap-3 px-5 py-3 rounded-xl bg-slate-100 border border-slate-300"
+                                   >
+                                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-600 text-white" aria-hidden>
+                                           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                           </svg>
+                                       </span>
+                                       <p className="text-sm font-semibold text-slate-900">
+                                           This order line was cancelled. Messaging and fulfilment actions are closed.
+                                       </p>
+                                   </div>
+                               )}
+                               {!lineCancelled && hasDispute && (
                                    <div
                                        role="alert"
                                        className="container mx-auto mb-6 flex items-center gap-3 px-5 py-3 rounded-xl bg-red-100 border border-red-300"
@@ -530,6 +584,21 @@ const OrderDetails: NextPage = () => {
                                                    This is an offline payment
                                                </p>
                                            )}
+                                           {singleOrder?.can_cancel && !lineCancelled && (
+                                               <div className="mt-4 pt-4 border-t border-gray-100">
+                                                   <button
+                                                       type="button"
+                                                       onClick={handleCancelOrderCustomer}
+                                                       disabled={cancellingOrder}
+                                                       className="w-full sm:w-auto px-4 py-2 rounded-md border border-slate-300 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                                                   >
+                                                       {cancellingOrder ? 'Cancelling…' : 'Cancel order line'}
+                                                   </button>
+                                                   <p className="mt-2 text-xs text-gray-500">
+                                                       Only available before payment is confirmed and before the merchant ships your order.
+                                                   </p>
+                                               </div>
+                                           )}
                                        </div>
 
                                    </div>
@@ -584,7 +653,9 @@ const OrderDetails: NextPage = () => {
                                        <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
                                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Messages</h3>
                                            <p className="text-sm text-gray-600 mb-4">
-                                               {messagingClosed
+                                               {lineCancelled
+                                                   ? 'This order line was cancelled. You cannot send new messages.'
+                                                   : messagingClosed
                                                    ? 'Order is closed. Use dispute below if there is an issue.'
                                                    : 'Reply to the merchant here. They will get an email when you send a message.'}
                                            </p>
@@ -629,7 +700,13 @@ const OrderDetails: NextPage = () => {
                                                            handleSendMessage();
                                                        }
                                                    }}
-                                                   placeholder={messagingClosed ? 'Messaging closed. Use dispute below if there is an issue.' : 'Type a message...'}
+                                                   placeholder={
+                                                       lineCancelled
+                                                           ? 'Order cancelled.'
+                                                           : messagingClosed
+                                                           ? 'Messaging closed. Use dispute below if there is an issue.'
+                                                           : 'Type a message...'
+                                                   }
                                                    rows={2}
                                                    className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
                                                    disabled={sendingMessage || messagingClosed}
@@ -648,7 +725,11 @@ const OrderDetails: NextPage = () => {
 
                                    {/* Same box: Confirm delivery, OR Submit Dispute form, OR Dispute thread */}
                                    <div
-                                       className={`p-6 rounded-lg shadow h-fit bg-white border border-gray-100 ${!hasDispute && !isFormActive ? 'opacity-50 pointer-events-none' : ''}`}>
+                                       className={`p-6 rounded-lg shadow h-fit bg-white border border-gray-100 ${
+                                           lineCancelled || (!hasDispute && !isFormActive)
+                                               ? 'opacity-50 pointer-events-none'
+                                               : ''
+                                       }`}>
                                        {isDeliveredAwaitingConfirmation && (
                                                <div className="px-4 py-3 rounded-lg border border-amber-200 bg-amber-50/50 flex flex-wrap items-center justify-between gap-2 mb-4">
                                                    <p className="text-sm text-gray-700">

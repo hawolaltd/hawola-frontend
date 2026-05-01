@@ -176,6 +176,12 @@ interface NewOrderDetailsResponse {
     isDelivered: boolean;
     user_confirm_order: boolean;
     user_open_dispute: boolean;
+    /** Backend-computed lifecycle status (e.g. pending, cancelled). */
+    orderitem_status?: string;
+    /** True when cancelled via merchant, customer, or staff. */
+    is_cancelled?: boolean;
+    /** Whether merchant/customer may cancel (rules: unpaid/unconfirmed payment, unshipped). */
+    can_cancel?: boolean;
     dispute_id?: number | null;
     image: string;
     is_reviewed: boolean;

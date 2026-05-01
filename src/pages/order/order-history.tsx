@@ -4,6 +4,8 @@ import AuthLayout from '@/components/layout/AuthLayout';
 import {amountFormatter, featuredImageCardUrl} from '@/util';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { toast } from 'sonner';
+import productService from '@/redux/product/productService';
 import {
     CheckCircleIcon,
     ClockIcon,
@@ -29,13 +31,26 @@ const OrderHistoryPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedOrderForDispute, setSelectedOrderForDispute] = useState<OrderDetail | null>(null);
     const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+    const [cancellingNumber, setCancellingNumber] = useState<string | null>(null);
+
+    const isOrderLineCancelled = (order: any) =>
+        Boolean(order?.is_cancelled || order?.orderitem_status === 'cancelled');
 
     const filteredOrders = ordersHistory?.detail?.filter((order: any) => {
-        const matchesStatus = statusFilter === 'all' || 
-            (statusFilter === 'delivered' && order.isDelivered) ||
-            (statusFilter === 'shipped' && order.isShipped && !order.isDelivered) ||
-            (statusFilter === 'pending' && !order.isShipped && !order.isDelivered);
-        
+        const cancelled = isOrderLineCancelled(order);
+        const matchesStatus =
+            statusFilter === 'all' ||
+            (statusFilter === 'cancelled' && cancelled) ||
+            (statusFilter === 'delivered' && order.isDelivered && !cancelled) ||
+            (statusFilter === 'shipped' &&
+                order.isShipped &&
+                !order.isDelivered &&
+                !cancelled) ||
+            (statusFilter === 'pending' &&
+                !cancelled &&
+                !order.isShipped &&
+                !order.isDelivered);
+
         const matchesSearch = !searchQuery || 
             order.orderitem_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             order.product?.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -44,6 +59,15 @@ const OrderHistoryPage = () => {
     });
 
     const getStatusBadge = (order: any) => {
+        if (isOrderLineCancelled(order)) {
+            return {
+                icon: <XCircleIcon className="w-5 h-5" />,
+                text: 'Cancelled',
+                bgColor: 'bg-slate-100',
+                textColor: 'text-slate-700',
+                borderColor: 'border-slate-200'
+            };
+        }
         if (order.isDelivered) {
             return {
                 icon: <CheckCircleIcon className="w-5 h-5" />,
@@ -155,9 +179,10 @@ const OrderHistoryPage = () => {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition"
                                 >
                                     <option value="all">All Orders</option>
-                                    <option value="pending">Pending</option>
+                                    <option value="pending">Pending / processing</option>
                                     <option value="shipped">Shipped</option>
                                     <option value="delivered">Delivered</option>
+                                    <option value="cancelled">Cancelled</option>
                                 </select>
                             </div>
 
@@ -178,28 +203,36 @@ const OrderHistoryPage = () => {
                         </div>
 
                         {/* Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-6">
                             <div className="text-center p-3 bg-gray-50 rounded-lg">
                                 <p className="text-2xl font-bold text-primary">{ordersHistory?.detail?.length || 0}</p>
                                 <p className="text-xs text-gray-600">Total Orders</p>
                             </div>
                             <div className="text-center p-3 bg-green-50 rounded-lg">
                                 <p className="text-2xl font-bold text-green-600">
-                                    {ordersHistory?.detail?.filter((o: any) => o.isDelivered).length || 0}
+                                    {ordersHistory?.detail?.filter((o: any) => !isOrderLineCancelled(o) && o.isDelivered).length || 0}
                                 </p>
                                 <p className="text-xs text-gray-600">Delivered</p>
                             </div>
                             <div className="text-center p-3 bg-blue-50 rounded-lg">
                                 <p className="text-2xl font-bold text-blue-600">
-                                    {ordersHistory?.detail?.filter((o: any) => o.isShipped && !o.isDelivered).length || 0}
+                                    {ordersHistory?.detail?.filter((o: any) =>
+                                        !isOrderLineCancelled(o) && o.isShipped && !o.isDelivered).length || 0}
                                 </p>
                                 <p className="text-xs text-gray-600">In Transit</p>
                             </div>
                             <div className="text-center p-3 bg-yellow-50 rounded-lg">
                                 <p className="text-2xl font-bold text-yellow-600">
-                                    {ordersHistory?.detail?.filter((o: any) => !o.isShipped && !o.isDelivered).length || 0}
+                                    {ordersHistory?.detail?.filter((o: any) =>
+                                        !isOrderLineCancelled(o) && !o.isShipped && !o.isDelivered).length || 0}
                                 </p>
-                                <p className="text-xs text-gray-600">Processing</p>
+                                <p className="text-xs text-gray-600">Active</p>
+                            </div>
+                            <div className="text-center p-3 bg-slate-100 rounded-lg">
+                                <p className="text-2xl font-bold text-slate-700">
+                                    {ordersHistory?.detail?.filter((o: any) => isOrderLineCancelled(o)).length || 0}
+                                </p>
+                                <p className="text-xs text-gray-600">Cancelled</p>
                             </div>
                         </div>
                     </div>
@@ -232,7 +265,8 @@ const OrderHistoryPage = () => {
                         ) : (
                             filteredOrders?.map((order: any) => {
                                 const statusBadge = getStatusBadge(order);
-                                const isDisputed = Boolean(order.user_open_dispute || order.dispute_id != null);
+                                const cancelled = isOrderLineCancelled(order);
+                                const isDisputed = Boolean(!cancelled && (order.user_open_dispute || order.dispute_id != null));
                                 return (
                                     <div
                                         key={order.id}
@@ -271,6 +305,11 @@ const OrderHistoryPage = () => {
                                                                 <span className="font-mono text-sm font-semibold text-primary">
                                                                     {order.orderitem_number}
                                                                 </span>
+                                                                {cancelled && (
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                                                        Cancelled
+                                                                    </span>
+                                                                )}
                                                                 {isDisputed && (
                                                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                                                                         Disputed
@@ -338,7 +377,46 @@ const OrderHistoryPage = () => {
                                                         View Details
                                                     </Link>
                                                     
-                                                    {!order.isDelivered && (
+                                                    {order.can_cancel && !cancelled && (
+                                                        <button
+                                                            type="button"
+                                                            disabled={!!cancellingNumber}
+                                                            onClick={async (e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                const num = order.orderitem_number as string;
+                                                                // eslint-disable-next-line no-alert
+                                                                if (
+                                                                    !confirm(
+                                                                        'Cancel this order? You can only cancel before payment is confirmed and before the item ships.'
+                                                                    )
+                                                                ) {
+                                                                    return;
+                                                                }
+                                                                setCancellingNumber(num);
+                                                                try {
+                                                                    await productService.cancelCustomerOrderItem(num);
+                                                                    toast.success('Order cancelled.');
+                                                                    dispatch(getOrderHistory());
+                                                                } catch (err: any) {
+                                                                    const d =
+                                                                        err?.response?.data?.detail ??
+                                                                        err?.response?.data?.message;
+                                                                    toast.error(
+                                                                        typeof d === 'string'
+                                                                            ? d
+                                                                            : 'Could not cancel this order.'
+                                                                    );
+                                                                } finally {
+                                                                    setCancellingNumber(null);
+                                                                }
+                                                            }}
+                                                            className="flex-1 md:flex-none px-4 py-2 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-all font-medium text-sm border border-slate-200 flex items-center justify-center gap-2 disabled:opacity-60"
+                                                        >
+                                                            {cancellingNumber === order.orderitem_number ? 'Cancelling…' : 'Cancel order'}
+                                                        </button>
+                                                    )}
+                                                    {!order.isDelivered && !cancelled && (
                                                         <>
                                                             <button
                                                                 type="button"
