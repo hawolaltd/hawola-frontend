@@ -202,8 +202,17 @@ export interface MerchantOtherProduct {
     slug: string;
 }
 
+export interface StockStatusPayload {
+    tracks_inventory: boolean;
+    total_units: number | null;
+    is_out_of_stock: boolean;
+    is_low_stock: boolean;
+    low_stock_threshold: number;
+}
+
 export interface ProductByIdResponse {
     product: Product;
+    stock_status?: StockStatusPayload | null;
     /** Full merchant profile from product detail API (merged with `product.merchant` in UI). */
     merchant?: Merchant;
     product_images: ProductImage[];

@@ -56,6 +56,15 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const {isAuthenticated} = useAppSelector(state => state.auth)
     const siteSettings = useAppSelector((state) => state.general.siteSettings)
     const contactMerchantOnly = isContactMerchantOnlyProduct(product?.product);
+    const stockStatus = product?.stock_status;
+    const inventoryUnavailable = Boolean(
+        stockStatus?.tracks_inventory && stockStatus?.is_out_of_stock
+    );
+    const inventoryLow = Boolean(
+        stockStatus?.tracks_inventory &&
+            stockStatus?.is_low_stock &&
+            !stockStatus?.is_out_of_stock
+    );
     const [contactDisclaimerSafe, setContactDisclaimerSafe] = useState("");
     const [buyerProtectionSafe, setBuyerProtectionSafe] = useState("");
 
@@ -174,6 +183,11 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const handleAddToCart = async (product: ProductByIdResponse) => {
         try {
+            const ss = product?.stock_status;
+            if (ss?.tracks_inventory && ss?.is_out_of_stock) {
+                toast.error("This product is currently out of stock.");
+                return;
+            }
             // Convert selected variants to the format expected by backend
             const variants = product?.product_variant?.length > 0
                 ? Object.entries(selectedVariants).map(([variantId, variantValueId]) => ({
@@ -923,6 +937,35 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     )}
 
+                    {inventoryUnavailable && !contactMerchantOnly && stockStatus?.tracks_inventory ? (
+                        <div className="mb-4 overflow-hidden rounded-2xl border border-rose-200/90 bg-gradient-to-r from-rose-50 via-white to-amber-50/80 p-4 shadow-sm ring-1 ring-rose-100/70">
+                            <div className="flex flex-wrap items-start gap-3">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-600 to-rose-800 text-lg font-black text-white shadow-md shadow-rose-600/25">
+                                    !
+                                </span>
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    <p className="text-base font-semibold text-rose-950">Currently out of stock</p>
+                                    <p className="text-sm leading-relaxed text-rose-900/85">
+                                        This listing is not available for purchase right now.
+                                        We&apos;ll notify your seller by email so they know shoppers are viewing this
+                                        product—it helps them prioritize restocking.
+                                    </p>
+                                    <p className="text-xs font-medium uppercase tracking-wide text-rose-800/75">
+                                        You can bookmark the page or contact the merchant from their store profile.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {!inventoryUnavailable && inventoryLow && !contactMerchantOnly && stockStatus?.tracks_inventory ? (
+                        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
+                            <span className="font-semibold">Limited quantity left</span>
+                            {" · "}
+                            Only a few units remain at this price—order soon.
+                        </div>
+                    ) : null}
+
                     {(product?.product?.accept_payment_on_delivery ||
                         !(siteSettings != null && siteSettings.accept_escrow_payment === false)) && (
                     <div className={`self-start w-fit inline-flex items-center gap-3 ${
@@ -1261,11 +1304,31 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                         )}
                                     </div>
                                 ) : (
-                                    <div onClick={()=>{
-                                        handleAddToCart(product as ProductByIdResponse)
-                                    }} className="flex flex-col sm:flex-row lg:items-center gap-4">
-                                        <button className="px-6 py-2.5 border border-primary rounded-xl text-primary hover:bg-primary/5 transition-colors font-semibold">Add to cart</button>
-                                        <button className="px-6 py-2.5 bg-primary rounded-xl text-white hover:bg-primary/90 transition-colors font-semibold">Buy now</button>
+                                    <div className={`flex flex-col sm:flex-row lg:items-center gap-4 ${inventoryUnavailable ? "opacity-50" : ""}`}>
+                                        <button
+                                            type="button"
+                                            disabled={inventoryUnavailable}
+                                            onClick={() => handleAddToCart(product as ProductByIdResponse)}
+                                            className={`px-6 py-2.5 border border-primary rounded-xl font-semibold transition-colors ${
+                                                inventoryUnavailable
+                                                    ? "cursor-not-allowed text-primary/70 border-primary/40"
+                                                    : "text-primary hover:bg-primary/5"
+                                            }`}
+                                        >
+                                            Add to cart
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={inventoryUnavailable}
+                                            onClick={() => handleAddToCart(product as ProductByIdResponse)}
+                                            className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${
+                                                inventoryUnavailable
+                                                    ? "cursor-not-allowed bg-primary/35 text-white"
+                                                    : "bg-primary text-white hover:bg-primary/90"
+                                            }`}
+                                        >
+                                            Buy now
+                                        </button>
                                     </div>
                                 )}
 
