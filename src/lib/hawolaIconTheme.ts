@@ -8,7 +8,11 @@ export const HI_LG = "h-6 w-6 shrink-0";
 
 /** Header: search, account, wishlist, cart, compare, menu */
 export const HI_FRAME_HEADER =
-  "inline-flex items-center justify-center rounded-lg border border-slate-200/90 bg-slate-50 p-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-headerBg";
+    "inline-flex items-center justify-center rounded-lg border border-slate-200/90 bg-slate-50 p-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-headerBg";
+
+/** Same geometry as HI_FRAME_HEADER; green fill when logged in (account chip). `lg:*` boosts desktop visibility. */
+export const HI_FRAME_HEADER_ACCOUNT_ACTIVE =
+    "inline-flex items-center justify-center rounded-lg border border-emerald-400/80 bg-emerald-100 p-1.5 text-emerald-900 shadow-sm shadow-emerald-900/10 transition hover:border-emerald-500 hover:bg-emerald-200 hover:text-emerald-950 lg:p-2 lg:ring-2 lg:ring-emerald-400/60 lg:border-emerald-500 lg:shadow-md";
 
 /** Header nav chips — Cars / Real Estate */
 export const HI_CHIP_SLATE =

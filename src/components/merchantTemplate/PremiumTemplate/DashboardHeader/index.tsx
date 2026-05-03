@@ -26,29 +26,35 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
   };
 
   return (
-    <div className="bg-white shadow-lg border-b border-gray-200 relative overflow-hidden">
+    <div className="relative overflow-hidden border-b border-gray-200 bg-white shadow-lg ring-1 ring-gray-200/80">
+      <div
+        className="merchant-premium-accent-topbar absolute left-0 right-0 top-0 z-30"
+        aria-hidden
+      />
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 merchant-gradient-light rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
-      <div className="absolute bottom-0 left-0 w-48 h-48 merchant-light-bg rounded-full blur-3xl translate-y-24 -translate-x-24"></div>
+      <div className="absolute -translate-y-32 top-0 right-0 h-64 w-64 translate-x-32 rounded-full bg-slate-100/75 blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 h-48 w-48 translate-y-24 -translate-x-24 rounded-full bg-gray-100/80 blur-3xl"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-8">
           {/* Store Info */}
           <div className="flex items-center space-x-6">
             {/* Logo */}
             <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden shadow-md">
-                {merchant?.logo ? (
-                  <Image
-                    src={merchant.logo}
-                    alt={merchant.store_name}
-                    width={64}
-                    height={64}
-                    className="object-contain"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-400 rounded-full"></div>
-                )}
+              <div className="merchant-premium-logo-shell">
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[0.875rem] bg-gray-50">
+                  {merchant?.logo ? (
+                    <Image
+                      src={merchant.logo}
+                      alt={merchant.store_name}
+                      width={64}
+                      height={64}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-gray-400"></div>
+                  )}
+                </div>
               </div>
               {merchant?.is_active && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -67,7 +73,7 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-4">
-            <button className="inline-flex items-center px-4 py-2 merchant-outline-button rounded-lg text-sm font-medium focus:outline-none transition-colors duration-200">
+            <button className="merchant-btn-focus-visible merchant-outline-button inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none">
               <svg
                 className="w-4 h-4 mr-2 merchant-icon-enhanced"
                 fill="none"
@@ -83,7 +89,7 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
               </svg>
               Follow
             </button>
-            <button className="inline-flex items-center px-4 py-2 merchant-button rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+            <button className="merchant-btn-focus-visible merchant-button inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 focus:outline-none">
               <svg
                 className="w-4 h-4 mr-2 merchant-icon-enhanced"
                 fill="none"

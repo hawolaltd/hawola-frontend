@@ -3,6 +3,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import { useRouter } from "next/router";
 import AuthLayout from "../layout/AuthLayout";
 import Head from "next/head";
+import Link from "next/link";
 import { Product } from "@/types/product";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
@@ -159,8 +160,6 @@ const StandardTemplate = () => {
   const textColor = getTextColor(primaryColor);
   const borderColor = getBorderColor(primaryColor);
   const darkerPrimary = getDarkerShade(primaryColor, 15);
-  const lighterBg = hexToRgba(primaryColor, 0.1);
-  const mediumBg = hexToRgba(primaryColor, 0.2);
 
   // For very bright colors like yellow, use a darker version for better contrast
   const r = parseInt(primaryColor.slice(1, 3), 16);
@@ -199,65 +198,52 @@ const StandardTemplate = () => {
     }).format(parseFloat(price));
   };
 
-  const calculateDiscount = (price: string, discountPrice: string) => {
-    const original = parseFloat(price);
-    const discount = parseFloat(discountPrice);
-    return Math.round(((original - discount) / original) * 100);
-  };
+  const ProductCard = ({ product }: { product: Product }) => {
+    const slug = product.slug?.trim();
+    const href = slug ? `/product/${slug}` : "#";
 
-  const ProductCard = ({ product }: { product: Product }) => (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group overflow-hidden">
-      <div className="relative overflow-hidden">
-        <AddToCompareButton product={product} className="absolute top-3 right-3 z-20" />
-        <img
-          src={
-            featuredImageCardUrl(product.featured_image?.[0])
-          }
-          alt={product.name}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+    return (
+      <div className="group relative flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:shadow-lg">
+        {/* Invisible hit target: entire card opens product detail (above content, below compare). */}
+        <Link
+          href={href}
+          className="absolute inset-0 z-10 rounded-xl focus:outline-none focus-visible:z-[25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          style={{ outlineColor: primaryColor }}
+          aria-label={`View ${product.name}`}
         />
-        {product.discount_price && product.discount_price !== product.price && (
-          <div
-            className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
-            style={{
-              backgroundColor: primaryColor,
-              color: textColor,
-              border: `1px solid ${borderColor}`,
-            }}
-          >
-            -{calculateDiscount(product.price, product.discount_price)}%
-          </div>
-        )}
-      </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-800 line-clamp-2 mb-2 text-sm">
-          {product.name}
-        </h3>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-gray-900">
+        <div className="relative z-[1] shrink-0 overflow-hidden bg-gray-100">
+          <img
+            src={featuredImageCardUrl(product.featured_image?.[0])}
+            alt={product.name}
+            className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col p-4">
+          <h3 className="mb-2 line-clamp-2 text-sm font-semibold text-gray-800">
+            {product.name}
+          </h3>
+          <div className="mt-auto flex flex-col gap-0.5 pt-2">
+            <span className="text-lg font-bold tabular-nums text-gray-900">
               {formatPrice(product.discount_price || product.price)}
             </span>
             {product.discount_price &&
               product.discount_price !== product.price && (
-                <span className="text-sm text-gray-500 line-through">
+                <span className="text-sm tabular-nums text-gray-500 line-through">
                   {formatPrice(product.price)}
                 </span>
               )}
           </div>
-          {/* Ratings hidden on product cards
-          <div className="flex items-center space-x-1">
-            <span className="text-yellow-400">★</span>
-            <span className="text-sm text-gray-600">{product.rating}</span>
-            <span className="text-sm text-gray-400">
-              ({product.numReviews})
-            </span>
-          </div>
-          */}
+        </div>
+        <div className="absolute left-3 top-3 z-20 sm:left-3.5 sm:top-3.5">
+          <AddToCompareButton
+            variant="icon"
+            product={product}
+            className="[&_button]:h-10 [&_button]:w-10 [&_button]:rounded-xl [&_button]:border-white/85 [&_button]:bg-white/95 [&_button]:shadow-md [&_button]:backdrop-blur-sm"
+          />
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const CategoryCard: React.FC<{ category: MerchantCategory }> = ({
     category,
@@ -318,12 +304,6 @@ const StandardTemplate = () => {
             .merchant-primary-hover:hover {
               background-color: ${darkerPrimary};
               color: ${getTextColor(darkerPrimary)};
-            }
-            .merchant-light-bg {
-              background-color: ${lighterBg};
-            }
-            .merchant-medium-bg {
-              background-color: ${mediumBg};
             }
             .merchant-gradient {
               background: linear-gradient(135deg, ${adjustedPrimaryColor} 0%, ${hexToRgba(
@@ -415,13 +395,8 @@ const StandardTemplate = () => {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
             </>
           ) : (
-            <div
-              className="w-full h-full flex items-center justify-center relative"
-              style={{ 
-                background: `linear-gradient(135deg, ${primaryColor} 0%, ${getDarkerShade(primaryColor, 20)} 100%)`
-              }}
-            >
-              <div className="text-center z-10 px-4" style={{ color: textColor }}>
+            <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600">
+              <div className="z-10 px-4 text-center text-white drop-shadow-md">
                 <h1 className="text-5xl md:text-6xl font-extrabold mb-4 drop-shadow-2xl">
                   {merchant_details?.store_name}
                 </h1>

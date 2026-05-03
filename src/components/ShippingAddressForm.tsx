@@ -5,6 +5,7 @@ import {getStateLocations, getAllStates} from "@/redux/general/generalSlice";
 import {addAddress, getAddress} from "@/redux/product/productSlice";
 import {toast} from "sonner";
 import {AddressData} from "@/types/product";
+import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 
 type ShippingFormValues = {
     first_name: string;
@@ -33,6 +34,9 @@ const ShippingAddressForm = ({
 }: ShippingAddressFormProps) => {
     const dispatch = useAppDispatch();
     const { states, stateLocations, isLoading } = useAppSelector(state => state.general);
+    const addressFormSubmitting = useAppSelector(
+        (state) => state.products.addressFormSubmitting
+    );
 
     const { control, handleSubmit, watch, setValue } = useForm<ShippingFormValues>({
         defaultValues: {
@@ -83,7 +87,11 @@ const ShippingAddressForm = ({
             {!embedded ? (
                 <h2 className="text-lg font-semibold mb-4 text-slate-800">Shipping address</h2>
             ) : null}
-            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <form
+                className="space-y-4"
+                onSubmit={handleSubmit(onSubmit)}
+                aria-busy={addressFormSubmitting}
+            >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Controller
                         name="first_name"
@@ -231,10 +239,19 @@ const ShippingAddressForm = ({
 
                 <button
                     type="submit"
-                    className="bg-primary text-white rounded-md px-8 py-2 hover:bg-primary-dark transition-colors"
-                    disabled={isLoading}
+                    className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md bg-primary px-8 py-2 text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={isLoading || addressFormSubmitting}
                 >
-                    {isLoading ? "Processing..." : editingAddress ? "Edit Address" : "Submit"}
+                    {addressFormSubmitting ? (
+                        <InlineButtonSpinner className="h-4 w-4 text-white" />
+                    ) : null}
+                    {addressFormSubmitting
+                        ? "Saving…"
+                        : isLoading
+                          ? "Loading…"
+                          : editingAddress
+                            ? "Save changes"
+                            : "Submit"}
                 </button>
             </form>
         </div>

@@ -2,11 +2,10 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
-import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import MerchantStoreProductCard from "@/components/merchant/MerchantStoreProductCard";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import type { Product } from "@/types/product";
-import { capitalize, formatCurrency, featuredImageCardUrl } from "@/util";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
 
 export default function NormalMerchantPage() {
@@ -126,8 +125,6 @@ export default function NormalMerchantPage() {
 
   const primaryColor = merchantData?.merchant_details?.primary_color || "#88AA17";
   const isLight = isLightColor(primaryColor);
-  const lighterBg = hexToRgba(primaryColor, 0.1);
-  const mediumBg = hexToRgba(primaryColor, 0.2);
   const textColor = getOptimalTextColor(primaryColor);
   const hoverTextColor = isLight ? "#374151" : "#f3f4f6";
 
@@ -161,6 +158,17 @@ export default function NormalMerchantPage() {
 
   const headingColor = getHeadingColor(primaryColor);
 
+  const banners = merchantData?.banners;
+  const bannerImageUrl =
+    Array.isArray(banners) &&
+    banners.length > 0 &&
+    typeof banners[0]?.image?.full_size === "string" &&
+    banners[0].image.full_size.trim() !== ""
+      ? banners[0].image.full_size.trim()
+      : null;
+
+  const bannerPatternSvg = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
+
   return (
     <AuthLayout>
       <div className="min-h-screen bg-gray-50">
@@ -190,12 +198,6 @@ export default function NormalMerchantPage() {
               .merchant-primary-hover:hover {
                 background-color: ${hexToRgba(adjustedPrimaryColor, 0.9)};
                 color: ${textColor};
-              }
-              .merchant-light-bg {
-                background-color: ${lighterBg};
-              }
-              .merchant-medium-bg {
-                background-color: ${mediumBg};
               }
               .merchant-gradient {
                 background: linear-gradient(135deg, ${adjustedPrimaryColor} 0%, ${hexToRgba(
@@ -265,19 +267,35 @@ export default function NormalMerchantPage() {
           </style>
         </Head>
 
-        {/* Banner Section */}
-        <div className="relative h-64 w-full overflow-hidden">
-          <img
-            src={merchantData?.banners?.[0]?.image?.full_size}
-            alt={merchantData?.merchant_details?.store_name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-white">
+        {/* Banner Section — image or neutral gradient when no banner asset */}
+        <div className="relative h-64 w-full overflow-hidden md:h-80">
+          {bannerImageUrl ? (
+            <img
+              src={bannerImageUrl}
+              alt={merchantData?.merchant_details?.store_name ?? "Store banner"}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <>
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600"
+              />
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.12]"
+                style={{ backgroundImage: bannerPatternSvg }}
+              />
+            </>
+          )}
+          <div
+            className={`absolute inset-0 flex items-center justify-center ${
+              bannerImageUrl ? "bg-black/30" : "bg-black/10"
+            }`}
+          >
+            <div className="mx-auto max-w-4xl px-4 text-center">
+              <h1 className="text-4xl font-bold text-white drop-shadow-md md:text-5xl">
                 {merchantData?.merchant_details?.store_name}
               </h1>
-              <div className="text-xl text-white mt-2 prose prose-invert max-w-none prose-p:mb-2 prose-p:last:mb-0">
+              <div className="mt-2 text-xl text-white prose prose-invert max-w-none drop-shadow prose-p:mb-2 prose-p:last:mb-0">
                 <MerchantRichHtml html={merchantData?.merchant_details?.store_page_subtitle} />
               </div>
             </div>
@@ -289,13 +307,13 @@ export default function NormalMerchantPage() {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Left Sidebar */}
             <div className="w-full md:w-1/3 lg:w-1/4">
-              <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 sticky top-8">
+              <div className="self-start overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl md:sticky md:top-24">
                 {/* Merchant Logo */}
                 <div className="p-6 flex justify-center bg-gradient-to-br from-gray-50 to-white">
                   <div className="relative">
                     <img
                       src={merchantData?.merchant_details?.logo}
-                      alt={merchants?.merchant_details?.store_name}
+                      alt={merchantData?.merchant_details?.store_name ?? ""}
                       className="h-32 w-32 rounded-3xl object-cover border-4 border-white shadow-2xl ring-4 ring-gray-100"
                     />
                     {merchantData?.merchant_details?.is_active && (
@@ -316,7 +334,7 @@ export default function NormalMerchantPage() {
 
                   <div className="mt-6 space-y-3">
                     <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="p-2 rounded-lg merchant-light-bg">
+                      <div className="rounded-lg bg-gray-100 p-2">
                         <svg
                           className="w-5 h-5 merchant-primary-text"
                           fill="none"
@@ -343,7 +361,7 @@ export default function NormalMerchantPage() {
                       </span>
                     </div>
                     <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="p-2 rounded-lg merchant-light-bg">
+                      <div className="rounded-lg bg-gray-100 p-2">
                         <svg
                           className="w-5 h-5 merchant-primary-text"
                           fill="none"
@@ -364,7 +382,7 @@ export default function NormalMerchantPage() {
                       </span>
                     </div>
                     <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="p-2 rounded-lg merchant-light-bg">
+                      <div className="rounded-lg bg-gray-100 p-2">
                         <svg
                           className="w-5 h-5 merchant-primary-text"
                           fill="none"
@@ -397,7 +415,7 @@ export default function NormalMerchantPage() {
                           href={merchantData?.merchant_details?.facebook}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-full merchant-light-bg transition"
+                          className="rounded-full bg-gray-100 p-2 transition"
                         >
                           <svg
                             className="w-5 h-5 merchant-primary-text"
@@ -414,7 +432,7 @@ export default function NormalMerchantPage() {
                           href={merchantData?.merchant_details?.twitter}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-full merchant-light-bg transition"
+                          className="rounded-full bg-gray-100 p-2 transition"
                         >
                           <svg
                             className="w-5 h-5 merchant-primary-text"
@@ -428,10 +446,10 @@ export default function NormalMerchantPage() {
                       )}
                       {merchantData?.merchant_details?.instagram && (
                         <a
-                          href={merchants?.merchant_details?.instagram ?? ""}
+                          href={merchantData?.merchant_details?.instagram ?? ""}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-full merchant-light-bg transition"
+                          className="rounded-full bg-gray-100 p-2 transition"
                         >
                           <svg
                             className="w-5 h-5 merchant-primary-text"
@@ -448,7 +466,7 @@ export default function NormalMerchantPage() {
                           href={merchantData?.merchant_details?.tiktok}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-full merchant-light-bg transition"
+                          className="rounded-full bg-gray-100 p-2 transition"
                         >
                           <svg
                             className="w-5 h-5 merchant-primary-text"
@@ -478,212 +496,181 @@ export default function NormalMerchantPage() {
 
             {/* Main Content */}
             <div className="w-full md:w-2/3 lg:w-3/4">
-              {/* Tabs */}
-              <div className="border-b border-gray-200 bg-white rounded-t-3xl shadow-sm">
-                <nav className="flex -mb-px overflow-x-auto scrollbar-hide">
+              <div className="mt-1 overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-slate-950/[0.02] md:mt-0">
+                <nav
+                  role="tablist"
+                  aria-label="Store sections"
+                  className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-3 py-3.5 sm:gap-2.5 sm:px-5 sm:py-4"
+                >
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "products"}
                     onClick={() => setActiveTab("products")}
-                    className={`mr-6 py-4 px-1 border-b-3 font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
+                    className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                       activeTab === "products"
-                        ? "merchant-heading-text merchant-primary-border border-b-3"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        ? "merchant-button text-white shadow-md"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200/95 active:bg-slate-200"
                     }`}
                   >
                     Products
                   </button>
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "policy"}
                     onClick={() => setActiveTab("policy")}
-                    className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                       activeTab === "policy"
-                        ? "merchant-heading-text merchant-primary-border"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        ? "merchant-button text-white shadow-md"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200/95 active:bg-slate-200"
                     }`}
                   >
                     Refund Policy
                   </button>
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "reviews"}
                     onClick={() => setActiveTab("reviews")}
-                    className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                       activeTab === "reviews"
-                        ? "merchant-heading-text merchant-primary-border"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        ? "merchant-button text-white shadow-md"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200/95 active:bg-slate-200"
                     }`}
                   >
                     Reviews
                   </button>
                   {merchantData?.merchant_details?.is_allowed_to_stream && (
                     <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === "live"}
                       onClick={() => setActiveTab("live")}
-                      className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
+                      className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                         activeTab === "live"
-                          ? "merchant-heading-text merchant-primary-border"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                          ? "merchant-button text-white shadow-md"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200/95 active:bg-slate-200"
                       }`}
                     >
                       Live Stream
                     </button>
                   )}
-
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "shipping"}
                     onClick={() => setActiveTab("shipping")}
-                    className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
                       activeTab === "shipping"
-                        ? "merchant-heading-text merchant-primary-border"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        ? "merchant-button text-white shadow-md"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200/95 active:bg-slate-200"
                     }`}
                   >
                     Shipping Info
                   </button>
                 </nav>
-              </div>
 
-              {/* Tab Content */}
-              <div className="mt-6 h-[900px] overflow-x-hidden">
-                {activeTab === "products" && (
-                  <div>
-                    <div className="text-2xl font-bold merchant-heading-text mb-6 prose prose-neutral max-w-none">
-                      <MerchantRichHtml html={merchantData?.merchant_details?.store_page_title} />
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                      {merchantData?.recent_products?.map((item, index) => (
-                        <div
-                          key={index}
-                          className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl overflow-hidden border border-gray-100 transition-all duration-300 transform hover:-translate-y-2"
-                        >
-                          <div className="relative h-56 bg-gray-100 overflow-hidden">
-                            <AddToCompareButton
+                <div
+                  role="tabpanel"
+                  className="min-h-0 border-t border-slate-100 px-4 py-6 sm:px-6 sm:py-8"
+                >
+                  {activeTab === "products" && (
+                    <div>
+                      <div className="merchant-heading-text mb-5 max-w-none text-xl font-bold leading-tight prose prose-neutral prose-p:inline prose-p:m-0 sm:mb-6 sm:text-2xl">
+                        <MerchantRichHtml html={merchantData?.merchant_details?.store_page_title} />
+                      </div>
+                      {merchantData?.recent_products &&
+                      merchantData.recent_products.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+                          {merchantData.recent_products.map((item) => (
+                            <MerchantStoreProductCard
+                              key={item.id}
                               product={item as Product}
-                              className="absolute top-3 right-3 z-20"
                             />
-                            <img
-                              src={
-                                featuredImageCardUrl(item?.featured_image?.[0])
-                              }
-                              alt={item?.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            />
-                            {item?.discount_price && item?.discount_price !== item?.price && (
-                              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-sm merchant-primary">
-                                {Math.round(((parseFloat(item.price) - parseFloat(item.discount_price)) / parseFloat(item.price)) * 100)}% OFF
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          </div>
-                          <div className="p-5">
-                            <h3 className="font-semibold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-gray-700 transition-colors">
-                              {capitalize(item?.name)}
-                            </h3>
-                            <div className="flex justify-between items-center mb-4">
-                              <div>
-                                <span className="text-2xl font-bold text-gray-900">
-                                  {formatCurrency(
-                                    item?.discount_price
-                                      ? item?.discount_price
-                                      : item?.price
-                                  )}
-                                </span>
-                                {item?.discount_price && item?.discount_price !== item?.price && (
-                                  <span className="text-sm text-gray-400 line-through ml-2">
-                                    {formatCurrency(item?.price)}
-                                  </span>
-                                )}
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/90 px-4 py-12 text-center text-sm text-slate-600 sm:py-14">
+                          No products listed yet. Check back soon.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "policy" && (
+                    <div>
+                      <h2 className="mb-4 text-xl font-bold merchant-heading-text sm:text-2xl">
+                        Refund Policy
+                      </h2>
+                      <div
+                        className="prose prose-neutral max-w-none text-slate-700"
+                        dangerouslySetInnerHTML={{
+                          __html: (
+                            merchantData?.merchant_details?.refund_policy ?? ""
+                          )
+                            .replace(/\r\n/g, "<br/>")
+                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === "reviews" && (
+                    <div>
+                      <h2 className="mb-6 text-xl font-bold merchant-heading-text sm:text-2xl">
+                        Customer Reviews
+                      </h2>
+                      <div className="space-y-0 divide-y divide-slate-100">
+                        {[...Array(5)].map((_, index) => (
+                          <div key={index} className="py-5 first:pt-0">
+                            <div className="mb-2 flex items-center gap-3">
+                              <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-slate-200 to-slate-300" />
+                              <div className="min-w-0">
+                                <h4 className="font-medium text-slate-900">
+                                  John Doe
+                                </h4>
+                                <div className="flex items-center gap-0.5">
+                                  {[...Array(5)].map((__, i) => (
+                                    <svg
+                                      key={i}
+                                      className={`h-4 w-4 ${
+                                        i < 4
+                                          ? "text-amber-400"
+                                          : "text-slate-200"
+                                      }`}
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      aria-hidden
+                                    >
+                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                  ))}
+                                </div>
                               </div>
                             </div>
-                            <button className="w-full px-4 py-3 rounded-xl merchant-button text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
-                              Add to Cart
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "policy" && (
-                  <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold merchant-heading-text mb-4">
-                      Refund Policy
-                    </h2>
-                    <div
-                      className="prose max-w-none"
-                      dangerouslySetInnerHTML={{
-                        __html: merchantData?.merchant_details?.refund_policy
-                          .replace(/\r\n/g, "<br/>")
-                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
-                      }}
-                    />
-                  </div>
-                )}
-
-                {activeTab === "reviews" && (
-                  <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold merchant-heading-text mb-4">
-                      Customer Reviews
-                    </h2>
-                    <div className="space-y-4">
-                      {[...Array(5)].map((item, index) => (
-                        <div key={index} className="border-b pb-4">
-                          <div className="flex items-center mb-2">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 mr-3"></div>
-                            <div>
-                              <h4 className="font-medium">John Doe</h4>
-                              <div className="flex items-center">
-                                {[...Array(5)].map((_, i) => (
-                                  <svg
-                                    key={i}
-                                    className={`w-4 h-4 ${
-                                      i < 4
-                                        ? "text-yellow-400"
-                                        : "text-gray-300"
-                                    }`}
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                  </svg>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-gray-700">
-                            Great products and excellent customer service. Will
-                            definitely buy again!
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "live" &&
-                  merchants?.merchant_details?.is_allowed_to_stream && (
-                    <div className="mt-8 bg-black rounded-lg overflow-hidden">
-                      <div className="relative pt-[56.25%]">
-                        <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                          <div className="text-center">
-                            <svg
-                              className="w-12 h-12 mx-auto text-red-500"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            <h3 className="text-xl font-bold text-white mt-2">
-                              Live Shopping Event
-                            </h3>
-                            <p className="text-gray-300">
-                              Next stream: Today at 3PM
+                            <p className="text-[0.9375rem] leading-relaxed text-slate-600">
+                              Great products and excellent customer service. Will
+                              definitely buy again!
                             </p>
-                            <button className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center mx-auto">
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "live" &&
+                    merchantData?.merchant_details?.is_allowed_to_stream && (
+                      <div className="overflow-hidden rounded-2xl bg-slate-950 ring-1 ring-slate-900/30">
+                        <div className="relative pt-[56.25%]">
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                            <div className="px-4 text-center">
                               <svg
-                                className="w-4 h-4 mr-2"
+                                className="mx-auto h-12 w-12 text-red-500"
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
+                                aria-hidden
                               >
                                 <path
                                   fillRule="evenodd"
@@ -691,58 +678,81 @@ export default function NormalMerchantPage() {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Set Reminder
-                            </button>
+                              <h3 className="mt-3 text-xl font-bold text-white">
+                                Live Shopping Event
+                              </h3>
+                              <p className="mt-1 text-sm text-slate-300">
+                                Next stream: Today at 3PM
+                              </p>
+                              <button
+                                type="button"
+                                className="mx-auto mt-5 flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-red-700"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                  aria-hidden
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Set Reminder
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    )}
+
+                  {activeTab === "shipping" && (
+                    <div className="rounded-2xl border border-slate-200/90 bg-slate-50/80 p-4 sm:p-5">
+                      <h4 className="mb-3 text-base font-semibold merchant-primary-text">
+                        Shipping Info
+                      </h4>
+                      <div className="flex items-center">
+                        <svg
+                          className="mr-2 h-5 w-5 merchant-primary-text"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>
+                          Usually ships within{" "}
+                          {
+                            merchantData?.merchant_details
+                              ?.shipping_number_of_days
+                          }{" "}
+                          business days
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <svg
+                          className="mr-2 h-5 w-5 merchant-primary-text"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                        <span>Contact for international shipping</span>
+                      </div>
                     </div>
                   )}
-
-                {activeTab === "shipping" && (
-                  <div className="bg-gray-50 p-4 rounded-lg mt-4 border border-gray-200">
-                    <h4 className="font-medium merchant-primary-text mb-2">
-                      Shipping Info
-                    </h4>
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 merchant-primary-text mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>
-                        Usually ships within{" "}
-                        {
-                          merchantData?.merchant_details
-                            ?.shipping_number_of_days
-                        }{" "}
-                        business days
-                      </span>
-                    </div>
-                    <div className="flex items-center mt-2">
-                      <svg
-                        className="w-5 h-5 merchant-primary-text mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                      <span>Contact for international shipping</span>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

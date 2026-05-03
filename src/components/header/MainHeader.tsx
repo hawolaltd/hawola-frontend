@@ -15,6 +15,7 @@ import {
   HI_CHIP_EMERALD,
   HI_CHIP_SLATE,
   HI_FRAME_HEADER,
+  HI_FRAME_HEADER_ACCOUNT_ACTIVE,
   HI_MD,
 } from "@/lib/hawolaIconTheme";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
@@ -26,6 +27,11 @@ import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import productService from "@/redux/product/productService";
 // import Navigation from "./Navigation";
+
+/** Admin/internal subcats (e.g. "Add to: vehicles") — not for the shopper strip. */
+function isAddToRoutingSubcategoryName(name: unknown): boolean {
+  return /^\s*add\s+to\s*:/i.test(String(name ?? ""));
+}
 
 const Header = ({ isScrolled }: { isScrolled?: any }) => {
   type HeaderSubcategory = {
@@ -211,7 +217,20 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
         const res = await productService.getSubcategoriesWithProducts({
           hint_subsec_ids: hintSubsecIds,
         });
-        const list = Array.isArray(res?.subcategories) ? res.subcategories : [];
+        const raw = Array.isArray(res?.subcategories) ? res.subcategories : [];
+        const list = raw
+          .filter(
+            (sub: HeaderSubcategory) =>
+              !isAddToRoutingSubcategoryName(sub?.name)
+          )
+          .map((sub: HeaderSubcategory) => {
+            const secs = Array.isArray(sub.second_subcategories)
+              ? sub.second_subcategories.filter(
+                  (s) => !isAddToRoutingSubcategoryName(s?.name)
+                )
+              : sub.second_subcategories;
+            return { ...sub, second_subcategories: secs };
+          });
         setHeaderSubcategories(list);
       } catch (error) {
         setHeaderSubcategories([]);
@@ -270,7 +289,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   );
 
   return (
-    <div className={"relative "}>
+    <div className="relative z-[60]">
       {/* Mobile search overlay (lg+ uses inline search bar) */}
       {searchModalOpen ? (
         <div
@@ -861,7 +880,9 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                     router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
                   }
                 }}
-                className={`flex cursor-pointer items-center justify-center ${HI_FRAME_HEADER}`}
+                className={`cursor-pointer ${
+                  isAuthenticated ? HI_FRAME_HEADER_ACCOUNT_ACTIVE : HI_FRAME_HEADER
+                }`}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -873,7 +894,10 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                 }}
                 aria-label={isAuthenticated ? "Account menu" : "Sign in"}
               >
-                <UserIcon className={`${HI_MD} text-primary`} aria-hidden />
+                <UserIcon
+                  className={`${HI_MD} ${isAuthenticated ? "text-emerald-900" : "text-primary"}`}
+                  aria-hidden
+                />
               </div>
               {userInfo && <UserInfoDropdown />}
             </div>

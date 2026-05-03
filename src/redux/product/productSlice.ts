@@ -3,11 +3,11 @@ import productService from '@/redux/product/productService';
 import {
     AddressResponse,
     AddToCartType,
+    LocalCart,
     addWishListType,
     CartResponse,
     CategoriesProductResponse,
     deleteWishListType,
-    LocalCart,
     OrderDetailsResponse,
     Product,
     ProductByIdResponse,
@@ -19,6 +19,21 @@ import { RootState } from '@/store/store';
 
 /** Max items in the compare list (UI + Redux). */
 export const MAX_COMPARE_PRODUCTS = 20;
+
+function pendingProductIdFromAddCartArg(
+    arg: AddToCartType | undefined
+): number | null {
+    const raw = arg?.items?.[0]?.product;
+    return typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
+}
+
+function pendingProductIdFromLocalCartArg(
+    arg: LocalCart | undefined
+): number | null {
+    const prod = arg?.items?.[0]?.product as Product | undefined;
+    const id = prod?.id;
+    return typeof id === 'number' && Number.isFinite(id) ? id : null;
+}
 
 interface ProductsState {
     products: ProductResponse;
@@ -49,6 +64,16 @@ interface ProductsState {
     compareProducts: Product[];
     /** Incremented when an item is added to compare (header glow; reset on rehydrate). */
     compareNavFlashCount: number;
+    /** `addToCarts` / `addToCartsLocal` in flight — product id for per-row spinners. */
+    addToCartPendingProductId: number | null;
+    /** `addWishList` in flight — product id. */
+    addToWishlistPendingProductId: number | null;
+    /** `addAddress` (cart shipping form) in flight. */
+    addressFormSubmitting: boolean;
+    /** Cart list fetch lifecycle — avoids empty flash before first `getCarts` completes. */
+    cartFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+    /** Wishlist fetch lifecycle — avoids empty flash before first `getWishList` completes. */
+    wishlistFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
 
 const initialState: ProductsState = {
@@ -78,6 +103,11 @@ const initialState: ProductsState = {
     message: '',
     compareProducts: [],
     compareNavFlashCount: 0,
+    addToCartPendingProductId: null,
+    addToWishlistPendingProductId: null,
+    addressFormSubmitting: false,
+    cartFetchStatus: 'idle',
+    wishlistFetchStatus: 'idle',
 };
 
 export const getProducts = createAsyncThunk(
@@ -677,6 +707,11 @@ const productSlice = createSlice({
             state.products = {} as ProductResponse;
             state.compareProducts = [];
             state.compareNavFlashCount = 0;
+            state.addToCartPendingProductId = null;
+            state.addToWishlistPendingProductId = null;
+            state.addressFormSubmitting = false;
+            state.cartFetchStatus = 'idle';
+            state.wishlistFetchStatus = 'idle';
         },
         syncLocalCartFromStorage: (state) => {
             // Sync localCart from localStorage on app start
@@ -815,37 +850,50 @@ const productSlice = createSlice({
             })
             .addCase(getCarts.pending, (state) => {
                 state.isLoading = true;
+                state.cartFetchStatus = 'pending';
             })
             .addCase(getCarts.fulfilled, (state, action) => {
                 state.isLoading = false;
+                state.cartFetchStatus = 'succeeded';
                 state.carts = action.payload;
             })
             .addCase(getCarts.rejected, (state, action) => {
                 state.isLoading = false;
+                state.cartFetchStatus = 'failed';
                 state.categories = {} as ProductCategoriesResponse;
                 state.error = true;
                 state.message = action.payload;
             })
-            .addCase(addToCarts.pending, (state) => {
+            .addCase(addToCarts.pending, (state, action) => {
                 state.isLoading = true;
+                state.addToCartPendingProductId = pendingProductIdFromAddCartArg(
+                    action.meta.arg
+                );
             })
             .addCase(addToCarts.fulfilled, (state, action) => {
                 state.isLoading = false;
+                state.addToCartPendingProductId = null;
             })
             .addCase(addToCarts.rejected, (state, action) => {
                 state.isLoading = false;
+                state.addToCartPendingProductId = null;
                 state.error = true;
                 state.message = action.payload;
             })
-            .addCase(addToCartsLocal.pending, (state) => {
+            .addCase(addToCartsLocal.pending, (state, action) => {
                 state.isLoading = true;
+                state.addToCartPendingProductId = pendingProductIdFromLocalCartArg(
+                    action.meta.arg
+                );
             })
             .addCase(addToCartsLocal.fulfilled, (state, action) => {
                 state.isLoading = false;
+                state.addToCartPendingProductId = null;
                 state.localCart = action.payload;
             })
             .addCase(addToCartsLocal.rejected, (state, action) => {
                 state.isLoading = false;
+                state.addToCartPendingProductId = null;
                 state.error = true;
                 state.message = action.payload;
             })
@@ -885,12 +933,15 @@ const productSlice = createSlice({
             })
             .addCase(addAddress.pending, (state) => {
                 state.isLoading = true;
+                state.addressFormSubmitting = true;
             })
             .addCase(addAddress.fulfilled, (state, action) => {
                 state.isLoading = false;
+                state.addressFormSubmitting = false;
             })
             .addCase(addAddress.rejected, (state, action) => {
                 state.isLoading = false;
+                state.addressFormSubmitting = false;
                 state.error = true;
                 state.message = action.payload;
             })
@@ -983,15 +1034,18 @@ const productSlice = createSlice({
             })
             .addCase(getWishList.pending, (state) => {
                 state.isLoading = true;
+                state.wishlistFetchStatus = 'pending';
             })
             .addCase(getWishList.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.wishLists = action.payload;
+                state.wishlistFetchStatus = 'succeeded';
             })
             .addCase(getWishList.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = true;
                 state.message = action.payload;
+                state.wishlistFetchStatus = 'failed';
             })
             .addCase(getWishListById.pending, (state) => {
                 state.isLoading = true;
@@ -1005,14 +1059,19 @@ const productSlice = createSlice({
                 state.error = true;
                 state.message = action.payload;
             })
-            .addCase(addWishList.pending, (state) => {
+            .addCase(addWishList.pending, (state, action) => {
                 state.isLoading = true;
+                const id = action.meta.arg?.items;
+                state.addToWishlistPendingProductId =
+                    typeof id === 'number' && Number.isFinite(id) ? id : null;
             })
             .addCase(addWishList.fulfilled, (state, action) => {
                 state.isLoading = false;
+                state.addToWishlistPendingProductId = null;
             })
             .addCase(addWishList.rejected, (state, action) => {
                 state.isLoading = false;
+                state.addToWishlistPendingProductId = null;
                 state.error = true;
                 state.message = action.payload;
             })

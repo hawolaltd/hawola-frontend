@@ -93,7 +93,6 @@ const BasicTemplate = () => {
   const textColor = getOptimalTextColor(primaryColor);
   const hoverColor = adjustColorBrightness(primaryColor, isLight ? -15 : 15);
   const hoverTextColor = getOptimalTextColor(hoverColor);
-  const lighterBg = hexToRgba(primaryColor, 0.08);
   const headingColor = isLight ? adjustColorBrightness(primaryColor, -30) : "#FFFFFF";
 
   useEffect(() => {
@@ -146,9 +145,6 @@ const BasicTemplate = () => {
             .merchant-button:hover {
               background-color: ${hoverColor};
               color: ${hoverTextColor};
-            }
-            .merchant-light-bg {
-              background-color: ${lighterBg};
             }
           `}
         </style>
@@ -224,12 +220,7 @@ const BasicTemplate = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
             </>
           ) : (
-            <div
-              className="w-full h-full relative"
-              style={{
-                background: `linear-gradient(135deg, ${adjustColorBrightness(primaryColor, -40)} 0%, ${adjustColorBrightness(primaryColor, -50)} 50%, ${adjustColorBrightness(primaryColor, -60)} 100%)`,
-              }}
-            >
+            <div className="relative h-full w-full bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600">
               {/* Pattern overlay for visual interest */}
               <div className="absolute inset-0 opacity-10" style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
@@ -326,10 +317,7 @@ const BasicTemplate = () => {
                           href="#"
                           className="group flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-xl hover:shadow-lg hover:border-gray-300 transition-all duration-300"
                         >
-                          <div 
-                            className="w-16 h-16 mb-3 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                            style={{ backgroundColor: lighterBg }}
-                          >
+                          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100 transition-transform duration-300 group-hover:scale-110">
                             {category.icon ? (
                               <img
                                 src={category.icon}
@@ -532,10 +520,7 @@ const BasicTemplate = () => {
                       href="#"
                       className="group flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-xl hover:shadow-lg hover:border-gray-300 transition-all duration-300"
                     >
-                      <div 
-                        className="w-16 h-16 mb-3 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                        style={{ backgroundColor: lighterBg }}
-                      >
+                      <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100 transition-transform duration-300 group-hover:scale-110">
                         {category.icon ? (
                           <img
                             src={category.icon}

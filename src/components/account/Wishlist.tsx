@@ -13,9 +13,12 @@ import {
     isContactMerchantOnlyProduct
 } from "@/util";
 import DirectContactActions from "@/components/product/DirectContactActions";
+import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 
 const Wishlist: NextPage = () => {
-    const {wishLists, isLoading} = useAppSelector(state => state.products)
+    const { wishLists, isLoading, addToCartPendingProductId } = useAppSelector(
+        (state) => state.products
+    );
 
     const handleRemove = (id: string | number) => {
             };
@@ -217,11 +220,28 @@ const Wishlist: NextPage = () => {
                                         showBadge={false}
                                     />
                                 ) : (
-                                    <button disabled={isLoading} onClick={() => {
-                                        handleAddToCart(item?.product as Product)
-                                    }}
-                                            className={`${isLoading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} text-white px-4 py-2 rounded text-sm`}>
-                                        Add to Cart
+                                    <button
+                                        type="button"
+                                        disabled={
+                                            isLoading ||
+                                            addToCartPendingProductId === item?.product?.id
+                                        }
+                                        onClick={() => {
+                                            handleAddToCart(item?.product as Product);
+                                        }}
+                                        className={`inline-flex min-w-[120px] items-center justify-center gap-2 px-4 py-2 rounded text-sm text-white ${
+                                            isLoading ||
+                                            addToCartPendingProductId === item?.product?.id
+                                                ? "cursor-wait bg-slate-300"
+                                                : "bg-primary hover:bg-primary-dark"
+                                        }`}
+                                    >
+                                        {addToCartPendingProductId === item?.product?.id ? (
+                                            <InlineButtonSpinner className="h-4 w-4 text-white" />
+                                        ) : null}
+                                        {addToCartPendingProductId === item?.product?.id
+                                            ? "Adding…"
+                                            : "Add to cart"}
                                     </button>
                                 )}
                             </td>

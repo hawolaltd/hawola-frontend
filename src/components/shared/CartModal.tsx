@@ -44,13 +44,9 @@ const CartModal = () => {
 
   return (
     <div
-      className="bg-white rounded-br-md rounded-bl-md p-4 w-96 border border-detailsBorder"
-      style={{
-        position: "absolute",
-        zIndex: 20,
-        right: "0px",
-        top: "100%",
-      }}
+      className="absolute right-0 top-full z-[100] w-96 rounded-br-md rounded-bl-md border border-detailsBorder bg-white p-4 shadow-lg"
+      role="dialog"
+      aria-label="Cart preview"
     >
       <div className={"h-[250px] overflow-x-hidden"}>
         {!hasAuthenticatedCart && !hasLocalCart ? (

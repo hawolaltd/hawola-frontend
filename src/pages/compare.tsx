@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -20,13 +20,48 @@ import {
 } from "@/util";
 import { toast } from "sonner";
 import DirectContactActions from "@/components/product/DirectContactActions";
+import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
+
+/** Shown until Redux Persist restores `compareProducts` (no empty flash). */
+function CompareLoadingSkeleton() {
+  return (
+    <div
+      className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm"
+      aria-busy="true"
+      aria-label="Loading compare list"
+    >
+      <div className="animate-pulse px-4 py-10 sm:px-8">
+        <p className="mb-8 text-center text-sm font-medium text-gray-600">
+          Loading your compare list…
+        </p>
+        <div className="flex min-w-max gap-6">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="w-[220px] shrink-0 space-y-4">
+              <div className="mx-auto h-28 w-28 rounded-md bg-gray-200" />
+              <div className="h-4 w-full rounded bg-gray-200" />
+              <div className="h-3 w-3/4 rounded bg-gray-200" />
+              <div className="h-8 w-full rounded-md bg-gray-200" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ComparePage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { compareProducts } = useAppSelector((s) => s.products);
+  const { compareProducts, addToCartPendingProductId } = useAppSelector(
+    (s) => s.products
+  );
+  const persistRehydrated = useAppSelector(
+    (s) => s._persist?.rehydrated === true
+  );
   const { isAuthenticated } = useAppSelector((s) => s.auth);
-  const [addingId, setAddingId] = useState<number | null>(null);
+
+  const showCompareHydrationLoading =
+    !persistRehydrated && compareProducts.length === 0;
 
   /** Effective shelf price for comparison (same as displayed main price). */
   const priceRange = useMemo(() => {
@@ -65,7 +100,6 @@ export default function ComparePage() {
         return;
       }
 
-      setAddingId(product.id);
       try {
         if (isAuthenticated) {
           const res = await dispatch(
@@ -106,8 +140,6 @@ export default function ComparePage() {
       } catch (e) {
         console.error(e);
         toast.error("Failed to add to cart");
-      } finally {
-        setAddingId(null);
       }
     },
     [dispatch, isAuthenticated, router]
@@ -130,7 +162,7 @@ export default function ComparePage() {
               <h1 className="text-3xl font-bold text-gray-900">
                 Compare products
               </h1>
-              {compareProducts.length > 0 && (
+              {compareProducts.length > 0 && !showCompareHydrationLoading && (
                 <button
                   type="button"
                   onClick={() => {
@@ -144,7 +176,9 @@ export default function ComparePage() {
               )}
             </div>
 
-            {compareProducts.length === 0 ? (
+            {showCompareHydrationLoading ? (
+              <CompareLoadingSkeleton />
+            ) : compareProducts.length === 0 ? (
               <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow-sm">
                 <p className="mb-4 text-gray-600">
                   You have not added any products to compare yet.
@@ -334,11 +368,16 @@ export default function ComparePage() {
                           ) : (
                             <button
                               type="button"
-                              disabled={addingId === p.id}
+                              disabled={addToCartPendingProductId === p.id}
                               onClick={() => void handleAddToCart(p)}
-                              className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
                             >
-                              {addingId === p.id ? "Adding…" : "Add to cart"}
+                              {addToCartPendingProductId === p.id ? (
+                                <InlineButtonSpinner className="h-4 w-4 text-white" />
+                              ) : null}
+                              {addToCartPendingProductId === p.id
+                                ? "Adding…"
+                                : "Add to cart"}
                             </button>
                           )}
                         </td>

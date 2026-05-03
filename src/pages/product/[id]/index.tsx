@@ -21,6 +21,7 @@ import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import DirectContactActions from "@/components/product/DirectContactActions";
 import { TagIcon } from '@heroicons/react/24/outline';
 import { buildProductSeo } from "@/util/storefrontSeo";
@@ -52,7 +53,14 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const dispatch = useAppDispatch()
 
-    const {product, isLoading, reviews, merchantReviews} = useAppSelector(state => state.products)
+    const {
+        product,
+        isLoading,
+        reviews,
+        merchantReviews,
+        addToCartPendingProductId,
+        addToWishlistPendingProductId,
+    } = useAppSelector((state) => state.products);
     const {isAuthenticated} = useAppSelector(state => state.auth)
     const siteSettings = useAppSelector((state) => state.general.siteSettings)
     const contactMerchantOnly = isContactMerchantOnlyProduct(product?.product);
@@ -168,18 +176,29 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     };
 
     const handleWishList = async () => {
-        try {
-            const res = await dispatch(addWishList({
-                items: product?.product?.id
-            }));
-            if (res?.type.includes('fulfilled')) {
-                toast.success('Added to wishlist');
-                dispatch(getWishList())
-            }
-        }catch (e) {
-
+        if (!isAuthenticated) {
+            toast.info("Sign in to save items to your wishlist.");
+            void router.push("/auth/login");
+            return;
         }
-    }
+        const wid = product?.product?.id;
+        if (!wid) return;
+        try {
+            const res = await dispatch(
+                addWishList({
+                    items: wid,
+                })
+            );
+            if (res?.type.includes("fulfilled")) {
+                toast.success("Added to wishlist");
+                dispatch(getWishList());
+            } else if (res?.type.includes("rejected")) {
+                toast.error("Could not add to wishlist.");
+            }
+        } catch {
+            toast.error("Could not add to wishlist.");
+        }
+    };
 
     const handleAddToCart = async (product: ProductByIdResponse) => {
         try {
@@ -197,17 +216,23 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                 : undefined;
 
             if (isAuthenticated) {
-                const res = await dispatch(addToCarts({
-                    items: [{
-                        qty: quantity,
-                        product: product?.product?.id,
-                        ...(variants && { variant: variants })
-                    }]
-                }));
+                const res = await dispatch(
+                    addToCarts({
+                        items: [
+                            {
+                                qty: quantity,
+                                product: product?.product?.id,
+                                ...(variants && { variant: variants }),
+                            },
+                        ],
+                    })
+                );
 
-                if (res?.type.includes('fulfilled')) {
+                if (res?.type.includes("fulfilled")) {
                     dispatch(getCarts());
-                    toast.success('Added to cart');
+                    toast.success("Added to cart");
+                } else if (res?.type.includes("rejected")) {
+                    toast.error("Could not add to cart.");
                 }
             } else {
                 // Get current cart from localStorage or initialize empty array
@@ -876,12 +901,34 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                         <div className={'flex items-center gap-4 lg:justify-end flex-wrap'}>
 
-                            <div onClick={handleWishList} className={'flex items-center gap-2'}>
-                                <span className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
-                                     <img src="/assets/love2.svg" alt="Wishlist" className="w-4 h-4"/>
+                            <button
+                                type="button"
+                                onClick={() => void handleWishList()}
+                                disabled={
+                                    addToWishlistPendingProductId === product?.product?.id
+                                }
+                                className="flex items-center gap-2 rounded-md p-0.5 text-left transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+                            >
+                                <span className="flex h-7 w-7 items-center justify-center rounded border border-[#dde4f0] bg-white">
+                                    {addToWishlistPendingProductId ===
+                                    product?.product?.id ? (
+                                        <InlineButtonSpinner className="h-3.5 w-3.5 text-rose-500" />
+                                    ) : (
+                                        <img
+                                            src="/assets/love2.svg"
+                                            alt=""
+                                            className="h-4 w-4"
+                                            width={16}
+                                            height={16}
+                                        />
+                                    )}
                                 </span>
-                                <p className={'text-primary font-[500] text-xs cursor-pointer'}>Add to Wish List</p>
-                            </div>
+                                <span className="text-xs font-medium text-primary">
+                                    {addToWishlistPendingProductId === product?.product?.id
+                                        ? "Saving…"
+                                        : "Add to wishlist"}
+                                </span>
+                            </button>
 
                             {product?.product && (
                                 <AddToCompareButton product={product.product} variant="inline" />
@@ -1305,30 +1352,46 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     </div>
                                 ) : (
                                     <div className={`flex flex-col sm:flex-row lg:items-center gap-4 ${inventoryUnavailable ? "opacity-50" : ""}`}>
+                                        {(() => {
+                                            const cartPid = product?.product?.id;
+                                            const cartBusy =
+                                                typeof cartPid === "number" &&
+                                                addToCartPendingProductId === cartPid;
+                                            return (
+                                                <>
                                         <button
                                             type="button"
-                                            disabled={inventoryUnavailable}
+                                            disabled={inventoryUnavailable || cartBusy}
                                             onClick={() => handleAddToCart(product as ProductByIdResponse)}
-                                            className={`px-6 py-2.5 border border-primary rounded-xl font-semibold transition-colors ${
-                                                inventoryUnavailable
+                                            className={`inline-flex min-h-[42px] min-w-[140px] items-center justify-center gap-2 px-6 py-2.5 border border-primary rounded-xl font-semibold transition-colors ${
+                                                inventoryUnavailable || cartBusy
                                                     ? "cursor-not-allowed text-primary/70 border-primary/40"
                                                     : "text-primary hover:bg-primary/5"
                                             }`}
                                         >
-                                            Add to cart
+                                            {cartBusy ? (
+                                                <InlineButtonSpinner className="h-4 w-4 text-primary" />
+                                            ) : null}
+                                            {cartBusy ? "Adding…" : "Add to cart"}
                                         </button>
                                         <button
                                             type="button"
-                                            disabled={inventoryUnavailable}
+                                            disabled={inventoryUnavailable || cartBusy}
                                             onClick={() => handleAddToCart(product as ProductByIdResponse)}
-                                            className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${
-                                                inventoryUnavailable
+                                            className={`inline-flex min-h-[42px] min-w-[140px] items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-colors ${
+                                                inventoryUnavailable || cartBusy
                                                     ? "cursor-not-allowed bg-primary/35 text-white"
                                                     : "bg-primary text-white hover:bg-primary/90"
                                             }`}
                                         >
-                                            Buy now
+                                            {cartBusy ? (
+                                                <InlineButtonSpinner className="h-4 w-4 text-white" />
+                                            ) : null}
+                                            {cartBusy ? "Adding…" : "Buy now"}
                                         </button>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 )}
 

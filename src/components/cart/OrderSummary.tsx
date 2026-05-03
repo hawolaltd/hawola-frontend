@@ -50,6 +50,7 @@ const OrderSummary = ({
   isAuthenticated = true,
   directMerchantMode,
   directMerchantNoticeHtml,
+  cartDataLoading = false,
 }: {
   subtotal: number;
   shippingCost: number;
@@ -71,6 +72,8 @@ const OrderSummary = ({
   directMerchantMode?: boolean;
   /** Sanitized HTML from site settings (or default) */
   directMerchantNoticeHtml?: string;
+  /** Cart lines still loading from server — totals are placeholders. */
+  cartDataLoading?: boolean;
 }) => {
   const [openDelete, setOpenDelete] = useState<boolean | string | null>(null);
 
@@ -118,6 +121,20 @@ const OrderSummary = ({
       <h2 className="text-xl font-bold mb-4">Summary</h2>
 
       <div className="space-y-4">
+        {cartDataLoading ? (
+          <div className="space-y-3" aria-busy="true" aria-label="Loading cart totals">
+            <div className="flex justify-between gap-4">
+              <span className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+              <span className="h-4 w-24 rounded bg-slate-200 animate-pulse" />
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="h-4 w-16 rounded bg-slate-200 animate-pulse" />
+              <span className="h-4 w-24 rounded bg-slate-200 animate-pulse" />
+            </div>
+            <p className="text-xs text-slate-500">Loading your cart…</p>
+          </div>
+        ) : (
+          <>
         <div className="flex justify-between">
           <span>Subtotal:</span>
           <span className="font-semibold">
@@ -131,6 +148,8 @@ const OrderSummary = ({
             {formatCurrency(shippingCost.toFixed(2))}
           </span>
         </div>
+          </>
+        )}
 
         {/* Address Section */}
         {addresses.addresses?.length > 0 ? (
@@ -251,9 +270,13 @@ const OrderSummary = ({
 
         <div className="border-t pt-4 flex justify-between">
           <span className="font-bold">Total:</span>
-          <span className="font-bold text-lg">
-            {formatCurrency(total.toFixed(2))}
-          </span>
+          {cartDataLoading ? (
+            <span className="h-7 w-28 rounded-md bg-slate-200 animate-pulse" />
+          ) : (
+            <span className="font-bold text-lg">
+              {formatCurrency(total.toFixed(2))}
+            </span>
+          )}
         </div>
       </div>
 
@@ -302,15 +325,49 @@ const OrderSummary = ({
 
       {/* Checkout Button */}
       <button
-        disabled={!selectedAdd || total <= 0 || loading || !isAuthenticated}
+        disabled={
+          cartDataLoading ||
+          !selectedAdd ||
+          total <= 0 ||
+          loading ||
+          !isAuthenticated
+        }
         onClick={onCheckout}
         className={`w-full mt-6 py-3 ${
-          !selectedAdd || total <= 0 || loading || !isAuthenticated
+          cartDataLoading ||
+          !selectedAdd ||
+          total <= 0 ||
+          loading ||
+          !isAuthenticated
             ? "bg-blue-200 cursor-not-allowed"
             : "bg-primary hover:bg-primary-dark"
         } text-white font-medium rounded-md transition flex justify-center items-center`}
       >
-        {loading ? (
+        {cartDataLoading ? (
+          <>
+            <svg
+              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Loading cart…
+          </>
+        ) : loading ? (
           <>
             <svg
               className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

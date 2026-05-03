@@ -50,7 +50,7 @@ const BannerShowcase = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+    <div className="merchant-premium-banner-shell overflow-hidden rounded-2xl bg-white">
       <div className="relative">
         {/* Main Banner */}
         <div className="relative h-64 md:h-80 overflow-hidden">
@@ -127,9 +127,9 @@ const BannerShowcase = ({
                 <button
                   key={banner.id || index}
                   onClick={() => setCurrentBanner(index)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                  className={`flex h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 ${
                     currentBanner === index
-                      ? "border-blue-500 ring-2 ring-blue-200"
+                      ? "merchant-premium-banner-thumb-active"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >

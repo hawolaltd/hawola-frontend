@@ -105,8 +105,17 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                     {/* Account first — below logo */}
                     <div className="shrink-0 border-b border-gray-200 p-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <div className={`${HI_FRAME_WELL} border-primary/25 bg-white`}>
-                                <UserIcon className={`${HI_MD} text-primary`} aria-hidden />
+                            <div
+                                className={
+                                    isAuthenticated
+                                        ? HI_FRAME_WELL_EMERALD
+                                        : `${HI_FRAME_WELL} border-primary/25 bg-white`
+                                }
+                            >
+                                <UserIcon
+                                    className={`${HI_MD} ${isAuthenticated ? "text-emerald-900" : "text-primary"}`}
+                                    aria-hidden
+                                />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-primary">

@@ -9,9 +9,45 @@ import { useEffect, useMemo, useRef } from "react";
 import { getMerchantProfile } from "@/redux/product/productSlice";
 import { buildMerchantSeo } from "@/util/storefrontSeo";
 
+const MERCHANT_TEMPLATES_LOWER = ["standard", "premium", "basic", "normal"] as const;
+type MerchantTemplateKey = (typeof MERCHANT_TEMPLATES_LOWER)[number];
+
+function coerceMerchantTemplate(name: unknown): MerchantTemplateKey | null {
+  const s =
+    typeof name === "string"
+      ? name
+      : Array.isArray(name)
+        ? name[0] ?? ""
+        : "";
+  const lower = String(s).trim().toLowerCase();
+  if ((MERCHANT_TEMPLATES_LOWER as readonly string[]).includes(lower)) {
+    return lower as MerchantTemplateKey;
+  }
+  return null;
+}
+
+/**
+ * Picks which storefront template to render (case-insensitive names from API).
+ * In development, `?merchantTemplate=Premium` etc. overrides API so you can iterate without DB changes.
+ *
+ * Default: **Basic** when the API sends no usable template name; legacy API "Normal" also maps to Basic.
+ */
+function resolveMerchantDisplayTemplate(
+  apiName: string | undefined,
+  queryParam: unknown
+): MerchantTemplateKey {
+  if (process.env.NODE_ENV === "development") {
+    const q = coerceMerchantTemplate(queryParam);
+    if (q) return q;
+  }
+  const fromApi = coerceMerchantTemplate(apiName) ?? "basic";
+  if (fromApi === "normal") return "basic";
+  return fromApi;
+}
+
 export default function MerchantPage() {
   const router = useRouter();
-  const { merchantSlug, ...rest } = router.query;
+  const { merchantSlug } = router.query;
   const dispatch = useAppDispatch();
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const {
@@ -32,8 +68,10 @@ export default function MerchantPage() {
     }
   }, [merchantSlug, dispatch]);
 
-  const templateName = (data?.home_page?.template_name as { name?: string })
-    ?.name;
+  const templateKey = resolveMerchantDisplayTemplate(
+    (data?.home_page?.template_name as { name?: string })?.name,
+    router.query.merchantTemplate
+  );
 
   const slugStr =
     typeof merchantSlug === "string"
@@ -137,12 +175,10 @@ export default function MerchantPage() {
         </Head>
       ) : null}
 
-      {templateName === "Standard" && <StandardTemplate />}
-      {templateName === "Premium" && <DashboardTemplate />}
-      {templateName === "Basic" && <BasicTemplate />}
-      {/* Default to Normal template if no template specified or Normal selected */}
-      {(!templateName || templateName === "Normal") && <BasicTemplate />}
-      {/* {(!templateName || templateName === "Normal") && <NormalMerchantPage />} */}
+      {templateKey === "standard" && <StandardTemplate />}
+      {templateKey === "premium" && <DashboardTemplate />}
+      {templateKey === "basic" && <BasicTemplate />}
+      {templateKey === "normal" && <NormalMerchantPage />}
     </div>
   );
 }

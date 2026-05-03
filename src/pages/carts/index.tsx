@@ -37,8 +37,49 @@ interface OrderItem {
   }>;
 }
 
+/** Shown while the first cart fetch is in flight (no empty flash). */
+function CartLinesLoadingSkeleton() {
+  return (
+    <div
+      className="min-h-[420px] space-y-4 p-4 max-md:min-h-[50vh] md:min-h-[480px]"
+      aria-busy="true"
+      aria-label="Loading your cart"
+    >
+      <p className="text-center text-sm font-medium text-headerBg">Loading your cart…</p>
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="flex animate-pulse gap-4 rounded-xl border border-slate-100 bg-slate-50/90 p-4 md:grid md:grid-cols-12 md:items-center md:gap-3"
+        >
+          <div className="flex items-center gap-3 md:col-span-5">
+            <div className="h-14 w-14 shrink-0 rounded-xl bg-slate-200 md:h-16 md:w-16" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-3.5 w-[min(100%,14rem)] rounded bg-slate-200" />
+              <div className="h-3 w-[min(100%,8rem)] rounded bg-slate-200" />
+            </div>
+          </div>
+          <div className="hidden md:col-span-2 md:flex md:justify-center">
+            <div className="h-4 w-16 rounded bg-slate-200" />
+          </div>
+          <div className="hidden md:col-span-2 md:flex md:justify-center">
+            <div className="h-8 w-24 rounded-lg bg-slate-200" />
+          </div>
+          <div className="hidden md:col-span-2 md:flex md:justify-center">
+            <div className="h-4 w-14 rounded bg-slate-200" />
+          </div>
+          <div className="hidden md:col-span-1 md:flex md:justify-center">
+            <div className="h-8 w-8 rounded bg-slate-200" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const CartPage = () => {
-  const { carts, addresses, localCart } = useAppSelector((state) => state.products);
+  const { carts, addresses, localCart, cartFetchStatus } = useAppSelector(
+    (state) => state.products
+  );
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const escrowDisabled =
@@ -49,7 +90,6 @@ const CartPage = () => {
         : DEFAULT_NON_ESCROW_CART_NOTICE_HTML)
     : "";
   const [cartNoticeSafe, setCartNoticeSafe] = useState("");
-  console.log("carts", carts);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<string>("");
@@ -145,6 +185,11 @@ const CartPage = () => {
 
   const allSelected =
     cartItems?.length > 0 && selectedItems.length === cartItems.length;
+
+  const fetchStatus = cartFetchStatus ?? "idle";
+  const showCartLinesLoading =
+    cartItems.length === 0 &&
+    (fetchStatus === "pending" || fetchStatus === "idle");
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const syncWithServer = useCallback(
@@ -583,7 +628,7 @@ const CartPage = () => {
         <div className="flex flex-col gap-8 lg:flex-row">
           {/* Products List */}
           <div className="space-y-3 lg:w-2/3 lg:space-y-0">
-            {cartItems?.length > 0 ? (
+            {cartItems?.length > 0 && !showCartLinesLoading ? (
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm md:hidden">
                 <label className="flex cursor-pointer items-center gap-3">
                   <input
@@ -603,7 +648,11 @@ const CartPage = () => {
 
             <div className="overflow-hidden rounded-lg bg-white shadow-md max-md:rounded-none max-md:bg-transparent max-md:shadow-none">
               {/* Table Header with Select All (tablet/desktop) */}
-              <div className="hidden border-b border-slate-200 p-4 md:grid md:grid-cols-12">
+              <div
+                className={`hidden border-b border-slate-200 p-4 md:grid md:grid-cols-12 ${
+                  showCartLinesLoading ? "md:hidden" : ""
+                }`}
+              >
                 <div className="col-span-5 font-semibold flex items-center gap-4">
                   <input
                     type="checkbox"
@@ -630,7 +679,9 @@ const CartPage = () => {
 
               {/* Items: full scroll on mobile app-style; fixed-height pane on large desktops */}
               <div className="max-lg:h-auto max-md:min-h-0 overflow-x-auto lg:h-[550px] lg:overflow-y-auto">
-                {cartItems?.length > 0 ? (
+                {showCartLinesLoading ? (
+                  <CartLinesLoadingSkeleton />
+                ) : cartItems?.length > 0 ? (
                   cartItems.map((cart) => {
                     const cartId = cart.id || cart.product?.id;
                     
@@ -724,6 +775,7 @@ const CartPage = () => {
             className="scroll-mt-4 max-md:rounded-2xl max-md:overflow-hidden max-md:shadow-sm lg:w-1/3"
           >
             <OrderSummary
+              cartDataLoading={showCartLinesLoading}
               subtotal={selectedSubtotal || 0}
               shippingCost={shippingCost || 0}
               total={total || 0}
@@ -760,7 +812,10 @@ const CartPage = () => {
         </div>
       </div>
 
-      {cartItems?.length > 0 && selectedItems.length > 0 && !creatingOrder ? (
+      {cartItems?.length > 0 &&
+      selectedItems.length > 0 &&
+      !creatingOrder &&
+      !showCartLinesLoading ? (
         <MobileFloatingHint
           onClick={scrollToCheckoutSummary}
           hintTitle="Go to delivery address"

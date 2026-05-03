@@ -119,7 +119,7 @@ function Categories() {
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-primary">Shop by Categories</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Explore all categories and subcategories in one expanded view.
+                Explore products based on category
               </p>
             </div>
 

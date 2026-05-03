@@ -20,7 +20,7 @@ const StoreInfo = ({
   refundPolicy,
 }: StoreInfoProps) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 merchant-card-bg">
+    <div className="merchant-premium-sidebar-card rounded-2xl p-6">
       <h3 className="text-lg font-semibold merchant-heading-text mb-4">
         Store Information
       </h3>
@@ -28,7 +28,7 @@ const StoreInfo = ({
       <div className="space-y-4">
         {/* Address */}
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
             <svg
               className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
@@ -52,7 +52,7 @@ const StoreInfo = ({
 
         {/* Phone */}
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
             <svg
               className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
@@ -69,7 +69,7 @@ const StoreInfo = ({
 
         {/* Email */}
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
             <svg
               className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
@@ -87,7 +87,7 @@ const StoreInfo = ({
 
         {/* Market */}
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
             <svg
               className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
               fill="currentColor"
@@ -110,7 +110,7 @@ const StoreInfo = ({
         {refundPolicy && (
           <div className="pt-4 border-t border-gray-200">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 merchant-light-bg rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+              <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
                 <svg
                   className="w-4 h-4 merchant-primary-text merchant-icon-enhanced"
                   fill="currentColor"
