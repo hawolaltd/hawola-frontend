@@ -1,12 +1,14 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { useAppSelector } from "@/hook/useReduxTypes";
+import EmptyCartCallout from "@/components/cart/EmptyCartCallout";
 import { amountFormatter, featuredImageCardUrl } from "@/util";
 
 const CartModal = () => {
   const router = useRouter();
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const siteSettings = useAppSelector((state) => state.general.siteSettings);
 
   const { carts, localCart } = useAppSelector((state) => state.products);
 
@@ -52,21 +54,8 @@ const CartModal = () => {
     >
       <div className={"h-[250px] overflow-x-hidden"}>
         {!hasAuthenticatedCart && !hasLocalCart ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <svg
-              className="w-16 h-16 mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-            <p className="text-sm">Your cart is empty</p>
+          <div className="flex h-full items-center justify-center px-1 py-2">
+            <EmptyCartCallout compact slogan={siteSettings?.app_slogan} />
           </div>
         ) : hasAuthenticatedCart
           ? carts?.cart_items?.map((item) => (

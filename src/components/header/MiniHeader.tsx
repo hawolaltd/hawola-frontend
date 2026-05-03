@@ -17,7 +17,7 @@ function MiniHeader() {
           href="/looking-for-product"
           className="text-xs font-semibold text-secondaryTextColor"
         >
-          I am looking for this product
+          Request for a product
         </Link>
       </div>
     </div>

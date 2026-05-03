@@ -1,4 +1,6 @@
 import React from "react";
+import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
+import { HI_SM } from "@/lib/hawolaIconTheme";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   MAX_COMPARE_PRODUCTS,
@@ -64,8 +66,8 @@ export default function AddToCompareButton({
         onClick={handleClick}
         className={`flex items-center gap-2 text-left ${className}`}
       >
-        <span className="flex items-center justify-center rounded border border-[#dde4f0] p-0.5">
-          <img src="/assets/compare.svg" alt="" className="h-4 w-4" width={16} height={16} />
+        <span className="flex items-center justify-center rounded-lg border border-slate-200/90 bg-slate-50 p-1">
+          <ArrowsRightLeftIcon className={`${HI_SM} text-primary`} aria-hidden />
         </span>
         <span className="cursor-pointer text-xs font-medium text-primary">
           {isIn ? "Remove from compare" : "Add to compare"}
@@ -82,13 +84,13 @@ export default function AddToCompareButton({
         type="button"
         onClick={handleClick}
         aria-label={label}
-        className={`z-10 flex h-8 w-8 items-center justify-center rounded-md border shadow-sm transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+        className={`z-10 flex h-8 w-8 items-center justify-center rounded-lg border shadow-sm transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
           isIn
             ? "border-secondaryTextColor bg-emerald-50 text-secondaryTextColor"
-            : "border-[#dde4f0] bg-white text-primary hover:border-primary/40"
+            : "border-slate-200/90 bg-slate-50 text-primary hover:border-primary/40"
         }`}
       >
-        <img src="/assets/compare.svg" alt="" className="h-4 w-4" width={16} height={16} />
+        <ArrowsRightLeftIcon className={HI_SM} aria-hidden />
       </button>
       <span
         role="tooltip"

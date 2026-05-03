@@ -1,6 +1,22 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  ArrowsRightLeftIcon,
+  Bars3Icon,
+  BuildingOffice2Icon,
+  HeartIcon,
+  MagnifyingGlassIcon,
+  ShoppingCartIcon,
+  TruckIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
+import {
+  HI_CHIP_EMERALD,
+  HI_CHIP_SLATE,
+  HI_FRAME_HEADER,
+  HI_MD,
+} from "@/lib/hawolaIconTheme";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { useCompareNavBump } from "@/hook/useCompareNavBump";
 import CartModal from "@/components/shared/CartModal";
@@ -33,6 +49,8 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   // const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [dropdownOpenCat, setDropdownOpenCat] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const searchModalInputRef = useRef<HTMLInputElement>(null);
   const { carts, localCart, wishLists, categories, compareProducts } =
     useAppSelector((state) => state.products);
   const compareNavBump = useCompareNavBump();
@@ -59,6 +77,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [clickedSubCategoryId, setClickedSubCategoryId] = useState<number | null>(null);
   const [headerSubcategories, setHeaderSubcategories] = useState<HeaderSubcategory[]>([]);
   const [activeMegaSubcategoryId, setActiveMegaSubcategoryId] = useState<number | null>(null);
+  const [subcatMoreOpen, setSubcatMoreOpen] = useState(false);
 
   const [userCart, setUserCart] = useState<CartResponse>(carts);
 
@@ -91,9 +110,29 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setSearchModalOpen(false);
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  useEffect(() => {
+    if (!searchModalOpen) return;
+    const t = window.setTimeout(() => searchModalInputRef.current?.focus(), 50);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.clearTimeout(t);
+      document.body.style.overflow = "";
+    };
+  }, [searchModalOpen]);
+
+  useEffect(() => {
+    if (!searchModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchModalOpen]);
 
   useEffect(() => {
     const getCartCount = () => {
@@ -181,8 +220,121 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
     void loadSubcategoriesWithProducts();
   }, []);
 
+  const SUBCAT_STRIP_MAX = 14;
+  const MOBILE_SUBCAT_VISIBLE = 5;
+  const stripSubcats = headerSubcategories.slice(0, SUBCAT_STRIP_MAX);
+  const mobileSubcatsFirst = stripSubcats.slice(0, MOBILE_SUBCAT_VISIBLE);
+  const mobileSubcatsRest = stripSubcats.slice(MOBILE_SUBCAT_VISIBLE);
+
+  const renderSubcategoryPill = (subcat: HeaderSubcategory) => (
+    <button
+      type="button"
+      onMouseEnter={() => setActiveMegaSubcategoryId(subcat.id)}
+      onFocus={() => setActiveMegaSubcategoryId(subcat.id)}
+      onClick={() => router.push(`/categories?type=subcat&slug=${subcat.slug}`)}
+      className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+        activeMegaSubcategoryId === subcat.id
+          ? "border-[#84cc16] bg-white text-[#365314]"
+          : "border-[#a3e635] bg-white/90 text-[#365314] hover:bg-white"
+      }`}
+    >
+      {(() => {
+        const iconData = subcategoryParentIconMap.get(subcat.id);
+        if (iconData?.icon) {
+          return (
+            <img
+              src={iconData.icon}
+              alt=""
+              className="mr-1.5 h-4 w-4 rounded object-cover"
+            />
+          );
+        }
+        if (iconData?.icon_code) {
+          return (
+            <span className="mr-1.5 text-sm leading-none">{iconData.icon_code}</span>
+          );
+        }
+        return null;
+      })()}
+      <span>{subcat.name}</span>
+    </button>
+  );
+
+  const viewAllCategoriesLink = (
+    <Link
+      href="/categories"
+      className="inline-flex shrink-0 items-center rounded-full border border-[#a3e635] bg-white px-3 py-1.5 text-xs font-semibold text-[#365314] transition hover:bg-[#f7fee7]"
+    >
+      View All
+    </Link>
+  );
+
   return (
     <div className={"relative "}>
+      {/* Mobile search overlay (lg+ uses inline search bar) */}
+      {searchModalOpen ? (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-start pt-[min(12vh,6rem)] px-4 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-search-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/55 backdrop-blur-[2px]"
+            aria-label="Close search"
+            onClick={() => setSearchModalOpen(false)}
+          />
+          <div className="relative z-[1] w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_24px_80px_-12px_rgba(15,23,42,0.35)] ring-1 ring-black/5">
+            <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white px-5 pb-4 pt-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p id="mobile-search-title" className="font-sans text-xl font-bold tracking-tight text-headerBg">
+                    Search Hawola
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Products, merchants & categories
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSearchModalOpen(false)}
+                  className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Close"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <form onSubmit={handleSearchSubmit} className="p-5">
+              <label className="sr-only" htmlFor="mobile-search-input">
+                Search query
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <input
+                  ref={searchModalInputRef}
+                  id="mobile-search-input"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="What are you looking for?"
+                  autoComplete="off"
+                  className="min-h-[52px] flex-1 rounded-xl border-2 border-slate-200 bg-slate-50/80 px-4 text-base text-primary outline-none transition placeholder:text-slate-400 focus:border-deepOrange focus:bg-white focus:ring-2 focus:ring-deepOrange/20"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex min-h-[52px] shrink-0 items-center justify-center rounded-xl bg-deepOrange px-8 text-sm font-bold uppercase tracking-wide text-white shadow-md transition hover:brightness-[0.93] active:scale-[0.98]"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       {/* Top Component Start*/}
       <div className="bg-white border-b border-gray-300">
         <div className="relative mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-6 py-5 lg:py-6 xl:px-0">
@@ -647,8 +799,8 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             </div>
             {/* ========== END NEW MEGA MENU ========== */}
 
-            {/* Search Bar (visible on all breakpoints; shares row with logo on mobile) */}
-            <div className="flex min-w-0 flex-1 items-center justify-center px-2 sm:px-4">
+            {/* Search bar — desktop / large tablets only; mobile uses icon + modal */}
+            <div className="hidden min-w-0 flex-1 items-center justify-center px-2 sm:px-4 lg:flex">
               <form
                 onSubmit={handleSearchSubmit}
                 className="flex w-full min-w-0 max-w-[920px] items-stretch rounded-lg shadow-sm"
@@ -658,12 +810,12 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search products, merchants, categories..."
-                  className="min-w-0 flex-1 rounded-l-lg rounded-r-none border-2 border-r-0 border-gray-300 px-3.5 py-2.5 text-base text-primary placeholder:text-gray-500 outline-none focus:border-[#FF5733]"
+                  className="min-w-0 flex-1 rounded-l-lg rounded-r-none border-2 border-r-0 border-gray-300 px-3.5 py-2.5 text-base text-primary placeholder:text-gray-500 outline-none focus:border-deepOrange"
                 />
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="shrink-0 rounded-r-lg rounded-l-none border-2 border-l-0 border-[#FF5733] bg-[#FF5733] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E64A2E] hover:border-[#E64A2E] sm:px-5"
+                  className="shrink-0 rounded-r-lg rounded-l-none border-2 border-l-0 border-deepOrange bg-deepOrange px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-[0.93] sm:px-5"
                 >
                   <span className="sm:hidden">Go</span>
                   <span className="hidden sm:inline">Search</span>
@@ -672,16 +824,12 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             </div>
 
             <div className="hidden items-center gap-2 lg:flex">
-              <Link
-                href="/cars"
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 transition hover:border-slate-800 hover:text-slate-900"
-              >
+              <Link href="/cars" className={HI_CHIP_SLATE}>
+                <TruckIcon className={`${HI_MD} text-primary`} aria-hidden />
                 Cars
               </Link>
-              <Link
-                href="/real-estate"
-                className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 transition hover:border-emerald-600 hover:text-emerald-800"
-              >
+              <Link href="/real-estate" className={HI_CHIP_EMERALD}>
+                <BuildingOffice2Icon className={`${HI_MD} text-emerald-700`} aria-hidden />
                 Real Estate
               </Link>
             </div>
@@ -693,8 +841,17 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             /> */}
           </div>
 
-          {/* Icons (User, Wishlist, Cart, Settings) */}
-          <div className="relative flex shrink-0 items-center space-x-4 sm:space-x-6">
+          {/* Icons: mobile search, User, Wishlist, Cart, Compare, menu */}
+          <div className="relative flex shrink-0 items-center space-x-1 sm:space-x-2">
+            <button
+              type="button"
+              onClick={() => setSearchModalOpen(true)}
+              className={`flex items-center justify-center lg:hidden ${HI_FRAME_HEADER}`}
+              aria-label="Open search"
+            >
+              <MagnifyingGlassIcon className={HI_MD} aria-hidden />
+            </button>
+
             <div className="relative">
               <div
                 onClick={() => {
@@ -704,9 +861,19 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                     router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
                   }
                 }}
-                className="cursor-pointer"
+                className={`flex cursor-pointer items-center justify-center ${HI_FRAME_HEADER}`}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (isAuthenticated) setUserInfo(!userInfo);
+                    else router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
+                  }
+                }}
+                aria-label={isAuthenticated ? "Account menu" : "Sign in"}
               >
-                <img src="/assets/account.svg" alt="User" className="w-6 h-6" />
+                <UserIcon className={`${HI_MD} text-primary`} aria-hidden />
               </div>
               {userInfo && <UserInfoDropdown />}
             </div>
@@ -718,26 +885,13 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                   ? `/wishlist`
                   : `/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`
               }
+              className={`relative flex items-center justify-center ${HI_FRAME_HEADER}`}
+              aria-label="Wishlist"
             >
-              <div
-                onClick={() => {
-                  // if (isAuthenticated) {
-                  //     router.push('/wishlist')
-                  // } else {
-                  //     router.push('/auth/login')
-                  // }
-                }}
-                className="relative cursor-pointer"
-              >
-                <span className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {wishLists?.wishlists?.length ?? 0}
-                </span>
-                <img
-                  src="/assets/love2.svg"
-                  alt="Wishlist"
-                  className="w-6 h-6"
-                />
-              </div>
+              <span className="pointer-events-none absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-deepOrange text-xs text-white">
+                {wishLists?.wishlists?.length ?? 0}
+              </span>
+              <HeartIcon className={HI_MD} aria-hidden />
             </Link>
 
             {/* Cart */}
@@ -746,59 +900,62 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                 if (isAuthenticated) {
                   setCart(!cart);
                 } else {
-                  // router.push('/auth/login')
                   setCart(!cart);
                 }
               }}
-              className="relative cursor-pointer"
+              className={`relative flex cursor-pointer items-center justify-center ${HI_FRAME_HEADER}`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setCart(!cart);
+                }
+              }}
+              aria-label="Shopping cart"
             >
-              <span className="absolute -top-2 -right-2 bg-deepOrange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="pointer-events-none absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-deepOrange text-xs text-white">
                 {!isAuthenticated && localCart !== null
                   ? localCart?.items?.length ?? 0
                   : carts?.cart_count ?? 0}
               </span>
-              <img src="/assets/cart2.svg" alt="Cart" className="w-6 h-6" />
+              <ShoppingCartIcon className={HI_MD} aria-hidden />
             </div>
 
-            {compareList.length > 0 && (
-              <Link
-                href="/compare"
-                className={`relative flex cursor-pointer items-center gap-2 rounded-lg px-0.5 text-primary ${
-                  compareNavBump
+            <Link
+              href="/compare"
+              className={`relative inline-flex cursor-pointer items-center gap-1.5 ${HI_FRAME_HEADER} ${
+                compareList.length > 0
+                  ? compareNavBump
                     ? "motion-safe:animate-compare-nav-bump"
                     : "motion-safe:animate-compare-nav-pulse"
-                }`}
-                aria-label={`Compare ${compareList.length} products`}
-              >
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-headerBg text-[10px] font-bold text-white">
+                  : ""
+              }`}
+              aria-label={
+                compareList.length > 0
+                  ? `Compare ${compareList.length} products`
+                  : "Compare products"
+              }
+            >
+              {compareList.length > 0 ? (
+                <span className="pointer-events-none absolute -top-2 -right-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-headerBg px-0.5 text-[10px] font-bold text-white">
                   {compareList.length}
                 </span>
-                <img src="/assets/compare.svg" alt="" className="h-6 w-6" />
-                <span className="hidden text-[16px] lg:flex">Compare</span>
-              </Link>
-            )}
+              ) : null}
+              <ArrowsRightLeftIcon className={HI_MD} aria-hidden />
+              <span className="hidden text-sm font-medium lg:inline">Compare</span>
+            </Link>
 
-            <div
+            <button
+              type="button"
               onClick={() => {
                 dispatch(setDrawerOpen(true));
               }}
-              className={"lg:hidden"}
+              className={`flex items-center justify-center lg:hidden ${HI_FRAME_HEADER}`}
+              aria-label="Open menu"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 7H7M20 7H11M20 17H17M4 17H13M4 12H20"
-                  stroke="#64748B"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
+              <Bars3Icon className={HI_MD} aria-hidden />
+            </button>
           </div>
           {cart && <CartModal />}
         </div>
@@ -810,47 +967,42 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             className="relative mx-auto w-full max-w-screen-xl px-6 xl:px-0"
             onMouseLeave={() => setActiveMegaSubcategoryId(null)}
           >
-            <div className="flex flex-wrap items-center gap-2 py-2">
-              {headerSubcategories.slice(0, 14).map((subcat) => (
-                <button
-                  key={subcat.id}
-                  type="button"
-                  onMouseEnter={() => setActiveMegaSubcategoryId(subcat.id)}
-                  onFocus={() => setActiveMegaSubcategoryId(subcat.id)}
-                  onClick={() => router.push(`/categories?type=subcat&slug=${subcat.slug}`)}
-                  className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                    activeMegaSubcategoryId === subcat.id
-                      ? "border-[#84cc16] bg-white text-[#365314]"
-                      : "border-[#a3e635] bg-white/90 text-[#365314] hover:bg-white"
-                  }`}
-                >
-                  {(() => {
-                    const iconData = subcategoryParentIconMap.get(subcat.id);
-                    if (iconData?.icon) {
-                      return (
-                        <img
-                          src={iconData.icon}
-                          alt=""
-                          className="mr-1.5 h-4 w-4 rounded object-cover"
-                        />
-                      );
-                    }
-                    if (iconData?.icon_code) {
-                      return (
-                        <span className="mr-1.5 text-sm leading-none">{iconData.icon_code}</span>
-                      );
-                    }
-                    return null;
-                  })()}
-                  <span>{subcat.name}</span>
-                </button>
+            {/* Desktop / tablet: full strip */}
+            <div className="hidden flex-wrap items-center gap-2 py-2 md:flex">
+              {stripSubcats.map((subcat) => (
+                <React.Fragment key={subcat.id}>{renderSubcategoryPill(subcat)}</React.Fragment>
               ))}
-              <Link
-                href="/categories"
-                className="inline-flex shrink-0 items-center rounded-full border border-[#a3e635] bg-white px-3 py-1.5 text-xs font-semibold text-[#365314] transition hover:bg-[#f7fee7]"
-              >
-                View All
-              </Link>
+              {viewAllCategoriesLink}
+            </div>
+
+            {/* Mobile: pills (5 or full strip) → View More/less (if needed) → View All — one row, same strip background */}
+            <div className="md:hidden">
+              <div className="flex flex-wrap items-center gap-2 py-2">
+                {(subcatMoreOpen ? stripSubcats : mobileSubcatsFirst).map((subcat) => (
+                  <React.Fragment key={subcat.id}>{renderSubcategoryPill(subcat)}</React.Fragment>
+                ))}
+                {mobileSubcatsRest.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setSubcatMoreOpen((o) => !o)}
+                    aria-expanded={subcatMoreOpen}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635] bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#365314] transition hover:bg-white"
+                  >
+                    {subcatMoreOpen ? "View less" : "View More"}
+                    <svg
+                      className={`h-3.5 w-3.5 transition-transform ${subcatMoreOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      aria-hidden
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                ) : null}
+                {viewAllCategoriesLink}
+              </div>
             </div>
 
             {(() => {

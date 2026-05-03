@@ -9,11 +9,9 @@ import { useCompareNavBump } from "@/hook/useCompareNavBump";
 import { addToCartsLocal } from "@/redux/product/productSlice";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import Drawer from "@/components/header/MobileMenuDrawer";
 
 function MainHeader() {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
   const [cart, setCart] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -59,11 +57,6 @@ function MainHeader() {
 
   return (
     <div>
-      <Drawer
-        isOpen={isDrawerOpen}
-        onClose={() => dispatch(setDrawerOpen(false))}
-        messageCount={3}
-      />
       <div className="bg-white border-b border-gray-300 relative pr-4">
         <div className="w-full px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">

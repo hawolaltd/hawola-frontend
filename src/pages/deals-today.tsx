@@ -3,9 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/header";
 import Footer from "@/components/home/Footer";
-import Drawer from "@/components/header/MobileMenuDrawer";
-import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { ProductFull, Banner } from "@/types/home";
 import ProductCard from "@/components/product/ProductCard";
 import generalService from "@/redux/general/generalService";
@@ -16,8 +13,6 @@ export default function DealsTodayPage() {
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
-  const dispatch = useAppDispatch();
   const itemsPerPage = 12;
 
   useEffect(() => {
@@ -62,7 +57,6 @@ export default function DealsTodayPage() {
       <Head>
         <title>Deals Today | Hawola</title>
       </Head>
-      <Drawer isOpen={isDrawerOpen} onClose={() => dispatch(setDrawerOpen(false))} messageCount={3} />
       <div className={"mb-4"}>
         <Header />
       </div>
@@ -113,7 +107,7 @@ export default function DealsTodayPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
               {paginatedProducts.map((product) => (
                 <div key={product.id} className="h-full">
                   <ProductCard product={product} />

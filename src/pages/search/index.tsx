@@ -9,16 +9,17 @@ import {
   setCurrentQuery,
   clearSearchResults,
 } from "@/redux/search/searchSlice";
-import { FiSearch, FiX, FiTrendingUp, FiClock } from "react-icons/fi";
-import { BiStore } from "react-icons/bi";
-import { AiOutlineProduct } from "react-icons/ai";
+import {
+  ArrowTrendingUpIcon,
+  BuildingStorefrontIcon,
+  ClockIcon,
+  CubeIcon,
+  MagnifyingGlassIcon,
+  TagIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import ProductCard from "@/components/product/ProductCard";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
-import MiniHeader from "@/components/header/MiniHeader";
-import MainHeader from "@/components/header/MainHeader";
-import Drawer from "@/components/header/MobileMenuDrawer";
-import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import Header from "@/components/header";
 import AuthLayout from "@/components/layout/AuthLayout";
 
 const SearchPage = () => {
@@ -27,8 +28,6 @@ const SearchPage = () => {
   const { searchResults, suggestions, isLoading, currentQuery, error } = useAppSelector(
     (state) => state.search
   );
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
-
   const [searchInput, setSearchInput] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "products" | "merchants">("all");
 
@@ -108,7 +107,7 @@ const SearchPage = () => {
   const renderEmptyState = () => (
     <div className="text-center py-16">
       <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
-        <FiSearch className="w-10 h-10 text-gray-400" />
+        <MagnifyingGlassIcon className="h-10 w-10 text-gray-400" aria-hidden />
       </div>
       <h3 className="text-xl font-semibold text-gray-800 mb-2">
         Start searching
@@ -124,7 +123,7 @@ const SearchPage = () => {
           {suggestions?.recent_searches && suggestions.recent_searches.length > 0 && (
             <div className="text-left">
               <div className="flex items-center gap-2 mb-3 text-gray-700">
-                <FiClock className="w-5 h-5" />
+                <ClockIcon className="h-5 w-5 shrink-0" aria-hidden />
                 <h4 className="font-medium">Recent Searches</h4>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -132,7 +131,7 @@ const SearchPage = () => {
                   <button
                     key={search.id}
                     onClick={() => handleSuggestionClick(search.query)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-[#FF5733] hover:text-[#FF5733] transition-colors text-sm"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-deepOrange hover:text-deepOrange transition-colors text-sm"
                   >
                     {search.query}
                   </button>
@@ -145,7 +144,7 @@ const SearchPage = () => {
           {suggestions?.popular_searches && suggestions.popular_searches.length > 0 && (
             <div className="text-left">
               <div className="flex items-center gap-2 mb-3 text-gray-700">
-                <FiTrendingUp className="w-5 h-5" />
+                <ArrowTrendingUpIcon className="h-5 w-5 shrink-0" aria-hidden />
                 <h4 className="font-medium">Popular Searches</h4>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -153,7 +152,7 @@ const SearchPage = () => {
                   <button
                     key={search.id}
                     onClick={() => handleSuggestionClick(search.query)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-[#FF5733] hover:text-[#FF5733] transition-colors text-sm"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-deepOrange hover:text-deepOrange transition-colors text-sm"
                   >
                     {search.query}
                   </button>
@@ -170,7 +169,7 @@ const SearchPage = () => {
   const renderNoResults = () => (
     <div className="text-center py-16">
       <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
-        <FiSearch className="w-10 h-10 text-gray-400" />
+        <MagnifyingGlassIcon className="h-10 w-10 text-gray-400" aria-hidden />
       </div>
       <h3 className="text-xl font-semibold text-gray-800 mb-2">
         No results found for "{currentQuery}"
@@ -188,7 +187,7 @@ const SearchPage = () => {
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-[#FF5733] hover:text-[#FF5733] transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-deepOrange hover:text-deepOrange transition-colors text-sm font-medium"
               >
                 {suggestion}
               </button>
@@ -218,16 +217,6 @@ const SearchPage = () => {
       </Head>
 
       <div className="min-h-screen bg-gray-50">
-        <Drawer
-          isOpen={isDrawerOpen}
-          onClose={() => dispatch(setDrawerOpen(false))}
-          messageCount={0}
-        />
-        
-        {/* Header with Logo */}
-        
-
-        
         <div className="max-w-screen-xl mx-auto px-6 xl:px-0 py-8">
           {/* Additional Search Bar for better UX on search page */}
           <div className="mb-8">
@@ -239,23 +228,26 @@ const SearchPage = () => {
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search products, merchants, categories..."
-                    className="w-full rounded-l-lg rounded-r-none border-2 border-r-0 border-gray-300 pl-12 pr-12 py-4 text-lg focus:border-[#FF5733] focus:outline-none transition-colors"
+                    className="w-full rounded-l-lg rounded-r-none border-2 border-r-0 border-gray-300 pl-12 pr-12 py-4 text-lg focus:border-deepOrange focus:outline-none transition-colors"
                     autoFocus
                   />
-                  <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
+                  <MagnifyingGlassIcon
+                    className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-gray-400"
+                    aria-hidden
+                  />
                   {searchInput && (
                     <button
                       type="button"
                       onClick={handleClearSearch}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      <FiX className="w-6 h-6" />
+                      <XMarkIcon className="h-6 w-6 shrink-0" aria-hidden />
                     </button>
                   )}
                 </div>
                 <button
                   type="submit"
-                  className="shrink-0 rounded-r-lg rounded-l-none border-2 border-l-0 border-[#FF5733] bg-[#FF5733] px-5 py-4 text-sm font-semibold text-white transition-colors hover:bg-[#e44a28] hover:border-[#e44a28]"
+                  className="shrink-0 rounded-r-lg rounded-l-none border-2 border-l-0 border-deepOrange bg-deepOrange px-5 py-4 text-sm font-semibold text-white transition-colors hover:brightness-[0.93]"
                 >
                   Search
                 </button>
@@ -266,7 +258,7 @@ const SearchPage = () => {
             {/* Loading State */}
             {isLoading && (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5733]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deepOrange"></div>
               </div>
             )}
 
@@ -284,20 +276,20 @@ const SearchPage = () => {
                   <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                     {totalProducts > 0 && (
                       <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-gray-200">
-                        <AiOutlineProduct className="w-4 h-4" />
+                        <CubeIcon className="h-4 w-4 shrink-0" aria-hidden />
                         <span>{totalProducts} Products</span>
                       </div>
                     )}
                     {hasMerchantResults && (
                       <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-gray-200">
-                        <BiStore className="w-4 h-4" />
+                        <BuildingStorefrontIcon className="h-4 w-4 shrink-0" aria-hidden />
                         <span>{totalMerchants} Merchants</span>
                       </div>
                     )}
                     {/* Categories quick stat hidden for now */}
                     {searchResults.total_promoted_products > 0 && (
-                      <div className="flex items-center gap-1 px-3 py-1 bg-[#FF5733] text-white rounded-full">
-                        <FiTrendingUp className="w-4 h-4" />
+                      <div className="flex items-center gap-1 px-3 py-1 bg-deepOrange text-white rounded-full">
+                        <ArrowTrendingUpIcon className="h-4 w-4 shrink-0" aria-hidden />
                         <span>{searchResults.total_promoted_products} Promoted</span>
                       </div>
                     )}
@@ -310,7 +302,7 @@ const SearchPage = () => {
                     onClick={() => setActiveTab("all")}
                     className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
                       activeTab === "all"
-                        ? "text-[#FF5733] border-b-2 border-[#FF5733]"
+                        ? "text-deepOrange border-b-2 border-deepOrange"
                         : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
@@ -321,7 +313,7 @@ const SearchPage = () => {
                       onClick={() => setActiveTab("products")}
                       className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
                         activeTab === "products"
-                          ? "text-[#FF5733] border-b-2 border-[#FF5733]"
+                          ? "text-deepOrange border-b-2 border-deepOrange"
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
@@ -332,7 +324,7 @@ const SearchPage = () => {
                     onClick={() => setActiveTab("merchants")}
                     className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
                       activeTab === "merchants"
-                        ? "text-[#FF5733] border-b-2 border-[#FF5733]"
+                        ? "text-deepOrange border-b-2 border-deepOrange"
                         : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
@@ -344,7 +336,7 @@ const SearchPage = () => {
                       onClick={() => setActiveTab("categories")}
                       className={`px-4 py-3 font-medium whitespace-nowrap transition-colors ${
                         activeTab === "categories"
-                          ? "text-[#FF5733] border-b-2 border-[#FF5733]"
+                          ? "text-deepOrange border-b-2 border-deepOrange"
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
@@ -363,11 +355,11 @@ const SearchPage = () => {
                       <div>
                         {activeTab === "all" && (
                           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <AiOutlineProduct className="w-6 h-6" />
+                            <CubeIcon className="h-6 w-6 shrink-0" aria-hidden />
                             Products
                           </h2>
                         )}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                           {searchResults.results.products.items.map((product: any) => (
                             <ProductCard key={product.id} product={product} />
                           ))}
@@ -385,7 +377,7 @@ const SearchPage = () => {
                                 onClick={() => handlePageChange(page)}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                   page === searchResults.results.products.page
-                                    ? "bg-[#FF5733] text-white"
+                                    ? "bg-deepOrange text-white"
                                     : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                                 }`}
                               >
@@ -402,7 +394,7 @@ const SearchPage = () => {
                         <div>
                           {activeTab === "all" && (
                             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                              <BiStore className="w-6 h-6" />
+                              <BuildingStorefrontIcon className="h-6 w-6 shrink-0" aria-hidden />
                               Merchants
                             </h2>
                           )}
@@ -412,7 +404,7 @@ const SearchPage = () => {
                                 <Link
                                   key={merchant.id}
                                   href={`/merchants/${merchant.slug}`}
-                                  className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-[#FF5733] hover:shadow-md transition-all"
+                                  className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-deepOrange hover:shadow-md transition-all"
                                 >
                                   <div className="flex items-start gap-4">
                                     {merchant.logo ? (
@@ -423,7 +415,7 @@ const SearchPage = () => {
                                       />
                                     ) : (
                                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                                        <BiStore className="w-8 h-8 text-gray-400" />
+                                        <BuildingStorefrontIcon className="h-8 w-8 shrink-0 text-gray-400" aria-hidden />
                                       </div>
                                     )}
                                     <div className="flex-1">
@@ -461,7 +453,7 @@ const SearchPage = () => {
                         <div>
                           {activeTab === "all" && (
                             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                              <BiCategory className="w-6 h-6" />
+                              <TagIcon className="h-6 w-6 shrink-0" aria-hidden />
                               Categories
                             </h2>
                           )}
@@ -477,7 +469,7 @@ const SearchPage = () => {
                                 <Link
                                   key={`${category.id}-${category.name}`}
                                   href={`/categories?category=${category.id}`}
-                                  className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-[#FF5733] hover:shadow-md transition-all text-center"
+                                  className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-deepOrange hover:shadow-md transition-all text-center"
                                 >
                                   {imageUrl ? (
                                     <img
@@ -497,7 +489,7 @@ const SearchPage = () => {
                                     />
                                   ) : (
                                     <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                                      <BiCategory className="w-10 h-10 text-gray-400" />
+                                      <TagIcon className="h-10 w-10 shrink-0 text-gray-400" aria-hidden />
                                     </div>
                                   )}
                                   <h3 className="font-medium text-gray-900">{category.name}</h3>

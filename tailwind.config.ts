@@ -8,6 +8,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"DM Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       keyframes: {
         "preloader-drift": {
           "0%, 100%": { transform: "translate(0, 0) scale(1)" },
@@ -96,6 +99,10 @@ export default {
             filter: "brightness(1) drop-shadow(0 0 0 transparent)",
           },
         },
+        "cart-scroll-nudge": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(6px)" },
+        },
       },
       animation: {
         "preloader-drift": "preloader-drift 20s ease-in-out infinite",
@@ -114,6 +121,7 @@ export default {
         "modern-float": "modern-float 5s ease-in-out infinite",
         "compare-nav-pulse": "compare-nav-pulse 1.6s ease-in-out infinite",
         "compare-nav-bump": "compare-nav-bump 0.85s ease-out 1",
+        "cart-scroll-nudge": "cart-scroll-nudge 1.25s ease-in-out infinite",
       },
       colors: {
         primary: "#425A8B",

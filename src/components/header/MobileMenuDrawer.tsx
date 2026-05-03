@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import {
+    ArrowTopRightOnSquareIcon,
+    BuildingOffice2Icon,
+    BuildingStorefrontIcon,
+    PencilSquareIcon,
+    TruckIcon,
+    UserIcon,
+    XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { HI_FRAME_HEADER, HI_FRAME_WELL, HI_FRAME_WELL_EMERALD, HI_MD, HI_SM } from '@/lib/hawolaIconTheme';
 import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
 import { addToCartsLocal } from '@/redux/product/productSlice';
 import { logout } from '@/redux/auth/authSlice';
+// import CuratedPopularCategoriesDrawer from '@/components/category/CuratedPopularCategoriesDrawer';
 
 interface DrawerLinkProps {
     href?: string;
@@ -17,15 +28,9 @@ interface DrawerProps {
     messageCount?: number;
 }
 
-const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) => {
-    // const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
-    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null>(null);
-    const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState<boolean>(false);
-
+const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _messageCount = 3 }) => {
     const dispatch = useAppDispatch();
     const router = useRouter();
-    const { categories } = useAppSelector((state) => state.products);
     const { isAuthenticated, user, profile } = useAppSelector((state) => state.auth);
 
     const displayEmail = profile?.email || user?.email || '';
@@ -74,88 +79,34 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                 className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
                     isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
-                onClick={() => {
-                    setIsCategoryDrawerOpen(false);
-                    onClose();
-                }}
+                onClick={onClose}
             />
 
             {/* Drawer */}
             <div
-                className={`fixed top-0 right-0 h-full w-80 bg-white z-50 shadow-xl overflow-x-hidden transform transition-transform duration-300 ease-in-out ${
+                className={`fixed top-0 right-0 flex h-full w-80 flex-col bg-white z-50 shadow-xl overflow-x-hidden transform transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
-                <div className="flex items-center justify-between p-4">
-                    {/* Logo */}
-                    <div className="flex items-center ">
-                        <img src="/hawola_Logo.png" alt="Logo" className="w-30 h-10"/>
+                <div className="flex shrink-0 items-center justify-between p-4">
+                    <div className="flex items-center">
+                        <img src="/hawola_Logo.png" alt="Logo" className="w-30 h-10" />
                     </div>
-                    <svg onClick={onClose} width={'35'} height={'35'} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h24v24h-24z" fill="#fff" opacity="0" transform="matrix(-1 0 0 -1 24 24)"/><path d="m13.41 12 4.3-4.29a1 1 0 1 0 -1.42-1.42l-4.29 4.3-4.29-4.3a1 1 0 0 0 -1.42 1.42l4.3 4.29-4.3 4.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l4.29-4.3 4.29 4.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z" fill="#8C9EC5"/></svg>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className={HI_FRAME_HEADER}
+                        aria-label="Close menu"
+                    >
+                        <XMarkIcon className={HI_MD} aria-hidden />
+                    </button>
                 </div>
-                <div className="h-full flex flex-col overflow-hidden">
-                    {/* Navigation Links (Home / Shop / Vendors / …) — off; categories entry below */}
-                    <div className="p-4 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                            <Link
-                                href="/cars"
-                                onClick={onClose}
-                                className="rounded-md border border-slate-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-700"
-                            >
-                                Cars
-                            </Link>
-                            <Link
-                                href="/real-estate"
-                                onClick={onClose}
-                                className="rounded-md border border-emerald-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-emerald-700"
-                            >
-                                Real Estate
-                            </Link>
-                        </div>
-
-                        {/* {navigationLinks.map((item) => (
-                            <DrawerLink
-                                key={item.label}
-                                item={item}
-                                isExpanded={expandedItems[item.label] || false}
-                                onToggleExpand={() => toggleExpand(item.label)}
-                            />
-                        ))} */}
-
-                        {/* Entry point for categories drawer */}
-                        {categories?.categories && categories.categories.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={() => setIsCategoryDrawerOpen(true)}
-                                className="w-full mt-2 flex items-center justify-between rounded-md px-3 py-2 text-sm font-semibold text-primary bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
-                            >
-                                <span>Shop by categories</span>
-                                <svg
-                                    className="w-4 h-4 text-gray-400"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 5l7 7-7 7"
-                                    />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
-
-                    {/* User Greeting + Account CTA (mirrors desktop account behavior) */}
-                    <div className="p-4 border-t border-gray-200 flex items-center justify-between gap-3">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    {/* Account first — below logo */}
+                    <div className="shrink-0 border-b border-gray-200 p-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 border-2 border-[#17CE89] border-solid rounded-full flex items-center justify-center bg-white">
-                                <img
-                                    src="/assets/account.svg"
-                                    alt="Account"
-                                    className="w-5 h-5"
-                                />
+                            <div className={`${HI_FRAME_WELL} border-primary/25 bg-white`}>
+                                <UserIcon className={`${HI_MD} text-primary`} aria-hidden />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-primary">
@@ -181,9 +132,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                         )}
                     </div>
 
-                    {/* Account Links (authenticated only, same items as desktop dropdown) */}
                     {isAuthenticated && (
-                        <div className="p-4 border-b border-gray-200 space-y-3">
+                        <div className="shrink-0 space-y-3 border-b border-gray-200 p-4">
                             <div className="grid grid-cols-2 gap-2">
                                 {accountLinks.map((item) => (
                                     <Link
@@ -208,232 +158,67 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount = 3 }) =>
                             </button>
                         </div>
                     )}
+
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                        <div className="space-y-3 p-4">
+                            {/* Cars & Real Estate — light tiles, navy / emerald text */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <Link
+                                    href="/cars"
+                                    onClick={onClose}
+                                    className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-slate-50 px-2 py-3 text-center text-xs font-semibold text-headerBg shadow-sm transition hover:border-slate-300 hover:bg-slate-100"
+                                >
+                                    <TruckIcon className={`${HI_MD} text-primary`} aria-hidden />
+                                    Cars
+                                </Link>
+                                <Link
+                                    href="/real-estate"
+                                    onClick={onClose}
+                                    className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-emerald-200/90 bg-emerald-50 px-2 py-3 text-center text-xs font-semibold text-emerald-900 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100"
+                                >
+                                    <BuildingOffice2Icon className={`${HI_MD} text-emerald-700`} aria-hidden />
+                                    Real Estate
+                                </Link>
+                            </div>
+
+                            <a
+                                href="https://merchant.hawola.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={onClose}
+                                className="flex items-center gap-3 rounded-lg border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white px-3 py-3 shadow-sm transition hover:border-slate-300 hover:from-slate-100"
+                            >
+                                <span className={HI_FRAME_WELL}>
+                                    <BuildingStorefrontIcon className={`${HI_MD} text-primary`} aria-hidden />
+                                </span>
+                                <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-primary">
+                                    Create your own store
+                                </span>
+                                <ArrowTopRightOnSquareIcon className={`${HI_SM} text-slate-400`} aria-hidden />
+                            </a>
+
+                            <Link
+                                href="/looking-for-product"
+                                onClick={onClose}
+                                className="flex items-center gap-3 rounded-lg border border-secondaryTextColor/25 bg-gradient-to-br from-[#5BC694]/12 to-emerald-50/40 px-3 py-3 shadow-sm transition hover:border-secondaryTextColor/40 hover:from-[#5BC694]/18"
+                            >
+                                <span className={HI_FRAME_WELL_EMERALD}>
+                                    <PencilSquareIcon className={`${HI_MD} text-emerald-800`} aria-hidden />
+                                </span>
+                                <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-emerald-950">
+                                    Request for a product
+                                </span>
+                            </Link>
+
+                            {/* Browse by aisle / curated categories — temporarily hidden
+                            <CuratedPopularCategoriesDrawer onNavigate={onClose} />
+                            */}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Categories side drawer layered on top */}
-            {categories?.categories && (
-                <CategoriesDrawer
-                    isOpen={isCategoryDrawerOpen}
-                    onClose={() => setIsCategoryDrawerOpen(false)}
-                    categories={categories.categories}
-                    selectedCategoryId={selectedCategoryId}
-                    setSelectedCategoryId={setSelectedCategoryId}
-                    selectedSubCategoryId={selectedSubCategoryId}
-                    setSelectedSubCategoryId={setSelectedSubCategoryId}
-                />
-            )}
         </>
-    );
-};
-
-// Separate categories side drawer on top of main drawer
-const CategoriesDrawer: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    categories: any[];
-    selectedCategoryId: number | null;
-    setSelectedCategoryId: (id: number | null) => void;
-    selectedSubCategoryId: number | null;
-    setSelectedSubCategoryId: (id: number | null) => void;
-}> = ({
-    isOpen,
-    onClose,
-    categories,
-    selectedCategoryId,
-    setSelectedCategoryId,
-    selectedSubCategoryId,
-    setSelectedSubCategoryId,
-}) => {
-    return (
-        <div
-            className={`fixed top-0 right-0 h-full w-80 bg-white z-[60] shadow-xl transform transition-transform duration-300 ease-in-out ${
-                isOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
-        >
-            <div className="h-full flex flex-col">
-                {/* Header with back button */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-                    >
-                        <svg
-                            className="w-5 h-5 mr-1"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                        Back
-                    </button>
-                    <h2 className="text-sm font-semibold text-primary">Categories</h2>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                {/* Body: 3-level categories list */}
-                <div className="flex-1 overflow-y-auto p-4 hide-scrollbar">
-                    {categories
-                        .filter(
-                            (item, index, self) =>
-                                item.name &&
-                                self.findIndex((i: any) => i.name === item.name) === index
-                        )
-                        .map((category: any) => {
-                            const isActiveCategory = selectedCategoryId === category.id;
-                            const hasSubcategories =
-                                category.subcategory && category.subcategory.length > 0;
-
-                            return (
-                                <div key={category.id} className="mb-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (hasSubcategories) {
-                                                setSelectedCategoryId(
-                                                    isActiveCategory ? null : category.id
-                                                );
-                                                setSelectedSubCategoryId(null);
-                                            } else {
-                                                onClose();
-                                                window.location.href = `/categories?type=cat&slug=${category.slug}`;
-                                            }
-                                        }}
-                                        className={`w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
-                                            isActiveCategory
-                                                ? 'bg-gray-100 text-deepOrange'
-                                                : 'text-gray-800 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <span className="truncate">{category.name}</span>
-                                        {hasSubcategories && (
-                                            <svg
-                                                className={`w-4 h-4 text-gray-400 transform transition-transform ${
-                                                    isActiveCategory ? 'rotate-90' : ''
-                                                }`}
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M9 5l7 7-7 7"
-                                                />
-                                            </svg>
-                                        )}
-                                    </button>
-
-                                    {/* Second level: subcategories */}
-                                    {isActiveCategory && hasSubcategories && (
-                                        <div className="mt-1 ml-3 border-l border-gray-200 pl-2 space-y-1">
-                                            {category.subcategory.map((subcat: any) => {
-                                                const isActiveSub =
-                                                    selectedSubCategoryId === subcat.id;
-                                                const hasThirdLevel =
-                                                    subcat.second_subcategory &&
-                                                    subcat.second_subcategory.length > 0;
-
-                                                return (
-                                                    <div key={subcat.id}>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                if (hasThirdLevel) {
-                                                                    setSelectedSubCategoryId(
-                                                                        isActiveSub
-                                                                            ? null
-                                                                            : subcat.id
-                                                                    );
-                                                                } else {
-                                                                    onClose();
-                                                                    window.location.href = `/categories?type=subcat&slug=${subcat.slug}`;
-                                                                }
-                                                            }}
-                                                            className={`w-full flex items-center justify-between rounded-md px-2 py-1.5 text-[11px] transition-colors ${
-                                                                isActiveSub
-                                                                    ? 'bg-gray-100 text-deepOrange'
-                                                                    : 'text-gray-700 hover:bg-gray-100'
-                                                            }`}
-                                                        >
-                                                            <span className="truncate">
-                                                                {subcat.name}
-                                                            </span>
-                                                            {hasThirdLevel && (
-                                                                <svg
-                                                                    className={`w-3 h-3 text-gray-400 transform transition-transform ${
-                                                                        isActiveSub
-                                                                            ? 'rotate-90'
-                                                                            : ''
-                                                                    }`}
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M9 5l7 7-7 7"
-                                                                    />
-                                                                </svg>
-                                                            )}
-                                                        </button>
-
-                                                        {/* Third level: second_subcategory */}
-                                                        {isActiveSub && hasThirdLevel && (
-                                                            <div className="mt-1 ml-3 border-l border-gray-200 pl-2 space-y-1">
-                                                                {subcat.second_subcategory.map(
-                                                                    (secSubcat: any) => (
-                                                                        <Link
-                                                                            key={secSubcat.id}
-                                                                            href={`/categories?type=secsubcat&slug=${secSubcat.slug}`}
-                                                                            onClick={onClose}
-                                                                            className="block rounded-md px-2 py-1 text-[10px] text-gray-700 hover:text-deepOrange hover:bg-gray-100 transition-colors"
-                                                                        >
-                                                                            {secSubcat.name}
-                                                                        </Link>
-                                                                    )
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                </div>
-            </div>
-        </div>
     );
 };
 

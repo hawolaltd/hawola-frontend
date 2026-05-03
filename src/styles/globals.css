@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
 /* Custom animations for dashboard template */
 @keyframes fade-in {
   from {

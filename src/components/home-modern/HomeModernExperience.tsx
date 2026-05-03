@@ -150,7 +150,7 @@ function HeroEditorialSplit({
                 alt=""
                 width={1400}
                 height={900}
-                className="h-full w-full object-cover object-center"
+                className="h-full w-full bg-slate-100 object-contain object-center lg:object-cover"
                 priority={idx === 0}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent lg:from-black/35" />
@@ -239,7 +239,7 @@ function CategoryMarquee({ categories }: { categories: PopularCategory[] }) {
   if (!categories.length) return null;
   const doubled = [...categories, ...categories];
   return (
-    <div className="border-y border-slate-200 bg-headerBg py-3 text-white motion-reduce:hidden">
+    <div id="categories" className="scroll-mt-24 border-y border-slate-200 bg-headerBg py-3 text-white motion-reduce:hidden">
       <div className="relative overflow-hidden">
         <div className="flex w-max motion-safe:animate-modern-marquee">
           {doubled.map((cat, idx) => (
@@ -377,7 +377,7 @@ function BentoRecommended({ products }: { products: ProductFull[] }) {
       <div className="mx-auto max-w-6xl px-6 sm:px-10">
         <h3 className="font-[family-name:Kanit] text-2xl font-bold text-headerBg sm:text-3xl">More recommended</h3>
         <p className="mt-2 max-w-lg text-sm text-slate-600">A tighter grid with hover depth—same products as classic home, different rhythm.</p>
-        <div className="mt-10 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+        <div className="mt-10 grid grid-cols-2 gap-3 auto-rows-fr sm:gap-4 lg:grid-cols-4 lg:gap-5">
           {rest.map((product, key) => (
             <div
               key={product.id ?? key}
@@ -386,43 +386,6 @@ function BentoRecommended({ products }: { products: ProductFull[] }) {
               <ProductCard product={product} />
             </div>
           ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CategorySnapStrip({ categories }: { categories: PopularCategory[] }) {
-  if (!categories.length) return null;
-  return (
-    <section id="categories" className="scroll-mt-24 border-b border-slate-200 bg-white py-14 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6 sm:px-10">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <h2 className="font-[family-name:Kanit] text-3xl font-bold text-headerBg">Browse by aisle</h2>
-          <Link href="/categories" className="shrink-0 text-sm font-bold text-secondaryTextColor hover:underline">
-            All categories
-          </Link>
-        </div>
-        <div className="relative">
-          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-12 bg-gradient-to-r from-white to-transparent" />
-          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-12 bg-gradient-to-l from-white to-transparent" />
-          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {categories.slice(0, 16).map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/categories?type=cat&slug=${encodeURIComponent(cat.slug)}`}
-                className="snap-start shrink-0 w-[132px] sm:w-[148px]"
-              >
-                <div className="flex flex-col items-center rounded-2xl border-2 border-slate-100 bg-slate-50/80 p-5 transition hover:border-secondaryTextColor hover:bg-white hover:shadow-lg">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-inner ring-1 ring-slate-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={cat.icon} alt="" className="h-14 w-14 object-contain" />
-                  </div>
-                  <p className="mt-4 text-center text-[13px] font-bold leading-snug text-headerBg line-clamp-2">{cat.name}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </section>
@@ -487,30 +450,30 @@ function TopRatedBento({
             <h2 className="mt-2 font-[family-name:Kanit] text-3xl font-bold text-headerBg sm:text-4xl">Top rated picks</h2>
             <p className="mt-2 max-w-xl text-sm text-slate-600">Asymmetric grid: hero tile + companions—feels editorial, not catalog-default.</p>
             {cells.length > 0 && (
-              <div className="mt-10 grid gap-4 lg:grid-cols-12 lg:grid-rows-2 lg:gap-5">
+              <div className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-12 lg:grid-rows-2 lg:gap-5">
                 {cells[0] && (
-                  <div className="lg:col-span-6 lg:row-span-2">
+                  <div className="col-span-1 lg:col-span-6 lg:row-span-2">
                     <div className="h-full min-h-[200px] rounded-[1.75rem] border border-slate-200 bg-white p-1 shadow-lg transition hover:shadow-xl lg:min-h-[380px]">
                       <ProductCard product={cells[0]} />
                     </div>
                   </div>
                 )}
                 {cells[1] && (
-                  <div className="lg:col-span-3">
+                  <div className="col-span-1 lg:col-span-3">
                     <div className="h-full rounded-2xl border border-slate-200 bg-white p-1 shadow-md">
                       <ProductCard product={cells[1]} />
                     </div>
                   </div>
                 )}
                 {cells[2] && (
-                  <div className="lg:col-span-3">
+                  <div className="col-span-1 lg:col-span-3">
                     <div className="h-full rounded-2xl border border-slate-200 bg-white p-1 shadow-md">
                       <ProductCard product={cells[2]} />
                     </div>
                   </div>
                 )}
                 {cells[3] && (
-                  <div className="lg:col-span-6">
+                  <div className="col-span-1 lg:col-span-6">
                     <div className="rounded-2xl border border-slate-200 bg-white p-1 shadow-md">
                       <ProductCard product={cells[3]} />
                     </div>
@@ -557,7 +520,7 @@ function TopSellingStrip({ products }: { products: ProductFull[] }) {
             Search the catalog →
           </Link>
         </div>
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           {products.slice(0, 8).map((product, key) => (
             <div
               key={product.id ?? key}
@@ -667,7 +630,6 @@ export default function HomeModernExperience() {
         </>
       )}
 
-      <CategorySnapStrip categories={categories} />
       <AdShowcase banners={advertTop} label="Featured partners" variant="a" />
       <TopRatedBento products={topRated} bestSelling={bestSelling} />
       <AdShowcase banners={advertMid} label="In the spotlight" variant="b" />

@@ -10,6 +10,9 @@ import productService from "@/redux/product/productService";
 import axiosInstance from "@/libs/api/axiosInstance";
 import { API } from "@/constant";
 import { toast } from "sonner";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+
+const HOW_IT_WORKS_DISMISS_KEY = "hawola-buying-how-it-works-dismissed";
 
 interface Category {
   id: number;
@@ -32,6 +35,26 @@ const LookingForProductPage = () => {
   const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(true);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && sessionStorage.getItem(HOW_IT_WORKS_DISMISS_KEY) === "1") {
+        setShowHowItWorks(false);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const dismissHowItWorks = () => {
+    try {
+      sessionStorage.setItem(HOW_IT_WORKS_DISMISS_KEY, "1");
+    } catch {
+      // ignore
+    }
+    setShowHowItWorks(false);
+  };
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -136,7 +159,7 @@ const LookingForProductPage = () => {
     }
   };
 
-  const metaTitle = "I am looking for this product | Hawola";
+  const metaTitle = "Request for a product | Hawola";
   const metaDescription =
     "Tell Hawola what you are looking for, upload photos and details, and let trusted merchants show interest in finding it for you.";
 
@@ -154,7 +177,7 @@ const LookingForProductPage = () => {
           <div className="flex flex-col">
             <div className="mb-5">
               <h2 className="text-xl md:text-2xl font-semibold text-gray-900">
-                I am looking for this product
+                Request for a product
               </h2>
               <p className="mt-1.5 text-sm text-gray-600">
                 Post a buying request and let verified merchants on Hawola respond. Your
@@ -238,28 +261,38 @@ const LookingForProductPage = () => {
               </div>
             ) : (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-7 space-y-6">
-                <div className="bg-blue-50 border border-blue-100 text-blue-800 text-sm rounded-lg p-4">
-                  <p className="font-medium">How it works</p>
-                  <ul className="mt-2 list-disc list-inside space-y-1 text-blue-900">
-                    <li>
-                      Describe the product you want and add clear photos if you have
-                      them.
-                    </li>
-                    <li>
-                      Optionally paste a video link from YouTube, Vimeo, Alibaba,
-                      Instagram, Facebook, Twitter/X, LinkedIn or TikTok.
-                    </li>
-                    <li>Interested merchants send you a message.</li>
-                    <li>
-                      You decide which merchant to share your contact details with
-                      before any merchant can see your phone or email.
-                    </li>
-                    <li>
-                      Each request stays active for <strong>21 days</strong>. After that it
-                      automatically expires and will no longer be visible to merchants.
-                    </li>
-                  </ul>
-                </div>
+                {showHowItWorks ? (
+                  <div className="relative bg-blue-50 border border-blue-100 text-blue-800 text-sm rounded-lg p-4 pr-10">
+                    <button
+                      type="button"
+                      onClick={dismissHowItWorks}
+                      className="absolute right-2 top-2 rounded-full p-1.5 text-blue-700 transition hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label="Close how it works"
+                    >
+                      <XMarkIcon className="h-5 w-5" aria-hidden />
+                    </button>
+                    <p className="font-medium">How it works</p>
+                    <ul className="mt-2 list-disc list-inside space-y-1 text-blue-900">
+                      <li>
+                        Describe the product you want and add clear photos if you have
+                        them.
+                      </li>
+                      <li>
+                        Optionally paste a video link from YouTube, Vimeo, Alibaba,
+                        Instagram, Facebook, Twitter/X, LinkedIn or TikTok.
+                      </li>
+                      <li>Interested merchants send you a message.</li>
+                      <li>
+                        You decide which merchant to share your contact details with
+                        before any merchant can see your phone or email.
+                      </li>
+                      <li>
+                        Each request stays active for <strong>21 days</strong>. After that it
+                        automatically expires and will no longer be visible to merchants.
+                      </li>
+                    </ul>
+                  </div>
+                ) : null}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>

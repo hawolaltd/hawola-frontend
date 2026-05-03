@@ -16,7 +16,21 @@ type ShippingFormValues = {
     phone2?: string;
 };
 
-const ShippingAddressForm = ({selectedAdd, editingAddress}:{selectedAdd: AddressData, editingAddress: boolean}) => {
+type ShippingAddressFormProps = {
+  selectedAdd: AddressData;
+  editingAddress: boolean;
+  /** Called after address is saved and list is refreshed (e.g. close modal) */
+  onSuccess?: () => void;
+  /** Hide page heading — use when the form is inside a modal/sheet */
+  embedded?: boolean;
+};
+
+const ShippingAddressForm = ({
+  selectedAdd,
+  editingAddress,
+  onSuccess,
+  embedded,
+}: ShippingAddressFormProps) => {
     const dispatch = useAppDispatch();
     const { states, stateLocations, isLoading } = useAppSelector(state => state.general);
 
@@ -60,12 +74,15 @@ const ShippingAddressForm = ({selectedAdd, editingAddress}:{selectedAdd: Address
         if(!res.type.includes('rejected')){
             toast.success('Successfully')
             dispatch(getAddress())
+            onSuccess?.()
         }
     };
 
     return (
         <div className="w-full mx-auto">
-            <h2 className="text-lg font-semibold mb-4 text-slate-800">Shipping address</h2>
+            {!embedded ? (
+                <h2 className="text-lg font-semibold mb-4 text-slate-800">Shipping address</h2>
+            ) : null}
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Controller

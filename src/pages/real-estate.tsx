@@ -3,9 +3,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/home/Footer";
-import Drawer from "@/components/header/MobileMenuDrawer";
-import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import productService from "@/redux/product/productService";
 import { ProductFull } from "@/types/home";
 import RealEstateShowcaseCard from "@/components/product/RealEstateShowcaseCard";
@@ -27,9 +24,6 @@ function orderPromotedFirst(promoted: ProductFull[], products: ProductFull[]) {
 }
 
 export default function RealEstateCuratedPage() {
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
-  const dispatch = useAppDispatch();
-
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductFull[]>([]);
   const [promotedIds, setPromotedIds] = useState<Set<number>>(new Set());
@@ -77,7 +71,6 @@ export default function RealEstateCuratedPage() {
         <title>Real Estate | Hawola</title>
       </Head>
       {loading ? <SiteSettingsPreloader /> : null}
-      <Drawer isOpen={isDrawerOpen} onClose={() => dispatch(setDrawerOpen(false))} messageCount={3} />
       <Header />
 
       <section className="border-b border-emerald-100 bg-gradient-to-r from-emerald-900 via-emerald-700 to-teal-700">
@@ -110,7 +103,7 @@ export default function RealEstateCuratedPage() {
             <p className="text-sm text-slate-500">No real-estate listings are available yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {products.map((product) => (
               <RealEstateShowcaseCard
                 key={product.id}

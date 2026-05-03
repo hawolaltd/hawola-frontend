@@ -2,7 +2,9 @@ import { AddressData } from "@/types/product";
 import { amountFormatter, formatCurrency } from "@/util";
 import AddressCard from "@/components/AddressCard";
 import ShippingAddressForm from "@/components/ShippingAddressForm";
-import React, { useState } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import DeleteModal from "@/components/shared/Delete";
 import { useAppDispatch } from "@/hook/useReduxTypes";
 import {
@@ -12,6 +14,23 @@ import {
   getCarts,
 } from "@/redux/product/productSlice";
 import { toast } from "sonner";
+
+/** Tailwind `md` is 768px — sheet matches max-md */
+function useIsNarrowViewport() {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === "undefined") return () => {};
+      const mq = window.matchMedia("(max-width: 767px)");
+      mq.addEventListener("change", onStoreChange);
+      return () => mq.removeEventListener("change", onStoreChange);
+    },
+    () =>
+      typeof window !== "undefined"
+        ? window.matchMedia("(max-width: 767px)").matches
+        : false,
+    () => false
+  );
+}
 
 const OrderSummary = ({
   subtotal,
@@ -59,6 +78,19 @@ const OrderSummary = ({
 
   const dispatch = useAppDispatch();
 
+  const narrow = useIsNarrowViewport();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!showForm || !narrow || !mounted) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showForm, narrow, mounted]);
+
   // console.log("addresses--", addresses);
   // console.log("selectedAdd--", selectedAdd, selectedAdd?.id);
   
@@ -80,10 +112,10 @@ const OrderSummary = ({
             setOpenDelete(null);
           }
         }}
-        warningText={`You are about to delete from your address, Are you really sure about this? This action cannot be undone`}
+        warningText="Delete this address? You will not be able to undo this."
       />
 
-      <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+      <h2 className="text-xl font-bold mb-4">Summary</h2>
 
       <div className="space-y-4">
         <div className="flex justify-between">
@@ -116,7 +148,7 @@ const OrderSummary = ({
           ))
         ) : (
           <p className="text-gray-500 mb-4">
-            You don't have any saved addresses yet.
+            No saved address yet. Add one below when you are ready.
           </p>
         )}
 
@@ -124,7 +156,7 @@ const OrderSummary = ({
           onClick={onAddNewAddress}
           className="mt-4 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          + Add New Address
+          Add an address
         </button>
 
         {selectedAdd && !showForm ? (
@@ -132,15 +164,81 @@ const OrderSummary = ({
             onClick={() => onEditAddress(selectedAdd)}
             className="mt-2 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Edit Shipping Form
+            Edit address
           </button>
         ) : null}
 
-        {showForm && (
+        {showForm && narrow && mounted
+          ? createPortal(
+              <div
+                className="fixed inset-0 z-[100] md:hidden"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cart-address-sheet-title"
+              >
+                <button
+                  type="button"
+                  className="absolute inset-0 bg-slate-900/55 backdrop-blur-[3px] transition-opacity"
+                  onClick={onCancelForm}
+                  aria-label="Close address form"
+                />
+                <div className="absolute inset-x-0 bottom-0 flex max-h-[min(92vh,calc(100dvh-0.5rem))] flex-col rounded-t-[1.35rem] bg-white shadow-[0_-8px_40px_rgba(15,23,42,0.18)] ring-1 ring-slate-200/90">
+                  <div
+                    className="mx-auto mt-2.5 h-1 w-11 shrink-0 rounded-full bg-slate-200/90"
+                    aria-hidden
+                  />
+                  <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50/80 px-4 pb-3 pt-1">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-deepOrange">
+                        Delivery
+                      </p>
+                      <h2
+                        id="cart-address-sheet-title"
+                        className="truncate text-lg font-bold text-headerBg"
+                      >
+                        {editingAddress
+                          ? "Edit delivery address"
+                          : "New delivery address"}
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onCancelForm}
+                      className="shrink-0 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-deepOrange focus-visible:ring-offset-2"
+                      aria-label="Close"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
+                    <ShippingAddressForm
+                      embedded
+                      editingAddress={editingAddress}
+                      selectedAdd={selectedAdd as AddressData}
+                      onSuccess={onCancelForm}
+                    />
+                  </div>
+                  <div className="shrink-0 border-t border-slate-100 bg-slate-50/90 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                    <button
+                      type="button"
+                      onClick={onCancelForm}
+                      className="w-full rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-deepOrange focus-visible:ring-offset-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )
+          : null}
+
+        {showForm && !narrow ? (
           <div className="border-t pt-4 flex flex-col justify-between">
             <ShippingAddressForm
               editingAddress={editingAddress}
               selectedAdd={selectedAdd as AddressData}
+              onSuccess={onCancelForm}
             />
             <button
               onClick={onCancelForm}
@@ -149,7 +247,7 @@ const OrderSummary = ({
               Cancel
             </button>
           </div>
-        )}
+        ) : null}
 
         <div className="border-t pt-4 flex justify-between">
           <span className="font-bold">Total:</span>
@@ -161,7 +259,7 @@ const OrderSummary = ({
 
       {/* Coupon Code */}
       <div className="mt-6">
-        <h3 className="font-medium mb-3">Apply Coupon</h3>
+        <h3 className="font-medium mb-3">Coupon code</h3>
         <div className="flex">
           <input
             type="text"
@@ -198,7 +296,7 @@ const OrderSummary = ({
       {/* Show login message for unauthenticated users */}
       {!isAuthenticated && (
         <div className="mt-4 p-3 bg-blue-50 text-blue-600 rounded-md text-sm">
-          Please login to proceed with checkout
+          Log in to check out
         </div>
       )}
 
@@ -234,14 +332,14 @@ const OrderSummary = ({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Processing...
+            Working...
           </>
         ) : !isAuthenticated ? (
-          "Login to Checkout"
+          "Log in to check out"
         ) : directMerchantMode ? (
           "Proceed to checkout"
         ) : (
-          "Proceed To Checkout"
+          "Proceed to checkout"
         )}
       </button>
     </div>

@@ -85,8 +85,8 @@ export default function BuyingRequests() {
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">My buying requests</h2>
         <p className="text-sm text-gray-600">
-          You have not posted any buying requests yet. When you use &quot;I am looking for this
-          product&quot;, they will appear here.
+          You have not posted any buying requests yet. When you use &quot;Request for a
+          product&quot;, your requests will appear here.
         </p>
       </div>
     );

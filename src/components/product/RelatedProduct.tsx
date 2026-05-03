@@ -27,7 +27,7 @@ const RelatedProduct = ({product}: ProductCardProps) => {
 
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
                     {product?.merchant_other_products?.map((product, key) => (<MerchantOtherItemsCard  key={key} product={product}/>))}
                 </div>
             </div>
@@ -40,7 +40,7 @@ const RelatedProduct = ({product}: ProductCardProps) => {
 
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
                     {product?.merchant_other_products?.map((product, key) => (<MerchantOtherItemsCard key={key} product={product}/>))}
                 </div>
             </div> */}
@@ -57,7 +57,7 @@ const RelatedProduct = ({product}: ProductCardProps) => {
 
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
                     {products?.results?.slice(0, 5)?.map((product, key) => (<ProductCard key={key} product={product}/>))}
                 </div>
             </div> */}

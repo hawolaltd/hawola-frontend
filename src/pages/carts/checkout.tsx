@@ -10,6 +10,7 @@ import { getUserProfile } from "@/redux/auth/authSlice";
 import { getSiteSettings } from "@/redux/general/generalSlice";
 import { wrapper } from "@/store/store";
 import type { PaystackProps } from "react-paystack/libs/types";
+import Link from "next/link";
 
 /** Opens Paystack once when mounted — no dependency on changing `config` objects (avoids re-initializing on every render). */
 const PaystackOpenOnce = dynamic(
@@ -184,7 +185,7 @@ const CheckoutPage = () => {
   if (loading) {
     return (
       <AuthLayout>
-        <div className="container mx-auto px-4 py-8 flex justify-center">
+        <div className="mx-auto flex w-full max-w-screen-xl justify-center max-md:bg-slate-100 max-md:px-3 max-md:py-8 md:px-6 md:py-8 xl:px-0">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </AuthLayout>
@@ -194,16 +195,19 @@ const CheckoutPage = () => {
   if (!orders) {
     return (
       <AuthLayout>
-        <div className="container mx-auto px-4 py-8 text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">
-            Order not found
-          </h2>
-          <button
-            onClick={() => router.push("/carts")}
-            className="px-6 py-2 bg-primary text-white rounded-md"
-          >
-            Back to Cart
-          </button>
+        <div className="mx-auto w-full max-w-screen-xl max-md:bg-slate-100 max-md:px-3 max-md:py-8 md:px-6 md:py-8 xl:px-0 text-center">
+          <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="mb-4 text-xl font-bold text-red-600 max-md:text-lg">
+              Order not found
+            </h2>
+            <button
+              type="button"
+              onClick={() => router.push("/carts")}
+              className="rounded-xl bg-primary px-6 py-3 font-medium text-white transition hover:bg-primary-dark"
+            >
+              Back to cart
+            </button>
+          </div>
         </div>
       </AuthLayout>
     );
@@ -212,19 +216,22 @@ const CheckoutPage = () => {
   const showUnpaidBadges = escrowDisabled || paymentMethod === "pod";
   const primaryIsUnpaid = escrowDisabled || paymentMethod === "pod";
 
+  const cardShell =
+    "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm";
+
   return (
     <AuthLayout>
-      <div className="container relative mx-auto px-4 py-8">
+      <div className="relative mx-auto w-full max-w-screen-xl max-md:bg-slate-100 max-md:px-3 max-md:py-5 md:px-6 md:py-8 xl:px-0">
         {loading && (
-          <div className="container absolute w-full h-full z-50 backdrop-blur-md items-center px-4 py-8 flex justify-center">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         )}
 
         {showPaystack && !escrowDisabled && paymentMethod === "card" && (
           <>
-            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-              <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-sm text-center">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xl">
                 <div className="mx-auto mb-4 animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
                 <h3 className="text-lg font-semibold mb-1">Waiting for payment...</h3>
                 <p className="text-sm text-gray-600">
@@ -248,8 +255,8 @@ const CheckoutPage = () => {
         )}
 
         {paymentConfirming && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-sm text-center">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xl">
               <div className="mx-auto mb-4 animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
               <h3 className="text-lg font-semibold mb-1">Confirming your order...</h3>
               <p className="text-sm text-gray-600">
@@ -259,54 +266,57 @@ const CheckoutPage = () => {
           </div>
         )}
 
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 className="mb-8 text-3xl font-bold text-headerBg max-md:mb-4 max-md:text-xl">
+          Checkout
+        </h1>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-2/3">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+        {/* Single column on all breakpoints — matches mobile cart flow site-wide */}
+        <div className="flex flex-col gap-4">
+          <div className={cardShell}>
+            <div className="p-4 md:p-6">
+              <h2 className="mb-4 text-xl font-bold text-headerBg max-md:text-lg">
+                Order summary
+              </h2>
 
-              <div className="space-y-4">
+              <div className="space-y-0 divide-y divide-slate-100">
                 {orders?.orderItems?.map((item: any) => (
                   <div
                     key={item?.id}
-                    className="flex justify-between border-b pb-4"
+                    className="flex gap-3 py-4 first:pt-0 last:pb-0"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gray-200 rounded-md">
-                        <img
-                          src={featuredImageCardUrl(item?.product?.featured_image?.[0])}
-                          alt={item?.product?.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="font-medium flex flex-wrap items-center gap-2">
-                          {item?.product?.name}
-                          {showUnpaidBadges && (
-                            <span className="inline-flex items-center rounded border border-yellow-300/90 bg-yellow-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-950 dark:border-yellow-300/90 dark:bg-yellow-50 dark:text-yellow-950">
-                              Unpaid
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-sm text-gray-500">Qty: {item?.qty}</p>
-                        {item?.variant && item?.variant?.length > 0 && (
-                          <div className="mt-1">
-                            {item?.variant?.map((v: any, i: number) => (
-                              <p key={i} className="text-xs text-gray-500">
-                                {v.variant?.name}: {v.variant_value?.value}
-                              </p>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200/80">
+                      <img
+                        src={featuredImageCardUrl(item?.product?.featured_image?.[0])}
+                        alt={item?.product?.name}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="flex flex-wrap items-center gap-2 font-semibold text-slate-800">
+                        {item?.product?.name}
+                        {showUnpaidBadges && (
+                          <span className="inline-flex items-center rounded border border-yellow-300/90 bg-yellow-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-950">
+                            Unpaid
+                          </span>
+                        )}
+                      </h3>
+                      <p className="mt-0.5 text-sm text-slate-500">Qty: {item?.qty}</p>
+                      {item?.variant && item?.variant?.length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {item?.variant?.map((v: any, i: number) => (
+                            <p key={i} className="text-xs text-slate-500">
+                              {v.variant?.name}: {v.variant_value?.value}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-semibold text-slate-900">
                         {formatCurrency((item?.order_price * item?.qty).toFixed(2))}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        Shipping:{" "}
+                      <p className="text-xs text-slate-500">
+                        Shipping{" "}
                         {formatCurrency((+item?.shipping_price).toFixed(2))}
                       </p>
                     </div>
@@ -314,30 +324,40 @@ const CheckoutPage = () => {
                 ))}
               </div>
             </div>
+          </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
-              <div className="space-y-2">
+          <div className={cardShell}>
+            <div className="p-4 md:p-6">
+              <h2 className="mb-3 text-xl font-bold text-headerBg max-md:text-lg">
+                Shipping address
+              </h2>
+              <div className="space-y-1.5 text-sm text-slate-700">
                 <p>{orders?.shipping_address?.address}</p>
                 <p>
                   {orders?.shipping_address?.city.name},{" "}
                   {orders?.shipping_address?.state.name}
                 </p>
                 <p>{orders?.shipping_address?.country?.name}</p>
-                <p>Phone: {orders?.shipping_address?.phone}</p>
+                <p className="pt-1 text-slate-600">
+                  Phone: {orders?.shipping_address?.phone}
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Payment Method</h2>
+          <div className={cardShell}>
+            <div className="p-4 md:p-6">
+              <h2 className="mb-4 text-xl font-bold text-headerBg max-md:text-lg">
+                Payment method
+              </h2>
 
               {escrowDisabled ? (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Complete your purchase using the button in the order total.
+                <p className="text-sm text-slate-600">
+                  Complete your purchase using the button in the order total below.
                 </p>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 border rounded-md border-primary/30 bg-primary/5">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/[0.06] p-3">
                     <input
                       type="radio"
                       id="pod"
@@ -347,14 +367,14 @@ const CheckoutPage = () => {
                       className="h-5 w-5 text-primary focus:ring-primary"
                     />
                     <label htmlFor="pod" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Pay on delivery</div>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <div className="font-semibold text-slate-800">Pay on delivery</div>
+                      <p className="mt-1 text-xs text-slate-600">
                         Pay when your order is delivered, as agreed with the seller.
                       </p>
                     </label>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 border rounded-md">
+                  <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                     <input
                       type="radio"
                       id="card"
@@ -364,8 +384,10 @@ const CheckoutPage = () => {
                       className="h-5 w-5 text-primary focus:ring-primary"
                     />
                     <label htmlFor="card" className="flex-1 cursor-pointer">
-                      <div className="font-medium">Credit / debit card (Paystack)</div>
-                      <div className="flex gap-2 mt-1">
+                      <div className="font-semibold text-slate-800">
+                        Credit / debit card (Paystack)
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
                         <img src="/assets/visa.webp" alt="Visa" className="h-6" />
                         <img
                           src="/assets/mastercard.png"
@@ -385,28 +407,33 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-              <h2 className="text-xl font-bold mb-4">Order Total</h2>
+          <div
+            id="checkout-order-total"
+            className={cardShell}
+          >
+            <div className="p-4 md:p-6">
+              <h2 className="mb-4 text-xl font-bold text-headerBg max-md:text-lg">
+                Order total
+              </h2>
 
               <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-slate-700">
+                  <span>Subtotal</span>
+                  <span className="font-semibold tabular-nums">
                     {formatCurrency((+orders?.totalPrice || 0).toFixed(2))}
                   </span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span>Shipping:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-slate-700">
+                  <span>Shipping</span>
+                  <span className="font-semibold tabular-nums">
                     {formatCurrency((+orders?.shippingPrice || 0).toFixed(2))}
                   </span>
                 </div>
 
-                <div className="border-t pt-4 flex justify-between">
-                  <span className="font-bold">Total:</span>
-                  <span className="font-bold text-lg">
+                <div className="flex justify-between border-t border-slate-200 pt-4">
+                  <span className="font-bold text-slate-900">Total</span>
+                  <span className="font-bold text-lg tabular-nums text-headerBg">
                     {formatCurrency(
                       (+(orders?.totalPriceDue || orders?.totalPrice) || 0).toFixed(2)
                     )}
@@ -417,16 +444,16 @@ const CheckoutPage = () => {
                   type="button"
                   onClick={() => void onPrimaryCheckout()}
                   disabled={processingPayment}
-                  className={`w-full mt-6 py-3 ${
+                  className={`mt-2 flex w-full items-center justify-center rounded-xl py-3.5 font-medium text-white transition ${
                     processingPayment
-                      ? "bg-blue-300"
+                      ? "cursor-not-allowed bg-slate-300"
                       : "bg-primary hover:bg-primary-dark"
-                  } text-white font-medium rounded-md transition flex justify-center items-center`}
+                  }`}
                 >
                   {processingPayment ? (
                     <>
                       <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -462,6 +489,15 @@ const CheckoutPage = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-10 border-t border-slate-200 pt-8 text-center">
+          <Link
+            href="/carts"
+            className="text-sm font-semibold text-primary underline-offset-4 hover:text-deepOrange hover:underline"
+          >
+            Back to cart
+          </Link>
         </div>
       </div>
     </AuthLayout>

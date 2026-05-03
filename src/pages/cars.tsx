@@ -3,9 +3,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/home/Footer";
-import Drawer from "@/components/header/MobileMenuDrawer";
-import { setDrawerOpen } from "@/redux/ui/uiSlice";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import productService from "@/redux/product/productService";
 import { ProductFull } from "@/types/home";
 import VehicleShowcaseCard from "@/components/product/VehicleShowcaseCard";
@@ -37,9 +34,6 @@ function toProduct(item: any): ProductFull | null {
 }
 
 export default function CarsCuratedPage() {
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
-  const dispatch = useAppDispatch();
-
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductFull[]>([]);
   const [promotedIds, setPromotedIds] = useState<Set<number>>(new Set());
@@ -88,7 +82,6 @@ export default function CarsCuratedPage() {
         <title>Cars & Vehicles | Hawola</title>
       </Head>
       {loading ? <SiteSettingsPreloader /> : null}
-      <Drawer isOpen={isDrawerOpen} onClose={() => dispatch(setDrawerOpen(false))} messageCount={3} />
       <Header />
 
       <section className="relative overflow-hidden border-b border-slate-800 bg-[radial-gradient(circle_at_15%_20%,#0f172a_0%,#020617_65%)]">
@@ -120,7 +113,7 @@ export default function CarsCuratedPage() {
             <p className="text-sm text-slate-500">No vehicle listings are available yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             {products.map((product) => (
               <VehicleShowcaseCard
                 key={product.id}

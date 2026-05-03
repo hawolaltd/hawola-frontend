@@ -211,7 +211,7 @@ function Categories() {
                 </div>
                 <div className="max-h-[520px] overflow-y-auto pr-1">
                   {thirdLevel.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
                       {thirdLevel.map((third: any) => (
                         <Link
                           key={third.id}
@@ -239,7 +239,7 @@ function Categories() {
                 Back to Home
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {recommendedProducts.slice(0, 8).map((product: any) => (
                 <ProductCard key={product?.id} product={product} />
               ))}
@@ -320,7 +320,7 @@ function Categories() {
           <div className="mx-auto w-full max-w-screen-xl px-6 py-8 xl:px-0">
             <ProductSkeleton
               count={10}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4"
+              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4"
             />
           </div>
 
@@ -437,7 +437,7 @@ function Categories() {
         <div
           className={`mx-auto w-full max-w-screen-xl px-6 xl:px-0 ${
             viewMode === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4"
+              ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-x-2 gap-y-4"
               : "space-y-4"
           }`}
         >

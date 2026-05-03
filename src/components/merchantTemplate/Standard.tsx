@@ -595,7 +595,7 @@ const StandardTemplate = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Recent Products
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
                     {recent_products?.map((product) => (
                       <ProductCard
                         key={product.id}

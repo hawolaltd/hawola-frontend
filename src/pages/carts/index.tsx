@@ -5,7 +5,6 @@ import {
 } from "@/util/sanitizeRichNotice";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import FeaturesSection from "@/components/home/FeaturesSection";
 import { toast } from "sonner";
 import {
   addOrder,
@@ -20,8 +19,11 @@ import { AddressData, CartItem } from "@/types/product";
 import { debounce } from "next/dist/server/utils";
 import { getAllStates } from "@/redux/general/generalSlice";
 import CartItemRow from "@/components/cart/CartItemRow";
+import EmptyCartCallout from "@/components/cart/EmptyCartCallout";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useRouter } from "next/router";
+import Link from "next/link";
+import MobileFloatingHint from "@/components/ui/MobileFloatingHint";
 
 interface OrderItem {
   product: number;
@@ -196,6 +198,13 @@ const CartPage = () => {
       setSelectedItems([]);
     }
   };
+
+  const scrollToCheckoutSummary = useCallback(() => {
+    document.getElementById("cart-order-summary")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, []);
 
   // Handle delete cart item
   const handleDeleteCart = async () => {
@@ -524,11 +533,17 @@ const CartPage = () => {
     setPendingUpdates({});
   }, [cartItems, carts, localCart, isAuthenticated]);
 
+  // Shipping restriction message must reset when checkout context changes (e.g. user
+  // deselects a non-shippable line and selects a valid one — error state was stuck).
+  useEffect(() => {
+    setShippingError(null);
+  }, [selectedItems, selectedAdd?.id, selectedAdd?.city?.name, selectedAdd?.state?.name]);
+
   // Show loading state while checking authentication
   if (authLoading) {
     return (
       <AuthLayout>
-        <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
+        <div className="mx-auto flex w-full max-w-screen-xl items-center justify-center px-6 py-8 min-h-screen xl:px-0">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       </AuthLayout>
@@ -539,7 +554,7 @@ const CartPage = () => {
   if (!isAuthenticated) {
     return (
       <AuthLayout>
-        <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
+        <div className="mx-auto flex w-full max-w-screen-xl items-center justify-center px-6 py-8 min-h-screen xl:px-0">
           <div className="text-center">
             <p className="text-gray-600 mb-4">Redirecting to login...</p>
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
@@ -560,15 +575,35 @@ const CartPage = () => {
         warningText={`You are about to delete from your cart Are you really sure about this? This action cannot be undone`}
       />
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+      <div className="mx-auto w-full max-w-screen-xl max-md:bg-slate-100 max-md:px-3 max-md:py-5 md:px-6 md:py-8 xl:px-0">
+        <h1 className="mb-8 text-3xl font-bold max-md:mb-4 max-md:text-xl max-md:font-bold">
+          Your cart
+        </h1>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col gap-8 lg:flex-row">
           {/* Products List */}
-          <div className="lg:w-2/3">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              {/* Table Header with Select All */}
-              <div className="hidden md:grid grid-cols-12 p-4 border-b">
+          <div className="space-y-3 lg:w-2/3 lg:space-y-0">
+            {cartItems?.length > 0 ? (
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm md:hidden">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="cart-checkbox"
+                    aria-label="Select all items in cart"
+                  />
+                  <span className="text-sm font-semibold text-headerBg">Select all</span>
+                </label>
+                <span className="text-xs tabular-nums text-slate-500">
+                  {selectedItems.length}/{cartItems.length}
+                </span>
+              </div>
+            ) : null}
+
+            <div className="overflow-hidden rounded-lg bg-white shadow-md max-md:rounded-none max-md:bg-transparent max-md:shadow-none">
+              {/* Table Header with Select All (tablet/desktop) */}
+              <div className="hidden border-b border-slate-200 p-4 md:grid md:grid-cols-12">
                 <div className="col-span-5 font-semibold flex items-center gap-4">
                   <input
                     type="checkbox"
@@ -593,8 +628,8 @@ const CartPage = () => {
                 </div>
               </div>
 
-              {/* Product Items */}
-              <div className={"h-[550px] overflow-x-auto"}>
+              {/* Items: full scroll on mobile app-style; fixed-height pane on large desktops */}
+              <div className="max-lg:h-auto max-md:min-h-0 overflow-x-auto lg:h-[550px] lg:overflow-y-auto">
                 {cartItems?.length > 0 ? (
                   cartItems.map((cart) => {
                     const cartId = cart.id || cart.product?.id;
@@ -675,34 +710,19 @@ const CartPage = () => {
                     );
                   })
                 ) : (
-                  <div className="p-8 text-center text-gray-500">
-                    Your cart is empty
+                  <div className="flex min-h-[420px] items-center justify-center rounded-2xl bg-white p-6 max-md:min-h-[50vh] md:min-h-[480px]">
+                    <EmptyCartCallout slogan={siteSettings?.app_slogan} />
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Cart Actions */}
-            <div className="flex flex-col sm:flex-row justify-between mt-6 gap-4">
-              <button
-                onClick={() => {
-                  router.push("/");
-                }}
-                className="px-6 py-2 border-none text-white rounded-md bg-primary transition"
-              >
-                Continue Shopping
-              </button>
-              {/*<button*/}
-              {/*    className="px-6 py-2 bg-primary rounded-md text-white transition"*/}
-              {/*    onClick={() => dispatch(getCarts())} // Refresh cart data*/}
-              {/*>*/}
-              {/*    Update Cart*/}
-              {/*</button>*/}
-            </div>
           </div>
 
           {/* Order Summary */}
-          <div className="lg:w-1/3">
+          <div
+            id="cart-order-summary"
+            className="scroll-mt-4 max-md:rounded-2xl max-md:overflow-hidden max-md:shadow-sm lg:w-1/3"
+          >
             <OrderSummary
               subtotal={selectedSubtotal || 0}
               shippingCost={shippingCost || 0}
@@ -729,7 +749,26 @@ const CartPage = () => {
             />
           </div>
         </div>
+
+        <div className="mt-10 border-t border-gray-200 pt-8 text-center">
+          <Link
+            href="/"
+            className="text-sm font-semibold text-primary underline-offset-4 hover:text-deepOrange hover:underline"
+          >
+            Keep shopping
+          </Link>
+        </div>
       </div>
+
+      {cartItems?.length > 0 && selectedItems.length > 0 && !creatingOrder ? (
+        <MobileFloatingHint
+          onClick={scrollToCheckoutSummary}
+          hintTitle="Go to delivery address"
+          ariaLabel="When finished selecting items, scroll down for your delivery address"
+          title="Address & order summary below"
+          description="When you're done selecting what to buy, scroll down to choose your delivery address. Tap here to jump straight there."
+        />
+      ) : null}
 
       {/* Checkout Loading Modal */}
       {creatingOrder && (
@@ -743,16 +782,16 @@ const CartPage = () => {
               
               {/* Loading text */}
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                {checkoutStep === "validating" && "Validating Your Order"}
-                {checkoutStep === "creating" && "Creating Your Order"}
-                {checkoutStep === "redirecting" && "Almost Ready!"}
-                {!checkoutStep && "Processing Your Order"}
+                {checkoutStep === "validating" && "Checking a few details"}
+                {checkoutStep === "creating" && "Locking in your order"}
+                {checkoutStep === "redirecting" && "Taking you to checkout"}
+                {!checkoutStep && "Just a moment"}
               </h3>
               <p className="text-gray-600 mb-4">
-                {checkoutStep === "validating" && "Checking shipping availability and calculating costs..."}
-                {checkoutStep === "creating" && "Creating your order and preparing for checkout..."}
-                {checkoutStep === "redirecting" && "Redirecting you to the checkout page..."}
-                {!checkoutStep && "Please wait while we process your order..."}
+                {checkoutStep === "validating" && "We are making sure delivery and costs look right for your address."}
+                {checkoutStep === "creating" && "Hang tight while we get your order ready to pay."}
+                {checkoutStep === "redirecting" && "You will be on the checkout page in a second."}
+                {!checkoutStep && "Thanks for waiting while we get things ready."}
               </p>
               
               {/* Progress steps */}
@@ -763,7 +802,7 @@ const CartPage = () => {
                     ["creating", "redirecting"].includes(checkoutStep) ? "bg-green-500" : "bg-gray-300"
                   }`}></div>
                   <span className={checkoutStep === "validating" ? "text-primary font-medium" : ""}>
-                    Validating shipping
+                    Delivery check
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -772,7 +811,7 @@ const CartPage = () => {
                     checkoutStep === "redirecting" ? "bg-green-500" : "bg-gray-300"
                   }`}></div>
                   <span className={checkoutStep === "creating" ? "text-primary font-medium" : ""}>
-                    Creating order
+                    Order setup
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -780,14 +819,13 @@ const CartPage = () => {
                     checkoutStep === "redirecting" ? "bg-primary animate-pulse" : "bg-gray-300"
                   }`}></div>
                   <span className={checkoutStep === "redirecting" ? "text-primary font-medium" : ""}>
-                    Preparing checkout
+                    Open checkout
                   </span>
                 </div>
               </div>
               
-              {/* Don't close warning */}
               <p className="text-xs text-gray-400 mt-4">
-                Please don't close this window
+                Keep this tab open so we do not lose your progress.
               </p>
             </div>
           </div>

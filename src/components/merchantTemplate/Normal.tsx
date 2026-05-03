@@ -544,7 +544,7 @@ export default function NormalMerchantPage() {
                     <div className="text-2xl font-bold merchant-heading-text mb-6 prose prose-neutral max-w-none">
                       <MerchantRichHtml html={merchantData?.merchant_details?.store_page_title} />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                       {merchantData?.recent_products?.map((item, index) => (
                         <div
                           key={index}

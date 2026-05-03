@@ -11,6 +11,7 @@ import {
   ShoppingBagIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import { HI_SM } from "@/lib/hawolaIconTheme";
 
 const Orders: NextPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,28 +32,28 @@ const Orders: NextPage = () => {
   const getStatusConfig = (order: any) => {
     if (order?.isDelivered) {
       return {
-        icon: <CheckCircleIcon className="w-4 h-4" />,
+        icon: <CheckCircleIcon className={HI_SM} aria-hidden />,
         text: "Delivered",
         color: "text-green-600",
         bg: "bg-green-50",
       };
     } else if (!isPaymentSettled(order)) {
       return {
-        icon: <ClockIcon className="w-4 h-4" />,
+        icon: <ClockIcon className={HI_SM} aria-hidden />,
         text: "Pending Payment",
         color: "text-amber-600",
         bg: "bg-amber-50",
       };
     } else if (order?.isShipped) {
       return {
-        icon: <TruckIcon className="w-4 h-4" />,
+        icon: <TruckIcon className={HI_SM} aria-hidden />,
         text: "Shipped",
         color: "text-blue-600",
         bg: "bg-blue-50",
       };
     } else {
       return {
-        icon: <ClockIcon className="w-4 h-4" />,
+        icon: <ClockIcon className={HI_SM} aria-hidden />,
         text: "Processing",
         color: "text-gray-600",
         bg: "bg-gray-50",
@@ -210,22 +211,22 @@ const Orders: NextPage = () => {
                 <div className="col-span-6 md:col-span-2 flex items-center gap-2 flex-wrap">
                   {order?.isDelivered ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 border border-green-200 w-full md:w-auto">
-                      <CheckCircleIcon className="w-4 h-4" />
+                      <CheckCircleIcon className={HI_SM} aria-hidden />
                       <span className="text-sm font-medium">Delivered</span>
                     </div>
                   ) : !isPaymentSettled(order) ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 border border-amber-200 w-full md:w-auto">
-                      <ClockIcon className="w-4 h-4" />
+                      <ClockIcon className={HI_SM} aria-hidden />
                       <span className="text-sm font-medium">Pending Payment</span>
                     </div>
                   ) : order?.isShipped ? (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 border border-blue-200 w-full md:w-auto">
-                      <TruckIcon className="w-4 h-4" />
+                      <TruckIcon className={HI_SM} aria-hidden />
                       <span className="text-sm font-medium">Shipped</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 w-full md:w-auto">
-                      <ClockIcon className="w-4 h-4" />
+                      <ClockIcon className={HI_SM} aria-hidden />
                       <span className="text-sm font-medium">Processing</span>
                     </div>
                   )}
@@ -241,7 +242,7 @@ const Orders: NextPage = () => {
                 >
                   {isDisputed && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-600 text-white cursor-default">
-                      <ExclamationTriangleIcon className="w-4 h-4" />
+                      <ExclamationTriangleIcon className={HI_SM} aria-hidden />
                       Disputed
                     </span>
                   )}

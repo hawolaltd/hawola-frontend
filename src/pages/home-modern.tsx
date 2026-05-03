@@ -2,7 +2,6 @@ import Head from "next/head";
 import React, { useEffect } from "react";
 import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
-import Drawer from "@/components/header/MobileMenuDrawer";
 import HomeModernExperience from "@/components/home-modern/HomeModernExperience";
 import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
@@ -11,7 +10,6 @@ import {
   getProducts,
   getWishList,
 } from "@/redux/product/productSlice";
-import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import { getHomeInsight, getHomePage } from "@/redux/general/generalSlice";
 
 /**
@@ -20,7 +18,6 @@ import { getHomeInsight, getHomePage } from "@/redux/general/generalSlice";
  */
 export default function HomeModernPage() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -51,11 +48,6 @@ export default function HomeModernPage() {
         />
         <meta property="og:type" content="website" />
       </Head>
-      <Drawer
-        isOpen={isDrawerOpen}
-        onClose={() => dispatch(setDrawerOpen(false))}
-        messageCount={3}
-      />
       <div className="border-b border-slate-200 bg-white">
         <Header />
       </div>

@@ -15,16 +15,12 @@ import {
   getProducts,
   getWishList,
 } from "@/redux/product/productSlice";
-import Drawer from "@/components/header/MobileMenuDrawer";
-import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import { getHomeInsight, getHomePage } from "@/redux/general/generalSlice";
 
 export default function Home() {
   const { products, carts } = useAppSelector((state) => state.products);
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
-
   console.log("isAuthenticated:", isAuthenticated);
   const dispatch = useAppDispatch();
 
@@ -60,11 +56,6 @@ export default function Home() {
         <meta property="og:description" content={metaDescription} />
         <meta property="og:type" content="website" />
       </Head>
-      <Drawer
-        isOpen={isDrawerOpen}
-        onClose={() => dispatch(setDrawerOpen(false))}
-        messageCount={3}
-      />
       <div className={"mb-4"}>
         <Header />
       </div>

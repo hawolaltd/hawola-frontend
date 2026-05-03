@@ -136,20 +136,23 @@ function HeroCarousel({ slides }: { slides: HeroCreativeSlide[] }) {
   if (!slides.length) return null;
 
   return (
-    <div className="relative group h-full min-h-[200px] sm:min-h-[260px] md:min-h-[300px]">
-      <div className="relative overflow-hidden rounded-xl w-full h-full min-h-[inherit]">
+    <div className="relative group h-full min-h-[min(52vw,280px)] sm:min-h-[260px] md:min-h-[300px]">
+      <div className="relative h-full min-h-[inherit] w-full overflow-hidden rounded-xl bg-slate-100">
         <div
-          className="flex transition-transform duration-500 ease-in-out h-full min-h-[inherit]"
+          className="flex h-full min-h-[inherit] transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {slides.map((slide, index) => (
-            <div key={slide.key} className="w-full flex-shrink-0 relative min-h-[inherit] bg-slate-100">
+            <div
+              key={slide.key}
+              className="relative h-full min-h-[min(52vw,280px)] w-full flex-shrink-0 bg-slate-100 sm:min-h-[260px] md:min-h-[300px]"
+            >
               <OptimizedImage
                 src={slide.image}
                 alt=""
                 width={1200}
                 height={400}
-                className="w-full h-full min-h-[200px] sm:min-h-[260px] md:min-h-[300px] object-cover"
+                className="h-full w-full min-h-[min(52vw,280px)] object-contain object-center sm:min-h-[260px] md:min-h-[300px] md:object-cover"
                 priority={index === 0}
               />
               <SlideLink slide={slide} className="absolute inset-0 z-10" />

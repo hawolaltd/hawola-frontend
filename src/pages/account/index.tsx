@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useState, type ComponentType, type SVGProps} from 'react';
 import Head from 'next/head';
 import { useRouter } from "next/router";
 import AuthLayout from "@/components/layout/AuthLayout";
@@ -11,6 +11,14 @@ import BuyingRequests from "@/components/account/BuyingRequests";
 import Settings from "@/components/account/Settings";
 import {getDisputes} from "@/redux/disputes/disputeSlice";
 import RecentlyViewed from "@/components/account/RecentlyViewed";
+import {
+    ClipboardDocumentListIcon,
+    EyeIcon,
+    HeartIcon,
+    ShoppingBagIcon,
+    UserIcon,
+} from "@heroicons/react/24/outline";
+import {HI_SM} from "@/lib/hawolaIconTheme";
 
 export default function AccountPage() {
     const router = useRouter();
@@ -21,27 +29,12 @@ export default function AccountPage() {
     const initialTab = (typeof window !== "undefined" && (router.query.tab as string)) || 'orders';
     const [tab, setTab] = useState<string>(initialTab);
 
-    const tabs = [
-        {
-            id: 'orders',
-            name: 'Orders',
-        },
-        {
-            id: 'wish',
-            name: 'Wishlist',
-        },
-        {
-            id: 'buying_requests',
-            name: 'My Buying Requests',
-        },
-        {
-            id: 'profile',
-            name: 'Profile',
-        },
-        {
-            id: 'recently_viewed',
-            name: 'Recently Viewed',
-        },
+    const tabs: { id: string; name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
+        { id: 'orders', name: 'Orders', Icon: ShoppingBagIcon },
+        { id: 'wish', name: 'Wishlist', Icon: HeartIcon },
+        { id: 'buying_requests', name: 'My Buying Requests', Icon: ClipboardDocumentListIcon },
+        { id: 'profile', name: 'Profile', Icon: UserIcon },
+        { id: 'recently_viewed', name: 'Recently Viewed', Icon: EyeIcon },
     ]
 
     const dispatch = useAppDispatch();
@@ -116,21 +109,31 @@ export default function AccountPage() {
                             From your account dashboard, you can easily check & view your recent orders, <br/> manage your shipping and billing addresses and edit your password and account details.
                         </p>
                         <nav className={`mb-8 flex space-x-6 text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer`}>
-                            {tabs.map(ta => (
-                                <span
-                                    key={ta.id}
-                                    onClick={() => {
-                                        setTab(ta.id);
-                                        router.push({
-                                            pathname: "/account",
-                                            query: { tab: ta.id },
-                                        }, undefined, { shallow: true });
-                                    }}
-                                    className={`pb-2 font-semibold ${tab === ta.id ? "border-b-2 border-white text-white" : ""}`}
-                                >
-                                    {ta.name}
-                                </span>
-                            ))}
+                            {tabs.map((ta) => {
+                                const TabIcon = ta.Icon;
+                                return (
+                                    <span
+                                        key={ta.id}
+                                        onClick={() => {
+                                            setTab(ta.id);
+                                            router.push(
+                                                {
+                                                    pathname: "/account",
+                                                    query: { tab: ta.id },
+                                                },
+                                                undefined,
+                                                { shallow: true }
+                                            );
+                                        }}
+                                        className={`inline-flex items-center gap-2 pb-2 font-semibold ${
+                                            tab === ta.id ? "border-b-2 border-white text-white" : ""
+                                        }`}
+                                    >
+                                        <TabIcon className={HI_SM} aria-hidden />
+                                        {ta.name}
+                                    </span>
+                                );
+                            })}
                         </nav>
                     </header>
 
