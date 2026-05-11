@@ -75,6 +75,8 @@ export interface Product {
     ship_outside_vicinity: boolean;
     ship_outside_state: boolean;
     accept_payment_on_delivery: boolean;
+    /** False = seller collects payment (no Hawola escrow for this SKU) */
+    is_payment_escrowed?: boolean;
     countInStock: number;
     sku: string | null;
     hide_product: boolean;

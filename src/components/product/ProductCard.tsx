@@ -156,7 +156,8 @@ function ProductCard({
       )}
 
       <Link
-        href={`product/${product?.slug}`}
+        href={`/product/${product?.slug}`}
+        prefetch
         className={`block p-4 ${viewMode === "list" ? "flex items-center gap-4" : ""}`}
       >
         <div className={"w-full flex items-center justify-center"}>

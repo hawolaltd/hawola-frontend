@@ -7,6 +7,7 @@ import "swiper/css/scrollbar";
 import "swiper/css";
 import "sweetalert2/src/sweetalert2.scss";
 import type { AppProps } from "next/app";
+import { useRouter } from "next/router";
 import Head from "next/head";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { PersistGate } from "redux-persist/integration/react";
@@ -26,6 +27,7 @@ import { RootState } from "@/store/store";
 import { useAppDispatch } from "@/hook/useReduxTypes";
 import LaunchPage from "@/components/LaunchPage";
 import SiteSettingsPreloader from "@/components/SiteSettingsPreloader";
+import RouteChangeProgress from "@/components/RouteChangeProgress";
 import {
   STOREFRONT_PREVIEW_LS_KEY,
   STOREFRONT_PREVIEW_URL_PARAM,
@@ -36,6 +38,8 @@ import productService from "@/redux/product/productService";
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
 function AppContent({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const skipGlobalSeo = router.pathname === "/[merchantSlug]";
   const dispatch = useAppDispatch();
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
@@ -201,39 +205,44 @@ function AppContent({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>{defaultTitle}</title>
-        {defaultDesc ? (
-          <meta name="description" content={defaultDesc.slice(0, 320)} />
-        ) : null}
-        {(siteSettings?.seo_site_default_keywords as string)?.trim() ? (
-          <meta
-            name="keywords"
-            content={String(siteSettings?.seo_site_default_keywords).slice(0, 512)}
-          />
-        ) : null}
-        <meta name="robots" content={defaultRobots} />
-        {canonicalBase ? <link rel="canonical" href={canonicalBase} /> : null}
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={defaultTitle} />
-        {defaultDesc ? (
-          <meta property="og:description" content={defaultDesc.slice(0, 320)} />
-        ) : null}
-        {siteSettings?.app_name ? (
-          <meta property="og:site_name" content={String(siteSettings?.app_name)} />
-        ) : null}
-        {(siteSettings?.seo_og_locale as string)?.trim() ? (
-          <meta property="og:locale" content={String(siteSettings?.seo_og_locale)} />
-        ) : (
-          <meta property="og:locale" content="en_US" />
-        )}
-        {canonicalBase ? <meta property="og:url" content={canonicalBase} /> : null}
-        {(siteSettings?.logo as { full_size?: string })?.full_size ? (
-          <meta
-            property="og:image"
-            content={String((siteSettings?.logo as { full_size?: string }).full_size)}
-          />
+        {!skipGlobalSeo ? (
+          <>
+            <title>{defaultTitle}</title>
+            {defaultDesc ? (
+              <meta name="description" content={defaultDesc.slice(0, 320)} />
+            ) : null}
+            {(siteSettings?.seo_site_default_keywords as string)?.trim() ? (
+              <meta
+                name="keywords"
+                content={String(siteSettings?.seo_site_default_keywords).slice(0, 512)}
+              />
+            ) : null}
+            <meta name="robots" content={defaultRobots} />
+            {canonicalBase ? <link rel="canonical" href={canonicalBase} /> : null}
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content={defaultTitle} />
+            {defaultDesc ? (
+              <meta property="og:description" content={defaultDesc.slice(0, 320)} />
+            ) : null}
+            {siteSettings?.app_name ? (
+              <meta property="og:site_name" content={String(siteSettings?.app_name)} />
+            ) : null}
+            {(siteSettings?.seo_og_locale as string)?.trim() ? (
+              <meta property="og:locale" content={String(siteSettings?.seo_og_locale)} />
+            ) : (
+              <meta property="og:locale" content="en_US" />
+            )}
+            {canonicalBase ? <meta property="og:url" content={canonicalBase} /> : null}
+            {(siteSettings?.logo as { full_size?: string })?.full_size ? (
+              <meta
+                property="og:image"
+                content={String((siteSettings?.logo as { full_size?: string }).full_size)}
+              />
+            ) : null}
+          </>
         ) : null}
       </Head>
+      <RouteChangeProgress />
       <Component {...pageProps} />
       <ToastContainer />
       <Toaster position={"top-right"} />

@@ -21,6 +21,7 @@ import {
 import ProductCard from "@/components/product/ProductCard";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import AuthLayout from "@/components/layout/AuthLayout";
+import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 
 const SearchPage = () => {
   const router = useRouter();
@@ -403,7 +404,7 @@ const SearchPage = () => {
                               {merchantItems.map((merchant: any) => (
                                 <Link
                                   key={merchant.id}
-                                  href={`/merchants/${merchant.slug}`}
+                                  href={merchantStorePublicPath(merchant.slug)}
                                   className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-deepOrange hover:shadow-md transition-all"
                                 >
                                   <div className="flex items-start gap-4">

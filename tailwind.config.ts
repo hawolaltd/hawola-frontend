@@ -103,6 +103,11 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(6px)" },
         },
+        /** Indeterminate bar during Next.js client-side route transition */
+        "route-indeterminate": {
+          "0%": { transform: "translateX(-120%)" },
+          "100%": { transform: "translateX(320%)" },
+        },
       },
       animation: {
         "preloader-drift": "preloader-drift 20s ease-in-out infinite",
@@ -122,6 +127,8 @@ export default {
         "compare-nav-pulse": "compare-nav-pulse 1.6s ease-in-out infinite",
         "compare-nav-bump": "compare-nav-bump 0.85s ease-out 1",
         "cart-scroll-nudge": "cart-scroll-nudge 1.25s ease-in-out infinite",
+        "route-indeterminate":
+          "route-indeterminate 1.05s ease-in-out infinite",
       },
       colors: {
         primary: "#425A8B",

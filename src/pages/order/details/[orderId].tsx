@@ -14,6 +14,10 @@ import productService from "@/redux/product/productService";
 import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
 import { API } from "@/constant";
+import {
+    DEFAULT_DIRECT_PAYMENT_MESSAGING_NOTICE_HTML,
+    sanitizeRichNotice,
+} from "@/util/sanitizeRichNotice";
 
 /** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
 const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
@@ -124,9 +128,11 @@ const OrderDetails: NextPage = () => {
     const [sendingDisputeComment, setSendingDisputeComment] = useState(false);
     const [disputeReplyText, setDisputeReplyText] = useState('');
     const [disputeReplyFiles, setDisputeReplyFiles] = useState<File[]>([]);
+    const [directPaymentMessagingSafe, setDirectPaymentMessagingSafe] = useState("");
 
     const {singleOrder, isLoading} = useAppSelector(state => state.products)
     const { profile: userProfile } = useAppSelector((state) => state.auth);
+    const siteSettings = useAppSelector((state) => state.general.siteSettings);
 
     const orderLatestStatus = getLatestStatus(singleOrder?.shipping_info?.flatMap(i => i.shipping_status
     ))
@@ -251,6 +257,17 @@ const OrderDetails: NextPage = () => {
         lineCancelled ||
         singleOrder?.isDelivered === true ||
         singleOrder?.user_confirm_order === true;
+
+    useEffect(() => {
+        if (!singleOrder?.is_offline_payment) {
+            setDirectPaymentMessagingSafe("");
+            return;
+        }
+        const src = siteSettings?.direct_payment_messaging_notice_html?.trim()
+            ? String(siteSettings.direct_payment_messaging_notice_html)
+            : DEFAULT_DIRECT_PAYMENT_MESSAGING_NOTICE_HTML;
+        setDirectPaymentMessagingSafe(sanitizeRichNotice(src));
+    }, [singleOrder?.is_offline_payment, siteSettings?.direct_payment_messaging_notice_html]);
 
     useEffect(() => {
         const orderId = router?.query?.orderId;
@@ -652,6 +669,12 @@ const OrderDetails: NextPage = () => {
                                        {/* Messages with merchant */}
                                        <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
                                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Messages</h3>
+                                           {singleOrder?.is_offline_payment && directPaymentMessagingSafe ? (
+                                               <div
+                                                   className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950 prose prose-sm max-w-none"
+                                                   dangerouslySetInnerHTML={{ __html: directPaymentMessagingSafe }}
+                                               />
+                                           ) : null}
                                            <p className="text-sm text-gray-600 mb-4">
                                                {lineCancelled
                                                    ? 'This order line was cancelled. You cannot send new messages.'

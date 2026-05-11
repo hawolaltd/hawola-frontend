@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import type { AdvertBanner, Banner, HeroCreativeSlide } from "@/types/home";
+import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 
 /** Stable empty refs so `?? []` does not allocate a new array every render. */
 const EMPTY_BANNERS: Banner[] = [];
@@ -42,7 +43,7 @@ function advertToSlide(a: AdvertBanner): HeroCreativeSlide {
   let href: string | null = null;
   if (a.url && String(a.url).trim()) href = String(a.url).trim();
   else if (a.product?.slug) href = `/product/${a.product.slug}`;
-  else if (a.merchant?.slug) href = `/merchants/${a.merchant.slug}`;
+  else if (a.merchant?.slug) href = merchantStorePublicPath(a.merchant.slug);
   return {
     key: `advert-${a.id}`,
     image: advertImageSrc(a),

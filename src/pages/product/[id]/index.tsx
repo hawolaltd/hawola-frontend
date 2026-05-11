@@ -16,7 +16,7 @@ import {
 import { useRouter } from "next/router";
 import {amountFormatter, buildWhatsAppLink, formatCurrency, isContactMerchantOnlyProduct} from "@/util";
 import Link from "next/link";
-import {LocalCartItem, ProductByIdResponse} from "@/types/product";
+import {LocalCartItem, Product, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductSkeleton from "@/components/product/ProductSkeleton";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
@@ -29,8 +29,11 @@ import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
 import {
     DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML,
     DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML,
+    DEFAULT_MERCHANT_COLLECTS_PAYMENT_NOTICE_HTML,
+    DEFAULT_NON_ESCROW_CART_NOTICE_HTML,
     sanitizeRichNotice,
 } from "@/util/sanitizeRichNotice";
+import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 
 type ProductPageProps = {
     serverNotFound?: boolean;
@@ -75,6 +78,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     );
     const [contactDisclaimerSafe, setContactDisclaimerSafe] = useState("");
     const [buyerProtectionSafe, setBuyerProtectionSafe] = useState("");
+    const [nonEscrowSiteNoticeSafe, setNonEscrowSiteNoticeSafe] = useState("");
+    const [merchantCollectsNoticeSafe, setMerchantCollectsNoticeSafe] = useState("");
 
     const productSlug =
         typeof query.id === "string"
@@ -401,6 +406,42 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     ]);
 
     useEffect(() => {
+        if (contactMerchantOnly || siteSettings == null || siteSettings.accept_escrow_payment !== false) {
+            setNonEscrowSiteNoticeSafe("");
+            return;
+        }
+        const src = siteSettings?.non_escrow_cart_notice_html?.trim()
+            ? String(siteSettings.non_escrow_cart_notice_html)
+            : DEFAULT_NON_ESCROW_CART_NOTICE_HTML;
+        setNonEscrowSiteNoticeSafe(sanitizeRichNotice(src));
+    }, [contactMerchantOnly, siteSettings?.accept_escrow_payment, siteSettings?.non_escrow_cart_notice_html]);
+
+    useEffect(() => {
+        if (
+            contactMerchantOnly ||
+            siteSettings == null ||
+            siteSettings.accept_escrow_payment === false
+        ) {
+            setMerchantCollectsNoticeSafe("");
+            return;
+        }
+        const pEscrow = product?.product as Product | undefined;
+        if (pEscrow?.is_payment_escrowed !== false) {
+            setMerchantCollectsNoticeSafe("");
+            return;
+        }
+        const src = siteSettings?.merchant_collects_payment_notice_html?.trim()
+            ? String(siteSettings.merchant_collects_payment_notice_html)
+            : DEFAULT_MERCHANT_COLLECTS_PAYMENT_NOTICE_HTML;
+        setMerchantCollectsNoticeSafe(sanitizeRichNotice(src));
+    }, [
+        contactMerchantOnly,
+        siteSettings?.accept_escrow_payment,
+        siteSettings?.merchant_collects_payment_notice_html,
+        (product?.product as Product | undefined)?.is_payment_escrowed,
+    ]);
+
+    useEffect(() => {
         if (!showMerchantContact) {
             setContactRevealFx(false);
             return;
@@ -573,7 +614,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                 <p className="mt-2 text-sm text-slate-300 leading-relaxed">
                                     Listed by{" "}
                                     <Link
-                                        href={`/merchants/${product?.product?.merchant?.slug}`}
+                                        href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
                                         className="font-semibold text-cyan-300 underline-offset-2 hover:underline"
                                     >
                                         {product?.product?.merchant?.store_name}
@@ -881,7 +922,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     <span className="inline-block h-4 w-32 bg-gray-200 rounded animate-pulse"></span>
                                 ) : (
                                     <Link
-                                        href={`/merchants/${product?.product?.merchant?.slug}`}
+                                        href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
                                         className="underline-offset-2 hover:underline"
                                     >
                                         {product?.product?.merchant?.store_name}
@@ -935,7 +976,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             )}
 
                             <div onClick={()=>{
-                                router.push(`/merchants/${product?.product?.merchant?.slug}`)
+                                const ms = product?.product?.merchant?.slug;
+                                if (ms) router.push(merchantStorePublicPath(ms));
                             }} className={'flex items-center gap-2'}>
                             <span
                                 className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
@@ -1011,6 +1053,20 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             {" · "}
                             Only a few units remain at this price—order soon.
                         </div>
+                    ) : null}
+
+                    {!contactMerchantOnly && nonEscrowSiteNoticeSafe ? (
+                        <div
+                            className="mb-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: nonEscrowSiteNoticeSafe }}
+                        />
+                    ) : null}
+
+                    {!contactMerchantOnly && merchantCollectsNoticeSafe ? (
+                        <div
+                            className="mb-4 rounded-2xl border border-[#e8edf6] bg-[#fbfcff] px-4 py-3 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: merchantCollectsNoticeSafe }}
+                        />
                     ) : null}
 
                     {(product?.product?.accept_payment_on_delivery ||
@@ -1341,7 +1397,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                                         </a>
                                                     ) : null}
                                                     <Link
-                                                        href={`/merchants/${product?.product?.merchant?.slug}`}
+                                                        href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
                                                         className="px-4 py-2 border border-primary text-primary text-sm rounded hover:bg-primary/5 transition-colors"
                                                     >
                                                         Open Merchant Profile

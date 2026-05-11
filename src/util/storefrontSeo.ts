@@ -187,9 +187,7 @@ export function buildMerchantSeo(params: {
   description = truncateSeo(description, 160);
 
   const base = resolveCanonicalBase(siteSettings);
-  const canonicalUrl = base
-    ? `${base}/merchants/${encodeURIComponent(pathSlug)}`
-    : "";
+  const canonicalUrl = base ? `${base}/${encodeURIComponent(pathSlug)}` : "";
 
   const robots = sstr(siteSettings?.seo_default_robots).trim() || "index,follow";
   const keywords = truncateSeo(

@@ -2,6 +2,12 @@ import DOMPurify from "dompurify";
 
 /** Used when `non_escrow_cart_notice_html` is empty but escrow is off */
 export const DEFAULT_NON_ESCROW_CART_NOTICE_HTML = `<p><strong>Pay the merchant directly.</strong> Hawola does not collect payment for orders on this site. Arrange payment and delivery with each seller yourself.</p>`;
+/** Product lists merchant-collects when `is_payment_escrowed` is false */
+export const DEFAULT_MERCHANT_COLLECTS_PAYMENT_NOTICE_HTML = `<p><strong>Merchant collects payment.</strong> For this listing the seller arranges payment with you directly. Hawola does not hold funds in escrow for this product.</p>`;
+/** Order messaging (buyer ↔ merchant) when the line is direct / offline payment */
+export const DEFAULT_DIRECT_PAYMENT_MESSAGING_NOTICE_HTML = `<p><strong>Direct payment.</strong> Hawola does not process payment for this order line. Coordinate amount, timing, and proof of payment with the other party.</p>`;
+/** Merchant dashboard order detail for offline/direct lines */
+export const DEFAULT_MERCHANT_ORDER_DIRECT_PAYMENT_NOTICE_HTML = `<p><strong>Direct payment.</strong> This order was placed without Hawola collecting funds. Confirm payment with the customer outside the platform where agreed.</p>`;
 export const DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML = `<p><strong>Disclaimer:</strong> Contact and transactions happen directly between buyer and merchant. Hawola does not verify every listing detail and is not a party to direct deals. Please review our <a href="/terms-of-use" target="_blank" rel="noopener noreferrer">Terms of Use</a> before proceeding.</p>`;
 export const DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML = `<ul><li>Meet in a safe public place.</li><li>Inspect the item/property before payment.</li><li>Confirm ownership and documentation.</li><li>Keep chats and payment evidence for records.</li></ul>`;
 

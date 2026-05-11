@@ -7,6 +7,7 @@ import {
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import type { Merchant, ProductByIdResponse } from "@/types/product";
 
 interface MerchantAboutProps {
@@ -119,7 +120,7 @@ function MerchantAbout({ product }: MerchantAboutProps) {
 
               {slug ? (
                 <Link
-                  href={`/merchants/${slug}`}
+                  href={merchantStorePublicPath(slug)}
                   className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition hover:opacity-95 hover:shadow-md ${onBrandClass}`}
                   style={{ backgroundColor: brand }}
                 >

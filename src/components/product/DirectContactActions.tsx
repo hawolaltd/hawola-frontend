@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 
 type DirectContactActionsProps = {
   merchantSlug?: string | null;
@@ -31,7 +32,7 @@ export default function DirectContactActions({
   className = "",
   stopPropagation = false,
 }: DirectContactActionsProps) {
-  const merchantHref = merchantSlug ? `/merchants/${merchantSlug}` : "/merchants";
+  const merchantHref = merchantSlug ? merchantStorePublicPath(merchantSlug) : "/";
   const baseWrap = compact ? "p-2" : "p-3";
 
   return (

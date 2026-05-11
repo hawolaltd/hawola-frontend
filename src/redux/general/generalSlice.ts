@@ -17,6 +17,12 @@ export interface SiteSettingsData {
   accept_escrow_payment?: boolean;
   /** Rich HTML (sanitized client-side) shown on cart when escrow is off */
   non_escrow_cart_notice_html?: string | null;
+  /** Product detail when listing uses merchant-collected payment (not escrowed) */
+  merchant_collects_payment_notice_html?: string | null;
+  /** Above buyer ↔ merchant order messages when payment is direct/offline */
+  direct_payment_messaging_notice_html?: string | null;
+  /** Merchant order detail when line is direct/offline */
+  merchant_order_direct_payment_notice_html?: string | null;
   /** Rich HTML disclaimer shown on contact-merchant-only listing pages */
   contact_merchant_disclaimer_html?: string | null;
   /** Rich HTML buyer protection tips shown on contact-merchant-only listing pages */

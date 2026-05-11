@@ -730,6 +730,14 @@ const productSlice = createSlice({
                 }
             }
         },
+        /** Filled from getServerSideProps so storefront renders before client fetch (OG tags + UI). */
+        hydrateMerchantProfileFromSsr: (
+            state,
+            action: PayloadAction<MerchantProfile>
+        ) => {
+            state.merchantProfile = action.payload;
+            state.isLoading = false;
+        },
         addToCompare: (state, action: PayloadAction<Product>) => {
             const p = action.payload;
             if (state.compareProducts.some((x) => x.id === p.id)) return;
@@ -1198,6 +1206,7 @@ const productSlice = createSlice({
 export const {
     reset,
     syncLocalCartFromStorage,
+    hydrateMerchantProfileFromSsr,
     addToCompare,
     removeFromCompare,
     toggleCompareProduct,
