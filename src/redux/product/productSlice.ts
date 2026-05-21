@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { REHYDRATE } from 'redux-persist';
 import productService from '@/redux/product/productService';
 import {
     AddressResponse,
@@ -40,6 +41,24 @@ export type ProductDetailSectionStatus =
     | 'pending'
     | 'succeeded'
     | 'failed';
+
+type ProductDetailLoadState = {
+    gallery: ProductDetailSectionStatus;
+    main: ProductDetailSectionStatus;
+    related: ProductDetailSectionStatus;
+};
+
+export const DEFAULT_PRODUCT_DETAIL_LOAD: ProductDetailLoadState = {
+    gallery: 'idle',
+    main: 'idle',
+    related: 'idle',
+};
+
+function ensureProductDetailLoad(state: ProductsState): void {
+    if (!state.productDetailLoad) {
+        state.productDetailLoad = { ...DEFAULT_PRODUCT_DETAIL_LOAD };
+    }
+}
 
 function mergeProductDetail(
     state: ProductsState,
@@ -94,11 +113,7 @@ interface ProductsState {
     cartFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
     /** Wishlist fetch lifecycle — avoids empty flash before first `getWishList` completes. */
     wishlistFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
-    productDetailLoad: {
-        gallery: ProductDetailSectionStatus;
-        main: ProductDetailSectionStatus;
-        related: ProductDetailSectionStatus;
-    };
+    productDetailLoad: ProductDetailLoadState;
 }
 
 const initialState: ProductsState = {
@@ -133,11 +148,7 @@ const initialState: ProductsState = {
     addressFormSubmitting: false,
     cartFetchStatus: 'idle',
     wishlistFetchStatus: 'idle',
-    productDetailLoad: {
-        gallery: 'idle',
-        main: 'idle',
-        related: 'idle',
-    },
+    productDetailLoad: { ...DEFAULT_PRODUCT_DETAIL_LOAD },
 };
 
 export const getProducts = createAsyncThunk(
@@ -850,11 +861,9 @@ const productSlice = createSlice({
     extraReducers: (builder) => {
         builder
             // Handle Redux Persist REHYDRATE to sync localStorage
-            .addCase('persist/REHYDRATE' as any, (state: any, action: any) => {
-                // After rehydration, sync from localStorage
-                if (state) {
-                    state.compareNavFlashCount = 0;
-                }
+            .addCase(REHYDRATE, (state) => {
+                ensureProductDetailLoad(state);
+                state.compareNavFlashCount = 0;
                 if (typeof window !== 'undefined') {
                     try {
                         const cartItems = localStorage.getItem('cartItems');
@@ -901,20 +910,12 @@ const productSlice = createSlice({
             .addCase(clearProductById.pending, (state) => {
                 state.isLoading = true;
                 state.product = {} as ProductByIdResponse;
-                state.productDetailLoad = {
-                    gallery: 'idle',
-                    main: 'idle',
-                    related: 'idle',
-                };
+                state.productDetailLoad = { ...DEFAULT_PRODUCT_DETAIL_LOAD };
             })
             .addCase(clearProductById.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.product = action.payload as ProductByIdResponse;
-                state.productDetailLoad = {
-                    gallery: 'idle',
-                    main: 'idle',
-                    related: 'idle',
-                };
+                state.productDetailLoad = { ...DEFAULT_PRODUCT_DETAIL_LOAD };
             })
             .addCase(clearProductById.rejected, (state, action) => {
                 state.isLoading = false;
@@ -936,19 +937,24 @@ const productSlice = createSlice({
                 state.product = {} as ProductByIdResponse;
             })
             .addCase(fetchProductDetailGallery.pending, (state) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.gallery = 'pending';
             })
             .addCase(fetchProductDetailGallery.fulfilled, (state, action) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.gallery = 'succeeded';
                 mergeProductDetail(state, action.payload as Partial<ProductByIdResponse>);
             })
             .addCase(fetchProductDetailGallery.rejected, (state) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.gallery = 'failed';
             })
             .addCase(fetchProductDetailMain.pending, (state) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.main = 'pending';
             })
             .addCase(fetchProductDetailMain.fulfilled, (state, action) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.main = 'succeeded';
                 const payload = action.payload as Partial<ProductByIdResponse> & {
                     product_variant_options?: unknown[];
@@ -962,16 +968,20 @@ const productSlice = createSlice({
                 });
             })
             .addCase(fetchProductDetailMain.rejected, (state) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.main = 'failed';
             })
             .addCase(fetchProductDetailRelated.pending, (state) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.related = 'pending';
             })
             .addCase(fetchProductDetailRelated.fulfilled, (state, action) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.related = 'succeeded';
                 mergeProductDetail(state, action.payload as Partial<ProductByIdResponse>);
             })
             .addCase(fetchProductDetailRelated.rejected, (state) => {
+                ensureProductDetailLoad(state);
                 state.productDetailLoad.related = 'failed';
             })
             .addCase(getAllCategories.pending, (state) => {

@@ -9,6 +9,7 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {
     addToCarts,
     addToCartsLocal, addWishList, clearProductById,
+    DEFAULT_PRODUCT_DETAIL_LOAD,
     fetchProductDetailGallery,
     fetchProductDetailMain,
     fetchProductDetailRelated,
@@ -72,12 +73,16 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         productDetailLoad,
     } = useAppSelector((state) => state.products);
 
-    const galleryReady = productDetailLoad.gallery === "succeeded";
-    const mainReady = productDetailLoad.main === "succeeded";
-    const relatedReady = productDetailLoad.related === "succeeded";
-    const galleryLoading = productDetailLoad.gallery === "pending" || productDetailLoad.gallery === "idle";
-    const mainLoading = productDetailLoad.main === "pending" || productDetailLoad.main === "idle";
-    const relatedLoading = productDetailLoad.related === "pending" || productDetailLoad.related === "idle";
+    const detailLoad = productDetailLoad ?? DEFAULT_PRODUCT_DETAIL_LOAD;
+    const galleryReady = detailLoad.gallery === "succeeded";
+    const mainReady = detailLoad.main === "succeeded";
+    const relatedReady = detailLoad.related === "succeeded";
+    const galleryLoading =
+        detailLoad.gallery === "pending" || detailLoad.gallery === "idle";
+    const mainLoading =
+        detailLoad.main === "pending" || detailLoad.main === "idle";
+    const relatedLoading =
+        detailLoad.related === "pending" || detailLoad.related === "idle";
 
     const displayName =
         product?.product?.name || preview?.name || "Product";
@@ -484,7 +489,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const shellReady = Boolean(preview?.name) || mainReady || galleryReady;
 
-    if (!shellReady && productDetailLoad.main === "failed" && productDetailLoad.gallery === "failed") {
+    if (!shellReady && detailLoad.main === "failed" && detailLoad.gallery === "failed") {
         return (
             <AuthLayout>
                 <Head>

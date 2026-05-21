@@ -23,7 +23,18 @@ import { createWrapper } from 'next-redux-wrapper';
 
 const persistConfig = {
     key: 'root',
+    version: 1,
     storage,
+    migrate: async (state: any) => {
+        if (state?.products && !state.products.productDetailLoad) {
+            state.products.productDetailLoad = {
+                gallery: 'idle',
+                main: 'idle',
+                related: 'idle',
+            };
+        }
+        return state;
+    },
     whitelist: [
         'auth',
         'general',
