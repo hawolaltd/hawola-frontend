@@ -82,9 +82,9 @@ export default function BuyingRequests() {
 
   if (requests.length === 0) {
     return (
-      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">My buying requests</h2>
-        <p className="text-sm text-gray-600">
+      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 mx-3 sm:mx-0">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">My buying requests</h2>
+        <p className="text-xs sm:text-sm text-gray-600">
           You have not posted any buying requests yet. When you use &quot;Request for a
           product&quot;, your requests will appear here.
         </p>
@@ -93,9 +93,9 @@ export default function BuyingRequests() {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">My buying requests</h2>
+    <div className="bg-white rounded-lg p-3 sm:p-6 shadow-sm border border-gray-200 space-y-4 mx-3 sm:mx-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900">My buying requests</h2>
         <p className="text-xs text-gray-500">
           Showing {(page - 1) * pageSize + 1}–
           {Math.min(page * pageSize, totalCount)} of {totalCount}
@@ -115,13 +115,13 @@ export default function BuyingRequests() {
           return (
             <article
               key={req.id}
-              className="flex gap-4 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:bg-gray-50"
+              className="flex gap-2 sm:gap-4 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:bg-gray-50"
               onClick={() => {
                 router.push(`/account/buying-requests/${req.id}`);
               }}
             >
               {firstImage && (
-                <div className="w-28 h-24 flex-shrink-0 bg-gray-100 overflow-hidden">
+                <div className="w-20 h-20 sm:w-28 sm:h-24 flex-shrink-0 bg-gray-100 overflow-hidden">
                   <img
                     src={firstImage}
                     alt={req.title}
@@ -129,14 +129,14 @@ export default function BuyingRequests() {
                   />
                 </div>
               )}
-              <div className="flex-1 py-3 pr-4">
+              <div className="flex-1 min-w-0 py-2 sm:py-3 pr-3 sm:pr-4">
                 <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
                   {req.title}
                 </h3>
                 <p className="mt-1 text-xs text-gray-600 line-clamp-2">
                   {req.description}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-gray-500">
+                <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2 text-[11px] text-gray-500">
                   {req.category_name && (
                     <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5">
                       {req.category_name}
@@ -169,7 +169,7 @@ export default function BuyingRequests() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-3">
+        <div className="flex items-center justify-between pt-3 gap-2">
           <button
             type="button"
             disabled={page <= 1}

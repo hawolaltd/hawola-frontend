@@ -185,7 +185,10 @@ function RegisterForm() {
         if (res?.type.includes('fulfilled')) {
             toast.success("Welcome to HAWOLA")
             reset()
-            setRegSuccess(true)
+            router.push(
+                `/auth/verify-pending?email=${encodeURIComponent(data.email)}`
+            );
+            return;
             // router.push('/auth/login')
         }else {
             const errorMessage = normalizeErrors(message)

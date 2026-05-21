@@ -42,7 +42,7 @@ function Description({ product }: DescriptionProps) {
 
       {displayTags.length > 0 && (
         <>
-          <div className="mt-8 border-t border-slate-200/90" aria-hidden />
+          <div className="mt-8 pt-6" aria-hidden />
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-[#8c9ec5]">Tags:</span>
             {displayTags.map((name: string, idx: number) => (

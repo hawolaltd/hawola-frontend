@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { HI_FRAME_HEADER, HI_FRAME_WELL, HI_FRAME_WELL_EMERALD, HI_MD, HI_SM } from '@/lib/hawolaIconTheme';
 import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
+import { getCarsCopy, getRealEstateCopy } from '@/util/curatedVerticalCopy';
 import { addToCartsLocal } from '@/redux/product/productSlice';
 import { logout } from '@/redux/auth/authSlice';
 // import CuratedPopularCategoriesDrawer from '@/components/category/CuratedPopularCategoriesDrawer';
@@ -32,6 +33,9 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     const dispatch = useAppDispatch();
     const router = useRouter();
     const { isAuthenticated, user, profile } = useAppSelector((state) => state.auth);
+    const siteSettings = useAppSelector((state) => state.general.siteSettings);
+    const carsNavLabel = getCarsCopy(siteSettings).navLabel;
+    const realEstateNavLabel = getRealEstateCopy(siteSettings).navLabel;
 
     const displayEmail = profile?.email || user?.email || '';
 
@@ -178,7 +182,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-slate-50 px-2 py-3 text-center text-xs font-semibold text-headerBg shadow-sm transition hover:border-slate-300 hover:bg-slate-100"
                                 >
                                     <TruckIcon className={`${HI_MD} text-primary`} aria-hidden />
-                                    Cars
+                                    {carsNavLabel}
                                 </Link>
                                 <Link
                                     href="/real-estate"
@@ -186,7 +190,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-emerald-200/90 bg-emerald-50 px-2 py-3 text-center text-xs font-semibold text-emerald-900 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100"
                                 >
                                     <BuildingOffice2Icon className={`${HI_MD} text-emerald-700`} aria-hidden />
-                                    Real Estate
+                                    {realEstateNavLabel}
                                 </Link>
                             </div>
 

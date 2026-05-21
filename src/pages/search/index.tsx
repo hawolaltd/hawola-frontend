@@ -22,6 +22,7 @@ import ProductCard from "@/components/product/ProductCard";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 
 const SearchPage = () => {
   const router = useRouter();
@@ -408,17 +409,15 @@ const SearchPage = () => {
                                   className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-deepOrange hover:shadow-md transition-all"
                                 >
                                   <div className="flex items-start gap-4">
-                                    {merchant.logo ? (
-                                      <img
-                                        src={merchant.logo}
-                                        alt={merchant.store_name}
-                                        className="w-16 h-16 rounded-lg object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                                        <BuildingStorefrontIcon className="h-8 w-8 shrink-0 text-gray-400" aria-hidden />
-                                      </div>
-                                    )}
+                                    <MerchantLogoOrInitial
+                                      logoUrl={merchant.logo}
+                                      storeName={merchant.store_name ?? "Store"}
+                                      primaryColor={merchant.primary_color}
+                                      alt={merchant.store_name ?? ""}
+                                      className="h-16 w-16 overflow-hidden rounded-lg"
+                                      imgClassName="h-full w-full object-cover"
+                                      fallbackTextClassName="text-lg font-bold"
+                                    />
                                     <div className="flex-1">
                                       <h3 className="font-semibold text-lg mb-1">
                                         {merchant.store_name}

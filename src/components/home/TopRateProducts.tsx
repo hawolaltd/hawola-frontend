@@ -1,60 +1,46 @@
 import React from "react";
-import BannerAds1 from "@/components/svg/banner-ads1";
 import ProductCard from "@/components/product/ProductCard";
-import ProductCard2 from "@/components/product/ProductCard2";
+import ProductRankPanel from "@/components/home/ProductRankPanel";
 import { ProductResponse } from "@/types/product";
 import { useAppSelector } from "@/hook/useReduxTypes";
+import type { ProductFull } from "@/types/home";
 
 interface TopRateProductsProps {
   products: ProductResponse;
 }
 
-const TopRateProducts = ({ products }: TopRateProductsProps) => {
+const TopRateProducts = ({ products: _products }: TopRateProductsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
-  const topSellingList = homePage?.data?.top_selling_products ?? [];
+  const topRated = homePage?.data?.top_rated_products ?? [];
+  const topSelling = (homePage?.data?.top_selling_products ?? []) as ProductFull[];
 
   return (
     <section className="w-full py-4">
-      <div className="mx-auto flex max-w-screen-xl gap-4 px-6 xl:px-0">
-        <div className={"w-full flex flex-col xl:flex-row gap-4"}>
-        <div className="w-full">
-          <div className="mx-auto text-left mb-8 w-full">
-            <div
-              className={
-                "flex items-center justify-between border-b border-b-[#CAD6EC] gap-8 p-4"
-              }
-            >
-              <h2 className="text-xl font-semibold text-primary">
-                Top Rated Products
-              </h2>
+      <div className="mx-auto max-w-screen-xl px-6 xl:px-0">
+        <div className="flex flex-col gap-8 xl:flex-row xl:items-start xl:gap-6">
+          <div className="min-w-0 w-full flex-1">
+            <div className="mx-auto mb-8 w-full text-left">
+              <div className="flex items-center justify-between gap-8 border-b border-b-[#CAD6EC] p-4">
+                <h2 className="text-xl font-semibold text-primary">
+                  Top Rated Products
+                </h2>
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
-            {homePage?.data?.top_rated_products?.map((product, key) => (
-              <ProductCard key={key} product={product} />
-            ))}
-          </div>
-        </div>
-
-        <div className={"flex w-full flex-col gap-6 xl:w-[31%]"}>
-          <div className="bg-white rounded gap-2">
-            <div
-              className={
-                "bg-[#fe9636] rounded-tl rounded-tr py-4 px-4 h-[62px] flex justify-between items-center"
-              }
-            >
-              <h4 className={"font-semibold text-xl text-white "}>
-                Top Selling
-              </h4>
-            </div>
-            <div className="bg-white rounded gap-2 ">
-              {topSellingList.slice(0, 4).map((item, key) => (
-                <ProductCard2 key={key} product={topSellingList} index={key} item={item} />
+            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-3">
+              {topRated.map((product, key) => (
+                <ProductCard key={product?.id ?? key} product={product} />
               ))}
             </div>
           </div>
+
+          <aside className="w-full shrink-0 xl:w-[min(22rem,34%)] xl:max-w-[min(22rem,34%)]">
+            <ProductRankPanel
+              title="Top Selling Products"
+              products={topSelling}
+              limit={8}
+            />
+          </aside>
         </div>
-      </div>
       </div>
     </section>
   );

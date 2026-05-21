@@ -11,6 +11,7 @@ import { getSiteSettings } from "@/redux/general/generalSlice";
 import { wrapper } from "@/store/store";
 import type { PaystackProps } from "react-paystack/libs/types";
 import Link from "next/link";
+import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 
 /** Opens Paystack once when mounted — no dependency on changing `config` objects (avoids re-initializing on every render). */
 const PaystackOpenOnce = dynamic(
@@ -48,6 +49,23 @@ const CheckoutPage = () => {
     siteSettings != null && siteSettings.accept_escrow_payment === false;
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentChoice>("pod");
+
+  const nonEscrowCheckoutNoticeSafe = useMemo(() => {
+    if (!escrowDisabled) return "";
+    const raw = (siteSettings?.non_escrow_cart_notice_html as string | undefined)?.trim();
+    if (!raw) return "";
+    return sanitizeRichNotice(raw);
+  }, [escrowDisabled, siteSettings?.non_escrow_cart_notice_html]);
+
+  const offlineDisclaimerSafe = useMemo(() => {
+    const raw = (siteSettings?.offline_payment_disclaimer as string | undefined)?.trim();
+    if (!raw) return "";
+    return sanitizeRichNotice(raw);
+  }, [siteSettings?.offline_payment_disclaimer]);
+
+  const showUnpaidBadges =
+    Boolean(orders) && (escrowDisabled || paymentMethod === "pod");
+  const primaryIsUnpaid = showUnpaidBadges;
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showPaystack, setShowPaystack] = useState(false);
   const [paymentConfirming, setPaymentConfirming] = useState(false);
@@ -213,9 +231,6 @@ const CheckoutPage = () => {
     );
   }
 
-  const showUnpaidBadges = escrowDisabled || paymentMethod === "pod";
-  const primaryIsUnpaid = escrowDisabled || paymentMethod === "pod";
-
   const cardShell =
     "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm";
 
@@ -350,6 +365,19 @@ const CheckoutPage = () => {
               <h2 className="mb-4 text-xl font-bold text-headerBg max-md:text-lg">
                 Payment method
               </h2>
+
+              {escrowDisabled && nonEscrowCheckoutNoticeSafe ? (
+                <div
+                  className="mb-4 rounded-xl border border-amber-200/90 bg-amber-50/90 p-4 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: nonEscrowCheckoutNoticeSafe }}
+                />
+              ) : null}
+              {(escrowDisabled || paymentMethod === "pod") && offlineDisclaimerSafe ? (
+                <div
+                  className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: offlineDisclaimerSafe }}
+                />
+              ) : null}
 
               {escrowDisabled ? (
                 <p className="text-sm text-slate-600">

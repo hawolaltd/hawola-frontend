@@ -68,6 +68,14 @@ interface MerchantDetailsResponse {
     is_active: boolean;
     slug: string;
     merchant_user: number;
+    /** Curated store reels (MerchantStreamsVideo), public merchant profile API. */
+    merchant_reels?: Array<{
+      id: number;
+      title: string;
+      video_link: string;
+      platform: string;
+      created_at: string | null;
+    }>;
   };
   home_page: Record<string, unknown>;
   banners: {
@@ -153,6 +161,13 @@ interface MerchantDetails {
   is_active: boolean;
   slug: string;
   merchant_user: number;
+  merchant_reels?: Array<{
+    id: number;
+    title: string;
+    video_link: string;
+    platform: string;
+    created_at: string | null;
+  }>;
 }
 
 interface State {

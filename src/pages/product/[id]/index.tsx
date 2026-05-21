@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useState} from 'react';
 import Head from 'next/head';
 import type { GetServerSideProps } from "next";
 import AuthLayout from "@/components/layout/AuthLayout";
@@ -9,31 +9,40 @@ import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {
     addToCarts,
     addToCartsLocal, addWishList, clearProductById,
+    fetchProductDetailGallery,
+    fetchProductDetailMain,
+    fetchProductDetailRelated,
     getCarts,
     getMerchantReviews,
-    getProductBySlug, getWishList
+    getWishList
 } from "@/redux/product/productSlice";
 import { useRouter } from "next/router";
-import {amountFormatter, buildWhatsAppLink, formatCurrency, isContactMerchantOnlyProduct} from "@/util";
+import {amountFormatter, formatCurrency, isContactMerchantOnlyProduct} from "@/util";
 import Link from "next/link";
-import {LocalCartItem, Product, ProductByIdResponse} from "@/types/product";
+import {LocalCartItem, ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
-import ProductSkeleton from "@/components/product/ProductSkeleton";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
+import ProductDetailGallerySkeleton from "@/components/product/detail/ProductDetailGallerySkeleton";
+import ProductDetailBuyBoxSkeleton from "@/components/product/detail/ProductDetailBuyBoxSkeleton";
+import ProductDetailTabsSkeleton from "@/components/product/detail/ProductDetailTabsSkeleton";
+import ProductDetailRelatedSkeleton from "@/components/product/detail/ProductDetailRelatedSkeleton";
+import {
+    previewImageFromPreview,
+    readProductDetailPreview,
+    type ProductDetailPreview,
+} from "@/lib/pdpPreview";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
-import DirectContactActions from "@/components/product/DirectContactActions";
 import { TagIcon } from '@heroicons/react/24/outline';
 import { buildProductSeo } from "@/util/storefrontSeo";
 import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
 import {
     DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML,
     DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML,
-    DEFAULT_MERCHANT_COLLECTS_PAYMENT_NOTICE_HTML,
-    DEFAULT_NON_ESCROW_CART_NOTICE_HTML,
     sanitizeRichNotice,
 } from "@/util/sanitizeRichNotice";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 
 type ProductPageProps = {
     serverNotFound?: boolean;
@@ -45,10 +54,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const [position, setPosition] = useState({x: "50%", y: "50%"});
     const [isHovered, setIsHovered] = useState(false);
     const [clientNotFound, setClientNotFound] = useState(false);
-    const [loadingProduct, setLoadingProduct] = useState(!serverNotFound);
+    const [preview, setPreview] = useState<ProductDetailPreview | null>(null);
     const [loadingReview, setLoadingReview] = useState(!serverNotFound);
-    const [showMerchantContact, setShowMerchantContact] = useState(false);
-    const [contactRevealFx, setContactRevealFx] = useState(false);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const router = useRouter();
@@ -58,15 +65,27 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const {
         product,
-        isLoading,
         reviews,
         merchantReviews,
         addToCartPendingProductId,
         addToWishlistPendingProductId,
+        productDetailLoad,
     } = useAppSelector((state) => state.products);
+
+    const galleryReady = productDetailLoad.gallery === "succeeded";
+    const mainReady = productDetailLoad.main === "succeeded";
+    const relatedReady = productDetailLoad.related === "succeeded";
+    const galleryLoading = productDetailLoad.gallery === "pending" || productDetailLoad.gallery === "idle";
+    const mainLoading = productDetailLoad.main === "pending" || productDetailLoad.main === "idle";
+    const relatedLoading = productDetailLoad.related === "pending" || productDetailLoad.related === "idle";
+
+    const displayName =
+        product?.product?.name || preview?.name || "Product";
     const {isAuthenticated} = useAppSelector(state => state.auth)
     const siteSettings = useAppSelector((state) => state.general.siteSettings)
-    const contactMerchantOnly = isContactMerchantOnlyProduct(product?.product);
+    const contactMerchantOnly =
+        isContactMerchantOnlyProduct(product?.product) ||
+        Boolean(preview?.contact_merchant_only);
     const stockStatus = product?.stock_status;
     const inventoryUnavailable = Boolean(
         stockStatus?.tracks_inventory && stockStatus?.is_out_of_stock
@@ -78,15 +97,19 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     );
     const [contactDisclaimerSafe, setContactDisclaimerSafe] = useState("");
     const [buyerProtectionSafe, setBuyerProtectionSafe] = useState("");
-    const [nonEscrowSiteNoticeSafe, setNonEscrowSiteNoticeSafe] = useState("");
     const [merchantCollectsNoticeSafe, setMerchantCollectsNoticeSafe] = useState("");
 
-    const productSlug =
-        typeof query.id === "string"
-            ? query.id
-            : Array.isArray(query.id)
-              ? query.id[0] ?? ""
-              : "";
+    const productSlug = useMemo(() => {
+        const id = query.id;
+        if (typeof id === "string" && id) return id;
+        if (Array.isArray(id) && id[0]) return id[0];
+        const m = router.asPath.match(/\/product\/([^/?#]+)/);
+        return m?.[1] ?? "";
+    }, [query.id, router.asPath]);
+
+    const productMatchesRoute = Boolean(
+        productSlug && product?.product?.slug === productSlug
+    );
 
     const productSeo = useMemo(() => {
         const p = product?.product;
@@ -144,15 +167,6 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             toast.error('Failed to copy link');
         });
     };
-
-    const LoadingSpinner = () => (
-        <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
-            <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
-                <p className="mt-4 text-primary font-medium">Loading product details...</p>
-            </div>
-        </div>
-    );
 
     // State for selected variants
     const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
@@ -295,59 +309,85 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     }
 
     const init = useCallback(async () => {
-        const slug = query.id;
-        if (!slug || typeof slug !== "string") return;
+        const slug = productSlug;
+        if (!slug) return;
 
-        setLoadingProduct(true);
         setLoadingReview(true);
         setClientNotFound(false);
+
         try {
-            await dispatch(clearProductById());
-            const res = await dispatch(getProductBySlug(slug));
-            if (getProductBySlug.rejected.match(res)) {
+            void dispatch(clearProductById());
+            const [galleryRes, mainRes, relatedRes] = await Promise.all([
+                dispatch(fetchProductDetailGallery(slug)),
+                dispatch(fetchProductDetailMain(slug)),
+                dispatch(fetchProductDetailRelated(slug)),
+            ]);
+
+            if (fetchProductDetailMain.rejected.match(mainRes)) {
+                const err = mainRes.payload as { status?: number } | undefined;
+                if (err?.status === 404) {
+                    setClientNotFound(true);
+                    return;
+                }
+            }
+
+            const mainPayload = fetchProductDetailMain.fulfilled.match(mainRes)
+                ? (mainRes.payload as ProductByIdResponse)
+                : null;
+            if (!mainPayload?.product?.id && fetchProductDetailGallery.rejected.match(galleryRes)) {
                 setClientNotFound(true);
                 return;
             }
-            const payload = res.payload as ProductByIdResponse;
-            if (!payload?.product?.id) {
-                setClientNotFound(true);
-                return;
-            }
+
             setClientNotFound(false);
-            await dispatch(getMerchantReviews(slug));
+            void dispatch(getMerchantReviews(slug));
         } catch {
             setClientNotFound(true);
         } finally {
-            setLoadingProduct(false);
             setLoadingReview(false);
         }
-    }, [dispatch, query.id]);
+    }, [dispatch, productSlug]);
+
+    useLayoutEffect(() => {
+        if (!productSlug || typeof window === "undefined") return;
+        const cached = readProductDetailPreview(productSlug);
+        setPreview(cached);
+        const img = previewImageFromPreview(cached);
+        if (img) {
+            setMainImage(img);
+            setCurrentImage(img);
+        }
+    }, [productSlug]);
 
     useEffect(() => {
         if (serverNotFound) {
-            setLoadingProduct(false);
             setLoadingReview(false);
             return;
         }
-        if (!routerIsReady) return;
-        const slug = query.id;
-        if (!slug || typeof slug !== "string") {
-            setClientNotFound(true);
-            setLoadingProduct(false);
-            setLoadingReview(false);
+        if (!productSlug) {
+            if (routerIsReady) {
+                setClientNotFound(true);
+                setLoadingReview(false);
+            }
             return;
         }
         void init();
-    }, [serverNotFound, routerIsReady, query.id, init]);
+    }, [serverNotFound, routerIsReady, productSlug, init]);
 
     useEffect(() => {
+        if (product?.product?.slug !== productSlug) return;
         if (product?.product?.featured_image?.[0]?.image_url) {
             setCurrentImage(product.product?.featured_image?.[0]?.image_url);
         }
         if (product?.product_images?.length) {
             setMainImage(product?.product_images?.[0]?.image_url);
         }
-    }, [product?.product?.featured_image, product?.product_images]);
+    }, [
+        productSlug,
+        product?.product?.slug,
+        product?.product?.featured_image,
+        product?.product_images,
+    ]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -369,7 +409,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     useEffect(() => {
         const p = (product as any)?.product;
-        if (!p?.id || !p?.slug) return;
+        if (!p?.id || !p?.slug || p.slug !== productSlug) return;
         const imageUrl =
             product?.product_images?.[0]?.image_url ||
             p?.featured_image?.[0]?.image?.full_size ||
@@ -406,51 +446,25 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     ]);
 
     useEffect(() => {
-        if (contactMerchantOnly || siteSettings == null || siteSettings.accept_escrow_payment !== false) {
-            setNonEscrowSiteNoticeSafe("");
-            return;
-        }
-        const src = siteSettings?.non_escrow_cart_notice_html?.trim()
-            ? String(siteSettings.non_escrow_cart_notice_html)
-            : DEFAULT_NON_ESCROW_CART_NOTICE_HTML;
-        setNonEscrowSiteNoticeSafe(sanitizeRichNotice(src));
-    }, [contactMerchantOnly, siteSettings?.accept_escrow_payment, siteSettings?.non_escrow_cart_notice_html]);
-
-    useEffect(() => {
-        if (
-            contactMerchantOnly ||
-            siteSettings == null ||
-            siteSettings.accept_escrow_payment === false
-        ) {
+        if (contactMerchantOnly) {
             setMerchantCollectsNoticeSafe("");
             return;
         }
-        const pEscrow = product?.product as Product | undefined;
-        if (pEscrow?.is_payment_escrowed !== false) {
+        const siteOn = siteSettings?.accept_escrow_payment === true;
+        const p = (product as any)?.product;
+        const nonEscrowed = p && p.is_payment_escrowed === false;
+        if (!siteOn || !nonEscrowed) {
             setMerchantCollectsNoticeSafe("");
             return;
         }
-        const src = siteSettings?.merchant_collects_payment_notice_html?.trim()
-            ? String(siteSettings.merchant_collects_payment_notice_html)
-            : DEFAULT_MERCHANT_COLLECTS_PAYMENT_NOTICE_HTML;
-        setMerchantCollectsNoticeSafe(sanitizeRichNotice(src));
+        const raw = (siteSettings?.merchant_collects_payment_notice_html as string | undefined)?.trim();
+        setMerchantCollectsNoticeSafe(raw ? sanitizeRichNotice(raw) : "");
     }, [
         contactMerchantOnly,
         siteSettings?.accept_escrow_payment,
         siteSettings?.merchant_collects_payment_notice_html,
-        (product?.product as Product | undefined)?.is_payment_escrowed,
+        (product as any)?.product?.is_payment_escrowed,
     ]);
-
-    useEffect(() => {
-        if (!showMerchantContact) {
-            setContactRevealFx(false);
-            return;
-        }
-        setContactRevealFx(true);
-        const timer = setTimeout(() => setContactRevealFx(false), 750);
-        return () => clearTimeout(timer);
-    }, [showMerchantContact]);
-
 
     const notFound = serverNotFound || clientNotFound;
     const slugForMessage =
@@ -468,12 +482,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         );
     }
 
-    if (loadingProduct) {
-        return <AuthLayout><ProductSkeleton /></AuthLayout>;
-    }
+    const shellReady = Boolean(preview?.name) || mainReady || galleryReady;
 
-    // Generate dynamic title
-    if (!product?.product?.id) {
+    if (!shellReady && productDetailLoad.main === "failed" && productDetailLoad.gallery === "failed") {
         return (
             <AuthLayout>
                 <Head>
@@ -484,6 +495,25 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             </AuthLayout>
         );
     }
+
+    const previewForRoute =
+        preview?.slug === productSlug ? preview : null;
+    const previewImageUrl = previewImageFromPreview(previewForRoute) || "";
+
+    const routeGalleryImages = (productMatchesRoute
+        ? product?.product_images || []
+        : []
+    )
+        .map((img) => img?.image_url)
+        .filter(Boolean) as string[];
+
+    const heroImageUrl = productMatchesRoute
+        ? mainImage ||
+          routeGalleryImages[0] ||
+          product?.product?.featured_image?.[0]?.image_url ||
+          previewImageUrl ||
+          ""
+        : previewImageUrl;
 
     const tagNames = product?.product?.tags?.map((t) => t?.name).filter(Boolean) || [];
     const keywordsCombined = [productSeo?.keywords, tagNames.join(", ")]
@@ -504,12 +534,6 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const ogLocale = (siteSettings?.seo_og_locale as string) || "en_US";
     const twitterSite = (siteSettings?.seo_twitter_site as string)?.trim();
-    const merchantPhoneNumber = product?.product?.merchant?.support_phone_number?.trim();
-    const whatsappLink = buildWhatsAppLink(
-        merchantPhoneNumber,
-        product?.product?.name,
-        product?.product?.merchant?.store_name
-    );
     const plainListingDescription = (product?.product?.description || "")
         .replace(/<[^>]+>/g, " ")
         .replace(/&nbsp;/gi, " ")
@@ -520,15 +544,15 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         .replace(/&#39;/g, "'")
         .replace(/\s+/g, " ")
         .trim();
-    const galleryImages = (product?.product_images || [])
-        .map((img) => img?.image_url)
-        .filter(Boolean) as string[];
     const effectiveGalleryImages =
-        galleryImages.length > 0
-            ? galleryImages
-            : (product?.product?.featured_image?.[0]?.image_url
+        routeGalleryImages.length > 0
+            ? routeGalleryImages
+            : previewImageUrl
+              ? [previewImageUrl]
+              : productMatchesRoute &&
+                  product?.product?.featured_image?.[0]?.image_url
                 ? [product.product.featured_image[0].image_url]
-                : []);
+                : [];
 
     const openLightboxAt = (src: string) => {
         const idx = effectiveGalleryImages.findIndex((url) => url === src);
@@ -550,7 +574,10 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         return (
             <AuthLayout>
                 <Head>
-                    <title>{productSeo?.title || "Hawola | Product"}</title>
+                    <title>
+                {productSeo?.title ||
+                    (preview?.name ? `${preview.name} | Hawola` : "Hawola | Product")}
+            </title>
                     <meta name="description" content={productSeo?.description || ""} />
                     {keywordsCombined ? (
                         <meta name="keywords" content={keywordsCombined.slice(0, 512)} />
@@ -571,33 +598,29 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     </div>
                     <div className="mx-auto max-w-[1320px] px-4 pb-8 pt-4">
-                        <div className="overflow-hidden rounded-[26px] border border-slate-700/70 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-[0_20px_45px_rgba(2,6,23,0.6)]">
+                        <div className="overflow-hidden rounded-[26px] bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-[0_20px_45px_rgba(2,6,23,0.6)]">
                         <div className="grid grid-cols-1 lg:grid-cols-12">
                             <div className="border-b border-slate-800 lg:col-span-8 lg:border-b-0 lg:border-r lg:border-slate-800 p-5 lg:p-7">
                                 <div className="aspect-[16/10] w-full rounded-2xl border border-slate-700 bg-slate-900 flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
                                     <img
-                                        src={mainImage || product?.product?.featured_image?.[0]?.image_url}
-                                        alt={product?.product?.name || "Listing image"}
+                                        src={heroImageUrl}
+                                        alt={displayName}
                                         className="w-full h-full object-contain cursor-zoom-in"
-                                        onClick={() =>
-                                            openLightboxAt(
-                                                mainImage || product?.product?.featured_image?.[0]?.image_url || ""
-                                            )
-                                        }
+                                        onClick={() => openLightboxAt(heroImageUrl || "")}
                                     />
                                 </div>
-                                {product?.product_images?.length > 1 ? (
+                                {routeGalleryImages.length > 1 ? (
                                     <div className="mt-4 grid grid-cols-5 gap-2 rounded-xl bg-slate-900/80 border border-slate-700 p-2">
-                                        {product.product_images.slice(0, 10).map((item, idx) => (
+                                        {routeGalleryImages.slice(0, 10).map((imageUrl, idx) => (
                                             <button
                                                 key={idx}
-                                                onClick={() => setMainImage(item?.image_url)}
+                                                onClick={() => setMainImage(imageUrl)}
                                                 className={`h-16 rounded-lg border overflow-hidden transition ${
-                                                    mainImage === item?.image_url ? "border-amber-400 ring-1 ring-amber-400/30" : "border-slate-700"
+                                                    mainImage === imageUrl ? "border-amber-400 ring-1 ring-amber-400/30" : "border-slate-700"
                                                 }`}
                                             >
                                                 <img
-                                                    src={item?.image_url}
+                                                    src={imageUrl}
                                                     alt="Listing preview"
                                                     className="w-full h-full object-cover"
                                                 />
@@ -652,47 +675,17 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                             <span className="font-medium text-white">{product.product.merchant.location.name}</span>
                                         </div>
                                     ) : null}
-                                    {merchantPhoneNumber ? (
-                                        <div
-                                            className={`overflow-hidden ${showMerchantContact ? "" : "pointer-events-none"}`}
-                                            style={{
-                                                maxHeight: showMerchantContact ? "72px" : "0px",
-                                                opacity: showMerchantContact ? 1 : 0,
-                                                transform: showMerchantContact ? "translateY(0)" : "translateY(-6px)",
-                                                transition: "max-height 320ms ease, opacity 260ms ease, transform 260ms ease",
-                                            }}
-                                        >
-                                            <div
-                                                className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2"
-                                                style={{
-                                                    animation: contactRevealFx
-                                                        ? "contactGlowPulse 700ms ease-out"
-                                                        : "none",
-                                                }}
-                                            >
-                                                <span className="text-slate-400">Phone</span>
-                                                <span className="font-medium text-white">{merchantPhoneNumber}</span>
-                                            </div>
-                                        </div>
-                                    ) : null}
                                 </div>
-
-                                <DirectContactActions
-                                    merchantSlug={product?.product?.merchant?.slug}
-                                    whatsappLink={whatsappLink}
-                                    onContactClick={() => setShowMerchantContact(true)}
-                                    className="mt-6"
-                                />
 
                             </div>
                         </div>
                     </div>
 
                     <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-5">
-                        <div className="lg:col-span-8 rounded-3xl border border-[#dde4f0] bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
+                        <div className="lg:col-span-8 rounded-3xl bg-white p-6 sm:shadow-[0_2px_24px_rgba(15,23,42,0.04)]">
                             <ProductInfo product={product} embedded />
                         </div>
-                        <div className="lg:col-span-4 rounded-3xl border border-[#dde4f0] bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
+                        <div className="lg:col-span-4 rounded-3xl bg-white p-6 sm:shadow-[0_2px_24px_rgba(15,23,42,0.04)]">
                             <h3 className="text-lg font-semibold text-primary">Buyer Protection & Disclaimer</h3>
                             <div
                                 className="mt-3 text-sm text-textPadded leading-6 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_a]:text-primary [&_a]:underline"
@@ -700,7 +693,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     __html: buyerProtectionSafe || DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML,
                                 }}
                             />
-                            <hr className="my-4 border-[#e8edf5]" />
+                            <div className="my-4 h-px bg-slate-100 dark:bg-slate-700/80" aria-hidden />
                             <div
                                 className="text-sm text-textPadded leading-6 [&_a]:text-primary [&_a]:underline"
                                 dangerouslySetInnerHTML={{
@@ -763,26 +756,16 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         />
                     </div>
                 ) : null}
-                <style jsx>{`
-                  @keyframes contactGlowPulse {
-                    0% {
-                      box-shadow: 0 0 0 rgba(59, 130, 246, 0);
-                    }
-                    50% {
-                      box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.18);
-                    }
-                    100% {
-                      box-shadow: 0 0 0 rgba(59, 130, 246, 0);
-                    }
-                  }
-                `}</style>
             </AuthLayout>
         );
     }
 
     return (<AuthLayout>
         <Head>
-            <title>{productSeo?.title || "Hawola | Product"}</title>
+            <title>
+                {productSeo?.title ||
+                    (preview?.name ? `${preview.name} | Hawola` : "Hawola | Product")}
+            </title>
             <meta name="description" content={productSeo?.description || ""} />
             {keywordsCombined ? (
                 <meta name="keywords" content={keywordsCombined.slice(0, 512)} />
@@ -830,27 +813,40 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     <span className="mx-2 text-[#9fb2e3]">/</span>
                     <span>{product?.product?.category?.name || "Products"}</span>
                     <span className="mx-2 text-[#9fb2e3]">/</span>
-                    <span className="text-white">{product?.product?.name}</span>
+                    <span className="text-white">{displayName}</span>
                 </nav>
             </div>
         </div>
         <div className="max-w-[1320px] mx-auto px-4 py-8">
             {/* Product Image start*/}
-            <div className="flex flex-col md:flex-row gap-4 rounded-3xl border border-[#e2e8f2] bg-white p-4 md:p-5 shadow-[0_3px_10px_rgba(16,24,40,0.04)]">
+            <div className="flex flex-col md:flex-row gap-4 rounded-3xl bg-white p-4 md:p-5 sm:shadow-[0_4px_32px_rgba(15,23,42,0.06)]">
                 {/* Image Display */}
 
+                {galleryLoading && routeGalleryImages.length === 0 ? (
+                    heroImageUrl ? (
+                        <div style={{ flex: 3 }} className="flex flex-1 items-center justify-center rounded-2xl bg-[#f8fafc] p-4">
+                            <img
+                                src={heroImageUrl}
+                                alt={displayName}
+                                className="max-h-[75vh] w-full object-contain opacity-90"
+                            />
+                        </div>
+                    ) : (
+                        <ProductDetailGallerySkeleton />
+                    )
+                ) : (
                 <div style={{flex: 3}} className="flex gap-4">
 
                     {/* Thumbnail Gallery */}
-                    <div className={'hidden lg:flex flex-col gap-3 h-[75vh] w-fit overflow-y-auto rounded-2xl border border-[#e7edf7] bg-[#f8fbff] p-2'}>
-                        {product?.product_images?.map((item, key) => (
+                    <div className={'hidden lg:flex flex-col gap-3 h-[75vh] w-fit overflow-y-auto rounded-2xl bg-[#f8fbff] p-2'}>
+                        {routeGalleryImages.map((imageUrl, key) => (
                             <div
                                 key={key}
-                                onClick={() => setMainImage(item?.image_url)}
-                                className={`border cursor-pointer transition-all duration-300 ${mainImage === item?.image_url ? 'border-primary ring-1 ring-primary/20' : 'border-[#dde4f0]'} flex items-center justify-center rounded-lg h-[96px] w-[96px] bg-white overflow-hidden`}
+                                onClick={() => setMainImage(imageUrl)}
+                                className={`cursor-pointer transition-all duration-300 flex items-center justify-center rounded-lg h-[96px] w-[96px] bg-white overflow-hidden shadow-sm ${mainImage === imageUrl ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-slate-200/40'}`}
                             >
                                 <img
-                                    src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
+                                    src={imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
                                     alt="Product Thumbnail"
                                     className="h-full w-full object-cover"
                                 />
@@ -859,18 +855,18 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     </div>
 
                     {/* Main Image Display */}
-                    <div className="flex-1 flex flex-col items-center justify-center border border-[#e2e8f2] bg-[#f8fafc] h-[75vh] rounded-2xl relative overflow-hidden">
+                    <div className="flex-1 flex flex-col items-center justify-center bg-[#f8fafc] h-[75vh] rounded-2xl relative overflow-hidden shadow-inner">
 
                         {/* Mobile Thumbnail Navigation */}
                         <div className="lg:hidden flex gap-2 overflow-x-auto py-2 w-full justify-center absolute bottom-2 left-0 right-0">
-                            {product?.product_images?.map((item, key) => (
+                            {routeGalleryImages.map((imageUrl, key) => (
                                 <div
                                     key={key}
-                                    onClick={() => setMainImage(item?.image_url)}
-                                    className={`w-12 h-12 rounded border cursor-pointer overflow-hidden ${mainImage === item?.image_url ? 'border-primary' : 'border-[#dde4f0]'}`}
+                                    onClick={() => setMainImage(imageUrl)}
+                                    className={`w-12 h-12 rounded-lg cursor-pointer overflow-hidden shadow-sm ${mainImage === imageUrl ? 'ring-2 ring-primary' : 'ring-1 ring-slate-200/50'}`}
                                 >
                                     <img
-                                        src={item?.image_url ? item.image_url : "/imgs/page/product/img-gallery-1.jpg"}
+                                        src={imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
                                         alt="Product Thumbnail"
                                         className="w-full h-full object-cover"
                                     />
@@ -886,7 +882,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             onMouseMove={handleMouseMove}
                         >
                             <img
-                                src={mainImage || product?.product?.featured_image?.[0]?.image_url}
+                                src={heroImageUrl || "/imgs/page/product/img-gallery-1.jpg"}
                                 alt="Product"
                                 className={`absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 ${
                                     isHovered ? "scale-150" : "scale-100"
@@ -900,43 +896,62 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     </div>
                 </div>
+                )}
 
                 {/* Product Image ends */}
-                <div style={{flex: 4}} className="p-3 lg:p-4 flex flex-col rounded-2xl border border-[#e7edf7] bg-gradient-to-b from-white to-[#f9fbff]">
-                    {/* Product Details */}
+                <div style={{flex: 4}} className="p-3 lg:p-4 flex flex-col rounded-2xl bg-gradient-to-b from-white to-[#f9fbff]">
                     <h1 className="text-2xl lg:text-3xl font-bold text-primary mb-4 capitalize leading-tight">
-                        {/*{ product?.product?.name}*/}
-                        {loadingProduct ? (
-                        <div className="h-8 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-                    ) : (
-                        product?.product?.name
-                    )}
+                        {displayName}
                     </h1>
 
+                    {mainLoading && !preview ? (
+                        <ProductDetailBuyBoxSkeleton />
+                    ) : null}
+                    {mainLoading && preview ? (
+                        <div className="mb-5 space-y-4">
+                            {(preview.discount_price || preview.price) ? (
+                                <div className="flex items-end gap-3 rounded-2xl bg-slate-50/80 p-4">
+                                    <p className="text-2xl lg:text-4xl font-bold text-primary">
+                                        {formatCurrency(
+                                            preview.discount_price ?? preview.price ?? ""
+                                        )}
+                                    </p>
+                                    {preview.price &&
+                                    preview.discount_price &&
+                                    Number(preview.price) > Number(preview.discount_price) ? (
+                                        <span className="line-through text-base lg:text-xl font-medium text-[#8c9ec5]">
+                                            {formatCurrency(preview.price)}
+                                        </span>
+                                    ) : null}
+                                </div>
+                            ) : null}
+                            {preview.merchant?.store_name ? (
+                                <p className="text-primary text-sm font-bold">
+                                    <span className="text-[#8c9ec5] text-xs font-bold">by</span>{" "}
+                                    {preview.merchant.store_name}
+                                </p>
+                            ) : null}
+                            <ProductDetailBuyBoxSkeleton />
+                        </div>
+                    ) : null}
+                    {!mainLoading ? (
+                    <>
                     <div
-                        className={'flex flex-col lg:flex-row lg:items-center mb-5 lg:justify-between w-full border-b border-b-[#e6ecf6] pb-4'}>
+                        className={'flex flex-col lg:flex-row lg:items-center mb-5 lg:justify-between w-full pb-4'}>
                         <div>
                             <p className="text-primary text-sm font-bold">
                                 <span className="text-[#8c9ec5] text-xs font-bold">by</span>{" "}
-                                {loadingProduct ? (
-                                    <span className="inline-block h-4 w-32 bg-gray-200 rounded animate-pulse"></span>
-                                ) : (
-                                    <Link
+                                <Link
                                         href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
                                         className="underline-offset-2 hover:underline"
                                     >
                                         {product?.product?.merchant?.store_name}
                                     </Link>
-                                )}
 
                                 {/*{product?.product?.merchant?.store_name}*/}
                             </p>
                             <div className="flex items-center text-xs text-[#8c9ec5] font-bold">
-                                {loadingProduct ? (
-                                    <span className="inline-block h-4 w-24 bg-gray-200 rounded animate-pulse"></span>
-                                ) : (
-                                    <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
-                                )}
+                                <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
                                 {/*{<span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>}*/}
                             </div>
                         </div>
@@ -950,7 +965,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                 }
                                 className="flex items-center gap-2 rounded-md p-0.5 text-left transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
                             >
-                                <span className="flex h-7 w-7 items-center justify-center rounded border border-[#dde4f0] bg-white">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white shadow-sm">
                                     {addToWishlistPendingProductId ===
                                     product?.product?.id ? (
                                         <InlineButtonSpinner className="h-3.5 w-3.5 text-rose-500" />
@@ -978,17 +993,19 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             <div onClick={()=>{
                                 const ms = product?.product?.merchant?.slug;
                                 if (ms) router.push(merchantStorePublicPath(ms));
-                            }} className={'flex items-center gap-2'}>
+                            }} className={'flex min-w-0 cursor-pointer items-center gap-3'}>
                             <span
-                                className={'flex items-center justify-center border border-[#dde4f0] p-0.5 rounded-[4px]'}>
-                                 <img
-                                     src={
-                                         product?.product?.merchant?.logo_thumbnail ||
-                                         product?.product?.merchant?.logo
-                                     }
-                                     alt="Store logo"
-                                     className="h-4 w-4 rounded-full object-cover"
-                                 />
+                                className={'flex items-center justify-center p-0.5 rounded-md bg-white shadow-sm'}>
+                                <MerchantLogoOrInitial
+                                    logoThumbnailUrl={product?.product?.merchant?.logo_thumbnail}
+                                    logoUrl={product?.product?.merchant?.logo}
+                                    storeName={product?.product?.merchant?.store_name ?? "Store"}
+                                    primaryColor={product?.product?.merchant?.primary_color}
+                                    alt=""
+                                    className="h-4 w-4 overflow-hidden rounded-full"
+                                    imgClassName="h-full w-full object-cover rounded-full"
+                                    fallbackTextClassName="text-[7px] font-bold leading-none"
+                                />
                             </span>
                             <p className={'text-primary font-[500] text-xs cursor-pointer'}>View Merchant Profile</p>
                         </div>
@@ -996,7 +1013,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     </div>
 
 
-                    <div className="flex items-end gap-3 mb-5 rounded-2xl border border-[#e4e9f2] bg-white p-4">
+                    <div className="flex items-end gap-3 mb-5 rounded-2xl bg-slate-50/80 p-4">
                         <p className="text-2xl lg:text-4xl font-bold text-primary">
                             {formatCurrency(product.product?.discount_price)}
                         </p>
@@ -1017,7 +1034,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     {/* Product Condition */}
                     {(product?.product as any)?.product_condition && (
                         <div className="mb-4">
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium shadow-sm">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -1026,8 +1043,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     )}
 
-                    {inventoryUnavailable && !contactMerchantOnly && stockStatus?.tracks_inventory ? (
-                        <div className="mb-4 overflow-hidden rounded-2xl border border-rose-200/90 bg-gradient-to-r from-rose-50 via-white to-amber-50/80 p-4 shadow-sm ring-1 ring-rose-100/70">
+                    {inventoryUnavailable && stockStatus?.tracks_inventory ? (
+                        <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-r from-rose-50 via-white to-amber-50/80 p-4 shadow-sm">
                             <div className="flex flex-wrap items-start gap-3">
                                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-600 to-rose-800 text-lg font-black text-white shadow-md shadow-rose-600/25">
                                     !
@@ -1047,24 +1064,17 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         </div>
                     ) : null}
 
-                    {!inventoryUnavailable && inventoryLow && !contactMerchantOnly && stockStatus?.tracks_inventory ? (
-                        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
+                    {!inventoryUnavailable && inventoryLow && stockStatus?.tracks_inventory ? (
+                        <div className="mb-4 rounded-2xl bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
                             <span className="font-semibold">Limited quantity left</span>
                             {" · "}
                             Only a few units remain at this price—order soon.
                         </div>
                     ) : null}
 
-                    {!contactMerchantOnly && nonEscrowSiteNoticeSafe ? (
+                    {merchantCollectsNoticeSafe ? (
                         <div
-                            className="mb-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: nonEscrowSiteNoticeSafe }}
-                        />
-                    ) : null}
-
-                    {!contactMerchantOnly && merchantCollectsNoticeSafe ? (
-                        <div
-                            className="mb-4 rounded-2xl border border-[#e8edf6] bg-[#fbfcff] px-4 py-3 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none"
+                            className="mb-4 rounded-2xl border border-amber-200/90 bg-amber-50/95 p-4 text-sm text-amber-950 shadow-sm prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline"
                             dangerouslySetInnerHTML={{ __html: merchantCollectsNoticeSafe }}
                         />
                     ) : null}
@@ -1073,9 +1083,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         !(siteSettings != null && siteSettings.accept_escrow_payment === false)) && (
                     <div className={`self-start w-fit inline-flex items-center gap-3 ${
                         product?.product?.accept_payment_on_delivery 
-                            ? 'bg-green-50 border-green-200 text-green-700' 
-                            : 'bg-gray-50 border-gray-200 text-gray-500'
-                    } px-4 py-3 rounded-xl border-2 transition-all duration-200`}>
+                            ? 'bg-green-50 text-green-700' 
+                            : 'bg-gray-50 text-gray-500'
+                    } px-4 py-3 rounded-xl shadow-sm transition-all duration-200`}>
                         <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
                             product?.product?.accept_payment_on_delivery 
                                 ? 'bg-green-100' 
@@ -1094,20 +1104,15 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                     : 'text-gray-600'
                             }`}>
                                 {product?.product?.accept_payment_on_delivery 
-                                    ? 'Payment on Delivery Available (Within Seller Location)' 
+                                    ? 'Payment on Delivery Available' 
                                     : 'Online Payment Only'
                                 }
                             </p>
-                            <p className={`text-xs ${
-                                product?.product?.accept_payment_on_delivery 
-                                    ? 'text-green-600' 
-                                    : 'text-gray-500'
-                            }`}>
-                                {product?.product?.accept_payment_on_delivery 
-                                    ? `Pay when your order arrives${product?.product?.merchant?.location?.name ? ` in ${product.product.merchant.location.name}` : ''}` 
-                                    : 'Secure online payment required'
-                                }
+                            {!product?.product?.accept_payment_on_delivery ? (
+                            <p className="text-xs text-gray-500">
+                                Secure online payment required
                             </p>
+                            ) : null}
                         </div>
                         {product?.product?.accept_payment_on_delivery && (
                             <div className="flex items-center">
@@ -1146,7 +1151,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                             </div>
                         </div>
                     </div> */}
-                    <ul className={'flex flex-col gap-2 text-sm mt-2 mb-6 px-4 font-medium rounded-2xl border border-[#e8edf6] bg-[#fbfcff] py-4'}>
+                    <ul className={'flex flex-col gap-2 text-sm mt-2 mb-6 px-4 font-medium rounded-2xl bg-[#fbfcff] py-4 shadow-sm'}>
                         {product?.product?.merchant?.location?.name && product?.product?.merchant?.location?.name !== 'unknown' && (
                             <li className={'flex items-center gap-2 text-sm text-primary'}>
                                 <svg className={'w-4 h-4'} width="8" height="8" viewBox="0 0 16 17" fill="none"
@@ -1333,10 +1338,10 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                                 <button
                                                     key={variantValue.id}
                                                     onClick={() => handleVariantSelect(variantGroup.variant.id, variantValue.id)}
-                                                    className={`border rounded text-xs px-3 py-1 ${
+                                                    className={`rounded-lg text-xs px-3 py-1 shadow-sm ${
                                                         selectedVariants[variantGroup.variant.id] === variantValue.id
-                                                            ? 'border-orange text-deepOrange bg-orange-50'
-                                                            : 'border-[#dde4f0] text-textPadded hover:border-orange'
+                                                            ? 'text-deepOrange bg-orange-50 ring-2 ring-orange-200/80'
+                                                            : 'bg-slate-100 text-textPadded hover:bg-slate-200/80'
                                                     } ${
                                                         variantValue.countInStock <= 0 ? 'opacity-50 cursor-not-allowed' : ''
                                                     }`}
@@ -1354,12 +1359,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
                         {/* Quantity */}
                         <div className={'mt-6'}>
-                            {!contactMerchantOnly ? (
-                                <p className="text-gray-500 mb-2">Quantity</p>
-                            ) : null}
+                            <p className="text-gray-500 mb-2">Quantity</p>
                             <div className={'flex flex-col lg:flex-row lg:items-center gap-4'}>
-                                {!contactMerchantOnly ? (
-                                    <div className="flex items-center w-fit space-x-3 border-b-[#dde4f0] pb-2 border-b-4">
+                                <div className="flex items-center w-fit space-x-3 rounded-xl bg-slate-50 px-3 py-1">
                                         <button onClick={() => handleQuantityChange(-1)}
                                                 className="font-normal text-primary w-8 h-8 flex items-center justify-center text-4xl">-
                                         </button>
@@ -1368,45 +1370,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                                 className="font-normal text-primary w-8 h-8 flex items-center justify-center text-4xl"> +
                                         </button>
                                     </div>
-                                ) : null}
                                 {/* Buttons */}
-                                {contactMerchantOnly ? (
-                                    <div className="flex flex-col gap-3">
-                                        <DirectContactActions
-                                            merchantSlug={product?.product?.merchant?.slug}
-                                            whatsappLink={whatsappLink}
-                                            onContactClick={() => setShowMerchantContact(true)}
-                                        />
-                                        {showMerchantContact && (
-                                            <div className="rounded-md border border-[#dde4f0] p-4 bg-[#f8fafc]">
-                                                <p className="text-sm text-primary font-semibold">
-                                                    Merchant Phone: {merchantPhoneNumber || "Not available"}
-                                                </p>
-                                                <p className="text-xs text-textPadded mt-1">
-                                                    Want to chat with the merchant? Use WhatsApp or open the merchant profile to continue the conversation.
-                                                </p>
-                                                <div className="flex flex-wrap gap-3 mt-3">
-                                                    {whatsappLink ? (
-                                                        <a
-                                                            href={whatsappLink}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="px-4 py-2 bg-[#25D366] text-white text-sm rounded hover:bg-[#20ba57] transition-colors"
-                                                        >
-                                                            Chat on WhatsApp
-                                                        </a>
-                                                    ) : null}
-                                                    <Link
-                                                        href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
-                                                        className="px-4 py-2 border border-primary text-primary text-sm rounded hover:bg-primary/5 transition-colors"
-                                                    >
-                                                        Open Merchant Profile
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
                                     <div className={`flex flex-col sm:flex-row lg:items-center gap-4 ${inventoryUnavailable ? "opacity-50" : ""}`}>
                                         {(() => {
                                             const cartPid = product?.product?.id;
@@ -1419,9 +1383,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                             type="button"
                                             disabled={inventoryUnavailable || cartBusy}
                                             onClick={() => handleAddToCart(product as ProductByIdResponse)}
-                                            className={`inline-flex min-h-[42px] min-w-[140px] items-center justify-center gap-2 px-6 py-2.5 border border-primary rounded-xl font-semibold transition-colors ${
+                                            className={`inline-flex min-h-[42px] min-w-[140px] items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-colors ring-2 ring-primary/30 bg-white ${
                                                 inventoryUnavailable || cartBusy
-                                                    ? "cursor-not-allowed text-primary/70 border-primary/40"
+                                                    ? "cursor-not-allowed text-primary/70 ring-primary/15"
                                                     : "text-primary hover:bg-primary/5"
                                             }`}
                                         >
@@ -1449,14 +1413,13 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                             );
                                         })()}
                                     </div>
-                                )}
 
                             </div>
                         </div>
 
 
                         {/* Additional info */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-8 border-t border-[#e8edf6] pt-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-10 pt-8">
                             {/* <div>
                                 <p className="font-bold text-primary flex items-center gap-0 text-sm">Free
                                     Delivery</p>
@@ -1509,6 +1472,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
 
                     </div>
+                    </>
+                    ) : null}
 
 
                 </div>
@@ -1517,10 +1482,18 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
             {/* Frequently Bought Together */}
 
-            <div className="mt-6 rounded-3xl border border-[#e2e8f2] bg-white p-6 shadow-[0_3px_10px_rgba(16,24,40,0.04)]">
-             <ProductInfo product={product}/>
+            <div className="mt-6 rounded-3xl bg-white p-6 sm:shadow-[0_4px_32px_rgba(15,23,42,0.06)]">
+             {mainLoading ? (
+                <ProductDetailTabsSkeleton />
+             ) : product?.product?.id ? (
+                <ProductInfo product={product} />
+             ) : null}
 
-             <RelatedProduct product={product}/>
+             {relatedLoading ? (
+                <ProductDetailRelatedSkeleton />
+             ) : (
+                <RelatedProduct product={product} />
+             )}
 
             </div>
         </div>
@@ -1534,24 +1507,7 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
         context.res.statusCode = 404;
         return { props: { serverNotFound: true } };
     }
-    const envBase = process.env.NEXT_PUBLIC_API_URL || "";
-    const base = envBase.replace(/\/?$/, "/");
-    if (!base || base === "/") {
-        return { props: { serverNotFound: false } };
-    }
-    try {
-        const url = `${base}products/detail/${encodeURIComponent(slug)}/`;
-        const res = await fetch(url, {
-            headers: { Accept: "application/json" },
-            redirect: "manual",
-        });
-        if (res.status === 404) {
-            context.res.statusCode = 404;
-            return { props: { serverNotFound: true } };
-        }
-    } catch {
-        /* allow client retry if SSR fetch fails */
-    }
+    // 404 is resolved on the client from section APIs — avoid blocking navigation on a full detail fetch.
     return { props: { serverNotFound: false } };
 };
 

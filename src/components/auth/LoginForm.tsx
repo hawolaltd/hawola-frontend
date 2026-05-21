@@ -33,9 +33,26 @@ export default function LoginForm() {
     useEffect(() => {
         if (error && message) {
             try {
-                const errorMessage = typeof message === 'string' 
-                    ? message 
-                    : normalizeErrors(message);
+                const errorMessage =
+                    typeof message === 'object' && message !== null && 'message' in message
+                        ? String((message as { message?: string }).message)
+                        : typeof message === 'string'
+                          ? message
+                          : normalizeErrors(message);
+
+                if (
+                    typeof message === 'object' &&
+                    message !== null &&
+                    (message as { code?: string }).code === 'email_not_verified'
+                ) {
+                    const targetEmail = (message as { email?: string }).email;
+                    if (targetEmail) {
+                        router.push(
+                            `/auth/verify-pending?email=${encodeURIComponent(targetEmail)}`
+                        );
+                    }
+                    return;
+                }
                 
                 if (errorMessage) {
                     toast.error(errorMessage, {
@@ -120,51 +137,29 @@ export default function LoginForm() {
                 }
                 router.push(redirectTarget)
             } else if (isRejected) {
-                // Login failed - extract error from the rejected action
-                let errorMessage = 'Unable to log in. Please check your email and password.';
-                
-                try {
-                    // @ts-ignore
-                    const errorPayload = res?.payload;
-                    
-                    if (errorPayload) {
-                        if (typeof errorPayload === 'string') {
-                            errorMessage = errorPayload;
-                        } else if (errorPayload && typeof errorPayload === 'object') {
-                            if (errorPayload.error) {
-                                // Handle format: {"error": ["message"]}
-                                if (Array.isArray(errorPayload.error)) {
-                                    errorMessage = errorPayload.error[0] || errorMessage;
-                                } else if (typeof errorPayload.error === 'string') {
-                                    errorMessage = errorPayload.error;
-                                }
-                            } else if (errorPayload.message) {
-                                errorMessage = errorPayload.message;
-                            } else if (errorPayload.detail) {
-                                errorMessage = errorPayload.detail;
-                            } else {
-                                // Try normalizeErrors as fallback
-                                const normalized = normalizeErrors(errorPayload);
-                                if (normalized) {
-                                    errorMessage = normalized;
-                                }
-                            }
-                        }
-                    } else if (message) {
-                        // Fallback to Redux state message
-                        try {
-                            errorMessage = typeof message === 'string' ? message : normalizeErrors(message) || errorMessage;
-                        } catch (e) {
-                            // If normalizeErrors fails, use default
-                            console.error('Error normalizing message:', e);
-                        }
-                    }
-                } catch (parseError) {
-                    // If error parsing fails, use default message
-                    console.error('Error parsing error payload:', parseError);
+                // @ts-ignore
+                const errorPayload = res?.payload;
+                const payloadObj =
+                    errorPayload && typeof errorPayload === 'object'
+                        ? errorPayload
+                        : null;
+                const errorMessage =
+                    typeof errorPayload === 'string'
+                        ? errorPayload
+                        : payloadObj?.message ||
+                          payloadObj?.detail ||
+                          'Unable to log in. Please check your email and password.';
+
+                if (payloadObj?.code === 'email_not_verified') {
+                    const targetEmail =
+                        payloadObj.email || loginPayload.email;
+                    toast.info(errorMessage, { duration: 6000 });
+                    router.push(
+                        `/auth/verify-pending?email=${encodeURIComponent(targetEmail)}`
+                    );
+                    return;
                 }
-                
-                // Show user-friendly error message
+
                 toast.error(errorMessage, {
                     style: {
                         background: "#ef4444",

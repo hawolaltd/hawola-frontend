@@ -67,41 +67,36 @@ export const login = createAsyncThunk(
         errorStatus: error?.response?.status
       });
       
-      // Extract error message from various possible formats
+      const errorData = error?.response?.data;
       let message = 'Unable to log in. Please check your credentials.';
-      
-      if (error?.response?.data) {
-        const errorData = error.response.data;
-        
-        // Handle format: {"error": ["message"]}
-        if (errorData.error) {
-          if (Array.isArray(errorData.error)) {
-            message = errorData.error[0] || message;
-          } else if (typeof errorData.error === 'string') {
-            message = errorData.error;
-          }
-        }
-        // Handle format: {"message": "..."}
-        else if (errorData.message) {
+
+      if (errorData) {
+        if (errorData.detail) {
+          message =
+            typeof errorData.detail === 'string'
+              ? errorData.detail
+              : Array.isArray(errorData.detail)
+                ? errorData.detail[0]
+                : message;
+        } else if (errorData.error) {
+          message = Array.isArray(errorData.error)
+            ? errorData.error[0]
+            : String(errorData.error);
+        } else if (errorData.message) {
           message = errorData.message;
-        }
-        // Handle format: {"detail": "..."}
-        else if (errorData.detail) {
-          message = errorData.detail;
-        }
-        // Handle format: string directly
-        else if (typeof errorData === 'string') {
+        } else if (typeof errorData === 'string') {
           message = errorData;
-        }
-        // Handle format: array of errors
-        else if (Array.isArray(errorData)) {
-          message = errorData[0] || message;
         }
       } else if (error?.message) {
         message = error.message;
       }
 
-      return thunkAPI.rejectWithValue(message);
+      return thunkAPI.rejectWithValue({
+        message,
+        code: errorData?.code,
+        email: errorData?.email,
+        activation_email_sent: errorData?.activation_email_sent,
+      });
     }
   }
 );
@@ -396,13 +391,21 @@ const authSlice = createSlice({
         if (typeof action.payload === 'string') {
           state.message = action.payload;
         } else if (action.payload && typeof action.payload === 'object') {
-          const payload = action.payload as { error?: string | string[]; message?: string; detail?: string };
-          if (payload.error) {
-            state.message = Array.isArray(payload.error) 
-              ? payload.error[0] 
-              : String(payload.error);
+          const payload = action.payload as {
+            error?: string | string[];
+            message?: string;
+            detail?: string;
+            code?: string;
+            email?: string;
+          };
+          if (payload.code === 'email_not_verified') {
+            state.message = payload;
           } else if (payload.message) {
             state.message = String(payload.message);
+          } else if (payload.error) {
+            state.message = Array.isArray(payload.error)
+              ? payload.error[0]
+              : String(payload.error);
           } else if (payload.detail) {
             state.message = String(payload.detail);
           } else {

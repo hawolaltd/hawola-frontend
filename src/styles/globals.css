@@ -22,6 +22,17 @@
   }
 }
 
+/* Hide scrollbar on horizontal scroll containers (eg. mobile tab navs) */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Uniform cart line checkboxes (native inputs size inconsistently across rows/browsers) */
 @layer components {
   .cart-checkbox {

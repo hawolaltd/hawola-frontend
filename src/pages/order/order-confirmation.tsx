@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAppSelector } from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
@@ -6,12 +6,31 @@ import { amountFormatter } from '@/util';
 import Link from 'next/link';
 import { CheckCircleIcon, TruckIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import FeaturesSection from "@/components/home/FeaturesSection";
+import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 
 const OrderConfirmationPage = () => {
     const router = useRouter();
     const { id } = router.query;
     const { orders } = useAppSelector(state => state.products);
     const { profile } = useAppSelector(state => state.auth);
+    const siteSettings = useAppSelector((state) => state.general.siteSettings);
+
+    const offlineMerchantPaymentNoticeSafe = useMemo(() => {
+        if (!orders?.is_offline_payment) return "";
+        const raw = (siteSettings?.non_escrow_cart_notice_html as string | undefined)?.trim();
+        if (!raw) return "";
+        return sanitizeRichNotice(raw);
+    }, [
+        orders?.is_offline_payment,
+        siteSettings?.non_escrow_cart_notice_html,
+    ]);
+
+    const offlinePaymentBadgeLabel = useMemo(() => {
+        const custom = (
+            siteSettings?.offline_order_confirmation_badge_text as string | undefined
+        )?.trim();
+        return custom || "";
+    }, [siteSettings?.offline_order_confirmation_badge_text]);
 
     // Track conversion in analytics
     useEffect(() => {
@@ -67,21 +86,23 @@ const OrderConfirmationPage = () => {
                                     Placed on {new Date(orders?.createdAt).toLocaleDateString()}
                                 </p>
                             </div>
-                            <div
-                                className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                                    orders?.isPaid
-                                        ? 'bg-green-100 text-green-800'
+                            {(orders?.isPaid || !orders?.is_offline_payment || offlinePaymentBadgeLabel) && (
+                                <div
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                                        orders?.isPaid
+                                            ? "bg-green-100 text-green-800"
+                                            : orders?.is_offline_payment && offlinePaymentBadgeLabel
+                                              ? "bg-amber-100 text-amber-900"
+                                              : "bg-gray-100 text-gray-800"
+                                    }`}
+                                >
+                                    {orders?.isPaid
+                                        ? "Payment successful"
                                         : orders?.is_offline_payment
-                                          ? 'bg-amber-100 text-amber-900'
-                                          : 'bg-gray-100 text-gray-800'
-                                }`}
-                            >
-                                {orders?.isPaid
-                                    ? 'Payment successful'
-                                    : orders?.is_offline_payment
-                                      ? 'Pay merchant directly — not paid through Hawola'
-                                      : 'Payment pending'}
-                            </div>
+                                          ? offlinePaymentBadgeLabel
+                                          : "Payment pending"}
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -128,6 +149,13 @@ const OrderConfirmationPage = () => {
                             </div>
                         </div>
                     </div>
+
+                    {offlineMerchantPaymentNoticeSafe ? (
+                        <div
+                            className="mb-8 rounded-lg border border-amber-200/90 bg-amber-50/90 p-4 text-sm text-slate-800 shadow-sm prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline"
+                            dangerouslySetInnerHTML={{ __html: offlineMerchantPaymentNoticeSafe }}
+                        />
+                    ) : null}
 
                     {/* Next Steps */}
                     <div className="border rounded-lg p-6 mb-8">

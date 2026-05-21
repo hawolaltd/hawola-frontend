@@ -68,9 +68,9 @@ const OrderSummary = ({
   loading: boolean;
   shippingError: string | null;
   isAuthenticated?: boolean;
-  /** Site has escrow disabled — show notice and unpaid-through-Hawola copy */
+  /** Site has escrow disabled — optional notice area */
   directMerchantMode?: boolean;
-  /** Sanitized HTML from site settings (or default) */
+  /** Sanitized HTML from `non_escrow_cart_notice_html` when escrow is off; omit or empty to hide */
   directMerchantNoticeHtml?: string;
   /** Cart lines still loading from server — totals are placeholders. */
   cartDataLoading?: boolean;

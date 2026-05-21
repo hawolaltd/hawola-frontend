@@ -13,13 +13,11 @@ import {
 } from "@/redux/product/productSlice";
 import { LocalCartItem, Product } from "@/types/product";
 import {
-  buildWhatsAppLink,
   formatCurrency,
   featuredImageCardSrc,
   isContactMerchantOnlyProduct,
 } from "@/util";
 import { toast } from "sonner";
-import DirectContactActions from "@/components/product/DirectContactActions";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 
@@ -356,16 +354,7 @@ export default function ComparePage() {
                       {compareProducts.map((p) => (
                         <td key={p.id} className="px-4 py-3">
                           {isContactMerchantOnlyProduct(p) ? (
-                            <DirectContactActions
-                              merchantSlug={p?.merchant?.slug}
-                              whatsappLink={buildWhatsAppLink(
-                                p?.merchant?.support_phone_number,
-                                p?.name,
-                                p?.merchant?.store_name
-                              )}
-                              compact
-                              showBadge={false}
-                            />
+                            <span className="text-sm text-gray-500">—</span>
                           ) : (
                             <button
                               type="button"

@@ -4,6 +4,9 @@ import { STOREFRONT_PREVIEW_LS_KEY } from '@/lib/storefrontPreview';
 
 const API_URL = 'authy';
 
+/** Home bundle can be slow locally; default axios timeout is 10s. */
+const HOME_API_TIMEOUT_MS = 45000;
+
 // get Home Page
 const getHomePage = async () => {
     let items: number[] = [];
@@ -22,14 +25,18 @@ const getHomePage = async () => {
         }
     }
 
-    const response = await axiosInstance.post(API + 'home/', { items });
+    const response = await axiosInstance.post(API + 'home/', { items }, {
+        timeout: HOME_API_TIMEOUT_MS,
+    });
     console.log('getHomePage:', response.data);
     // Wrap response in data object to match HomeData type structure
     return { data: response.data };
 };
 
 const getDealsTodayPage = async () => {
-    const response = await axiosInstance.post(API + 'home/deals-today/', {});
+    const response = await axiosInstance.post(API + 'home/deals-today/', {}, {
+        timeout: HOME_API_TIMEOUT_MS,
+    });
     return { data: response.data };
 };
 
@@ -49,14 +56,18 @@ const getRecommendedTodayPage = async () => {
             items = [];
         }
     }
-    const response = await axiosInstance.post(API + 'home/recommended-today/', { items });
+    const response = await axiosInstance.post(API + 'home/recommended-today/', { items }, {
+        timeout: HOME_API_TIMEOUT_MS,
+    });
     return { data: response.data };
 };
 
 // home insight
 
 const getHomeInsight = async () => {
-    const response = await axiosInstance.get(API + 'home/insight/');
+    const response = await axiosInstance.get(API + 'home/insight/', {
+        timeout: HOME_API_TIMEOUT_MS,
+    });
     console.log('getHomeInsights:', response.data);
     // Wrap response in data object to match HomeData type structure
     return { data: response.data };

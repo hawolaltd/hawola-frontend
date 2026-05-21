@@ -7,12 +7,14 @@ import Link from "next/link";
 import { Product } from "@/types/product";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import { featuredImageCardUrl } from "@/util";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
+import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<"products" | "about" | "policy">(
+  const [activeTab, setActiveTab] = useState<"products" | "reels" | "about" | "policy">(
     "products"
   );
 
@@ -49,6 +51,9 @@ const StandardTemplate = () => {
     home_page,
     is_streaming_now,
   } = merchantData;
+
+  const merchantReels = merchant_details?.merchant_reels ?? [];
+  const hasMerchantReels = merchantReels.length > 0;
 
   // Enhanced function to check if a color is light or dark with better edge case handling
   const isLightColor = (hex: string) => {
@@ -441,10 +446,14 @@ const StandardTemplate = () => {
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
             <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
               <div className="relative">
-                <img
-                  src={merchant_details?.logo}
-                  alt={merchant_details?.store_name}
-                  className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
+                <MerchantLogoOrInitial
+                  logoUrl={merchant_details?.logo}
+                  storeName={merchant_details?.store_name ?? "Store"}
+                  primaryColor={merchant_details?.primary_color}
+                  alt={merchant_details?.store_name ?? ""}
+                  className="h-24 w-24 overflow-hidden rounded-2xl border-4 border-white shadow-lg"
+                  imgClassName="h-full w-full object-cover"
+                  fallbackTextClassName="text-2xl font-bold"
                 />
                 {is_streaming_now && (
                   <div
@@ -518,7 +527,21 @@ const StandardTemplate = () => {
               >
                 Products
               </button>
+              {hasMerchantReels ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("reels")}
+                  className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
+                    activeTab === "reels"
+                      ? "merchant-tab-active border-b-2"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Reels
+                </button>
+              ) : null}
               <button
+                type="button"
                 onClick={() => setActiveTab("about")}
                 className={`flex-1 py-4 px-6 text-center font-medium transition-colors duration-200 ${
                   activeTab === "about"
@@ -581,6 +604,17 @@ const StandardTemplate = () => {
                 </section>
               </>
             )}
+
+            {activeTab === "reels" && hasMerchantReels ? (
+              <section className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
+                <StorefrontReelsGallery
+                  reels={merchantReels}
+                  heading="Reels"
+                  description="Curated videos from this store. Tap a card to watch full screen."
+                  tone="subtle"
+                />
+              </section>
+            ) : null}
 
             {activeTab === "about" && (
               <section className="bg-white rounded-2xl shadow-sm p-8">

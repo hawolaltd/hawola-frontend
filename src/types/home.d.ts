@@ -106,6 +106,8 @@ interface HomeData {
     advert_banner_middle: (AdvertBanner | null)[];
     advert_banner_bottom?: (AdvertBanner | null)[];
     hawola_specials: ProductFull[];
+    /** Products flagged `is_deals_today` for home + Deals Today surfaces. */
+    deals_today_products?: ProductFull[];
     top_rated_products: ProductFull[];
     top_selling_products: ProductFull[];
     best_selling_products: ProductFull[];

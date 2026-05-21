@@ -28,10 +28,36 @@ const clearProductById = async () => {
     return {};
 };
 
-// get ProductBy slug
+// get ProductBy slug (full bundle — legacy)
 const getProductBySlug = async (slug: string) => {
     const response = await axios.get(API + API_URL + 'detail/' + slug + '/');
 
+    return response.data;
+};
+
+const PDP_SECTION_TIMEOUT_MS = 45000;
+
+const getProductDetailGallery = async (slug: string) => {
+    const response = await axiosInstance.get(
+        API + API_URL + 'detail/' + encodeURIComponent(slug) + '/gallery/',
+        { timeout: PDP_SECTION_TIMEOUT_MS }
+    );
+    return response.data;
+};
+
+const getProductDetailMain = async (slug: string) => {
+    const response = await axiosInstance.get(
+        API + API_URL + 'detail/' + encodeURIComponent(slug) + '/main/',
+        { timeout: PDP_SECTION_TIMEOUT_MS }
+    );
+    return response.data;
+};
+
+const getProductDetailRelated = async (slug: string) => {
+    const response = await axiosInstance.get(
+        API + API_URL + 'detail/' + encodeURIComponent(slug) + '/related/',
+        { timeout: PDP_SECTION_TIMEOUT_MS }
+    );
     return response.data;
 };
 
@@ -357,6 +383,9 @@ const productService = {
     getRecentlyViewedProducts,
     syncRecentlyViewedProducts,
     getProductBySlug,
+    getProductDetailGallery,
+    getProductDetailMain,
+    getProductDetailRelated,
     getCarts,
     addToCarts,
     addToCartsLocal,

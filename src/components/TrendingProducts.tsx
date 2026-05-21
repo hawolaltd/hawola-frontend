@@ -1,7 +1,6 @@
 import React from "react";
-import BannerAds1 from "@/components/svg/banner-ads1";
 import ProductCard from "@/components/product/ProductCard";
-import ProductCard2 from "@/components/product/ProductCard2";
+import ProductRankPanel from "@/components/home/ProductRankPanel";
 import { ProductResponse } from "@/types/product";
 import { useAppSelector } from "@/hook/useReduxTypes";
 
@@ -12,13 +11,11 @@ interface TrendingProductsProps {
 const TrendingProducts = ({ products }: TrendingProductsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
   const bestSellingList = homePage?.data?.best_selling_products ?? [];
-
   return (
     <section className="w-full py-4">
-      <div className="mx-auto flex max-w-screen-xl gap-4 px-6 xl:px-0">
-      <div className={"w-full flex flex-col xl:flex-row gap-4"}>
-        <div className="w-full">
-          <div className="mx-auto text-left mb-8 w-full">
+      <div className="mx-auto flex max-w-screen-xl flex-col gap-8 px-6 xl:flex-row xl:items-start xl:gap-6 xl:px-0">
+        <div className="min-w-0 w-full flex-1">
+          <div className="mx-auto mb-8 w-full text-left">
             <div
               className={
                 "flex items-center justify-between border-b border-b-[#CAD6EC] gap-8 p-4"
@@ -88,25 +85,9 @@ const TrendingProducts = ({ products }: TrendingProductsProps) => {
           </div> */}
         </div>
 
-        <div className={"flex w-full flex-col gap-6 xl:w-[31%]"}>
-          <div className="bg-white rounded gap-2">
-            <div
-              className={
-                "bg-[#fe9636] rounded-tl rounded-tr py-4 px-4 h-[62px] flex justify-between items-center"
-              }
-            >
-              <h4 className={"font-semibold text-xl text-white "}>
-                Best Seller
-              </h4>
-            </div>
-            <div className="bg-white rounded gap-2 ">
-              {bestSellingList.slice(0, 4).map((item, key) => (
-                <ProductCard2 key={key} product={bestSellingList} index={key} item={item} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+        <aside className="w-full shrink-0 xl:max-w-[min(22rem,34%)] xl:w-[min(22rem,34%)]">
+          <ProductRankPanel title="Best Seller" products={bestSellingList} limit={5} />
+        </aside>
       </div>
     </section>
   );

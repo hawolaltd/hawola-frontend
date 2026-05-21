@@ -103,12 +103,17 @@ export default function AccountPage() {
 
                 <main className="p-0">
                     {/* Header */}
-                    <header className="mb-6 bg-headerBg px-20 pt-4">
-                        <h1 className="text-3xl font-semibold text-white">Hello {user?.first_name}</h1>
-                        <p className="text-sm text-white font-medium mt-2 mb-12">
-                            From your account dashboard, you can easily check & view your recent orders, <br/> manage your shipping and billing addresses and edit your password and account details.
+                    <header className="mb-4 sm:mb-6 bg-headerBg px-4 sm:px-8 lg:px-20 pt-4">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">Hello {user?.first_name}</h1>
+                        <p className="text-xs sm:text-sm text-white font-medium mt-2 mb-6 sm:mb-10 lg:mb-12">
+                            From your account dashboard, you can easily check & view your recent orders,
+                            <span className="hidden sm:inline"><br/></span>
+                            <span className="sm:hidden"> </span>
+                            manage your shipping and billing addresses and edit your password and account details.
                         </p>
-                        <nav className={`mb-8 flex space-x-6 text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer`}>
+                        <nav
+                            className={`-mx-4 sm:mx-0 px-4 sm:px-0 mb-0 sm:mb-8 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
+                        >
                             {tabs.map((ta) => {
                                 const TabIcon = ta.Icon;
                                 return (
@@ -125,7 +130,7 @@ export default function AccountPage() {
                                                 { shallow: true }
                                             );
                                         }}
-                                        className={`inline-flex items-center gap-2 pb-2 font-semibold ${
+                                        className={`inline-flex items-center gap-1.5 sm:gap-2 pb-2 font-semibold shrink-0 ${
                                             tab === ta.id ? "border-b-2 border-white text-white" : ""
                                         }`}
                                     >
@@ -143,7 +148,7 @@ export default function AccountPage() {
                                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
                             </div>
                         ) : (
-                            <div className={'container h-screen overflow-x-hidden mx-auto mb-12'}>
+                            <div className={'container overflow-x-hidden mx-auto mb-8 sm:mb-12 px-3 sm:px-4 lg:px-6'}>
                                 {tab === 'wish' && <Wishlist />}
                                 {tab === 'orders' && <Orders />}
                                 {tab === 'buying_requests' && <BuyingRequests />}

@@ -1,9 +1,9 @@
 import React from "react";
 import { useRouter } from "next/router";
-import { Product, ProductResponse } from "@/types/product";
-import { buildWhatsAppLink, formatCurrency, featuredImageCardUrl, isContactMerchantOnlyProduct } from "@/util";
+import { ProductResponse } from "@/types/product";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { ProductFull } from "@/types/home";
-import DirectContactActions from "@/components/product/DirectContactActions";
+import { saveProductDetailPreview } from "@/lib/pdpPreview";
 
 function ProductCard2({
   product,
@@ -23,41 +23,35 @@ function ProductCard2({
     item?.price != null &&
     String(item.discount_price).trim() !== "" &&
     String(item.discount_price) !== String(item.price);
-  const contactOnly = isContactMerchantOnlyProduct(item);
-  const whatsappLink = buildWhatsAppLink(
-    item?.merchant?.support_phone_number,
-    item?.name,
-    item?.merchant?.store_name
-  );
-
   return (
     <div
       onClick={() => {
+        saveProductDetailPreview(item);
         router.push(`product/${item?.slug}`);
       }}
-      className={`bg-white cursor-pointer relative flex ${
-        index + 1 !== listLen ? "border-b-[#dde4f0] border-b" : " "
-      } pb-1 pt-4 pl-4 pr-4 overflow-hidden`}
+      className={`relative flex cursor-pointer gap-3 overflow-hidden bg-white px-3 py-3 ${
+        index + 1 !== listLen ? "border-b border-[#dde4f0]" : ""
+      }`}
     >
-      <div className="relative">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-slate-100 ring-1 ring-slate-200/60">
         {item.discount_price && (
-          <span className="absolute -top-2 left-0 bg-orange-500 text-white text-xs font-semibold py-1 px-1 rounded">
+          <span className="absolute left-0 top-0 z-[1] rounded-br bg-orange-500 px-1 py-0.5 text-[10px] font-bold leading-none text-white">
             -
             {(
               ((+item.price - +item.discount_price) / +item.price) *
               100
             ).toFixed()}
-            %{" "}
+            %
           </span>
         )}
         <img
           src={featuredImageCardUrl(item.featured_image?.[0])}
           alt={item.name}
-          className="w-full h-16 object-cover"
+          className="h-full w-full object-cover"
         />
       </div>
-      <div className="p-4">
-        <h3 className="text-sm font-semibold text-primary">
+      <div className="min-w-0 flex-1 pr-1 pt-0.5">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-primary">
           {item.name?.length > 40 ? item.name?.slice(0, 40) + "..." : item.name}
         </h3>
         {/* Ratings hidden on product cards
@@ -90,11 +84,11 @@ function ProductCard2({
         <div className="mt-2 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
           {hasDiscount ? (
             <>
-              <span className="text-xs line-through text-textPadded leading-tight">
-                {formatCurrency(item.price)}
-              </span>
               <span className="text-sm font-semibold text-gray-800 leading-tight">
                 {formatCurrency(item.discount_price)}
+              </span>
+              <span className="text-xs line-through text-textPadded leading-tight">
+                {formatCurrency(item.price)}
               </span>
             </>
           ) : (
@@ -103,16 +97,6 @@ function ProductCard2({
             </span>
           )}
         </div>
-        {contactOnly && (
-          <DirectContactActions
-            merchantSlug={item?.merchant?.slug}
-            whatsappLink={whatsappLink}
-            compact
-            showBadge={false}
-            className="mt-2"
-            stopPropagation
-          />
-        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { buildWhatsAppLink, formatCurrency, featuredImageCardUrl, isContactMerchantOnlyProduct } from "@/util";
+import { formatCurrency, featuredImageCardUrl } from "@/util";
+import { formatProductCardTitle } from "@/util/formatProductCardTitle";
 import { LocalCartItem, Product, ProductByIdResponse } from "@/types/product";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
@@ -10,9 +11,8 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductFull } from "@/types/home";
+import { saveProductDetailPreview } from "@/lib/pdpPreview";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
-import DirectContactActions from "@/components/product/DirectContactActions";
-
 function ProductCard({
   product,
   margin,
@@ -41,13 +41,7 @@ function ProductCard({
     product?.price != null &&
     String(product.discount_price).trim() !== "" &&
     String(product.discount_price) !== String(product.price);
-  const contactOnly = isContactMerchantOnlyProduct(product);
-  const whatsappLink = buildWhatsAppLink(
-    product?.merchant?.support_phone_number,
-    product?.name,
-    product?.merchant?.store_name
-  );
-
+  const isList = viewMode === "list";
   const handleAddToCart = async (product: Product) => {
     try {
       // Convert selected variants to the format expected by backend
@@ -144,7 +138,7 @@ function ProductCard({
       className={`relative bg-white border cursor-pointer ${
         margin ? margin : ""
       } border-solid border-[#D5DFE4] rounded-lg overflow-hidden ${
-        viewMode === "list" ? "" : ""
+        isList ? "" : "flex h-full flex-col"
       }`}
     >
       <AddToCompareButton product={product} className="absolute top-3 left-3" />
@@ -158,9 +152,20 @@ function ProductCard({
       <Link
         href={`/product/${product?.slug}`}
         prefetch
-        className={`block p-4 ${viewMode === "list" ? "flex items-center gap-4" : ""}`}
+        onClick={() => saveProductDetailPreview(product)}
+        className={
+          isList
+            ? "flex items-center gap-4 p-4"
+            : "flex min-h-0 flex-1 flex-col gap-3 p-4"
+        }
       >
-        <div className={"w-full flex items-center justify-center"}>
+        <div
+          className={
+            isList
+              ? "flex w-full items-center justify-center"
+              : "flex h-[150px] w-full shrink-0 items-center justify-center"
+          }
+        >
           <img
             src={featuredImageCardUrl(product.featured_image?.[0])}
             alt={product.name}
@@ -169,14 +174,22 @@ function ProductCard({
             }}
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <h3 className="text-[10px] text-textPadded font-semibold">
+        <div
+          className={
+            isList
+              ? "flex flex-col gap-1.5"
+              : "flex min-h-0 flex-1 flex-col gap-1"
+          }
+        >
+          <h3 className="line-clamp-1 text-[10px] font-semibold text-textPadded">
             {product.merchant?.store_name}
           </h3>
-          <h3 className="text-xs font-semibold text-primary">
-            {product.name?.length > 50
-              ? product.name?.slice(0, 50) + "..."
-              : product.name}
+          <h3
+            className={`text-xs font-semibold leading-tight text-primary break-words line-clamp-2 ${
+              isList ? "" : "min-h-0"
+            }`}
+          >
+            {formatProductCardTitle(product.name)}
           </h3>
           {/* Ratings hidden on product cards (per product policy)
           <div className={"flex items-center gap-1"}>
@@ -206,14 +219,18 @@ function ProductCard({
             </span>
           </div>
           */}
-          <div className="mt-1 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
+          <div
+            className={`border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5 ${
+              isList ? "mt-1" : "mt-2 shrink-0"
+            }`}
+          >
             {hasDiscount ? (
               <>
-                <p className="text-xs text-textPadded line-through leading-tight">
-                  {formatCurrency(product.price)}
-                </p>
                 <p className="text-lg font-bold text-primary leading-tight">
                   {formatCurrency(product.discount_price)}
+                </p>
+                <p className="text-xs text-textPadded line-through leading-tight">
+                  {formatCurrency(product.price)}
                 </p>
               </>
             ) : (
@@ -224,14 +241,6 @@ function ProductCard({
           </div>
         </div>
       </Link>
-      {contactOnly && (
-        <DirectContactActions
-          merchantSlug={product?.merchant?.slug}
-          whatsappLink={whatsappLink}
-          compact
-          className="border-0 border-t border-[#dde4f0] rounded-none"
-        />
-      )}
     </div>
   );
 }

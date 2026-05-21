@@ -19,6 +19,7 @@ import {
   HI_MD,
 } from "@/lib/hawolaIconTheme";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { getCarsCopy, getRealEstateCopy } from "@/util/curatedVerticalCopy";
 import { useCompareNavBump } from "@/hook/useCompareNavBump";
 import CartModal from "@/components/shared/CartModal";
 import { useRouter } from "next/router";
@@ -59,6 +60,9 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const searchModalInputRef = useRef<HTMLInputElement>(null);
   const { carts, localCart, wishLists, categories, compareProducts } =
     useAppSelector((state) => state.products);
+  const siteSettings = useAppSelector((state) => state.general.siteSettings);
+  const carsNavLabel = getCarsCopy(siteSettings).navLabel;
+  const realEstateNavLabel = getRealEstateCopy(siteSettings).navLabel;
   const compareNavBump = useCompareNavBump();
   const compareList = Array.isArray(compareProducts) ? compareProducts : [];
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
@@ -845,11 +849,11 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             <div className="hidden items-center gap-2 lg:flex">
               <Link href="/cars" className={HI_CHIP_SLATE}>
                 <TruckIcon className={`${HI_MD} text-primary`} aria-hidden />
-                Cars
+                {carsNavLabel}
               </Link>
               <Link href="/real-estate" className={HI_CHIP_EMERALD}>
                 <BuildingOffice2Icon className={`${HI_MD} text-emerald-700`} aria-hidden />
-                Real Estate
+                {realEstateNavLabel}
               </Link>
             </div>
 

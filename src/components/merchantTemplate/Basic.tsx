@@ -6,13 +6,15 @@ import Link from "next/link";
 import AuthLayout from "../layout/AuthLayout";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import type { Product } from "@/types/product";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
+import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
-    "overview" | "products" | "categories" | "about"
+    "overview" | "products" | "reels" | "categories" | "about"
   >("overview");
   const [isSticky, setIsSticky] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -118,6 +120,16 @@ const BasicTemplate = () => {
     is_streaming_now,
   } = merchantData;
 
+  const merchantReels = merchant_details?.merchant_reels ?? [];
+  const hasMerchantReels = merchantReels.length > 0;
+  const navSections: Array<"overview" | "products" | "reels" | "categories" | "about"> = [
+    "overview",
+    "products",
+    ...(hasMerchantReels ? (["reels"] as const) : []),
+    "categories",
+    "about",
+  ];
+
   return (
     <AuthLayout>
       <Head>
@@ -164,10 +176,14 @@ const BasicTemplate = () => {
             <div className="flex items-center justify-between h-20">
               {/* Logo */}
               <div className="flex items-center space-x-4">
-                <img
-                  src={merchant_details?.logo}
-                  alt={merchant_details?.store_name}
-                  className="h-12 w-12 rounded-lg object-cover"
+                <MerchantLogoOrInitial
+                  logoUrl={merchant_details?.logo}
+                  storeName={merchant_details?.store_name ?? "Store"}
+                  primaryColor={merchant_details?.primary_color}
+                  alt={merchant_details?.store_name ?? ""}
+                  className="h-12 w-12 overflow-hidden rounded-lg"
+                  imgClassName="h-full w-full object-cover"
+                  fallbackTextClassName="text-sm font-bold"
                 />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">
@@ -183,19 +199,26 @@ const BasicTemplate = () => {
 
               {/* Navigation */}
               <nav className="hidden md:flex items-center space-x-8">
-                {["overview", "products", "categories", "about"].map((section) => (
-                  <button
-                    key={section}
-                    onClick={() => setActiveSection(section as any)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                      activeSection === section
-                        ? "merchant-primary text-white"
-                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                  >
-                    {section.charAt(0).toUpperCase() + section.slice(1)}
-                  </button>
-                ))}
+                {navSections.map((section) => {
+                  const label =
+                    section === "reels"
+                      ? "Reels"
+                      : section.charAt(0).toUpperCase() + section.slice(1);
+                  return (
+                    <button
+                      key={section}
+                      type="button"
+                      onClick={() => setActiveSection(section)}
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                        activeSection === section
+                          ? "merchant-primary text-white"
+                          : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </nav>
 
               {/* Mobile Menu Button */}
@@ -497,6 +520,17 @@ const BasicTemplate = () => {
             </section>
           )}
 
+          {activeSection === "reels" && hasMerchantReels ? (
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <StorefrontReelsGallery
+                reels={merchantReels}
+                heading="Reels"
+                description="Curated videos from this store. Tap a card to watch full screen."
+                tone="subtle"
+              />
+            </section>
+          ) : null}
+
           {/* Categories Section */}
           {activeSection === "categories" && (
             <section>
@@ -631,17 +665,24 @@ const BasicTemplate = () => {
                 <h3 className="text-lg font-bold mb-4">Quick Links</h3>
                 <ul className="space-y-2 text-sm text-gray-400">
                   <li>
-                    <button onClick={() => setActiveSection("products")} className="hover:text-white">
+                    <button type="button" onClick={() => setActiveSection("products")} className="hover:text-white">
                       Products
                     </button>
                   </li>
+                  {hasMerchantReels ? (
+                    <li>
+                      <button type="button" onClick={() => setActiveSection("reels")} className="hover:text-white">
+                        Reels
+                      </button>
+                    </li>
+                  ) : null}
                   <li>
-                    <button onClick={() => setActiveSection("categories")} className="hover:text-white">
+                    <button type="button" onClick={() => setActiveSection("categories")} className="hover:text-white">
                       Categories
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => setActiveSection("about")} className="hover:text-white">
+                    <button type="button" onClick={() => setActiveSection("about")} className="hover:text-white">
                       About Us
                     </button>
                   </li>

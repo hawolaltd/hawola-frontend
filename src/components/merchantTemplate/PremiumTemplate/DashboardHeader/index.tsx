@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 
 interface Merchant {
   store_name: string;
@@ -42,19 +42,15 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
             {/* Logo */}
             <div className="relative">
               <div className="merchant-premium-logo-shell">
-                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[0.875rem] bg-gray-50">
-                  {merchant?.logo ? (
-                    <Image
-                      src={merchant.logo}
-                      alt={merchant.store_name}
-                      width={64}
-                      height={64}
-                      className="object-contain"
-                    />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-gray-400"></div>
-                  )}
-                </div>
+                <MerchantLogoOrInitial
+                  logoUrl={merchant?.logo}
+                  storeName={merchant?.store_name ?? "Store"}
+                  primaryColor={merchant?.primary_color}
+                  alt={merchant.store_name}
+                  className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[0.875rem] bg-gray-50"
+                  imgClassName="h-full w-full object-contain"
+                  fallbackTextClassName="text-xl font-bold"
+                />
               </div>
               {merchant?.is_active && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">

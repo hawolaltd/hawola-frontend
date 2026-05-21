@@ -35,6 +35,26 @@ function pendingProductIdFromLocalCartArg(
     return typeof id === 'number' && Number.isFinite(id) ? id : null;
 }
 
+export type ProductDetailSectionStatus =
+    | 'idle'
+    | 'pending'
+    | 'succeeded'
+    | 'failed';
+
+function mergeProductDetail(
+    state: ProductsState,
+    patch: Partial<ProductByIdResponse>
+): void {
+    const prev = state.product || ({} as ProductByIdResponse);
+    state.product = {
+        ...prev,
+        ...patch,
+        product: patch.product
+            ? ({ ...prev.product, ...patch.product } as Product)
+            : prev.product,
+    };
+}
+
 interface ProductsState {
     products: ProductResponse;
     product: ProductByIdResponse;
@@ -74,6 +94,11 @@ interface ProductsState {
     cartFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
     /** Wishlist fetch lifecycle — avoids empty flash before first `getWishList` completes. */
     wishlistFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+    productDetailLoad: {
+        gallery: ProductDetailSectionStatus;
+        main: ProductDetailSectionStatus;
+        related: ProductDetailSectionStatus;
+    };
 }
 
 const initialState: ProductsState = {
@@ -108,6 +133,11 @@ const initialState: ProductsState = {
     addressFormSubmitting: false,
     cartFetchStatus: 'idle',
     wishlistFetchStatus: 'idle',
+    productDetailLoad: {
+        gallery: 'idle',
+        main: 'idle',
+        related: 'idle',
+    },
 };
 
 export const getProducts = createAsyncThunk(
@@ -178,6 +208,57 @@ export const getProductBySlug = createAsyncThunk(
                 error.toString();
 
             return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+export const fetchProductDetailGallery = createAsyncThunk(
+    'products/detail-gallery',
+    async (slug: string, thunkAPI) => {
+        try {
+            return await productService.getProductDetailGallery(slug);
+        } catch (error: any) {
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    (error.response.data.message || error.response.data.detail)) ||
+                error.message ||
+                error.toString();
+            return thunkAPI.rejectWithValue({ message, status: error.response?.status });
+        }
+    }
+);
+
+export const fetchProductDetailMain = createAsyncThunk(
+    'products/detail-main',
+    async (slug: string, thunkAPI) => {
+        try {
+            return await productService.getProductDetailMain(slug);
+        } catch (error: any) {
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    (error.response.data.message || error.response.data.detail)) ||
+                error.message ||
+                error.toString();
+            return thunkAPI.rejectWithValue({ message, status: error.response?.status });
+        }
+    }
+);
+
+export const fetchProductDetailRelated = createAsyncThunk(
+    'products/detail-related',
+    async (slug: string, thunkAPI) => {
+        try {
+            return await productService.getProductDetailRelated(slug);
+        } catch (error: any) {
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    (error.response.data.message || error.response.data.detail)) ||
+                error.message ||
+                error.toString();
+            return thunkAPI.rejectWithValue({ message, status: error.response?.status });
         }
     }
 );
@@ -819,10 +900,21 @@ const productSlice = createSlice({
             })
             .addCase(clearProductById.pending, (state) => {
                 state.isLoading = true;
+                state.product = {} as ProductByIdResponse;
+                state.productDetailLoad = {
+                    gallery: 'idle',
+                    main: 'idle',
+                    related: 'idle',
+                };
             })
             .addCase(clearProductById.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.product = action.payload as ProductByIdResponse;
+                state.productDetailLoad = {
+                    gallery: 'idle',
+                    main: 'idle',
+                    related: 'idle',
+                };
             })
             .addCase(clearProductById.rejected, (state, action) => {
                 state.isLoading = false;
@@ -842,6 +934,45 @@ const productSlice = createSlice({
                 state.error = true;
                 state.message = action.payload;
                 state.product = {} as ProductByIdResponse;
+            })
+            .addCase(fetchProductDetailGallery.pending, (state) => {
+                state.productDetailLoad.gallery = 'pending';
+            })
+            .addCase(fetchProductDetailGallery.fulfilled, (state, action) => {
+                state.productDetailLoad.gallery = 'succeeded';
+                mergeProductDetail(state, action.payload as Partial<ProductByIdResponse>);
+            })
+            .addCase(fetchProductDetailGallery.rejected, (state) => {
+                state.productDetailLoad.gallery = 'failed';
+            })
+            .addCase(fetchProductDetailMain.pending, (state) => {
+                state.productDetailLoad.main = 'pending';
+            })
+            .addCase(fetchProductDetailMain.fulfilled, (state, action) => {
+                state.productDetailLoad.main = 'succeeded';
+                const payload = action.payload as Partial<ProductByIdResponse> & {
+                    product_variant_options?: unknown[];
+                };
+                mergeProductDetail(state, {
+                    ...payload,
+                    product_variant:
+                        payload.product_variant ??
+                        payload.product_variant_options ??
+                        state.product?.product_variant,
+                });
+            })
+            .addCase(fetchProductDetailMain.rejected, (state) => {
+                state.productDetailLoad.main = 'failed';
+            })
+            .addCase(fetchProductDetailRelated.pending, (state) => {
+                state.productDetailLoad.related = 'pending';
+            })
+            .addCase(fetchProductDetailRelated.fulfilled, (state, action) => {
+                state.productDetailLoad.related = 'succeeded';
+                mergeProductDetail(state, action.payload as Partial<ProductByIdResponse>);
+            })
+            .addCase(fetchProductDetailRelated.rejected, (state) => {
+                state.productDetailLoad.related = 'failed';
             })
             .addCase(getAllCategories.pending, (state) => {
                 state.isLoading = true;

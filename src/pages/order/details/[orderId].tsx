@@ -14,10 +14,7 @@ import productService from "@/redux/product/productService";
 import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
 import { API } from "@/constant";
-import {
-    DEFAULT_DIRECT_PAYMENT_MESSAGING_NOTICE_HTML,
-    sanitizeRichNotice,
-} from "@/util/sanitizeRichNotice";
+import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 
 /** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
 const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
@@ -263,11 +260,13 @@ const OrderDetails: NextPage = () => {
             setDirectPaymentMessagingSafe("");
             return;
         }
-        const src = siteSettings?.direct_payment_messaging_notice_html?.trim()
-            ? String(siteSettings.direct_payment_messaging_notice_html)
-            : DEFAULT_DIRECT_PAYMENT_MESSAGING_NOTICE_HTML;
-        setDirectPaymentMessagingSafe(sanitizeRichNotice(src));
-    }, [singleOrder?.is_offline_payment, siteSettings?.direct_payment_messaging_notice_html]);
+        const rawMessaging = (siteSettings?.direct_payment_messaging_notice_html as string | undefined)?.trim();
+        const src = rawMessaging || "";
+        setDirectPaymentMessagingSafe(src ? sanitizeRichNotice(src) : "");
+    }, [
+        singleOrder?.is_offline_payment,
+        siteSettings?.direct_payment_messaging_notice_html,
+    ]);
 
     useEffect(() => {
         const orderId = router?.query?.orderId;
@@ -444,20 +443,23 @@ const OrderDetails: NextPage = () => {
                     )  :
                    (
                        <>
-                           <header className="mb-6 bg-headerBg px-20 pt-4 h-[150px] flex flex-col">
-                               <h1 className="text-3xl font-semibold text-white">Hello {userProfile?.first_name || userProfile?.username || 'Customer'}</h1>
-                               <p className="text-sm text-white font-medium mt-2 ">
-                                   From your account dashboard, you can easily check & view your recent orders, <br/> manage your shipping and billing addresses and edit your password and account details.
+                           <header className="mb-4 sm:mb-6 bg-headerBg px-4 sm:px-8 lg:px-20 py-4 sm:py-5 flex flex-col">
+                               <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">Hello {userProfile?.first_name || userProfile?.username || 'Customer'}</h1>
+                               <p className="text-xs sm:text-sm text-white font-medium mt-2 ">
+                                   From your account dashboard, you can easily check & view your recent orders,
+                                   <span className="hidden sm:inline"><br/></span>
+                                   <span className="sm:hidden"> </span>
+                                   manage your shipping and billing addresses and edit your password and account details.
                                </p>
 
 
                            </header>
 
-                           <div className="min-h-screen px-6 py-4">
+                           <div className="min-h-screen px-3 sm:px-6 py-4">
                                {/* Back Button */}
                                <button
                                    onClick={() => router.back()}
-                                   className="mb-6 flex items-center text-primary container mx-auto"
+                                   className="mb-4 sm:mb-6 flex items-center text-primary container mx-auto text-sm sm:text-base"
                                >
                                    <svg
                                        xmlns="http://www.w3.org/2000/svg"
@@ -477,14 +479,14 @@ const OrderDetails: NextPage = () => {
                                {lineCancelled && (
                                    <div
                                        role="status"
-                                       className="container mx-auto mb-6 flex items-center gap-3 px-5 py-3 rounded-xl bg-slate-100 border border-slate-300"
+                                       className="container mx-auto mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 rounded-xl bg-slate-100 border border-slate-300"
                                    >
-                                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-600 text-white" aria-hidden>
-                                           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                       <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-slate-600 text-white" aria-hidden>
+                                           <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                            </svg>
                                        </span>
-                                       <p className="text-sm font-semibold text-slate-900">
+                                       <p className="text-xs sm:text-sm font-semibold text-slate-900">
                                            This order line was cancelled. Messaging and fulfilment actions are closed.
                                        </p>
                                    </div>
@@ -492,43 +494,42 @@ const OrderDetails: NextPage = () => {
                                {!lineCancelled && hasDispute && (
                                    <div
                                        role="alert"
-                                       className="container mx-auto mb-6 flex items-center gap-3 px-5 py-3 rounded-xl bg-red-100 border border-red-300"
+                                       className="container mx-auto mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 rounded-xl bg-red-100 border border-red-300"
                                    >
-                                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white" aria-hidden>
-                                           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                       <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white" aria-hidden>
+                                           <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                            </svg>
                                        </span>
-                                       <p className="text-sm font-semibold text-red-900">
+                                       <p className="text-xs sm:text-sm font-semibold text-red-900">
                                            This item is disputed. Reply in the dispute thread below (max 10 messages).
                                        </p>
                                    </div>
                                )}
 
                                <div
-                                   className="container mx-auto overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                   className="container mx-auto overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                    <div className={'flex flex-col gap-4'}>
 
                                        {/* Order Header */}
-                                       <div className="p-6 flex flex-col rounded-lg shadow bg-white border border-gray-100">
-                                           <div className="flex justify-between items-start w-full">
-                                               <div className={'w-full'}>
-                                                   <h1 className="text-xl font-bold text-gray-800">Order Number: <span
-                                                       className={'text-xs'}>{singleOrder?.orderitem_number}</span></h1>
+                                       <div className="p-4 sm:p-6 flex flex-col rounded-lg shadow bg-white border border-gray-100">
+                                           <div className="flex justify-between items-start w-full gap-2">
+                                               <div className={'flex-1 min-w-0'}>
+                                                   <h1 className="text-base sm:text-xl font-bold text-gray-800 break-words">Order Number: <span
+                                                       className={'text-xs break-all'}>{singleOrder?.orderitem_number}</span></h1>
 
-                                                   <div className="flex items-center w-full">
+                                                   <div className="flex items-center w-full mt-2">
                                                        <img
                                                            src={singleOrder?.image}
                                                            alt={singleOrder?.name}
-                                                           width={'100%'}
-                                                           height={'100px'}
+                                                           className="w-full h-auto max-h-48 object-contain"
                                                        />
                                                    </div>
 
-                                                   <h2 className="text-sm font-semibold text-gray-700 mt-1">{singleOrder?.product?.name}</h2>
+                                                   <h2 className="text-sm font-semibold text-gray-700 mt-1 break-words">{singleOrder?.product?.name}</h2>
                                                </div>
-                                               <div className="text-right">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${displayOrderStatus.className}`}>
+                                               <div className="text-right shrink-0">
+                                    <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${displayOrderStatus.className}`}>
                                         {displayOrderStatus.text}
                                     </span>
                                                </div>
@@ -536,32 +537,32 @@ const OrderDetails: NextPage = () => {
                                        </div>
 
                                        {/* Customer Information */}
-                                       <div className="p-6 rounded-lg shadow flex flex-col bg-white border border-gray-100">
-                                           <h3 className="text-lg font-semibold text-gray-800 mb-4">Shipping Information</h3>
-                                           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                       <div className="p-4 sm:p-6 rounded-lg shadow flex flex-col bg-white border border-gray-100">
+                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Shipping Information</h3>
+                                           <div className="grid grid-cols-1 md:grid-cols-1 gap-3 sm:gap-4">
                                                <div>
                                                    <p className="text-sm text-gray-600">Name:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.user}</p>
+                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.user}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Shipping address:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.shipping_address?.address}</p>
+                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.shipping_address?.address}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Contact Phone:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.orderitem_number}</p>
+                                                   <p className="text-gray-800 font-medium break-all">{singleOrder?.orderitem_number}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Alternative Contact Phone:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.additional_info}</p>
+                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.additional_info}</p>
                                                </div>
                                            </div>
                                        </div>
 
                                        {/* Order Information */}
-                                       <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Information</h3>
-                                           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
+                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Order Information</h3>
+                                           <div className="grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-4">
                                                <div>
                                                    <p className="text-sm text-gray-600">Quantity:</p>
                                                    <p className="text-gray-800 font-medium">{singleOrder?.qty}</p>
@@ -582,8 +583,8 @@ const OrderDetails: NextPage = () => {
                                        </div>
 
                                        {/* Payment Status */}
-                                       <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Payment Status</h3>
+                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
+                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Payment Status</h3>
                                            <div className="flex items-center">
                                                <div className={`w-3 h-3 rounded-full mr-2 ${
                                                    singleOrder?.payment_confirmed
@@ -623,8 +624,8 @@ const OrderDetails: NextPage = () => {
                                    <div className={`flex flex-col gap-4`}>
 
                                        {/* Shipping Updates */}
-                                       <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-lg font-semibold text-gray-800 mb-4">Tracking Information</h3>
+                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
+                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Tracking Information</h3>
                                            <div className="space-y-4">
                                                {singleOrder?.shipping_info?.flatMap(info => info?.shipping_status).map((update, index) => (
                                                    <div key={index} className="flex">
@@ -648,12 +649,12 @@ const OrderDetails: NextPage = () => {
                                        </div>
 
                                        {/* Shipping Information */}
-                                       <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Shipping Updates</h3>
-                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
+                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Shipping Updates</h3>
+                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                                <div>
                                                    <p className="text-sm text-gray-600">Tracking Number:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.tracking_number}</p>
+                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.tracking_number}</p>
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Expected Date of Arrival:</p>
@@ -661,14 +662,14 @@ const OrderDetails: NextPage = () => {
                                                </div>
                                                <div>
                                                    <p className="text-sm text-gray-600">Logistic Company:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.shipping_info?.[0]?.logistics_company_name}</p>
+                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.shipping_info?.[0]?.logistics_company_name}</p>
                                                </div>
                                            </div>
                                        </div>
 
                                        {/* Messages with merchant */}
-                                       <div className="p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Messages</h3>
+                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
+                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Messages</h3>
                                            {singleOrder?.is_offline_payment && directPaymentMessagingSafe ? (
                                                <div
                                                    className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950 prose prose-sm max-w-none"
@@ -748,7 +749,7 @@ const OrderDetails: NextPage = () => {
 
                                    {/* Same box: Confirm delivery, OR Submit Dispute form, OR Dispute thread */}
                                    <div
-                                       className={`p-6 rounded-lg shadow h-fit bg-white border border-gray-100 ${
+                                       className={`p-4 sm:p-6 rounded-lg shadow h-fit bg-white border border-gray-100 ${
                                            lineCancelled || (!hasDispute && !isFormActive)
                                                ? 'opacity-50 pointer-events-none'
                                                : ''
@@ -770,14 +771,14 @@ const OrderDetails: NextPage = () => {
                                            )}
                                            {!hasDispute && (
                                                <>
-                                                   <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">
                                                        Submit Dispute
                                                        {!isFormActive ? (
-                                                           <span className="ml-2 text-sm text-red-500">
+                                                           <span className="ml-2 text-xs sm:text-sm text-red-500 block sm:inline mt-1 sm:mt-0">
                                                                (Available after order is received)
                                                            </span>
                                                        ) : singleOrder?.isDelivered ? (
-                                                           <span className="ml-2 text-sm text-gray-600">
+                                                           <span className="ml-2 text-xs sm:text-sm text-gray-600 block sm:inline mt-1 sm:mt-0">
                                                                You can confirm delivery above or submit a dispute if there is an issue.
                                                            </span>
                                                        ) : null}
@@ -920,7 +921,7 @@ const OrderDetails: NextPage = () => {
                                                    </div>
                                                )}
 
-                                               <h3 className="text-lg font-semibold text-gray-800 mb-2">Dispute thread</h3>
+                                               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Dispute thread</h3>
                                                <p className="text-sm text-gray-600 mb-4">
                                                    Reply here (max 10 messages). The merchant is notified when you add a reply.
                                                </p>

@@ -47,6 +47,15 @@ export interface FeaturedImage {
     image_ppoi: string;
 }
 
+/** Product-attached social reel from product detail API (`product_reels`). */
+export interface ProductReel {
+    id: number;
+    title: string;
+    video_link: string;
+    platform: string;
+    created_at: string | null;
+}
+
 export interface Product {
     id: number;
     user: string;
@@ -91,6 +100,7 @@ export interface Product {
     product_variant: any[];
     tags?: Array<{ id: number; name: string; slug: string }>;
     contact_merchant_only?: boolean;
+    product_reels?: ProductReel[];
 }
 
 export interface ProductResponse {
@@ -223,6 +233,8 @@ export interface ProductByIdResponse {
     is_wished: boolean;
     reviews_ratings: any[];
     merchant_other_products: MerchantOtherProduct[];
+    /** Same category, other merchants (product detail API). */
+    recommended_products?: MerchantOtherProduct[];
 }
 
 // Categories

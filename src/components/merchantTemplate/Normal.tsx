@@ -3,10 +3,12 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import MerchantStoreProductCard from "@/components/merchant/MerchantStoreProductCard";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import type { Product } from "@/types/product";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
+import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
@@ -36,7 +38,8 @@ export default function NormalMerchantPage() {
     );
   }
 
-  // Function to convert hex to rgba with opacity
+  const merchantReels = merchantData.merchant_details.merchant_reels ?? [];
+  const hasMerchantReels = merchantReels.length > 0;
   const hexToRgba = (hex: string, opacity: number) => {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -311,10 +314,14 @@ export default function NormalMerchantPage() {
                 {/* Merchant Logo */}
                 <div className="p-6 flex justify-center bg-gradient-to-br from-gray-50 to-white">
                   <div className="relative">
-                    <img
-                      src={merchantData?.merchant_details?.logo}
+                    <MerchantLogoOrInitial
+                      logoUrl={merchantData?.merchant_details?.logo}
+                      storeName={merchantData?.merchant_details?.store_name ?? "Store"}
+                      primaryColor={merchantData?.merchant_details?.primary_color}
                       alt={merchantData?.merchant_details?.store_name ?? ""}
-                      className="h-32 w-32 rounded-3xl object-cover border-4 border-white shadow-2xl ring-4 ring-gray-100"
+                      className="h-32 w-32 overflow-hidden rounded-3xl border-4 border-white shadow-2xl ring-4 ring-gray-100"
+                      imgClassName="h-full w-full object-cover"
+                      fallbackTextClassName="text-3xl font-bold"
                     />
                     {merchantData?.merchant_details?.is_active && (
                       <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
@@ -515,6 +522,21 @@ export default function NormalMerchantPage() {
                   >
                     Products
                   </button>
+                  {hasMerchantReels ? (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === "reels"}
+                      onClick={() => setActiveTab("reels")}
+                      className={`snap-start shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ${
+                        activeTab === "reels"
+                          ? "merchant-button text-white shadow-md"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200/95 active:bg-slate-200"
+                      }`}
+                    >
+                      Reels
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     role="tab"
@@ -597,6 +619,17 @@ export default function NormalMerchantPage() {
                       )}
                     </div>
                   )}
+
+                  {activeTab === "reels" && hasMerchantReels ? (
+                    <div>
+                      <StorefrontReelsGallery
+                        reels={merchantReels}
+                        heading="Reels"
+                        description="Curated videos from this store. Tap a card to watch full screen."
+                        tone="subtle"
+                      />
+                    </div>
+                  ) : null}
 
                   {activeTab === "policy" && (
                     <div>

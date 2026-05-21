@@ -7,6 +7,11 @@ import productService from "@/redux/product/productService";
 import { ProductFull } from "@/types/home";
 import RealEstateShowcaseCard from "@/components/product/RealEstateShowcaseCard";
 import SiteSettingsPreloader from "@/components/SiteSettingsPreloader";
+import { useAppSelector } from "@/hook/useReduxTypes";
+import {
+  getRealEstateCopy,
+  realEstateStatChips,
+} from "@/util/curatedVerticalCopy";
 
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
@@ -24,6 +29,7 @@ function orderPromotedFirst(promoted: ProductFull[], products: ProductFull[]) {
 }
 
 export default function RealEstateCuratedPage() {
+  const siteSettings = useAppSelector((s) => s.general.siteSettings);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductFull[]>([]);
   const [promotedIds, setPromotedIds] = useState<Set<number>>(new Set());
@@ -65,31 +71,33 @@ export default function RealEstateCuratedPage() {
     };
   }, [products.length, promotedIds]);
 
+  const copy = getRealEstateCopy(siteSettings, categoryLabel);
+  const statChips = realEstateStatChips(siteSettings, heroStats);
+
   return (
     <div>
       <Head>
-        <title>Real Estate | Hawola</title>
+        <title>{copy.pageTitle}</title>
       </Head>
       {loading ? <SiteSettingsPreloader /> : null}
       <Header />
 
       <section className="border-b border-emerald-100 bg-gradient-to-r from-emerald-900 via-emerald-700 to-teal-700">
         <div className="mx-auto w-full max-w-screen-xl px-6 py-12 xl:px-0">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-emerald-100/90">Real Estate Edit</p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">{categoryLabel} Showcase</h1>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-emerald-100/90">{copy.heroEyebrow}</p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">{copy.heroTitle}</h1>
           <p className="mt-3 max-w-2xl text-sm text-emerald-50 md:text-base">
-            Premium properties and trusted direct listings. Promoted inventory is featured first and remaining listings are rotated randomly to keep discovery fresh.
+            {copy.heroDescription}
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-              {heroStats.promoted} Promoted
-            </span>
-            <span className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-              {heroStats.curated} Curated Random
-            </span>
-            <span className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-              {heroStats.total} Total Listings
-            </span>
+            {statChips.map((chip) => (
+              <span
+                key={chip}
+                className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white"
+              >
+                {chip}
+              </span>
+            ))}
             <Link href="/" className="ml-auto text-xs font-semibold uppercase tracking-wider text-white/90 hover:text-white">
               Back Home
             </Link>
@@ -100,7 +108,7 @@ export default function RealEstateCuratedPage() {
       <section className="mx-auto w-full max-w-screen-xl px-6 py-8 xl:px-0">
         {products.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-            <p className="text-sm text-slate-500">No real-estate listings are available yet.</p>
+            <p className="text-sm text-slate-500">{copy.emptyMessage}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">

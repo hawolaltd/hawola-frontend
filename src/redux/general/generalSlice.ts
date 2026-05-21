@@ -17,6 +17,8 @@ export interface SiteSettingsData {
   accept_escrow_payment?: boolean;
   /** Rich HTML (sanitized client-side) shown on cart when escrow is off */
   non_escrow_cart_notice_html?: string | null;
+  /** Plain-text badge on order confirmation when payment was not through Hawola */
+  offline_order_confirmation_badge_text?: string | null;
   /** Product detail when listing uses merchant-collected payment (not escrowed) */
   merchant_collects_payment_notice_html?: string | null;
   /** Above buyer ↔ merchant order messages when payment is direct/offline */

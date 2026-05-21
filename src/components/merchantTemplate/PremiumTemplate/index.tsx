@@ -13,6 +13,7 @@ import Head from "next/head";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { buildMerchantBrandPalette } from "@/util/merchantBrandPalette";
 import { buildPremiumMerchantInlineCss } from "@/util/premiumMerchantInlineCss";
+import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 
 const DashboardTemplate = () => {
   const {
@@ -38,6 +39,9 @@ const DashboardTemplate = () => {
     () => buildPremiumMerchantInlineCss(brandPalette),
     [brandPalette]
   );
+
+  const merchantReels = merchantData?.merchant_details?.merchant_reels ?? [];
+  const hasMerchantReels = merchantReels.length > 0;
 
   if (isLoading) {
     return (
@@ -154,6 +158,19 @@ const DashboardTemplate = () => {
                   subtitle={merchantData?.merchant_details?.store_page_subtitle}
                 />
               </div>
+
+              {hasMerchantReels ? (
+                <div className="animate-fade-in delay-300">
+                  <div className="merchant-premium-section-shell p-6 sm:p-8">
+                    <StorefrontReelsGallery
+                      reels={merchantReels}
+                      heading="Reels"
+                      description="Curated videos from this store. Tap a card to watch full screen."
+                      tone="subtle"
+                    />
+                  </div>
+                </div>
+              ) : null}
 
               {/* About Section */}
               <div className="animate-fade-in delay-300">

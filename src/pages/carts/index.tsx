@@ -1,8 +1,4 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import {
-  DEFAULT_NON_ESCROW_CART_NOTICE_HTML,
-  sanitizeRichNotice,
-} from "@/util/sanitizeRichNotice";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { toast } from "sonner";
@@ -24,6 +20,7 @@ import OrderSummary from "@/components/cart/OrderSummary";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import MobileFloatingHint from "@/components/ui/MobileFloatingHint";
+import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 
 interface OrderItem {
   product: number;
@@ -84,12 +81,12 @@ const CartPage = () => {
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const escrowDisabled =
     siteSettings != null && siteSettings.accept_escrow_payment === false;
-  const noticeSource = escrowDisabled
-    ? (siteSettings?.non_escrow_cart_notice_html?.trim()
-        ? String(siteSettings.non_escrow_cart_notice_html)
-        : DEFAULT_NON_ESCROW_CART_NOTICE_HTML)
-    : "";
-  const [cartNoticeSafe, setCartNoticeSafe] = useState("");
+  const nonEscrowCartNoticeSafe = useMemo(() => {
+    if (!escrowDisabled) return "";
+    const raw = (siteSettings?.non_escrow_cart_notice_html as string | undefined)?.trim();
+    if (!raw) return "";
+    return sanitizeRichNotice(raw);
+  }, [escrowDisabled, siteSettings?.non_escrow_cart_notice_html]);
   const dispatch = useAppDispatch();
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<string>("");
@@ -544,14 +541,6 @@ const CartPage = () => {
     dispatch(getCarts());
   }, [dispatch, isAuthenticated, authLoading]);
 
-  useEffect(() => {
-    if (!noticeSource) {
-      setCartNoticeSafe("");
-      return;
-    }
-    setCartNoticeSafe(sanitizeRichNotice(noticeSource));
-  }, [noticeSource]);
-
   // Update cart items when carts change
   useEffect(() => {
     const newCartItems = isAuthenticated ? (carts["cart_items"] || []) : (localCart?.items || []);
@@ -797,7 +786,7 @@ const CartPage = () => {
               shippingError={shippingError}
               isAuthenticated={isAuthenticated}
               directMerchantMode={escrowDisabled}
-              directMerchantNoticeHtml={cartNoticeSafe}
+              directMerchantNoticeHtml={nonEscrowCartNoticeSafe || undefined}
             />
           </div>
         </div>

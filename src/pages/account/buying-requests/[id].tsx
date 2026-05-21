@@ -115,7 +115,7 @@ export default function BuyingRequestDetailPage() {
           <title>Buying request details</title>
         </Head>
 
-        <main className="px-4 sm:px-6 lg:px-20 py-6">
+        <main className="px-3 sm:px-6 lg:px-20 py-4 sm:py-6">
           <button
             type="button"
             className="mb-4 text-xs text-gray-600 hover:text-gray-900"
@@ -133,12 +133,12 @@ export default function BuyingRequestDetailPage() {
               We could not find this buying request.
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2.5fr)]">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2.5fr)]">
               {/* Left: request details */}
-              <section className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-                <div className="flex items-start gap-3">
+              <section className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row items-start gap-3">
                   {request.images && request.images.length > 0 && (
-                    <div className="flex-shrink-0 space-y-1">
+                    <div className="flex-shrink-0 space-y-1 w-full sm:w-auto">
                       <p className="text-[11px] font-medium text-gray-500">Request images (click for larger view)</p>
                       <div className="flex flex-wrap gap-2">
                         {request.images.map((img) => (
@@ -151,15 +151,15 @@ export default function BuyingRequestDetailPage() {
                             <img
                               src={img.image_url || ""}
                               alt={request.title}
-                              className="w-24 h-20 object-cover"
+                              className="w-20 h-16 sm:w-24 sm:h-20 object-cover"
                             />
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
-                  <div className="flex-1">
-                    <h1 className="text-base sm:text-lg font-semibold text-gray-900">
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
                       {request.title}
                     </h1>
                     <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-gray-500">
@@ -227,8 +227,8 @@ export default function BuyingRequestDetailPage() {
               </section>
 
               {/* Right: merchant responses */}
-              <section className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-                <div className="flex items-center justify-between">
+              <section className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 space-y-4">
+                <div className="flex items-center justify-between gap-2">
                   <h2 className="text-sm font-semibold text-gray-900">
                     Merchant responses
                   </h2>
@@ -251,9 +251,9 @@ export default function BuyingRequestDetailPage() {
                         key={interest.id}
                         className="border border-gray-200 rounded-md p-3 text-xs space-y-2"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <p className="font-semibold text-gray-900">
+                        <div className="flex items-start justify-between gap-2 flex-wrap sm:flex-nowrap">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 break-words">
                               {interest.merchant_store_name}
                             </p>
                             <p className="text-[11px] text-gray-500">
@@ -268,7 +268,7 @@ export default function BuyingRequestDetailPage() {
                             </p>
                           </div>
                           {interest.is_contact_shared ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px] font-medium">
+                            <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px] font-medium">
                               Contact shared
                             </span>
                           ) : null}
@@ -309,7 +309,7 @@ export default function BuyingRequestDetailPage() {
                               type="button"
                               disabled={sharingIds.includes(interest.id)}
                               onClick={() => handleShareContact(interest)}
-                              className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-[11px] font-medium text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-primary px-3 py-2 text-[11px] font-medium text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-center"
                             >
                               {sharingIds.includes(interest.id)
                                 ? "Sharing your contact…"

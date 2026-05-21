@@ -120,12 +120,12 @@ const Settings: NextPage = () => {
     }, [dispatch]);
 
     return (
-        <div className="p-4 lg:p-0">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="grid grid-cols-1 gap-8">
+        <div className="p-3 sm:p-4 lg:p-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 gap-6 lg:gap-8 min-w-0">
                     {/* Contact Information */}
                     <div>
-                        <h2 className="text-lg font-bold text-primary mb-4">
+                        <h2 className="text-base sm:text-lg font-bold text-primary mb-4">
                             Contact information
                         </h2>
                         <div className="space-y-4">
@@ -193,14 +193,14 @@ const Settings: NextPage = () => {
 
                     {/* Password Change */}
                     <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-primary">
+                        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                            <h2 className="text-base sm:text-lg font-bold text-primary">
                                 Change Password
                             </h2>
                             {!showPasswordForm && (
                                 <button
                                     onClick={() => setShowPasswordForm(true)}
-                                    className="text-sm text-primary hover:underline"
+                                    className="text-xs sm:text-sm text-primary hover:underline"
                                 >
                                     Change Password
                                 </button>
@@ -235,7 +235,7 @@ const Settings: NextPage = () => {
                                     }
                                     className="w-full p-2 border rounded bg-inherit"
                                 />
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <button
                                         disabled={passwordLoading}
                                         onClick={handlePasswordChange}
@@ -279,7 +279,7 @@ const Settings: NextPage = () => {
 
                     {/* Shipping Address */}
                     <div>
-                        <h2 className="text-lg font-bold text-primary mb-4">
+                        <h2 className="text-base sm:text-lg font-bold text-primary mb-4">
                             Shipping address
                         </h2>
                         <div className="space-y-4">
@@ -417,7 +417,7 @@ const Settings: NextPage = () => {
                     <button
                         disabled={loading}
                         onClick={handleSave}
-                        className={`flex items-center justify-center ${loading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} w-[60%] lg:w-[30%] text-white px-6 py-2 rounded mt-6`}
+                        className={`flex items-center justify-center ${loading ? 'bg-blue-200 cursor-not-allowed' : 'bg-primary'} w-full sm:w-[60%] lg:w-[40%] text-white px-6 py-2 rounded mt-6`}
                     >
                         {loading ? <div className={'flex items-center justify-center w-full'}>
                             <span role="status">
@@ -436,14 +436,14 @@ const Settings: NextPage = () => {
                         </div> : "Save change"}
                     </button>
                 </div>
-                <div className={'flex flex-col gap-4 lg:items-end'}>
+                <div className={'flex flex-col gap-4 lg:items-end min-w-0'}>
                     {
                         addresses?.addresses?.map(address => (
-                            <div key={address?.id} className="mt-4 flex flex-col sm:w-1/2">
-                                <p className="text-sm text-primary">
+                            <div key={address?.id} className="mt-4 flex flex-col w-full lg:w-2/3 p-3 sm:p-4 border border-gray-200 rounded-lg bg-white">
+                                <p className="text-sm text-primary font-semibold">
                                     {capitalize(address?.first_name)} {capitalize(address?.last_name)}
                                 </p>
-                                <p className="text-sm text-primary">
+                                <p className="text-sm text-primary break-words">
                                     Home Address: {address?.address}
                                 </p>
                                 <p className="text-sm text-primary">
@@ -452,7 +452,7 @@ const Settings: NextPage = () => {
                                 <p className="text-sm text-primary">
                                     Phone Number: {address?.phone}
                                 </p>
-                                <button className="bg-primary w-fit text-white px-4 py-2 rounded mt-2">
+                                <button className="bg-primary w-full sm:w-fit text-white px-4 py-2 rounded mt-3 text-sm">
                                     Set as Default
                                 </button>
                             </div>

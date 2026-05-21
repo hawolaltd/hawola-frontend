@@ -14,12 +14,10 @@ import {
 import { LocalCartItem, Product, WishlistResponse } from "@/types/product";
 import { toast } from "sonner";
 import {
-  buildWhatsAppLink,
   formatCurrency,
   featuredImageCardUrl,
   isContactMerchantOnlyProduct,
 } from "@/util";
-import DirectContactActions from "@/components/product/DirectContactActions";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import {
   HeartIcon,
@@ -346,16 +344,7 @@ export default function WishlistPage() {
 
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2">
                         {contactOnly ? (
-                          <DirectContactActions
-                            merchantSlug={p?.merchant?.slug}
-                            whatsappLink={buildWhatsAppLink(
-                              p?.merchant?.support_phone_number,
-                              p?.name,
-                              p?.merchant?.store_name
-                            )}
-                            compact
-                            showBadge={false}
-                          />
+                          <span className="text-[11px] text-gray-500">—</span>
                         ) : (
                           <button
                             type="button"

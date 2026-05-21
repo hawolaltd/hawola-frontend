@@ -7,6 +7,7 @@ import {
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import type { Merchant, ProductByIdResponse } from "@/types/product";
 
@@ -100,10 +101,15 @@ function MerchantAbout({ product }: MerchantAboutProps) {
                   className="relative shrink-0 rounded-2xl p-1 shadow-md ring-2 ring-white"
                   style={{ boxShadow: `0 0 0 1px ${brand}33` }}
                 >
-                  <img
-                    src={merchant.logo_thumbnail || merchant.logo || "/imgs/page/homepage1/user-1.png"}
-                    alt=""
-                    className="h-16 w-16 rounded-xl object-cover sm:h-20 sm:w-20"
+                  <MerchantLogoOrInitial
+                    logoThumbnailUrl={merchant.logo_thumbnail}
+                    logoUrl={merchant.logo}
+                    storeName={storeName}
+                    primaryColor={merchant.primary_color}
+                    alt={storeName}
+                    className="h-16 w-16 overflow-hidden rounded-xl sm:h-20 sm:w-20"
+                    imgClassName="h-full w-full object-cover"
+                    fallbackTextClassName="text-lg font-bold sm:text-2xl"
                   />
                 </div>
                 <div className="min-w-0 flex-1">

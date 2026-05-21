@@ -3,9 +3,9 @@ import HomeTopRegion from "@/components/home/HomeTopRegion";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import TrendingProducts from "@/components/TrendingProducts";
-import Partner from "@/components/partner/Partner";
+import HawolaSpecials from "@/components/home/HawolaSpecials";
 import TopRateProducts from "@/components/home/TopRateProducts";
 import TopSellingProducts from "@/components/home/TopSellingProducts";
 import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
@@ -21,7 +21,6 @@ export default function Home() {
   const { products, carts } = useAppSelector((state) => state.products);
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  console.log("isAuthenticated:", isAuthenticated);
   const dispatch = useAppDispatch();
 
   // Fetch public homepage data once on mount
@@ -63,6 +62,7 @@ export default function Home() {
       {/* <Partner /> */}
       {/* <ProductList products={products} /> */}
       <TrendingProducts products={products} />
+      <HawolaSpecials products={products} />
       <TopRateProducts products={products} />
       <TopSellingProducts products={products} />
       <RecentlyViewedSection />

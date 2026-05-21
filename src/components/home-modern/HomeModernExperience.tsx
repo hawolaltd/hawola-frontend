@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import ProductDetailLink from "@/components/product/ProductDetailLink";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import ProductCard from "@/components/product/ProductCard";
 import ProductCard2 from "@/components/product/ProductCard2";
-import DirectContactActions from "@/components/product/DirectContactActions";
-import { buildWhatsAppLink, formatCurrency, featuredImageCardSrc, isContactMerchantOnlyProduct } from "@/util";
+import { formatCurrency, featuredImageCardSrc } from "@/util";
 import type { AdvertBanner, PopularCategory, ProductFull } from "@/types/home";
 
 function dedupeCategories(cats: PopularCategory[] | undefined): PopularCategory[] {
@@ -286,12 +286,6 @@ function StatsBand({
 function EditorialSpotlight({ product }: { product: ProductFull }) {
   const img = featuredImageCardSrc(product.featured_image?.[0]);
   const pct = discountPct(product.price, product.discount_price);
-  const contactOnly = isContactMerchantOnlyProduct(product);
-  const whatsappLink = buildWhatsAppLink(
-    product?.merchant?.support_phone_number,
-    product?.name,
-    product?.merchant?.store_name
-  );
   return (
     <section id="spotlight" className="scroll-mt-24 border-b border-slate-200 bg-white py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-6 sm:px-10">
@@ -305,8 +299,8 @@ function EditorialSpotlight({ product }: { product: ProductFull }) {
           </Link>
         </div>
         <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
-          <Link
-            href={`/product/${product.slug}`}
+          <ProductDetailLink
+            product={product}
             className="group relative block overflow-hidden rounded-[2rem] bg-slate-100 shadow-xl shadow-slate-300/40 lg:col-span-7"
           >
             {img ? (
@@ -328,7 +322,7 @@ function EditorialSpotlight({ product }: { product: ProductFull }) {
               <p className="text-sm font-semibold text-white/90">View product</p>
               <p className="text-lg font-bold text-white">{product.name}</p>
             </div>
-          </Link>
+          </ProductDetailLink>
           <div className="flex flex-col justify-between rounded-[2rem] border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-8 shadow-lg lg:col-span-5 lg:p-10">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-textPadded">{product.merchant?.store_name}</p>
@@ -348,20 +342,12 @@ function EditorialSpotlight({ product }: { product: ProductFull }) {
                 )}
               </div>
             </div>
-            {contactOnly ? (
-              <DirectContactActions
-                merchantSlug={product?.merchant?.slug}
-                whatsappLink={whatsappLink}
-                className="mt-8 sm:w-[420px]"
-              />
-            ) : (
-              <Link
-                href={`/product/${product.slug}`}
+            <ProductDetailLink
+                product={product}
                 className="mt-8 inline-flex w-full items-center justify-center rounded-2xl bg-secondaryTextColor py-4 text-center text-sm font-bold text-white transition hover:brightness-105 sm:w-auto sm:px-12"
               >
                 Add to cart flow →
-              </Link>
-            )}
+              </ProductDetailLink>
           </div>
         </div>
       </div>
@@ -440,6 +426,7 @@ function TopRatedBento({
 }) {
   const [a, b, c, d] = products;
   const cells = [a, b, c, d].filter(Boolean) as ProductFull[];
+  const bestSellingShown = bestSelling.slice(0, 5);
   if (!cells.length && !bestSelling.length) return null;
   return (
     <section id="rated" className="scroll-mt-24 bg-gradient-to-b from-white via-[#f7f9fc] to-white py-16 sm:py-24">
@@ -488,18 +475,38 @@ function TopRatedBento({
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">Velocity</p>
                 <h3 className="mt-1 font-[family-name:Kanit] text-2xl font-bold">Best sellers</h3>
               </div>
-              <div className="divide-y divide-slate-100">
-                {bestSelling.slice(0, 4).map((item, key) => (
+              <div>
+                {bestSellingShown.map((item, key) => (
                   <div key={item.id ?? key} className="relative bg-white">
-                    <span className="absolute left-3 top-1/2 z-[1] -translate-y-1/2 font-[family-name:Kanit] text-3xl font-bold text-slate-100">
-                      {String(key + 1).padStart(2, "0")}
-                    </span>
-                    <ProductCard2 product={bestSelling} index={key} item={item} />
+                    <ProductCard2 product={bestSellingShown} index={key} item={item} />
                   </div>
                 ))}
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HawolaSpecialsBand({ products }: { products: ProductFull[] }) {
+  if (!products.length) return null;
+  return (
+    <section className="border-t border-orange-200/70 bg-gradient-to-b from-orange-50/90 via-white to-white py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-6 sm:px-10">
+        <p className="text-xs font-bold uppercase tracking-[0.35em] text-orange-600">Featured</p>
+        <h2 className="mt-2 font-[family-name:Kanit] text-3xl font-bold text-headerBg sm:text-4xl">Hawola Specials</h2>
+        <p className="mt-2 max-w-xl text-sm text-slate-600">Hand-picked for you</p>
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {products.slice(0, 8).map((product, key) => (
+            <div
+              key={product.id ?? key}
+              className="rounded-2xl border border-orange-100/80 bg-white p-1 shadow-md transition hover:border-orange-200 hover:shadow-lg"
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -610,6 +617,13 @@ export default function HomeModernExperience() {
   const topRated = (homePage?.data?.top_rated_products ?? []) as ProductFull[];
   const topSelling = (homePage?.data?.top_selling_products ?? []) as ProductFull[];
   const bestSelling = (homePage?.data?.best_selling_products ?? []) as ProductFull[];
+  const hawolaSpecials = useMemo(() => {
+    const h = homePage?.data?.hawola_specials as ProductFull[] | undefined;
+    const legacy = (homePage?.data as { odinwo_specials?: ProductFull[] } | undefined)?.odinwo_specials;
+    if (h?.length) return h;
+    if (legacy?.length) return legacy;
+    return [];
+  }, [homePage?.data]);
   const advertTop = (homePage?.data?.advert_banner ?? []) as AdvertBanner[];
   const advertMid = (homePage?.data?.advert_banner_middle ?? []) as AdvertBanner[];
 
@@ -633,6 +647,7 @@ export default function HomeModernExperience() {
       <AdShowcase banners={advertTop} label="Featured partners" variant="a" />
       <TopRatedBento products={topRated} bestSelling={bestSelling} />
       <AdShowcase banners={advertMid} label="In the spotlight" variant="b" />
+      <HawolaSpecialsBand products={hawolaSpecials} />
       <TopSellingStrip products={topSelling} />
       <TrustPulse />
       <BottomCTA />
