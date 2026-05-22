@@ -114,6 +114,8 @@ interface ProductsState {
     /** Wishlist fetch lifecycle — avoids empty flash before first `getWishList` completes. */
     wishlistFetchStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
     productDetailLoad: ProductDetailLoadState;
+    /** Slug for which `product` + `productDetailLoad` were last populated. */
+    productDetailSlug: string | null;
 }
 
 const initialState: ProductsState = {
@@ -149,6 +151,7 @@ const initialState: ProductsState = {
     cartFetchStatus: 'idle',
     wishlistFetchStatus: 'idle',
     productDetailLoad: { ...DEFAULT_PRODUCT_DETAIL_LOAD },
+    productDetailSlug: null,
 };
 
 export const getProducts = createAsyncThunk(
@@ -857,6 +860,19 @@ const productSlice = createSlice({
         clearCompare: (state) => {
             state.compareProducts = [];
         },
+        setProductDetailBundle: (
+            state,
+            action: PayloadAction<{
+                slug: string;
+                product: ProductByIdResponse;
+                productDetailLoad: ProductDetailLoadState;
+            }>
+        ) => {
+            state.productDetailSlug = action.payload.slug;
+            state.product = action.payload.product;
+            state.productDetailLoad = action.payload.productDetailLoad;
+            state.isLoading = false;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -911,15 +927,19 @@ const productSlice = createSlice({
                 state.isLoading = true;
                 state.product = {} as ProductByIdResponse;
                 state.productDetailLoad = { ...DEFAULT_PRODUCT_DETAIL_LOAD };
+                state.productDetailSlug = null;
             })
             .addCase(clearProductById.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.product = action.payload as ProductByIdResponse;
                 state.productDetailLoad = { ...DEFAULT_PRODUCT_DETAIL_LOAD };
+                state.productDetailSlug = null;
             })
             .addCase(clearProductById.rejected, (state, action) => {
                 state.isLoading = false;
                 state.product = {} as ProductByIdResponse;
+                state.productDetailLoad = { ...DEFAULT_PRODUCT_DETAIL_LOAD };
+                state.productDetailSlug = null;
                 state.error = true;
                 state.message = action.payload;
             })
@@ -944,6 +964,10 @@ const productSlice = createSlice({
                 ensureProductDetailLoad(state);
                 state.productDetailLoad.gallery = 'succeeded';
                 mergeProductDetail(state, action.payload as Partial<ProductByIdResponse>);
+                const slug =
+                    (action.payload as { slug?: string })?.slug ||
+                    state.product?.product?.slug;
+                if (slug) state.productDetailSlug = slug;
             })
             .addCase(fetchProductDetailGallery.rejected, (state) => {
                 ensureProductDetailLoad(state);
@@ -966,6 +990,8 @@ const productSlice = createSlice({
                         payload.product_variant_options ??
                         state.product?.product_variant,
                 });
+                const slug = payload.product?.slug || state.product?.product?.slug;
+                if (slug) state.productDetailSlug = slug;
             })
             .addCase(fetchProductDetailMain.rejected, (state) => {
                 ensureProductDetailLoad(state);
@@ -1352,5 +1378,6 @@ export const {
     removeFromCompare,
     toggleCompareProduct,
     clearCompare,
+    setProductDetailBundle,
 } = productSlice.actions;
 export default productSlice.reducer;

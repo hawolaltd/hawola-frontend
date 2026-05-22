@@ -34,6 +34,7 @@ import {
 } from "@/lib/storefrontPreview";
 import { clearLocalRecentlyViewedProducts, getLocalRecentlyViewedProductIds } from "@/lib/recentlyViewed";
 import productService from "@/redux/product/productService";
+import { initAmplitude } from "@/lib/amplitude";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
@@ -57,6 +58,10 @@ function AppContent({ Component, pageProps }: AppProps) {
       opacity: 0.75 + Math.random() * 0.25,
     }))
   );
+
+  useEffect(() => {
+    initAmplitude();
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

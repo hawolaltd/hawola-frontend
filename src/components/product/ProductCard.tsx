@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { ProductFull } from "@/types/home";
+import { useProductDetailPrefetch } from "@/hooks/useProductDetailPrefetch";
 import { saveProductDetailPreview } from "@/lib/pdpPreview";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 function ProductCard({
@@ -35,6 +36,7 @@ function ProductCard({
   const { localCart } = useAppSelector((state) => state.products);
 
   const dispatch = useAppDispatch();
+  const prefetchHandlers = useProductDetailPrefetch(product?.slug);
 
   const hasDiscount =
     product?.discount_price != null &&
@@ -152,6 +154,10 @@ function ProductCard({
       <Link
         href={`/product/${product?.slug}`}
         prefetch
+        onMouseEnter={prefetchHandlers.onMouseEnter}
+        onMouseLeave={prefetchHandlers.onMouseLeave}
+        onFocus={prefetchHandlers.onFocus}
+        onTouchStart={prefetchHandlers.onTouchStart}
         onClick={() => saveProductDetailPreview(product)}
         className={
           isList

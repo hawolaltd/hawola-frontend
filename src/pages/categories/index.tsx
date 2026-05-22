@@ -74,8 +74,13 @@ function Categories() {
   useEffect(() => {
     if (!isExpandedCategoriesPage) return;
     dispatch(getAllCategories());
-    dispatch(getHomePage());
-  }, [dispatch, isExpandedCategoriesPage]);
+    const hasRecommended =
+      Array.isArray(homePage?.data?.recommended_products) &&
+      homePage.data.recommended_products.length > 0;
+    if (!hasRecommended) {
+      dispatch(getHomePage());
+    }
+  }, [dispatch, isExpandedCategoriesPage, homePage?.data?.recommended_products]);
 
   const categoriesTree = useMemo(() => {
     const list = categories?.categories || [];

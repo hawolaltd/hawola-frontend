@@ -10,6 +10,7 @@
     "postinstall": "node scripts/copy-tinymce.cjs"
   },
   "dependencies": {
+    "@amplitude/unified": "^1.1.7",
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.1.1",

@@ -8,15 +8,13 @@ import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {
     addToCarts,
-    addToCartsLocal, addWishList, clearProductById,
+    addToCartsLocal,
+    addWishList,
     DEFAULT_PRODUCT_DETAIL_LOAD,
-    fetchProductDetailGallery,
-    fetchProductDetailMain,
-    fetchProductDetailRelated,
     getCarts,
-    getMerchantReviews,
-    getWishList
+    getWishList,
 } from "@/redux/product/productSlice";
+import { ensureProductDetailLoaded } from "@/lib/productDetailPrefetch";
 import { useRouter } from "next/router";
 import {amountFormatter, formatCurrency, isContactMerchantOnlyProduct} from "@/util";
 import Link from "next/link";
@@ -321,31 +319,12 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         setClientNotFound(false);
 
         try {
-            void dispatch(clearProductById());
-            const [galleryRes, mainRes, relatedRes] = await Promise.all([
-                dispatch(fetchProductDetailGallery(slug)),
-                dispatch(fetchProductDetailMain(slug)),
-                dispatch(fetchProductDetailRelated(slug)),
-            ]);
-
-            if (fetchProductDetailMain.rejected.match(mainRes)) {
-                const err = mainRes.payload as { status?: number } | undefined;
-                if (err?.status === 404) {
-                    setClientNotFound(true);
-                    return;
-                }
-            }
-
-            const mainPayload = fetchProductDetailMain.fulfilled.match(mainRes)
-                ? (mainRes.payload as ProductByIdResponse)
-                : null;
-            if (!mainPayload?.product?.id && fetchProductDetailGallery.rejected.match(galleryRes)) {
+            const { notFound } = await ensureProductDetailLoaded(dispatch, slug);
+            if (notFound) {
                 setClientNotFound(true);
                 return;
             }
-
             setClientNotFound(false);
-            void dispatch(getMerchantReviews(slug));
         } catch {
             setClientNotFound(true);
         } finally {
