@@ -1486,6 +1486,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             <MerchantChatWidget
                 productSlug={product.product.slug}
                 productName={product.product.name}
+                merchantPrimaryColor={product.product.merchant?.primary_color}
                 merchantStoreName={product.product.merchant?.store_name}
             />
         ) : null}

@@ -1022,7 +1022,6 @@ const OrderDetails: NextPage = () => {
                 orderitemNumber={orderitemNumber}
                 productName={singleOrder?.product?.name}
                 productSlug={singleOrder?.product?.slug}
-                merchantStoreName={singleOrder?.merchant?.store_name}
             />
         ) : null}
         </AuthLayout>
