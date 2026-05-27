@@ -9,6 +9,8 @@ import {
   type BuyerChatConversation,
   type BuyerChatMessage,
 } from "@/lib/buyerChatApi";
+import ChatContextLinks from "@/components/account/ChatContextLinks";
+import { storefrontMerchantPath, storefrontProductPath } from "@/lib/storefrontUrls";
 function conversationSubtitle(c: BuyerChatConversation): string {
   if (c.orderitem_number) return `Order ${c.orderitem_number}`;
   if (c.product_name) return String(c.product_name);
@@ -132,14 +134,6 @@ export default function AccountChats() {
     }
   };
 
-  const contextLabel = selected
-    ? selected.orderitem_number
-      ? `Order ${selected.orderitem_number}`
-      : selected.product_name
-        ? `Product: ${selected.product_name}`
-        : "Store"
-    : "";
-
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div className="flex flex-col md:grid md:grid-cols-12 md:min-h-[460px]">
@@ -177,6 +171,7 @@ export default function AccountChats() {
               <ul className="divide-y divide-gray-100">
                 {conversations.map((c) => {
                   const active = selected?.slug === c.slug;
+                  const storeHref = storefrontMerchantPath(c.merchant_slug);
                   return (
                     <li key={c.slug}>
                       <button
@@ -187,14 +182,33 @@ export default function AccountChats() {
                         }`}
                       >
                         <div className="flex justify-between gap-2">
-                          <span className="font-semibold text-gray-900 line-clamp-1">
-                            {c.merchant_store_name || "Merchant"}
-                          </span>
+                          {storeHref ? (
+                            <Link
+                              href={storeHref}
+                              onClick={(e) => e.stopPropagation()}
+                              className="font-semibold text-primary line-clamp-1 hover:underline"
+                            >
+                              {c.merchant_store_name || "Merchant"}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-gray-900 line-clamp-1">
+                              {c.merchant_store_name || "Merchant"}
+                            </span>
+                          )}
                           <span className="shrink-0 text-xs text-gray-500">
                             {formatChatTime(c.last_message_at)}
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{conversationSubtitle(c)}</p>
+                        {c.product_slug && c.product_name ? (
+                          <Link
+                            href={storefrontProductPath(c.product_slug)!}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-primary mt-0.5 line-clamp-1 hover:underline inline-block"
+                          >
+                            {c.product_name}
+                          </Link>
+                        ) : null}
                         {c.last_message_preview ? (
                           <p className="text-sm text-gray-600 mt-1 line-clamp-2">{c.last_message_preview}</p>
                         ) : null}
@@ -221,10 +235,10 @@ export default function AccountChats() {
             </div>
           ) : (
             <>
-              <div className="flex items-start gap-2 border-b border-gray-100 px-3 py-3 bg-[rgb(236,252,203)] text-emerald-900 md:px-4">
+              <div className="flex items-start gap-2 border-b border-gray-100 px-3 py-3 bg-primary text-white md:px-4">
                 <button
                   type="button"
-                  className="md:hidden -ml-1 p-1 rounded hover:bg-white/10"
+                  className="md:hidden -ml-1 p-1 rounded text-white hover:bg-white/10"
                   aria-label="Back to list"
                   onClick={() => {
                     setMobileThread(false);
@@ -233,18 +247,7 @@ export default function AccountChats() {
                   <ArrowLeftIcon className="h-6 w-6" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">
-                    {selected.merchant_store_name || "Merchant"}
-                  </p>
-                  <p className="text-xs text-emerald-900/80 mt-0.5">{contextLabel}</p>
-                  {selected.merchant_slug ? (
-                    <Link
-                      href={`/${encodeURIComponent(selected.merchant_slug)}`}
-                      className="text-xs text-emerald-900/90 underline mt-1 inline-block hover:text-emerald-950"
-                    >
-                      View store
-                    </Link>
-                  ) : null}
+                  <ChatContextLinks conversation={selected} variant="onPrimary" />
                 </div>
               </div>
               <div
@@ -265,7 +268,7 @@ export default function AccountChats() {
                         <div
                           className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                             mine
-                              ? "bg-[rgb(236,252,203)] text-emerald-900 rounded-br-md border border-lime-200"
+                              ? "bg-primary text-white rounded-br-md"
                               : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                           }`}
                         >
@@ -287,7 +290,7 @@ export default function AccountChats() {
                 />
                 <button
                   type="button"
-                  className="rounded-lg bg-[rgb(236,252,203)] px-4 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                   disabled={!selected || sending}
                   onClick={() => void send()}
                 >
