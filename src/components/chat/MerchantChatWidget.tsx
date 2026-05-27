@@ -153,13 +153,13 @@ export default function MerchantChatWidget({
   return (
     <>
       <div className="fixed bottom-5 right-5 z-[60] flex flex-row items-center justify-end gap-2 sm:gap-3">
-        <span className="max-w-[10rem] rounded-2xl border border-lime-300 bg-white/95 px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug text-emerald-900 shadow-md dark:bg-gray-900/95 sm:max-w-[14rem] sm:px-3 sm:py-2 sm:text-sm">
+        <span className="max-w-[10rem] rounded-2xl border border-lime-200 bg-white px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug text-emerald-900 shadow-md sm:max-w-[14rem] sm:px-3 sm:py-2 sm:text-sm">
           Chat with this seller
         </span>
         <button
           type="button"
           onClick={() => (open ? setOpen(false) : void openChat())}
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#A3E635] text-emerald-900 shadow-lg transition-opacity hover:opacity-90"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[rgb(236,252,203)] text-emerald-900 shadow-lg transition-opacity hover:opacity-90"
           aria-label="Chat with this seller"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -174,12 +174,12 @@ export default function MerchantChatWidget({
       </div>
 
       {open && (
-        <div className="fixed bottom-24 right-5 z-[60] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
-          <div className="bg-[#A3E635] px-4 py-3 text-emerald-900">
+        <div className="fixed bottom-24 right-5 z-[60] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+          <div className="bg-[rgb(236,252,203)] px-4 py-3 text-emerald-900">
             <p className="font-semibold text-sm">{merchantStoreName || conversation?.merchant_store_name || "Merchant"}</p>
             <p className="text-xs mt-0.5 opacity-90">{contextLabel}</p>
           </div>
-          <div ref={scrollRef} className="flex-1 max-h-72 min-h-48 overflow-y-auto p-3 space-y-2 bg-gray-50 dark:bg-gray-950">
+          <div ref={scrollRef} className="flex-1 max-h-72 min-h-48 overflow-y-auto bg-white p-3 space-y-2">
             {loading ? (
               <p className="text-sm text-gray-500 text-center py-6">Loading…</p>
             ) : messages.length === 0 ? (
@@ -192,8 +192,8 @@ export default function MerchantChatWidget({
                     <div
                       className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                         mine
-                          ? "bg-[#A3E635] text-emerald-900 rounded-br-md"
-                          : "bg-white border text-gray-800 dark:bg-gray-800 dark:text-gray-100 rounded-bl-md"
+                          ? "bg-[rgb(236,252,203)] text-emerald-900 rounded-br-md border border-lime-200"
+                          : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                       }`}
                     >
                       {m.body}
@@ -203,9 +203,9 @@ export default function MerchantChatWidget({
               })
             )}
           </div>
-          <div className="border-t p-2 flex gap-2 dark:border-gray-700">
+          <div className="border-t border-gray-200 bg-white p-2 flex gap-2">
             <input
-              className="flex-1 rounded-lg border bg-white px-3 py-2 text-sm dark:bg-gray-300 dark:border-gray-600 dark:text-gray-900"
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
               placeholder="Type a message…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -214,7 +214,7 @@ export default function MerchantChatWidget({
             />
             <button
               type="button"
-              className="rounded-lg bg-[#A3E635] px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
+              className="rounded-lg bg-[rgb(236,252,203)] px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
               disabled={!conversation || sending}
               onClick={() => void send()}
             >

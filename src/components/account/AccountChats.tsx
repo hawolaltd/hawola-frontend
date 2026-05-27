@@ -221,7 +221,7 @@ export default function AccountChats() {
             </div>
           ) : (
             <>
-              <div className="flex items-start gap-2 border-b border-gray-100 px-3 py-3 bg-[#A3E635] text-emerald-900 md:px-4">
+              <div className="flex items-start gap-2 border-b border-gray-100 px-3 py-3 bg-[rgb(236,252,203)] text-emerald-900 md:px-4">
                 <button
                   type="button"
                   className="md:hidden -ml-1 p-1 rounded hover:bg-white/10"
@@ -249,7 +249,7 @@ export default function AccountChats() {
               </div>
               <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50"
+                className="flex-1 overflow-y-auto bg-white p-3 space-y-2"
               >
                 {threadLoading ? (
                   <div className="flex justify-center py-12">
@@ -265,7 +265,7 @@ export default function AccountChats() {
                         <div
                           className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                             mine
-                              ? "bg-[#A3E635] text-emerald-900 rounded-br-md"
+                              ? "bg-[rgb(236,252,203)] text-emerald-900 rounded-br-md border border-lime-200"
                               : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                           }`}
                         >
@@ -287,7 +287,7 @@ export default function AccountChats() {
                 />
                 <button
                   type="button"
-                  className="rounded-lg bg-[#A3E635] px-4 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
+                  className="rounded-lg bg-[rgb(236,252,203)] px-4 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
                   disabled={!selected || sending}
                   onClick={() => void send()}
                 >
