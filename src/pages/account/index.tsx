@@ -11,7 +11,9 @@ import BuyingRequests from "@/components/account/BuyingRequests";
 import Settings from "@/components/account/Settings";
 import {getDisputes} from "@/redux/disputes/disputeSlice";
 import RecentlyViewed from "@/components/account/RecentlyViewed";
+import AccountChats from "@/components/account/AccountChats";
 import {
+    ChatBubbleLeftRightIcon,
     ClipboardDocumentListIcon,
     EyeIcon,
     HeartIcon,
@@ -20,22 +22,39 @@ import {
 } from "@heroicons/react/24/outline";
 import {HI_SM} from "@/lib/hawolaIconTheme";
 
+const ACCOUNT_TAB_IDS = [
+    "orders",
+    "wish",
+    "buying_requests",
+    "chats",
+    "profile",
+    "recently_viewed",
+] as const;
+
 export default function AccountPage() {
     const router = useRouter();
     const {profile: user} = useAppSelector(state => state.auth);
-    console.log("user:", user)
     const [loading, setLoading] = useState(false)
 
-    const initialTab = (typeof window !== "undefined" && (router.query.tab as string)) || 'orders';
-    const [tab, setTab] = useState<string>(initialTab);
+    const [tab, setTab] = useState<string>("orders");
 
     const tabs: { id: string; name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
         { id: 'orders', name: 'Orders', Icon: ShoppingBagIcon },
         { id: 'wish', name: 'Wishlist', Icon: HeartIcon },
         { id: 'buying_requests', name: 'My Buying Requests', Icon: ClipboardDocumentListIcon },
+        { id: 'chats', name: 'Chats', Icon: ChatBubbleLeftRightIcon },
         { id: 'profile', name: 'Profile', Icon: UserIcon },
         { id: 'recently_viewed', name: 'Recently Viewed', Icon: EyeIcon },
     ]
+
+    useEffect(() => {
+        if (!router.isReady) return;
+        const raw = router.query.tab;
+        const id = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] ?? "" : "";
+        if (id && (ACCOUNT_TAB_IDS as readonly string[]).includes(id)) {
+            setTab(id);
+        }
+    }, [router.isReady, router.query.tab]);
 
     const dispatch = useAppDispatch();
 
@@ -152,6 +171,7 @@ export default function AccountPage() {
                                 {tab === 'wish' && <Wishlist />}
                                 {tab === 'orders' && <Orders />}
                                 {tab === 'buying_requests' && <BuyingRequests />}
+                                {tab === 'chats' && <AccountChats />}
                                 {tab === 'profile' && <Settings />}
                                 {tab === 'recently_viewed' && <RecentlyViewed />}
                             </div>

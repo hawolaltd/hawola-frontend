@@ -314,7 +314,6 @@ const getReviews = async () => {
 
 const getMerchantReviews = async (slug: string) => {
     const response = await axiosInstance.get(API + `reviews/product/${slug}/`);
-    console.log('getMerchantReviews:', response);
     return response.data;
 };
 

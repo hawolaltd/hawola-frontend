@@ -14,6 +14,7 @@ import {
 } from "@/redux/product/productSlice";
 import { buildMerchantSeo } from "@/util/storefrontSeo";
 import { isReservedMerchantStoreSlug } from "@/util/merchantPublicPath";
+import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
 
 const MERCHANT_TEMPLATES_LOWER = ["standard", "premium", "basic", "normal"] as const;
 type MerchantTemplateKey = (typeof MERCHANT_TEMPLATES_LOWER)[number];
@@ -251,6 +252,13 @@ export default function MerchantPage({
       {templateKey === "premium" && <DashboardTemplate />}
       {templateKey === "basic" && <BasicTemplate />}
       {templateKey === "normal" && <NormalMerchantPage />}
+
+      {profileSource?.merchant_details?.id != null ? (
+        <MerchantChatWidget
+          merchantId={profileSource.merchant_details.id}
+          merchantStoreName={profileSource.merchant_details.store_name}
+        />
+      ) : null}
     </div>
   );
 }

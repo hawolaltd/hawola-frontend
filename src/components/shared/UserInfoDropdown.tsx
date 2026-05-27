@@ -24,6 +24,15 @@ function UserInfoDropdown() {
 
           <li>
             <Link
+              href={{ pathname: "/account", query: { tab: "chats" } }}
+              className="block text-primary px-4 py-2 hover:text-deepOrange"
+            >
+              Chats
+            </Link>
+          </li>
+
+          <li>
+            <Link
               href="/order/order-history"
               className="block text-primary px-4 py-2 hover:text-deepOrange"
             >

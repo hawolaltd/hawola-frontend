@@ -34,6 +34,8 @@ const MAX_CACHE_ENTRIES = 12;
 const cache = new Map<string, DetailCacheEntry>();
 const inflight = new Map<string, Promise<void>>();
 const hoverTimers = new Map<string, ReturnType<typeof setTimeout>>();
+/** Avoid duplicate concurrent review API calls (e.g. React StrictMode double-mount). */
+const merchantReviewsInflight = new Map<string, Promise<void>>();
 
 const emptyProduct = (): ProductByIdResponse =>
   ({ product: {} } as ProductByIdResponse);
@@ -94,6 +96,19 @@ function commitEntry(entry: DetailCacheEntry): void {
   entry.updatedAt = Date.now();
   cache.set(entry.slug, entry);
   pruneCache();
+}
+
+function dispatchMerchantReviewsDeduped(dispatch: AppDispatch, slug: string): void {
+  if (merchantReviewsInflight.has(slug)) return;
+  const p = dispatch(getMerchantReviews(slug))
+    .unwrap()
+    .catch(() => {
+      /* logged in slice; avoid unhandled rejection */
+    })
+    .finally(() => {
+      merchantReviewsInflight.delete(slug);
+    });
+  merchantReviewsInflight.set(slug, p);
 }
 
 async function fetchIntoCache(slug: string): Promise<void> {
@@ -201,7 +216,7 @@ export async function ensureProductDetailLoaded(
   const cached = getCachedProductDetailBundle(slug);
   if (cached) {
     dispatch(setProductDetailBundle(cached));
-    void dispatch(getMerchantReviews(slug));
+    dispatchMerchantReviewsDeduped(dispatch, slug);
     if (cached.productDetailLoad.related !== "succeeded") {
       const relatedRes = await dispatch(fetchProductDetailRelated(slug));
       if (fetchProductDetailRelated.fulfilled.match(relatedRes)) {
@@ -242,7 +257,7 @@ export async function ensureProductDetailLoaded(
     return { notFound: true };
   }
 
-  void dispatch(getMerchantReviews(slug));
+  dispatchMerchantReviewsDeduped(dispatch, slug);
 
   const entry = getOrCreateEntry(slug);
   entry.product = emptyProduct();

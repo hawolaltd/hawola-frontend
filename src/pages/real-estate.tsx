@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/home/Footer";
 import productService from "@/redux/product/productService";
@@ -8,10 +8,7 @@ import { ProductFull } from "@/types/home";
 import RealEstateShowcaseCard from "@/components/product/RealEstateShowcaseCard";
 import SiteSettingsPreloader from "@/components/SiteSettingsPreloader";
 import { useAppSelector } from "@/hook/useReduxTypes";
-import {
-  getRealEstateCopy,
-  realEstateStatChips,
-} from "@/util/curatedVerticalCopy";
+import { getRealEstateCopy } from "@/util/curatedVerticalCopy";
 
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
@@ -62,17 +59,7 @@ export default function RealEstateCuratedPage() {
     void load();
   }, []);
 
-  const heroStats = useMemo(() => {
-    const promotedCount = Array.from(promotedIds).length;
-    return {
-      total: products.length,
-      promoted: promotedCount,
-      curated: Math.max(products.length - promotedCount, 0),
-    };
-  }, [products.length, promotedIds]);
-
   const copy = getRealEstateCopy(siteSettings, categoryLabel);
-  const statChips = realEstateStatChips(siteSettings, heroStats);
 
   return (
     <div>
@@ -89,16 +76,8 @@ export default function RealEstateCuratedPage() {
           <p className="mt-3 max-w-2xl text-sm text-emerald-50 md:text-base">
             {copy.heroDescription}
           </p>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            {statChips.map((chip) => (
-              <span
-                key={chip}
-                className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white"
-              >
-                {chip}
-              </span>
-            ))}
-            <Link href="/" className="ml-auto text-xs font-semibold uppercase tracking-wider text-white/90 hover:text-white">
+          <div className="mt-5 flex justify-end">
+            <Link href="/" className="text-xs font-semibold uppercase tracking-wider text-white/90 hover:text-white">
               Back Home
             </Link>
           </div>

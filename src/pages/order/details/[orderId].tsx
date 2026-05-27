@@ -15,6 +15,7 @@ import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
 import { API } from "@/constant";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
+import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
 
 /** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
 const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
@@ -1016,6 +1017,14 @@ const OrderDetails: NextPage = () => {
                        </>
                       )}
             </div>
+        {orderitemNumber && singleOrder?.product?.slug ? (
+            <MerchantChatWidget
+                orderitemNumber={orderitemNumber}
+                productName={singleOrder?.product?.name}
+                productSlug={singleOrder?.product?.slug}
+                merchantStoreName={singleOrder?.merchant?.store_name}
+            />
+        ) : null}
         </AuthLayout>
     );
 };
