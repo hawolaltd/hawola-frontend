@@ -256,7 +256,6 @@ export default function MerchantPage({
       {profileSource?.merchant_details?.id != null ? (
         <MerchantChatWidget
           merchantId={profileSource.merchant_details.id}
-          merchantPrimaryColor={profileSource.merchant_details.primary_color}
           merchantStoreName={profileSource.merchant_details.store_name}
         />
       ) : null}

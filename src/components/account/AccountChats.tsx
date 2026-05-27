@@ -221,7 +221,7 @@ export default function AccountChats() {
             </div>
           ) : (
             <>
-              <div className="flex items-start gap-2 border-b border-gray-100 px-3 py-3 bg-primary text-white md:px-4">
+              <div className="flex items-start gap-2 border-b border-gray-100 px-3 py-3 bg-[#A3E635] text-emerald-900 md:px-4">
                 <button
                   type="button"
                   className="md:hidden -ml-1 p-1 rounded hover:bg-white/10"
@@ -236,11 +236,11 @@ export default function AccountChats() {
                   <p className="font-semibold text-sm truncate">
                     {selected.merchant_store_name || "Merchant"}
                   </p>
-                  <p className="text-xs text-white/90 mt-0.5">{contextLabel}</p>
+                  <p className="text-xs text-emerald-900/80 mt-0.5">{contextLabel}</p>
                   {selected.merchant_slug ? (
                     <Link
                       href={`/${encodeURIComponent(selected.merchant_slug)}`}
-                      className="text-xs text-white/90 underline mt-1 inline-block hover:text-white"
+                      className="text-xs text-emerald-900/90 underline mt-1 inline-block hover:text-emerald-950"
                     >
                       View store
                     </Link>
@@ -265,7 +265,7 @@ export default function AccountChats() {
                         <div
                           className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                             mine
-                              ? "bg-primary text-white rounded-br-md"
+                              ? "bg-[#A3E635] text-emerald-900 rounded-br-md"
                               : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                           }`}
                         >
@@ -287,7 +287,7 @@ export default function AccountChats() {
                 />
                 <button
                   type="button"
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="rounded-lg bg-[#A3E635] px-4 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
                   disabled={!selected || sending}
                   onClick={() => void send()}
                 >

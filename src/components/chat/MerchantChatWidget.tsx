@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
-import { useSelector } from "react-redux";
+import Cookies from "js-cookie";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import { toast } from "sonner";
+import { authTokenStorageKeyName } from "@/constant";
 import {
   getBuyerChatMessages,
   sendBuyerChatMessage,
@@ -15,24 +17,36 @@ import {
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
   merchantId?: number;
-  merchantPrimaryColor?: string;
   productSlug?: string;
   productName?: string;
   orderitemNumber?: string;
   merchantStoreName?: string;
 };
 
+function hasAuthSession(
+  isAuthenticated: boolean,
+  profile: { pk?: number; email?: string } | null,
+  user: { pk?: number; id?: number; email?: string } | null | undefined
+): boolean {
+  if (isAuthenticated) return true;
+  if (profile?.pk || profile?.email) return true;
+  if (user?.email || user?.pk || user?.id) return true;
+  if (typeof window !== "undefined") {
+    const token = Cookies.get(authTokenStorageKeyName as string);
+    if (token) return true;
+  }
+  return false;
+}
+
 export default function MerchantChatWidget({
   merchantId,
-  merchantPrimaryColor,
   productSlug,
   productName,
   orderitemNumber,
   merchantStoreName,
 }: Props) {
   const router = useRouter();
-  const profile = useSelector((state: any) => state.auth?.profile);
-  const isLoggedIn = Boolean(profile?.id || profile?.email);
+  const { isAuthenticated, profile, user } = useAppSelector((state) => state.auth);
 
   const [open, setOpen] = useState(false);
   const [conversation, setConversation] = useState<BuyerChatConversation | null>(null);
@@ -42,13 +56,6 @@ export default function MerchantChatWidget({
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const FALLBACK_BRAND = "#A3E635";
-  const colorLooksValid = (v?: string) =>
-    typeof v === "string" && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim());
-  const brandColor = colorLooksValid(merchantPrimaryColor)
-    ? String(merchantPrimaryColor).trim()
-    : FALLBACK_BRAND;
-  const brandTextColor = "#0f172a";
 
   const contextLabel = orderitemNumber
     ? `Order ${orderitemNumber}`
@@ -80,7 +87,7 @@ export default function MerchantChatWidget({
   );
 
   const openChat = async () => {
-    if (!isLoggedIn) {
+    if (!hasAuthSession(isAuthenticated, profile, user)) {
       toast.info("Please sign in to chat with the merchant");
       const returnUrl = typeof window !== "undefined" ? window.location.pathname : "/";
       router.push(`/auth/login?redirect=${encodeURIComponent(returnUrl)}`);
@@ -102,7 +109,12 @@ export default function MerchantChatWidget({
       const rows = await getBuyerChatMessages(conv.slug);
       setMessages(rows);
     } catch (e: any) {
-      toast.error(e?.response?.data?.detail || "Could not start chat");
+      const status = e?.response?.status;
+      if (status === 401) {
+        toast.error("Your session expired. Please sign in again.");
+      } else {
+        toast.error(e?.response?.data?.detail || "Could not start chat");
+      }
       setOpen(false);
     } finally {
       setLoading(false);
@@ -141,20 +153,13 @@ export default function MerchantChatWidget({
   return (
     <>
       <div className="fixed bottom-5 right-5 z-[60] flex flex-row items-center justify-end gap-2 sm:gap-3">
-        <span
-          className="max-w-[10rem] rounded-2xl border bg-white/95 px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug shadow-md dark:bg-gray-900/95 sm:max-w-[14rem] sm:px-3 sm:py-2 sm:text-sm"
-          style={{
-            borderColor: `${brandColor}66`,
-            color: brandColor,
-          }}
-        >
+        <span className="max-w-[10rem] rounded-2xl border border-lime-300 bg-white/95 px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug text-emerald-900 shadow-md dark:bg-gray-900/95 sm:max-w-[14rem] sm:px-3 sm:py-2 sm:text-sm">
           Chat with this seller
         </span>
         <button
           type="button"
           onClick={() => (open ? setOpen(false) : void openChat())}
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white shadow-lg transition-opacity hover:opacity-90"
-          style={{ backgroundColor: brandColor }}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#A3E635] text-emerald-900 shadow-lg transition-opacity hover:opacity-90"
           aria-label="Chat with this seller"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,9 +175,9 @@ export default function MerchantChatWidget({
 
       {open && (
         <div className="fixed bottom-24 right-5 z-[60] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
-          <div className="px-4 py-3" style={{ backgroundColor: brandColor, color: brandTextColor }}>
+          <div className="bg-[#A3E635] px-4 py-3 text-emerald-900">
             <p className="font-semibold text-sm">{merchantStoreName || conversation?.merchant_store_name || "Merchant"}</p>
-            <p className="text-xs mt-0.5 opacity-80">{contextLabel}</p>
+            <p className="text-xs mt-0.5 opacity-90">{contextLabel}</p>
           </div>
           <div ref={scrollRef} className="flex-1 max-h-72 min-h-48 overflow-y-auto p-3 space-y-2 bg-gray-50 dark:bg-gray-950">
             {loading ? (
@@ -187,10 +192,9 @@ export default function MerchantChatWidget({
                     <div
                       className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                         mine
-                          ? "text-slate-900 rounded-br-md"
+                          ? "bg-[#A3E635] text-emerald-900 rounded-br-md"
                           : "bg-white border text-gray-800 dark:bg-gray-800 dark:text-gray-100 rounded-bl-md"
                       }`}
-                      style={mine ? { backgroundColor: brandColor } : undefined}
                     >
                       {m.body}
                     </div>
@@ -210,8 +214,7 @@ export default function MerchantChatWidget({
             />
             <button
               type="button"
-              className="rounded-lg px-3 py-2 text-sm text-slate-900 disabled:opacity-50"
-              style={{ backgroundColor: brandColor }}
+              className="rounded-lg bg-[#A3E635] px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
               disabled={!conversation || sending}
               onClick={() => void send()}
             >
