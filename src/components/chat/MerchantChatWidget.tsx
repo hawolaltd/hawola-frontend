@@ -13,6 +13,10 @@ import {
   type BuyerChatConversation,
   type BuyerChatMessage,
 } from "@/lib/buyerChatApi";
+import {
+  subscribeBuyerChat,
+  CHAT_FALLBACK_POLL_MS,
+} from "@/lib/buyerChatSocket";
 
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
@@ -122,12 +126,38 @@ export default function MerchantChatWidget({
   };
 
   useEffect(() => {
-    if (!open || !conversation?.slug) return;
-    pollRef.current = setInterval(() => {
-      void loadMessages(conversation.slug, true);
-    }, 8000);
+    if (!open || !conversation?.slug) return undefined;
+
+    const slug = conversation.slug;
+    const stopPoll = () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+    const startPoll = () => {
+      stopPoll();
+      pollRef.current = setInterval(() => {
+        void loadMessages(slug, true);
+      }, CHAT_FALLBACK_POLL_MS);
+    };
+
+    const unsubscribe = subscribeBuyerChat(slug, {
+      onMessage: (msg) => {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg as BuyerChatMessage];
+        });
+      },
+      onConnectedChange: (connected) => {
+        if (connected) stopPoll();
+        else startPoll();
+      },
+    });
+
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      unsubscribe();
+      stopPoll();
     };
   }, [open, conversation?.slug, loadMessages]);
 
