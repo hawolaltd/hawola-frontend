@@ -741,6 +741,13 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         />
                     </div>
                 ) : null}
+                {product?.product?.slug ? (
+                    <MerchantChatWidget
+                        productSlug={product.product.slug}
+                        productName={product.product.name}
+                        merchantStoreName={product.product.merchant?.store_name}
+                    />
+                ) : null}
             </AuthLayout>
         );
     }
@@ -1482,7 +1489,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
             </div>
         </div>
-        {product?.product?.slug && !isContactMerchantOnlyProduct(product?.product) ? (
+        {product?.product?.slug ? (
             <MerchantChatWidget
                 productSlug={product.product.slug}
                 productName={product.product.name}
