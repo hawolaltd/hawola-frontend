@@ -79,19 +79,23 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
 
     return (
         <>
-            {/* Overlay */}
+            {/* Overlay — above header (z-60), category strip (z-70), and mobile search (z-100) */}
             <div
-                className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
+                className={`fixed inset-0 z-[110] bg-black/50 transition-opacity duration-300 ${
                     isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
                 onClick={onClose}
+                aria-hidden={!isOpen}
             />
 
             {/* Drawer */}
             <div
-                className={`fixed top-0 right-0 flex h-full w-80 flex-col bg-white z-50 shadow-xl overflow-x-hidden transform transition-transform duration-300 ease-in-out ${
-                    isOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed top-0 right-0 z-[110] flex h-full w-80 flex-col overflow-x-hidden bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+                    isOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
                 }`}
+                role="dialog"
+                aria-modal={isOpen}
+                aria-hidden={!isOpen}
             >
                 <div className="flex shrink-0 items-center justify-between p-4">
                     <div className="flex items-center">
