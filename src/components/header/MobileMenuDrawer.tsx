@@ -199,21 +199,30 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                 </Link>
                             </div>
 
-                            <a
-                                href="https://merchant.hawola.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={onClose}
-                                className="flex items-center gap-3 rounded-lg border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white px-3 py-3 shadow-sm transition hover:border-slate-300 hover:from-slate-100"
-                            >
-                                <span className={HI_FRAME_WELL}>
-                                    <BuildingStorefrontIcon className={`${HI_MD} text-primary`} aria-hidden />
-                                </span>
-                                <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-primary">
-                                    Create your own store
-                                </span>
-                                <ArrowTopRightOnSquareIcon className={`${HI_SM} text-slate-400`} aria-hidden />
-                            </a>
+                            <div className="grid grid-cols-2 gap-2">
+                                <a
+                                    href="https://merchant.hawola.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={onClose}
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white px-2 py-2.5 text-center text-xs font-semibold text-primary shadow-sm transition hover:border-slate-300 hover:from-slate-100"
+                                >
+                                    <BuildingStorefrontIcon className={`${HI_SM} shrink-0`} aria-hidden />
+                                    Create Store
+                                    <ArrowTopRightOnSquareIcon className={`${HI_SM} shrink-0 text-slate-400`} aria-hidden />
+                                </a>
+                                <a
+                                    href="https://merchant.hawola.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={onClose}
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white px-2 py-2.5 text-center text-xs font-semibold text-primary shadow-sm transition hover:border-slate-300 hover:from-slate-100"
+                                >
+                                    <BuildingStorefrontIcon className={`${HI_SM} shrink-0`} aria-hidden />
+                                    Merchant Account
+                                    <ArrowTopRightOnSquareIcon className={`${HI_SM} shrink-0 text-slate-400`} aria-hidden />
+                                </a>
+                            </div>
 
                             <Link
                                 href="/looking-for-product"

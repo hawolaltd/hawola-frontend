@@ -16,6 +16,11 @@ import { toast } from "sonner";
 import { API } from "@/constant";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
+import Link from "next/link";
+import {
+    storefrontMerchantPath,
+    storefrontProductPath,
+} from "@/lib/storefrontUrls";
 
 /** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
 const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
@@ -277,6 +282,19 @@ const OrderDetails: NextPage = () => {
     }, [dispatch, router?.query?.orderId]);
 
     const orderitemNumber = singleOrder?.orderitem_number || (router?.query?.orderId as string);
+    const productSlug = singleOrder?.product?.slug;
+    const merchantSlug =
+        singleOrder?.product?.merchant?.slug ??
+        (typeof singleOrder?.merchant === "object" && singleOrder?.merchant != null
+            ? (singleOrder.merchant as { slug?: string }).slug
+            : undefined);
+    const merchantStoreName =
+        singleOrder?.product?.merchant?.store_name ??
+        (typeof singleOrder?.merchant === "object" && singleOrder?.merchant != null
+            ? (singleOrder.merchant as { store_name?: string }).store_name
+            : undefined);
+    const productHref = storefrontProductPath(productSlug);
+    const merchantHref = storefrontMerchantPath(merchantSlug);
 
     useEffect(() => {
         if (!orderitemNumber) return;
@@ -528,6 +546,28 @@ const OrderDetails: NextPage = () => {
                                                    </div>
 
                                                    <h2 className="text-sm font-semibold text-gray-700 mt-1 break-words">{singleOrder?.product?.name}</h2>
+                                                   {(productHref || merchantHref) ? (
+                                                       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                                           {productHref ? (
+                                                               <Link
+                                                                   href={productHref}
+                                                                   className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-primary hover:bg-gray-100"
+                                                               >
+                                                                   View product page
+                                                               </Link>
+                                                           ) : null}
+                                                           {merchantHref ? (
+                                                               <Link
+                                                                   href={merchantHref}
+                                                                   className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-primary hover:bg-gray-100"
+                                                               >
+                                                                   {merchantStoreName
+                                                                       ? `View ${merchantStoreName}`
+                                                                       : "View seller store"}
+                                                               </Link>
+                                                           ) : null}
+                                                       </div>
+                                                   ) : null}
                                                </div>
                                                <div className="text-right shrink-0">
                                     <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${displayOrderStatus.className}`}>

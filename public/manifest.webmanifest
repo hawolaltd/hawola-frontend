@@ -1,0 +1,25 @@
+{
+  "name": "Hawola",
+  "short_name": "Hawola",
+  "description": "Shop local on Hawola — home screen shortcut to browse deals.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0E224D",
+  "theme_color": "#0E224D",
+  "icons": [
+    {
+      "src": "/fav.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/hawola_Logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
