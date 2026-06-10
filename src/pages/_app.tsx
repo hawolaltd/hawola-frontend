@@ -35,8 +35,7 @@ import {
 import { clearLocalRecentlyViewedProducts, getLocalRecentlyViewedProductIds } from "@/lib/recentlyViewed";
 import productService from "@/redux/product/productService";
 import { initAmplitude } from "@/lib/amplitude";
-import PwaRouteGuard from "@/components/pwa/PwaRouteGuard";
-import HomeStandaloneLinkGuard from "@/components/pwa/HomeStandaloneLinkGuard";
+import PwaBrowserShortcutLauncher from "@/components/pwa/PwaBrowserShortcutLauncher";
 import StorefrontInstallBanner from "@/components/pwa/StorefrontInstallBanner";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
@@ -211,6 +210,7 @@ function AppContent({ Component, pageProps }: AppProps) {
     "";
 
   return (
+    <PwaBrowserShortcutLauncher siteLabel="Hawola" logoSrc="/fav.png">
     <>
       <Head>
         {!skipGlobalSeo ? (
@@ -250,8 +250,6 @@ function AppContent({ Component, pageProps }: AppProps) {
           </>
         ) : null}
       </Head>
-      <PwaRouteGuard />
-      <HomeStandaloneLinkGuard />
       <RouteChangeProgress />
       <Component {...pageProps} />
       <StorefrontInstallBanner show={router.pathname === "/"} />
@@ -292,6 +290,7 @@ function AppContent({ Component, pageProps }: AppProps) {
         </>
       ) : null}
     </>
+    </PwaBrowserShortcutLauncher>
   );
 }
 

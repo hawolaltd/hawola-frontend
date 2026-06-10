@@ -248,22 +248,6 @@ const Footer = () => {
           <div className="flex flex-col lg:flex-row lg:items-end gap-8 justify-between">
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-3">
-                Get the app
-              </h4>
-              <p className="text-sm text-white/80 mb-4 max-w-md">
-                Download our apps for a smoother experience and exclusive offers.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <div className="rounded-lg bg-white p-2 shadow-sm">
-                  <img src="/assets/appstore.png" alt="Download on the App Store" className="h-9 w-auto" />
-                </div>
-                <div className="rounded-lg bg-white p-2 shadow-sm">
-                  <img src="/assets/googlePlay.png" alt="Get it on Google Play" className="h-9 w-auto" />
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-3">
                 Payment
               </h4>
               <div className="rounded-lg bg-white/95 p-3 inline-block">

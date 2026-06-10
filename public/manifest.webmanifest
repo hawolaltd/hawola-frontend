@@ -1,7 +1,7 @@
 {
   "name": "Hawola",
   "short_name": "Hawola",
-  "description": "Shop local on Hawola — home screen shortcut to browse deals.",
+  "description": "Home screen shortcut to Hawola — opens the shop in your browser.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
