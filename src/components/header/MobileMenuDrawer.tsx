@@ -201,7 +201,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
 
                             <div className="grid grid-cols-2 gap-2">
                                 <a
-                                    href="https://merchant.hawola.com"
+                                    href="https://merchant.hawola.com/register"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={onClose}
