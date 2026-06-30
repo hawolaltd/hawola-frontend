@@ -7,6 +7,7 @@ import {
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
+import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import type { Merchant, ProductByIdResponse } from "@/types/product";
@@ -225,15 +226,17 @@ function MerchantAbout({ product }: MerchantAboutProps) {
               <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">About this seller</h3>
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-200" aria-hidden />
             </div>
-            {about ? (
-              <div className="prose prose-slate prose-p:leading-relaxed prose-headings:text-slate-900 max-w-none text-slate-700">
-                <MerchantRichHtml html={about} />
-              </div>
-            ) : (
-              <p className="text-sm leading-relaxed text-slate-500">
-                This seller has not added a public bio yet. Visit their store to see products and policies.
-              </p>
-            )}
+            <MerchantAboutWithSidebar details={merchant}>
+              {about ? (
+                <div className="prose prose-slate prose-p:leading-relaxed prose-headings:text-slate-900 max-w-none text-slate-700">
+                  <MerchantRichHtml html={about} />
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed text-slate-500">
+                  This seller has not added a public bio yet. Visit their store to see products and policies.
+                </p>
+              )}
+            </MerchantAboutWithSidebar>
           </div>
         </div>
       </div>

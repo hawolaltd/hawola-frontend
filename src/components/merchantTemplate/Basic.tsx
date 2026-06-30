@@ -11,6 +11,7 @@ import { formatCurrency, featuredImageCardUrl } from "@/util";
 import type { Product } from "@/types/product";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
+import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
@@ -521,12 +522,14 @@ const BasicTemplate = () => {
           )}
 
           {activeSection === "reels" && hasMerchantReels ? (
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <section className="w-full">
               <StorefrontReelsGallery
                 reels={merchantReels}
                 heading="Reels"
-                description="Curated videos from this store. Tap a card to watch full screen."
+                description="Scroll to explore videos from this store. Tap any reel to watch full screen."
                 tone="subtle"
+                layout="page"
+                merchantDetails={merchant_details}
               />
             </section>
           ) : null}
@@ -583,8 +586,8 @@ const BasicTemplate = () => {
 
           {/* About Section */}
           {activeSection === "about" && (
-            <section className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <section className="w-full">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full">
                 {home_page?.first_image && typeof home_page.first_image === 'string' ? (
                   <div
                     className="h-64 bg-cover bg-center"
@@ -592,15 +595,16 @@ const BasicTemplate = () => {
                   />
                 ) : null}
                 <div className="p-8 md:p-12">
-                  <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                    {merchant_details?.about_title || `About ${merchant_details?.store_name}`}
-                  </h2>
-                  <div className="prose prose-lg max-w-none text-gray-700">
-                    <MerchantRichHtml html={merchant_details?.about} />
-                  </div>
+                  <MerchantAboutWithSidebar details={merchant_details}>
+                    <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                      {merchant_details?.about_title || `About ${merchant_details?.store_name}`}
+                    </h2>
+                    <div className="prose prose-lg max-w-none text-gray-700">
+                      <MerchantRichHtml html={merchant_details?.about} />
+                    </div>
 
-                  {/* Contact Information */}
-                  <div className="mt-12 grid md:grid-cols-2 gap-6">
+                    {/* Contact Information */}
+                    <div className="mt-12 grid md:grid-cols-2 gap-6">
                     {[
                       {
                         icon: "📍",
@@ -645,63 +649,12 @@ const BasicTemplate = () => {
                       </div>
                     ))}
                   </div>
+                  </MerchantAboutWithSidebar>
                 </div>
               </div>
             </section>
           )}
         </main>
-
-        {/* Footer */}
-        <footer className="bg-gray-900 text-white mt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div>
-                <h3 className="text-lg font-bold mb-4">{merchant_details?.store_name}</h3>
-                <p className="text-gray-400 text-sm">
-                  {stripHtmlForMeta(merchant_details?.about, 150)}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold mb-4">Quick Links</h3>
-                <ul className="space-y-2 text-sm text-gray-400">
-                  <li>
-                    <button type="button" onClick={() => setActiveSection("products")} className="hover:text-white">
-                      Products
-                    </button>
-                  </li>
-                  {hasMerchantReels ? (
-                    <li>
-                      <button type="button" onClick={() => setActiveSection("reels")} className="hover:text-white">
-                        Reels
-                      </button>
-                    </li>
-                  ) : null}
-                  <li>
-                    <button type="button" onClick={() => setActiveSection("categories")} className="hover:text-white">
-                      Categories
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" onClick={() => setActiveSection("about")} className="hover:text-white">
-                      About Us
-                    </button>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold mb-4">Contact</h3>
-                <ul className="space-y-2 text-sm text-gray-400">
-                  <li>{merchant_details?.support_email}</li>
-                  <li>{merchant_details?.support_phone_number}</li>
-                  <li>{merchant_details?.store_address}</li>
-                </ul>
-              </div>
-            </div>
-            <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
-              © {new Date().getFullYear()} {merchant_details?.store_name}. All rights reserved.
-            </div>
-          </div>
-        </footer>
       </div>
     </AuthLayout>
   );

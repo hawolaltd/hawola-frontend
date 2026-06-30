@@ -5,7 +5,6 @@ import BannerShowcase from "./BannerShowcase";
 import CategoryGrid from "./CategoryGrid";
 import ProductShowcase from "./ProductShowcase";
 import StoreInfo from "./StoreInfo";
-import SocialMedia from "./SocialMedia";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
@@ -14,6 +13,7 @@ import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { buildMerchantBrandPalette } from "@/util/merchantBrandPalette";
 import { buildPremiumMerchantInlineCss } from "@/util/premiumMerchantInlineCss";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
+import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 
 const DashboardTemplate = () => {
   const {
@@ -123,14 +123,6 @@ const DashboardTemplate = () => {
                   market={merchantData?.merchant_details?.market?.name}
                   refundPolicy={merchantData?.merchant_details?.refund_policy}
                 />
-                <SocialMedia
-                  facebook={merchantData?.merchant_details?.facebook}
-                  twitter={merchantData?.merchant_details?.twitter}
-                  instagram={merchantData?.merchant_details?.instagram}
-                  tiktok={merchantData?.merchant_details?.tiktok}
-                  linkedin={merchantData?.merchant_details?.linkedin}
-                  youtube={merchantData?.merchant_details?.youtube}
-                />
               </div>
             </div>
 
@@ -165,8 +157,10 @@ const DashboardTemplate = () => {
                     <StorefrontReelsGallery
                       reels={merchantReels}
                       heading="Reels"
-                      description="Curated videos from this store. Tap a card to watch full screen."
+                      description="Scroll to explore videos from this store. Tap any reel to watch full screen."
                       tone="subtle"
+                      layout="page"
+                      merchantDetails={merchantData?.merchant_details}
                     />
                   </div>
                 </div>
@@ -174,31 +168,33 @@ const DashboardTemplate = () => {
 
               {/* About Section */}
               <div className="animate-fade-in delay-300">
-                <div className="merchant-premium-section-shell p-8">
-                  <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div className="merchant-gradient merchant-icon-container flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm">
-                      <svg
-                        className="h-6 w-6 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                <div className="merchant-premium-section-shell p-6 sm:p-8">
+                  <MerchantAboutWithSidebar details={merchantData?.merchant_details}>
+                    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                      <div className="merchant-gradient merchant-icon-container flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm">
+                        <svg
+                          className="h-6 w-6 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="text-3xl font-bold merchant-heading-text">
+                          {merchantData?.merchant_details?.about_title}
+                        </h2>
+                        <span className="merchant-premium-title-rule" aria-hidden />
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h2 className="text-3xl font-bold merchant-heading-text">
-                        {merchantData?.merchant_details?.about_title}
-                      </h2>
-                      <span className="merchant-premium-title-rule" aria-hidden />
+                    <div className="prose prose-lg max-w-none leading-relaxed text-gray-600">
+                      <MerchantRichHtml html={merchantData?.merchant_details?.about} />
                     </div>
-                  </div>
-                  <div className="prose prose-lg max-w-none leading-relaxed text-gray-600">
-                    <MerchantRichHtml html={merchantData?.merchant_details?.about} />
-                  </div>
+                  </MerchantAboutWithSidebar>
                 </div>
               </div>
             </div>

@@ -5,7 +5,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import type { ProductFull } from "@/types/home";
 
 interface HawolaSpecialsProps {
-  products: ProductResponse;
+  products?: ProductResponse;
 }
 
 function specialsList(homePage: { data?: Record<string, unknown> } | null): ProductFull[] {

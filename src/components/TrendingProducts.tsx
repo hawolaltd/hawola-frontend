@@ -5,10 +5,10 @@ import { ProductResponse } from "@/types/product";
 import { useAppSelector } from "@/hook/useReduxTypes";
 
 interface TrendingProductsProps {
-  products: ProductResponse;
+  products?: ProductResponse;
 }
 
-const TrendingProducts = ({ products }: TrendingProductsProps) => {
+const TrendingProducts = ({ products: _products }: TrendingProductsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
   const bestSellingList = homePage?.data?.best_selling_products ?? [];
   return (

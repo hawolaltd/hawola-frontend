@@ -119,19 +119,13 @@ function AppContent({ Component, pageProps }: AppProps) {
     // Categories for header mega-menu / mobile nav on every route (not only home)
     dispatch(getAllCategories());
 
-    // Global error handler for unhandled promise rejections
+    // Keep browser/runtime errors visible in devtools while still logging them.
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason);
-      // Prevent the default browser error handling
-      event.preventDefault();
-      // You can also show a toast or log to an error reporting service here
     };
 
-    // Global error handler for uncaught errors
     const handleError = (event: ErrorEvent) => {
       console.error('Uncaught error:', event.error);
-      // Prevent the default browser error handling
-      event.preventDefault();
     };
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
@@ -176,8 +170,9 @@ function AppContent({ Component, pageProps }: AppProps) {
     return () => window.clearTimeout(timer);
   }, [showLaunchPage, dateTimeTill]);
 
-  // Show loader with blur until site settings check has finished (prevents flashing the site before under-construction is known)
-  if (!siteSettingsLoaded) {
+  // Show loader only on first visit when no cached settings exist
+  const hasCachedSiteSettings = siteSettings != null;
+  if (!siteSettingsLoaded && !hasCachedSiteSettings) {
     return <SiteSettingsPreloader />;
   }
 

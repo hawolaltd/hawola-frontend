@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { TikTokEmbed } from "react-social-media-embed";
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
-import { InstagramBlockquoteEmbed } from "@/components/reels/InstagramBlockquoteEmbed";
+import { InstagramIframeEmbed } from "@/components/reels/InstagramIframeEmbed";
+import { TikTokIframeEmbed } from "@/components/reels/TikTokIframeEmbed";
 import { normalizeInstagramPermalinkForEmbed } from "@/lib/instagramEmbedUrl";
 
 export type ReelPlatform = "youtube" | "instagram" | "tiktok";
@@ -14,15 +14,6 @@ function getYoutubeVideoId(url: string): string {
     return u.searchParams.get("v") || u.pathname.split("/").filter(Boolean).pop() || "";
   } catch {
     return "";
-  }
-}
-
-function getTikTokCiteUrl(url: string): string {
-  try {
-    const raw = url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`;
-    return new URL(raw).href;
-  } catch {
-    return url.trim();
   }
 }
 
@@ -40,10 +31,10 @@ export interface ReelEmbedProps {
    * Instagram’s oEmbed blockquote needs ~326px width; use `compact` in narrow cards
    * (still min 326px inside the component) and `default` in the full-screen modal.
    */
-  embedSize?: "compact" | "default";
+  embedSize?: "compact" | "default" | "grid";
+  /** When false, embeds ignore pointer events so reel popups can scroll between items. */
+  interactive?: boolean;
 }
-
-const EMBED_WIDTH = 328;
 
 export function ReelEmbed({
   platform,
@@ -51,12 +42,15 @@ export function ReelEmbed({
   title,
   className = "",
   embedSize = "default",
+  interactive = true,
 }: ReelEmbedProps) {
   if (platform === "youtube") {
     const videoId = getYoutubeVideoId(url);
     if (!videoId) return null;
     return (
-      <div className={`aspect-video overflow-hidden rounded-lg bg-black ${className}`}>
+      <div
+        className={`aspect-video overflow-hidden rounded-lg bg-black ${interactive ? "" : "pointer-events-none"} ${className}`}
+      >
         <LiteYouTubeEmbed
           id={videoId}
           title={title || "YouTube video"}
@@ -69,23 +63,25 @@ export function ReelEmbed({
 
   if (platform === "instagram") {
     return (
-      <InstagramBlockquoteEmbed
+      <InstagramIframeEmbed
         url={url}
         title={title}
         className={className}
         embedSize={embedSize}
+        interactive={interactive}
       />
     );
   }
 
   if (platform === "tiktok") {
-    const citeUrl = getTikTokCiteUrl(url);
     return (
-      <div
-        className={`flex justify-center overflow-hidden rounded-lg [&_.tiktok-embed]:max-w-full ${className}`}
-      >
-        <TikTokEmbed url={citeUrl} width={EMBED_WIDTH} />
-      </div>
+      <TikTokIframeEmbed
+        url={url}
+        title={title}
+        className={className}
+        embedSize={embedSize}
+        interactive={interactive}
+      />
     );
   }
 
@@ -101,7 +97,7 @@ export function getReelPlatform(url: string): ReelPlatform | null {
     const u = new URL(lower.startsWith("http") ? lower : `https://${lower}`);
     const full = u.href.toLowerCase();
     if (full.includes("youtube.com") || full.includes("youtu.be/")) return "youtube";
-    if (full.includes("tiktok.com") || full.includes("vm.tiktok.com")) return "tiktok";
+    if (full.includes("tiktok.com") || full.includes("vm.tiktok.com") || full.includes("vt.tiktok.com")) return "tiktok";
   } catch {
     return null;
   }

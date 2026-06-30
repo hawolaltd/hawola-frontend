@@ -117,3 +117,10 @@ export function normalizeInstagramPermalinkForEmbed(rawInput: string): string | 
 export function isInstagramEmbeddableUrl(url: string): boolean {
   return normalizeInstagramPermalinkForEmbed(url) != null;
 }
+
+/** Official Instagram iframe embed src (more reliable than embed.js blockquotes). */
+export function getInstagramEmbedIframeSrc(rawInput: string): string | null {
+  const permalink = normalizeInstagramPermalinkForEmbed(rawInput);
+  if (!permalink) return null;
+  return `${permalink.replace(/\/+$/, "")}/embed/captioned`;
+}

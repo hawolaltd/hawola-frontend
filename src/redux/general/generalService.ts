@@ -112,7 +112,7 @@ const getSiteSettings = async () => {
             path += `${sep}preview_token=${encodeURIComponent(pt)}`;
         }
     }
-    const response = await axiosInstance.get(path);
+    const response = await axiosInstance.get(path, { timeout: 8000 });
     return response.data;
 };
 

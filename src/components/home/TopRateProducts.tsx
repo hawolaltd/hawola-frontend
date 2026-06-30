@@ -6,7 +6,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import type { ProductFull } from "@/types/home";
 
 interface TopRateProductsProps {
-  products: ProductResponse;
+  products?: ProductResponse;
 }
 
 const TopRateProducts = ({ products: _products }: TopRateProductsProps) => {

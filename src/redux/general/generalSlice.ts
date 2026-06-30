@@ -238,7 +238,9 @@ const generalSlice = createSlice({
         state.message = action.payload;
       })
       .addCase(getSiteSettings.pending, (state) => {
-        state.siteSettingsLoaded = false;
+        if (!state.siteSettings) {
+          state.siteSettingsLoaded = false;
+        }
       })
       .addCase(getSiteSettings.fulfilled, (state, action) => {
         state.siteSettings = action.payload as SiteSettingsData;

@@ -11,6 +11,7 @@ import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrIniti
 import { featuredImageCardUrl } from "@/util";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
+import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -606,59 +607,61 @@ const StandardTemplate = () => {
             )}
 
             {activeTab === "reels" && hasMerchantReels ? (
-              <section className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
-                <StorefrontReelsGallery
-                  reels={merchantReels}
-                  heading="Reels"
-                  description="Curated videos from this store. Tap a card to watch full screen."
-                  tone="subtle"
-                />
-              </section>
+              <StorefrontReelsGallery
+                reels={merchantReels}
+                heading="Reels"
+                description="Scroll to explore videos from this store. Tap any reel to watch full screen."
+                tone="subtle"
+                layout="page"
+                merchantDetails={merchant_details}
+              />
             ) : null}
 
             {activeTab === "about" && (
-              <section className="bg-white rounded-2xl shadow-sm p-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  {merchant_details?.about_title}
-                </h2>
-                <div className="prose prose-lg max-w-none text-gray-700">
-                  <MerchantRichHtml html={merchant_details?.about} />
-                </div>
+              <section className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
+                <MerchantAboutWithSidebar details={merchant_details}>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                    {merchant_details?.about_title}
+                  </h2>
+                  <div className="prose prose-lg max-w-none text-gray-700">
+                    <MerchantRichHtml html={merchant_details?.about} />
+                  </div>
 
-                <div className="mt-8 p-6 bg-gray-50 rounded-xl">
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Store Information
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-4 text-gray-700">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
-                        🏪
+                  <div className="mt-8 p-6 bg-gray-50 rounded-xl">
+                    <h3 className="font-semibold text-gray-900 mb-3">
+                      Store Information
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-4 text-gray-700">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
+                          🏪
+                        </div>
+                        <span>{merchant_details?.store_address}</span>
                       </div>
-                      <span>{merchant_details?.store_address}</span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
-                        📍
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
+                          📍
+                        </div>
+                        <span>
+                          {merchant_details?.location?.name},{" "}
+                          {merchant_details?.state?.name}
+                        </span>
                       </div>
-                      <span>
-                        {merchant_details?.location?.name},{" "}
-                        {merchant_details?.state?.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
-                        📞
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
+                          📞
+                        </div>
+                        <span>{merchant_details?.support_phone_number}</span>
                       </div>
-                      <span>{merchant_details?.support_phone_number}</span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
-                        ✉️
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm merchant-primary">
+                          ✉️
+                        </div>
+                        <span>{merchant_details?.support_email}</span>
                       </div>
-                      <span>{merchant_details?.support_email}</span>
                     </div>
                   </div>
-                </div>
+                </MerchantAboutWithSidebar>
               </section>
             )}
 

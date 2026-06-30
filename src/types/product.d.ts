@@ -35,6 +35,11 @@ export interface Merchant {
     tiktok: string;
     linkedin: string | null;
     youtube: string | null;
+    threads?: string | null;
+    pinterest?: string | null;
+    whatsapp?: string | null;
+    telegram_link?: string | null;
+    external_websites?: Array<{ name: string; url: string }> | null;
     date_added: string;
     is_active: boolean;
     slug: string;

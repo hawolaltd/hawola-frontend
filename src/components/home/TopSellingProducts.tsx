@@ -6,7 +6,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import { AdvertBanner } from "@/types/home";
 
 interface TopSellingProductsProps {
-  products: ProductResponse;
+  products?: ProductResponse;
 }
 
 interface ImageSliderProps {

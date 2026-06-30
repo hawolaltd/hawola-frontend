@@ -79,7 +79,7 @@ const refreshTokenRequest = async (): Promise<boolean> => {
     if (!refreshToken) return false;
 
     try {
-        const response = await axios.post(`${API}/api/authy/token/refresh`, {
+        const response = await axios.post(`${API}authy/token/refresh`, {
             token: refreshToken,
         });
         if (response.data && response.data?.success) {

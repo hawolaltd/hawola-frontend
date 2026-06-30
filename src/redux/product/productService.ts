@@ -9,9 +9,13 @@ import {
 } from '@/types/product';
 const API_URL = 'products/';
 
+const LIST_API_TIMEOUT_MS = 20000;
+
 // get products
 const getProducts = async () => {
-    const response = await axios.get(API + API_URL + 'list');
+    const response = await axiosInstance.get(API + API_URL + 'list', {
+        timeout: LIST_API_TIMEOUT_MS,
+    });
 
     return response.data;
 };
@@ -63,7 +67,9 @@ const getProductDetailRelated = async (slug: string) => {
 
 // get all categories
 const getAllCategories = async () => {
-    const response = await axios.get(API + `categories/all/`);
+    const response = await axiosInstance.get(API + `categories/all/`, {
+        timeout: LIST_API_TIMEOUT_MS,
+    });
 
     return response.data;
 };

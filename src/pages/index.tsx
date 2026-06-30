@@ -12,22 +12,18 @@ import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   getCarts,
-  getProducts,
   getWishList,
 } from "@/redux/product/productSlice";
-import { getHomeInsight, getHomePage } from "@/redux/general/generalSlice";
+import { getHomePage } from "@/redux/general/generalSlice";
 
 export default function Home() {
-  const { products, carts } = useAppSelector((state) => state.products);
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
 
   // Fetch public homepage data once on mount
   useEffect(() => {
-    dispatch(getProducts());
     dispatch(getHomePage());
-    dispatch(getHomeInsight());
   }, [dispatch]);
 
   // Fetch user-specific data when auth status changes
@@ -61,10 +57,10 @@ export default function Home() {
       <HomeTopRegion />
       {/* <Partner /> */}
       {/* <ProductList products={products} /> */}
-      <TrendingProducts products={products} />
-      <HawolaSpecials products={products} />
-      <TopRateProducts products={products} />
-      <TopSellingProducts products={products} />
+      <TrendingProducts />
+      <HawolaSpecials />
+      <TopRateProducts />
+      <TopSellingProducts />
       <RecentlyViewedSection />
       <Footer />
     </div>
