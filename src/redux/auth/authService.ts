@@ -224,6 +224,14 @@ const googleLogin = async (authToken: string) => {
   };
 };
 
+const requestAccountDeletion = async (message?: string) => {
+  const response = await axiosInstance.post(
+    API + API_URL + "/account-deletion-request/",
+    message ? { message } : {}
+  );
+  return response.data;
+};
+
 const authService = {
   register,
   logout,
@@ -239,6 +247,7 @@ const authService = {
   getCarts,
   addToCarts,
   resendConfirmationEmail,
+  requestAccountDeletion,
 };
 
 export default authService;

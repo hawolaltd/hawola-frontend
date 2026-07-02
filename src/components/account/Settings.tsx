@@ -5,6 +5,8 @@ import {getUserProfile, updateProfile, changePassword} from "@/redux/auth/authSl
 import {getAddress} from "@/redux/product/productSlice";
 import {capitalize} from "@/util";
 import {toast} from "sonner";
+import AccountDeletionRequestCard from "@/components/account/AccountDeletionRequestCard";
+import Link from "next/link";
 
 const Settings: NextPage = () => {
     const {profile} = useAppSelector(state => state.auth)
@@ -459,6 +461,18 @@ const Settings: NextPage = () => {
                         ))
                     }
                 </div>
+            </div>
+
+            <div className="mt-10 flex flex-col gap-3">
+                <h3 className="text-lg font-semibold text-[#0E224D]">Account deletion</h3>
+                <p className="text-sm text-gray-600">
+                    You can also manage this on the{" "}
+                    <Link href="/account/delete" className="text-deepOrange hover:underline">
+                        account deletion page
+                    </Link>
+                    .
+                </p>
+                <AccountDeletionRequestCard compact />
             </div>
 
         </div>

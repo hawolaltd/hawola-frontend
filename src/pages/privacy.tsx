@@ -184,8 +184,10 @@ export default function PrivacyPolicyPage() {
         </ul>
         <p>
           You can update much of your information in your{" "}
-          <Link href="/account">account settings</Link>. For other requests, contact us using the
-          details below.
+          <Link href="/account">account settings</Link>. To request deletion of your account and
+          associated personal data, use our{" "}
+          <Link href="/account/delete">account deletion request page</Link>. For other requests,
+          contact us using the details below.
         </p>
       </section>
 
