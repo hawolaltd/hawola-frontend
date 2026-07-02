@@ -163,7 +163,8 @@ export default function TermsOfUsePage() {
         <h3>6.5 Reporting abusive or illegal content</h3>
         <p>
           If you believe User Content or another user&apos;s behaviour violates these Terms or is
-          unlawful, please report it to{" "}
+          unlawful, use the in-app <strong>Report</strong> option on chats and buying requests, or
+          email{" "}
           <a href="mailto:ask@hawola.com">ask@hawola.com</a> with relevant details (such as
           screenshots, usernames, order or chat references, and a description of the issue). We
           will review reports and take appropriate action where warranted.

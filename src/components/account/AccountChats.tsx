@@ -15,6 +15,8 @@ import {
 } from "@/lib/buyerChatSocket";
 import ChatContextLinks from "@/components/account/ChatContextLinks";
 import { storefrontMerchantPath, storefrontProductPath } from "@/lib/storefrontUrls";
+import ContentModerationActions from "@/components/moderation/ContentModerationActions";
+import { blockBuyerChat, reportBuyerChat } from "@/lib/contentModerationApi";
 function conversationSubtitle(c: BuyerChatConversation): string {
   if (c.orderitem_number) return `Order ${c.orderitem_number}`;
   if (c.product_name) return String(c.product_name);
@@ -278,6 +280,23 @@ export default function AccountChats() {
                 </button>
                 <div className="flex-1 min-w-0">
                   <ChatContextLinks conversation={selected} variant="onPrimary" />
+                  <div className="mt-2">
+                    <ContentModerationActions
+                      className="[&_button]:text-white/95 [&_button:hover]:text-white"
+                      blockLabel="Block store"
+                      onReport={async (payload) => {
+                        if (!selected?.slug) return;
+                        await reportBuyerChat(selected.slug, payload);
+                      }}
+                      onBlock={async () => {
+                        if (!selected?.slug) return;
+                        await blockBuyerChat(selected.slug);
+                        setSelected(null);
+                        setMobileThread(false);
+                        void refreshList();
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
               <div
