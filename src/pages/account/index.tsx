@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import AuthLayout from "@/components/layout/AuthLayout";
 import {getAddress, getOrderHistory, getWishList} from "@/redux/product/productSlice";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getUserProfile, updateProfile} from "@/redux/auth/authSlice";
+import {getUserProfile, logout, updateProfile} from "@/redux/auth/authSlice";
 import Wishlist from "@/components/account/Wishlist";
 import Orders from "@/components/account/Orders";
 import BuyingRequests from "@/components/account/BuyingRequests";
@@ -13,6 +13,7 @@ import {getDisputes} from "@/redux/disputes/disputeSlice";
 import RecentlyViewed from "@/components/account/RecentlyViewed";
 import AccountChats from "@/components/account/AccountChats";
 import {
+    ArrowRightOnRectangleIcon,
     ChatBubbleLeftRightIcon,
     ClipboardDocumentListIcon,
     EyeIcon,
@@ -21,6 +22,7 @@ import {
     UserIcon,
 } from "@heroicons/react/24/outline";
 import {HI_SM} from "@/lib/hawolaIconTheme";
+import { addToCartsLocal } from "@/redux/product/productSlice";
 
 const ACCOUNT_TAB_IDS = [
     "orders",
@@ -113,6 +115,12 @@ export default function AccountPage() {
         init()
     }, [init]);
 
+    const handleSignOut = () => {
+        dispatch(addToCartsLocal({ items: [] }));
+        dispatch(logout());
+        router.push("/");
+    };
+
     return (
         <AuthLayout>
             <div className="!p-0 bg-gray-50">
@@ -123,13 +131,25 @@ export default function AccountPage() {
                 <main className="p-0">
                     {/* Header */}
                     <header className="mb-4 sm:mb-6 bg-headerBg px-4 sm:px-8 lg:px-20 pt-4">
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">Hello {user?.first_name}</h1>
-                        <p className="text-xs sm:text-sm text-white font-medium mt-2 mb-6 sm:mb-10 lg:mb-12">
-                            From your account dashboard, you can easily check & view your recent orders,
-                            <span className="hidden sm:inline"><br/></span>
-                            <span className="sm:hidden"> </span>
-                            manage your shipping and billing addresses and edit your password and account details.
-                        </p>
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">Hello {user?.first_name}</h1>
+                                <p className="text-xs sm:text-sm text-white font-medium mt-2 mb-6 sm:mb-10 lg:mb-12">
+                                    From your account dashboard, you can easily check & view your recent orders,
+                                    <span className="hidden sm:inline"><br/></span>
+                                    <span className="sm:hidden"> </span>
+                                    manage your shipping and billing addresses and edit your password and account details.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSignOut}
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-deepOrange px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                            >
+                                <ArrowRightOnRectangleIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+                                Sign out
+                            </button>
+                        </div>
                         <nav
                             className={`-mx-4 sm:mx-0 px-4 sm:px-0 mb-0 sm:mb-8 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
                         >

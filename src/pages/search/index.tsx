@@ -23,6 +23,7 @@ import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
+import BuyingRequestSearchBanner from "@/components/search/BuyingRequestSearchBanner";
 
 const SearchPage = () => {
   const router = useRouter();
@@ -177,7 +178,8 @@ const SearchPage = () => {
         No results found for "{currentQuery}"
       </h3>
       <p className="text-gray-600 mb-6">
-        Try different keywords or check your spelling
+        Try different keywords or check your spelling — or post a buying request
+        below.
       </p>
 
       {/* Spelling Suggestions */}
@@ -206,6 +208,15 @@ const SearchPage = () => {
   const merchantItemsCount = merchantItems.length || 0;
   const totalMerchants = searchResults?.total_merchants || merchantItemsCount;
   const hasMerchantResults = totalMerchants > 0 || merchantItemsCount > 0;
+  const totalSearchResults = searchResults?.total_results ?? 0;
+  const showBuyingBanner =
+    !isLoading &&
+    !!searchResults &&
+    !!currentQuery?.trim() &&
+    totalSearchResults < 5;
+  const buyingBannerVariant =
+    totalSearchResults === 0 ? "noResults" : "default";
+  const buyingBannerQuery = currentQuery?.trim() || searchInput.trim();
   // Categories block is intentionally hidden for now.
   // const totalCategories = searchResults?.total_categories || 0;
 
@@ -347,7 +358,6 @@ const SearchPage = () => {
                   )} */}
                 </div>
 
-                {/* Results Content */}
                 {searchResults.total_results === 0 ? (
                   renderNoResults()
                 ) : (
@@ -502,6 +512,14 @@ const SearchPage = () => {
                     */}
                   </div>
                 )}
+
+                {showBuyingBanner ? (
+                  <BuyingRequestSearchBanner
+                    variant={buyingBannerVariant}
+                    query={buyingBannerQuery}
+                    className="mt-8"
+                  />
+                ) : null}
               </>
             )}
 
