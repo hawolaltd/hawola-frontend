@@ -98,15 +98,84 @@ export default function TermsOfUsePage() {
       </section>
 
       <section>
-        <h2>6. Chats, reviews, and user content</h2>
+        <h2>6. User-generated content and in-app communications</h2>
         <p>
-          You may communicate with merchants and submit content such as messages, reviews, or
-          images. You must not post content that is abusive, defamatory, infringing, spam, or
-          otherwise unlawful.
+          Hawola includes features that allow users to create and exchange content within the
+          app and website, including:
+        </p>
+        <ul>
+          <li>Direct messages and chat between buyers and merchants</li>
+          <li>Buying requests (text descriptions, categories, budgets, and photos you upload)</li>
+          <li>Product reviews, ratings, and related comments where available</li>
+          <li>Dispute messages and customer-support communications</li>
+          <li>Profile information and other content you choose to submit</li>
+        </ul>
+        <p>
+          Content you submit through these features is &quot;User Content.&quot; You retain ownership of
+          your User Content, but you grant Hawola a worldwide, non-exclusive, royalty-free licence
+          to host, store, reproduce, display, and use it as needed to operate, secure, and improve
+          the platform (including resolving disputes and enforcing these Terms).
+        </p>
+
+        <h3>6.1 Your responsibilities</h3>
+        <p>You are solely responsible for User Content you submit. You agree that your User Content will not:</p>
+        <ul>
+          <li>Be false, misleading, defamatory, harassing, hateful, or threatening</li>
+          <li>Include unlawful, fraudulent, or deceptive material</li>
+          <li>Infringe any third party&apos;s intellectual property, privacy, or other rights</li>
+          <li>Contain sexually explicit material, nudity intended to arouse, or exploitation of minors</li>
+          <li>Promote violence, self-harm, illegal drugs, weapons, or prohibited goods</li>
+          <li>Include spam, malware, phishing, or unsolicited commercial messages</li>
+          <li>Share another person&apos;s personal information without lawful authority or consent</li>
+        </ul>
+
+        <h3>6.2 Communications between users and merchants</h3>
+        <p>
+          Chat and messaging on Hawola are intended for marketplace-related communication (for
+          example, product enquiries, orders, and buying requests). Messages may be visible to the
+          participants in a conversation and stored on Hawola systems for delivery, support, fraud
+          prevention, and dispute resolution.
         </p>
         <p>
-          You grant Hawola a non-exclusive, royalty-free licence to use, display, and store content
-          you submit on the platform for the purpose of operating and promoting Hawola.
+          Hawola does not routinely monitor all private messages, but we may review, retain, or
+          disclose communications where required by law, to enforce these Terms, to respond to
+          reports, or to protect users and the platform.
+        </p>
+
+        <h3>6.3 Buying requests and public content</h3>
+        <p>
+          Buying requests and similar posts may be visible to merchants and other users depending
+          on product settings. Do not include sensitive personal data in public posts unless you
+          are comfortable sharing it for that purpose.
+        </p>
+
+        <h3>6.4 Moderation and enforcement</h3>
+        <p>
+          Hawola may, but is not obligated to, monitor, edit, remove, or restrict access to User
+          Content at any time if we believe it violates these Terms, applicable law, or our
+          community standards, or if it poses risk to users or the platform.
+        </p>
+        <p>
+          We may suspend or terminate accounts involved in repeated or serious violations. See
+          Section 12 (Account suspension and termination).
+        </p>
+
+        <h3>6.5 Reporting abusive or illegal content</h3>
+        <p>
+          If you believe User Content or another user&apos;s behaviour violates these Terms or is
+          unlawful, please report it to{" "}
+          <a href="mailto:ask@hawola.com">ask@hawola.com</a> with relevant details (such as
+          screenshots, usernames, order or chat references, and a description of the issue). We
+          will review reports and take appropriate action where warranted.
+        </p>
+
+        <h3>6.6 Copyright and intellectual property complaints</h3>
+        <p>
+          If you believe content on Hawola infringes your copyright or other intellectual property
+          rights, contact us at{" "}
+          <a href="mailto:ask@hawola.com">ask@hawola.com</a> with identification of the work,
+          the location of the infringing material, and your contact information. We may remove or
+          disable access to content that we reasonably believe infringes third-party rights.
         </p>
       </section>
 

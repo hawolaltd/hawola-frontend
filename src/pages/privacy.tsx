@@ -61,12 +61,19 @@ export default function PrivacyPolicyPage() {
           <li>Pickup location preferences where applicable</li>
         </ul>
 
-        <h3>1.3 Buying requests and communications</h3>
+        <h3>1.3 Buying requests, communications, and user-generated content</h3>
         <ul>
           <li>Product requests you post (&quot;looking for product&quot; / buying requests), including title, description, category, budget, and images you upload</li>
           <li>Messages and chats with merchants through Hawola</li>
+          <li>Reviews, ratings, dispute messages, and other content you submit in the app or on the website</li>
           <li>Contact details you choose to share when responding to or receiving responses on buying requests</li>
         </ul>
+        <p>
+          We may review, store, and process this content to deliver messaging features, enforce our
+          Terms of Use, respond to abuse reports, and resolve disputes. See our{" "}
+          <Link href="/terms">Terms of Use</Link> (User-generated content section) for rules on
+          acceptable use and how to report problematic content.
+        </p>
 
         <h3>1.4 Usage and device data</h3>
         <ul>

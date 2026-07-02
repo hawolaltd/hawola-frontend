@@ -506,8 +506,7 @@ function RegisterForm() {
                                 />
                             </div>
                             <div className="flex justify-between items-center mt-2">
-                                <label className="flex items-center text-xs text-[#435a8c]">
-                                    <Controller
+                                <Controller
                                         name="terms"
                                         control={control}
                                         defaultValue={'false'}
@@ -515,17 +514,43 @@ function RegisterForm() {
                                             required: "You are required to agree to the terms and conditions",
                                         }}
                                         render={({field, fieldState}) => (<div className={'flex flex-col'}>
-                                                <div className={'flex gap-2 items-center'}>
-                                                    <input value={field.value}
-                                                           onChange={field.onChange} type="checkbox" className="mr-2"/>
-                                                    By clicking Register button, you agree to our terms and policy.
+                                                <div className={'flex gap-2 items-start'}>
+                                                    <input
+                                                        id="register-terms"
+                                                        value={field.value}
+                                                        onChange={field.onChange}
+                                                        type="checkbox"
+                                                        className="mt-0.5 shrink-0"
+                                                    />
+                                                    <label htmlFor="register-terms" className="text-xs text-[#435a8c] leading-relaxed">
+                                                        By clicking Register button, you agree to our{" "}
+                                                        <Link
+                                                            href="/terms"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-medium underline underline-offset-2 hover:text-deepOrange"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            Terms of Use
+                                                        </Link>
+                                                        {" "}and{" "}
+                                                        <Link
+                                                            href="/privacy"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-medium underline underline-offset-2 hover:text-deepOrange"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            Privacy Policy
+                                                        </Link>
+                                                        .
+                                                    </label>
                                                 </div>
                                                 {fieldState.error && (
                                                     <span className="text-red-500">{fieldState.error.message}</span>)}
                                             </div>)}
                                     />
 
-                                </label>
                             </div>
                             <button disabled={isLoading || !terms}
                                     className={`w-full mt-3 ${isLoading || !terms ? 'bg-blue-300 cursor-not-allowed' : "bg-[#435a8c]"} text-white py-3 rounded-md text-lg font-semibold`}
