@@ -5,7 +5,6 @@ import {getUserProfile, updateProfile, changePassword} from "@/redux/auth/authSl
 import {getAddress} from "@/redux/product/productSlice";
 import {capitalize} from "@/util";
 import {toast} from "sonner";
-import AccountDeletionRequestCard from "@/components/account/AccountDeletionRequestCard";
 import Link from "next/link";
 
 const Settings: NextPage = () => {
@@ -279,6 +278,23 @@ const Settings: NextPage = () => {
                         )}
                     </div>
 
+                    <div className="rounded-lg border border-red-200 bg-red-50/50 p-4">
+                        <h2 className="text-base sm:text-lg font-bold text-[#0E224D] mb-2">
+                            Account deletion
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Request permanent deletion of your Hawola account and associated personal
+                            data, including profile, addresses, wishlist, buying requests, and chats
+                            where applicable.
+                        </p>
+                        <Link
+                            href="/account/delete"
+                            className="inline-flex items-center rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                        >
+                            Request account deletion
+                        </Link>
+                    </div>
+
                     {/* Shipping Address */}
                     <div>
                         <h2 className="text-base sm:text-lg font-bold text-primary mb-4">
@@ -461,18 +477,6 @@ const Settings: NextPage = () => {
                         ))
                     }
                 </div>
-            </div>
-
-            <div className="mt-10 flex flex-col gap-3">
-                <h3 className="text-lg font-semibold text-[#0E224D]">Account deletion</h3>
-                <p className="text-sm text-gray-600">
-                    You can also manage this on the{" "}
-                    <Link href="/account/delete" className="text-deepOrange hover:underline">
-                        account deletion page
-                    </Link>
-                    .
-                </p>
-                <AccountDeletionRequestCard compact />
             </div>
 
         </div>
