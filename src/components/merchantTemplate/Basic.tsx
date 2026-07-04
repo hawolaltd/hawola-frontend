@@ -252,58 +252,56 @@ const BasicTemplate = () => {
         {/* Hero Banner */}
         <section className={`relative overflow-hidden ${hasHeroBanner ? 'h-[400px] md:h-[500px]' : 'h-[300px] md:h-[400px]'}`}>
           {hasHeroBanner ? (
-            <>
-              <img
-                src={
-                  heroSlides[0]?.image?.full_size ||
-                  heroSlides[0]?.image?.medium_square_crop ||
-                  undefined
-                }
-                alt="Store Banner"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-            </>
+            <img
+              src={
+                heroSlides[0]?.image?.full_size ||
+                heroSlides[0]?.image?.medium_square_crop ||
+                undefined
+              }
+              alt="Store Banner"
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <div className="relative h-full w-full bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600">
-              {/* Pattern overlay for visual interest */}
-              <div className="absolute inset-0 opacity-10" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              }} />
-            </div>
-          )}
-          <div className="absolute inset-0 flex items-center">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="max-w-2xl text-white">
-                <div className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg prose prose-invert max-w-none prose-p:mb-2 prose-headings:text-white prose-p:text-gray-100">
-                  <MerchantRichHtml
-                    html={
-                      merchant_details?.store_page_subtitle ||
-                      merchant_details?.store_name ||
-                      "<p>Welcome to Our Store</p>"
-                    }
-                  />
-                </div>
-                <p className="text-lg md:text-xl text-gray-200 mb-6 drop-shadow-md">
-                  {(() => {
-                    const plain = stripHtmlForMeta(merchant_details?.about, 2000);
-                    if (!plain) return "Discover amazing products at great prices";
-                    return plain.length > 150 ? `${plain.slice(0, 150)}…` : plain;
-                  })()}
-                </p>
-                <button
-                  onClick={() => setActiveSection("products")}
-                  className="px-8 py-3 rounded-lg font-semibold shadow-lg transition-transform hover:scale-105"
-                  style={{
-                    backgroundColor: hasHeroBanner ? primaryColor : (isLight ? "#FFFFFF" : "#1F2937"),
-                    color: hasHeroBanner ? textColor : (isLight ? primaryColor : "#FFFFFF"),
-                  }}
-                >
-                  Shop Now
-                </button>
+            <>
+              <div className="relative h-full w-full bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600">
+                <div className="absolute inset-0 opacity-10" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                }} />
               </div>
-            </div>
-          </div>
+              <div className="absolute inset-0 flex items-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                  <div className="max-w-2xl text-white">
+                    <div className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg prose prose-invert max-w-none prose-p:mb-2 prose-headings:text-white prose-p:text-gray-100">
+                      <MerchantRichHtml
+                        html={
+                          merchant_details?.store_page_subtitle ||
+                          merchant_details?.store_name ||
+                          "<p>Welcome to Our Store</p>"
+                        }
+                      />
+                    </div>
+                    <p className="text-lg md:text-xl text-gray-200 mb-6 drop-shadow-md">
+                      {(() => {
+                        const plain = stripHtmlForMeta(merchant_details?.about, 2000);
+                        if (!plain) return "Discover amazing products at great prices";
+                        return plain.length > 150 ? `${plain.slice(0, 150)}…` : plain;
+                      })()}
+                    </p>
+                    <button
+                      onClick={() => setActiveSection("products")}
+                      className="px-8 py-3 rounded-lg font-semibold shadow-lg transition-transform hover:scale-105"
+                      style={{
+                        backgroundColor: isLight ? "#FFFFFF" : "#1F2937",
+                        color: isLight ? primaryColor : "#FFFFFF",
+                      }}
+                    >
+                      Shop Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </section>
 
         {/* Main Content */}

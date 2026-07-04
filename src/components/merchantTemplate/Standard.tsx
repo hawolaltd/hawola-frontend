@@ -396,18 +396,14 @@ const StandardTemplate = () => {
         {/* Banner Section */}
         <div className="relative h-[400px] md:h-[500px] overflow-hidden">
           {heroSlides.length > 0 ? (
-            <>
-              <img
-                src={
-                  heroSlides[activeBannerIndex]?.image?.full_size ||
-                  heroSlides[activeBannerIndex]?.image?.medium_square_crop
-                }
-                alt="Store Banner"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
-            </>
+            <img
+              src={
+                heroSlides[activeBannerIndex]?.image?.full_size ||
+                heroSlides[activeBannerIndex]?.image?.medium_square_crop
+              }
+              alt="Store Banner"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600">
               <div className="z-10 px-4 text-center text-white drop-shadow-md">

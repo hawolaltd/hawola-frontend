@@ -294,22 +294,18 @@ export default function NormalMerchantPage() {
                 className="pointer-events-none absolute inset-0 opacity-[0.12]"
                 style={{ backgroundImage: bannerPatternSvg }}
               />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                <div className="mx-auto max-w-4xl px-4 text-center">
+                  <h1 className="text-4xl font-bold text-white drop-shadow-md md:text-5xl">
+                    {merchantData?.merchant_details?.store_name}
+                  </h1>
+                  <div className="mt-2 text-xl text-white prose prose-invert max-w-none drop-shadow prose-p:mb-2 prose-p:last:mb-0">
+                    <MerchantRichHtml html={merchantData?.merchant_details?.store_page_subtitle} />
+                  </div>
+                </div>
+              </div>
             </>
           )}
-          <div
-            className={`absolute inset-0 flex items-center justify-center ${
-              bannerImageUrl ? "bg-black/30" : "bg-black/10"
-            }`}
-          >
-            <div className="mx-auto max-w-4xl px-4 text-center">
-              <h1 className="text-4xl font-bold text-white drop-shadow-md md:text-5xl">
-                {merchantData?.merchant_details?.store_name}
-              </h1>
-              <div className="mt-2 text-xl text-white prose prose-invert max-w-none drop-shadow prose-p:mb-2 prose-p:last:mb-0">
-                <MerchantRichHtml html={merchantData?.merchant_details?.store_page_subtitle} />
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Merchant Info Section */}
