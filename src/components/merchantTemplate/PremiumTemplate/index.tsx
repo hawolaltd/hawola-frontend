@@ -12,6 +12,7 @@ import Head from "next/head";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { buildMerchantBrandPalette } from "@/util/merchantBrandPalette";
 import { buildPremiumMerchantInlineCss } from "@/util/premiumMerchantInlineCss";
+import type { MerchantBannerImageSizes } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 
@@ -132,8 +133,18 @@ const DashboardTemplate = () => {
               <div className="animate-fade-in">
                 <BannerShowcase
                   banners={merchantData?.banners}
-                  defaultBanner={merchantData?.merchant_details?.default_banner as any}
-                  merchantBanner={merchantData?.merchant_details?.merchant_banner}
+                  defaultBanner={
+                    merchantData?.merchant_details?.default_banner as
+                      | MerchantBannerImageSizes
+                      | string
+                      | null
+                      | undefined
+                  }
+                  merchantBanner={
+                    merchantData?.merchant_details?.merchant_banner as
+                      | Array<{ id?: number; image?: MerchantBannerImageSizes }>
+                      | undefined
+                  }
                 />
               </div>
 

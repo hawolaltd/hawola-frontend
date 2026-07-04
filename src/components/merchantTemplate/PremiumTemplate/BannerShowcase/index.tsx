@@ -1,20 +1,31 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import {
   resolveMerchantBannerUrl,
   type MerchantBannerImageSizes,
+  type MerchantBannerSlide,
 } from "@/util/merchantBanner";
 
-interface Banner {
-  id: number;
-  image: MerchantBannerImageSizes;
-  image_ppoi: string;
-}
+type ShowcaseSlide = {
+  id: number | string;
+  image?: MerchantBannerImageSizes;
+};
 
 interface BannerShowcaseProps {
-  banners: Banner[];
+  banners?: MerchantBannerSlide[];
   defaultBanner?: MerchantBannerImageSizes | string | null;
-  merchantBanner?: Array<{ image?: MerchantBannerImageSizes }>;
+  merchantBanner?: Array<{ id?: number; image?: MerchantBannerImageSizes }>;
+}
+
+function toShowcaseSlide(
+  banner: MerchantBannerSlide | { id?: number; image?: MerchantBannerImageSizes },
+  index: number
+): ShowcaseSlide | null {
+  const url = resolveMerchantBannerUrl({ banners: [banner as MerchantBannerSlide] });
+  if (!url) return null;
+  const id =
+    "id" in banner && banner.id != null ? banner.id : `slide-${index}`;
+  return { id, image: banner.image ?? { full_size: url } };
 }
 
 const BannerShowcase = ({
@@ -24,30 +35,32 @@ const BannerShowcase = ({
 }: BannerShowcaseProps) => {
   const [currentBanner, setCurrentBanner] = useState(0);
 
-  const defaultSlide =
-    resolveMerchantBannerUrl({ defaultBanner }) != null
-      ? {
-          id: "default" as const,
-          image:
-            typeof defaultBanner === "string"
-              ? { full_size: defaultBanner }
-              : defaultBanner,
-          image_ppoi: "center",
-        }
-      : null;
+  const allBanners = useMemo(() => {
+    const slides: ShowcaseSlide[] = [];
+    let index = 0;
 
-  // Combine carousel banners, profile merchant_banner, and default_banner fallback
-  const allBanners = [
-    ...(banners || []),
-    ...(merchantBanner || []),
-    ...(defaultSlide ? [defaultSlide] : []),
-  ].filter(
-    (banner) =>
-      banner &&
-      resolveMerchantBannerUrl({
-        banners: [banner as Banner],
-      })
-  );
+    for (const banner of banners ?? []) {
+      const slide = toShowcaseSlide(banner, index++);
+      if (slide) slides.push(slide);
+    }
+    for (const banner of merchantBanner ?? []) {
+      const slide = toShowcaseSlide(banner, index++);
+      if (slide) slides.push(slide);
+    }
+
+    const defaultUrl = resolveMerchantBannerUrl({ defaultBanner });
+    if (defaultUrl) {
+      slides.push({
+        id: "default",
+        image:
+          typeof defaultBanner === "string"
+            ? { full_size: defaultBanner }
+            : defaultBanner ?? { full_size: defaultUrl },
+      });
+    }
+
+    return slides;
+  }, [banners, defaultBanner, merchantBanner]);
 
   if (!allBanners.length) return null;
 
@@ -69,7 +82,7 @@ const BannerShowcase = ({
           <Image
             src={
               resolveMerchantBannerUrl({
-                banners: [allBanners[currentBanner] as Banner],
+                banners: [allBanners[currentBanner]],
               }) || "/placeholder-banner.jpg"
             }
             alt="Store Banner"
@@ -147,9 +160,9 @@ const BannerShowcase = ({
                 >
                   <Image
                     src={
-                      banner.image?.thumbnail ||
-                      banner.image?.thumbnail_100 ||
-                      "/placeholder-thumb.jpg"
+                      resolveMerchantBannerUrl({
+                        banners: [allBanners[index]],
+                      }) || "/placeholder-thumb.jpg"
                     }
                     alt={`Banner ${index + 1}`}
                     width={64}
