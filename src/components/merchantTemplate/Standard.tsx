@@ -10,6 +10,7 @@ import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import { featuredImageCardUrl } from "@/util";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
+import { buildMerchantHeroSlides } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 
@@ -55,6 +56,10 @@ const StandardTemplate = () => {
 
   const merchantReels = merchant_details?.merchant_reels ?? [];
   const hasMerchantReels = merchantReels.length > 0;
+  const heroSlides = buildMerchantHeroSlides({
+    banners,
+    defaultBanner: merchant_details?.default_banner,
+  });
 
   // Enhanced function to check if a color is light or dark with better edge case handling
   const isLightColor = (hex: string) => {
@@ -390,10 +395,13 @@ const StandardTemplate = () => {
       <div className="min-h-screen bg-gray-50">
         {/* Banner Section */}
         <div className="relative h-[400px] md:h-[500px] overflow-hidden">
-          {banners?.length > 0 ? (
+          {heroSlides.length > 0 ? (
             <>
               <img
-                src={banners[activeBannerIndex]?.image?.full_size}
+                src={
+                  heroSlides[activeBannerIndex]?.image?.full_size ||
+                  heroSlides[activeBannerIndex]?.image?.medium_square_crop
+                }
                 alt="Store Banner"
                 className="w-full h-full object-cover"
               />
@@ -414,9 +422,9 @@ const StandardTemplate = () => {
           )}
 
           {/* Banner Navigation */}
-          {banners?.length > 1 && (
+          {heroSlides.length > 1 && (
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
-              {banners.map((_: any, index: number) => (
+              {heroSlides.map((_: unknown, index: number) => (
                 <button
                   key={index}
                   onClick={() => setActiveBannerIndex(index)}

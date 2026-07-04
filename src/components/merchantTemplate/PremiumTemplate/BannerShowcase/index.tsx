@@ -1,26 +1,20 @@
 import React, { useState } from "react";
 import Image from "next/image";
+import {
+  resolveMerchantBannerUrl,
+  type MerchantBannerImageSizes,
+} from "@/util/merchantBanner";
 
 interface Banner {
   id: number;
-  image: {
-    medium_square_crop: string;
-    thumbnail_100: string;
-    thumbnail: string;
-    full_size: string;
-  };
+  image: MerchantBannerImageSizes;
   image_ppoi: string;
 }
 
 interface BannerShowcaseProps {
   banners: Banner[];
-  defaultBanner: {
-    medium_square_crop: string;
-    thumbnail_100: string;
-    thumbnail: string;
-    full_size: string;
-  };
-  merchantBanner: any[];
+  defaultBanner?: MerchantBannerImageSizes | string | null;
+  merchantBanner?: Array<{ image?: MerchantBannerImageSizes }>;
 }
 
 const BannerShowcase = ({
@@ -30,12 +24,30 @@ const BannerShowcase = ({
 }: BannerShowcaseProps) => {
   const [currentBanner, setCurrentBanner] = useState(0);
 
-  // Combine all banners
+  const defaultSlide =
+    resolveMerchantBannerUrl({ defaultBanner }) != null
+      ? {
+          id: "default" as const,
+          image:
+            typeof defaultBanner === "string"
+              ? { full_size: defaultBanner }
+              : defaultBanner,
+          image_ppoi: "center",
+        }
+      : null;
+
+  // Combine carousel banners, profile merchant_banner, and default_banner fallback
   const allBanners = [
     ...(banners || []),
     ...(merchantBanner || []),
-    { id: "default", image: defaultBanner, image_ppoi: "center" },
-  ].filter((banner) => banner && banner.image);
+    ...(defaultSlide ? [defaultSlide] : []),
+  ].filter(
+    (banner) =>
+      banner &&
+      resolveMerchantBannerUrl({
+        banners: [banner as Banner],
+      })
+  );
 
   if (!allBanners.length) return null;
 
@@ -56,9 +68,9 @@ const BannerShowcase = ({
         <div className="relative h-64 md:h-80 overflow-hidden">
           <Image
             src={
-              allBanners[currentBanner]?.image?.full_size ||
-              allBanners[currentBanner]?.image?.medium_square_crop ||
-              "/placeholder-banner.jpg"
+              resolveMerchantBannerUrl({
+                banners: [allBanners[currentBanner] as Banner],
+              }) || "/placeholder-banner.jpg"
             }
             alt="Store Banner"
             width={800}

@@ -10,6 +10,11 @@ import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrIniti
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import type { Product } from "@/types/product";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
+import {
+  buildMerchantHeroSlides,
+  hasMerchantHeroBanner,
+  type MerchantBannerImageSizes,
+} from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 
@@ -123,6 +128,18 @@ const BasicTemplate = () => {
 
   const merchantReels = merchant_details?.merchant_reels ?? [];
   const hasMerchantReels = merchantReels.length > 0;
+  const merchantBanner = merchant_details?.merchant_banner as
+    | Array<{ image?: MerchantBannerImageSizes }>
+    | undefined;
+  const heroSlides = buildMerchantHeroSlides({
+    banners,
+    defaultBanner: merchant_details?.default_banner,
+  });
+  const hasHeroBanner = hasMerchantHeroBanner({
+    banners,
+    defaultBanner: merchant_details?.default_banner,
+    merchantBanner,
+  });
   const navSections: Array<"overview" | "products" | "reels" | "categories" | "about"> = [
     "overview",
     "products",
@@ -233,11 +250,15 @@ const BasicTemplate = () => {
         </header>
 
         {/* Hero Banner */}
-        <section className={`relative overflow-hidden ${banners?.length > 0 ? 'h-[400px] md:h-[500px]' : 'h-[300px] md:h-[400px]'}`}>
-          {banners?.length > 0 ? (
+        <section className={`relative overflow-hidden ${hasHeroBanner ? 'h-[400px] md:h-[500px]' : 'h-[300px] md:h-[400px]'}`}>
+          {hasHeroBanner ? (
             <>
               <img
-                src={banners[0]?.image?.full_size}
+                src={
+                  heroSlides[0]?.image?.full_size ||
+                  heroSlides[0]?.image?.medium_square_crop ||
+                  undefined
+                }
                 alt="Store Banner"
                 className="w-full h-full object-cover"
               />
@@ -274,8 +295,8 @@ const BasicTemplate = () => {
                   onClick={() => setActiveSection("products")}
                   className="px-8 py-3 rounded-lg font-semibold shadow-lg transition-transform hover:scale-105"
                   style={{
-                    backgroundColor: banners?.length > 0 ? primaryColor : (isLight ? "#FFFFFF" : "#1F2937"),
-                    color: banners?.length > 0 ? textColor : (isLight ? primaryColor : "#FFFFFF"),
+                    backgroundColor: hasHeroBanner ? primaryColor : (isLight ? "#FFFFFF" : "#1F2937"),
+                    color: hasHeroBanner ? textColor : (isLight ? primaryColor : "#FFFFFF"),
                   }}
                 >
                   Shop Now
