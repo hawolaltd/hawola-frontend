@@ -244,8 +244,8 @@ function AppContent({ Component, pageProps }: AppProps) {
       </Head>
       <RouteChangeProgress />
       <Component {...pageProps} />
-      <ToastContainer />
-      <Toaster position={"top-right"} />
+      <ToastContainer closeButton />
+      <Toaster position="top-right" closeButton />
       {showLaunchConfetti ? (
         <>
           <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden>

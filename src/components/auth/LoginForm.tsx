@@ -10,6 +10,7 @@ import {toast} from "sonner";
 import {useRouter} from "next/router";
 import {addToCarts, addToCartsLocal} from "@/redux/product/productSlice";
 import {normalizeErrors} from "@/util";
+import MerchantAuthPrompt from "@/components/auth/MerchantAuthPrompt";
 
 export default function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
@@ -436,11 +437,18 @@ export default function LoginForm() {
                     <div className="flex-1 h-px bg-gray-200" />
                 </div>
 
-                <Link href={'/auth/register'}>
-                    <p className="text-left text-xs text-[#435a8c] mt-4">
-                        Have not an account? <span className="text-blue-900 font-semibold">Sign Up</span>
-                    </p>
-                </Link>
+                <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#435a8c]">
+                    <Link href="/auth/register">
+                        <span>
+                            Have not an account?{" "}
+                            <span className="font-semibold text-blue-900">Sign Up</span>
+                        </span>
+                    </Link>
+                    <span className="text-gray-300 select-none" aria-hidden>
+                        |
+                    </span>
+                    <MerchantAuthPrompt variant="login" inline />
+                </div>
             </div>
 
             {/* Global loading overlay for clearer feedback */}

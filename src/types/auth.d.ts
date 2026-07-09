@@ -56,11 +56,18 @@ export interface ForgotPasswordConfirmFormType {
 export interface UserProfileResponse {
     pk: number;
     email: string;
-    phone_number: string;
-    gender: string;
+    phone_number?: string | null;
+    gender?: string | null;
     username: string;
-    last_name: string;
-    first_name: string;
+    last_name?: string | null;
+    first_name?: string | null;
+    profile_image?: string | null;
+    profile_image_url?: string | null;
+    is_staff?: boolean;
+    is_superuser?: boolean;
+    is_merchant?: boolean;
+    telegram_connected?: boolean;
+    telegram_order_notifications_enabled?: boolean;
 }
 
 export interface UpdateProfileDataType {

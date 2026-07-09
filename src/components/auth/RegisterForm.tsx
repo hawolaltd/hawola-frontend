@@ -11,6 +11,7 @@ import Link from "next/link";
 import {normalizeErrors} from "@/util";
 import { addToCarts, addToCartsLocal } from "@/redux/product/productSlice";
 import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
+import MerchantAuthPrompt from "@/components/auth/MerchantAuthPrompt";
 
 // Rate limiting constants
 const MAX_RESEND_ATTEMPTS = 2;
@@ -571,28 +572,19 @@ function RegisterForm() {
                                     </span>
                                 </div> : "Sign Up"}
                             </button>
-
-                            <Link href={'/auth/login'}>
-                                <p className="text-left text-xs text-[#435a8c] mt-2">
-                                    Already have an account? <span className="text-blue-900 font-semibold">Sign In</span>
-                                </p>
-                            </Link>
                         </form>
 
-                        <div className="mt-4 pt-2">
-                            <div className={'flex flex-col gap-2'}>
-                                <p className="text-center text-xs text-primary mt-2">
-                                    You can also create a merchant account{" "}
-                                    <a
-                                        href="https://merchant.hawola.com"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-900 font-semibold"
-                                    >
-                                        here
-                                    </a>
-                                </p>
-                            </div>
+                        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#435a8c]">
+                            <Link href="/auth/login">
+                                <span>
+                                    Already have an account?{" "}
+                                    <span className="font-semibold text-blue-900">Sign In</span>
+                                </span>
+                            </Link>
+                            <span className="text-gray-300 select-none" aria-hidden>
+                                |
+                            </span>
+                            <MerchantAuthPrompt variant="register" inline />
                         </div>
                     </div>
 

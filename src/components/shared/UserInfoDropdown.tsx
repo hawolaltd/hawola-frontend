@@ -58,15 +58,6 @@ function UserInfoDropdown() {
             </Link>
           </li>
 
-          <li>
-            <Link
-              href="/account/delete"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              Request account deletion
-            </Link>
-          </li>
-
           <li
             onClick={(e) => {
               e.preventDefault();

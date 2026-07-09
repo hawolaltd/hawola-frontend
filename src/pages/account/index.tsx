@@ -9,6 +9,7 @@ import Wishlist from "@/components/account/Wishlist";
 import Orders from "@/components/account/Orders";
 import BuyingRequests from "@/components/account/BuyingRequests";
 import Settings from "@/components/account/Settings";
+import NotificationSettings from "@/components/account/NotificationSettings";
 import {getDisputes} from "@/redux/disputes/disputeSlice";
 import RecentlyViewed from "@/components/account/RecentlyViewed";
 import AccountChats from "@/components/account/AccountChats";
@@ -20,9 +21,14 @@ import {
     HeartIcon,
     ShoppingBagIcon,
     UserIcon,
+    BellAlertIcon,
 } from "@heroicons/react/24/outline";
 import {HI_SM} from "@/lib/hawolaIconTheme";
 import { addToCartsLocal } from "@/redux/product/productSlice";
+import AccountTelegramConnectPrompt from "@/components/account/AccountTelegramConnectPrompt";
+
+/** Matches MainHeader / Footer content width */
+const PAGE_WIDTH = "mx-auto w-full max-w-screen-xl px-6 xl:px-0";
 
 const ACCOUNT_TAB_IDS = [
     "orders",
@@ -30,6 +36,7 @@ const ACCOUNT_TAB_IDS = [
     "buying_requests",
     "chats",
     "profile",
+    "notifications",
     "recently_viewed",
 ] as const;
 
@@ -46,6 +53,7 @@ export default function AccountPage() {
         { id: 'buying_requests', name: 'My Buying Requests', Icon: ClipboardDocumentListIcon },
         { id: 'chats', name: 'Chats', Icon: ChatBubbleLeftRightIcon },
         { id: 'profile', name: 'Profile', Icon: UserIcon },
+        { id: 'notifications', name: 'Notifications', Icon: BellAlertIcon },
         { id: 'recently_viewed', name: 'Recently Viewed', Icon: EyeIcon },
     ]
 
@@ -89,7 +97,7 @@ export default function AccountPage() {
             }
 
 
-            if(tab === "profile"){
+            if(tab === "profile" || tab === "notifications"){
                 const res = await  dispatch(getUserProfile())
                 if (res.type.includes("fulfilled")) {
                     setLoading(false)
@@ -130,16 +138,18 @@ export default function AccountPage() {
 
                 <main className="p-0">
                     {/* Header */}
-                    <header className="mb-4 sm:mb-6 bg-headerBg px-4 sm:px-8 lg:px-20 pt-4">
+                    <header className="mb-4 sm:mb-6 bg-headerBg pt-4">
+                        <div className={PAGE_WIDTH}>
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 flex-1">
                                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">Hello {user?.first_name}</h1>
-                                <p className="text-xs sm:text-sm text-white font-medium mt-2 mb-6 sm:mb-10 lg:mb-12">
+                                <p className="text-xs sm:text-sm text-white font-medium mt-2">
                                     From your account dashboard, you can easily check & view your recent orders,
                                     <span className="hidden sm:inline"><br/></span>
                                     <span className="sm:hidden"> </span>
                                     manage your shipping and billing addresses and edit your password and account details.
                                 </p>
+                                <AccountTelegramConnectPrompt connected={!!user?.telegram_connected} />
                             </div>
                             <button
                                 type="button"
@@ -151,7 +161,7 @@ export default function AccountPage() {
                             </button>
                         </div>
                         <nav
-                            className={`-mx-4 sm:mx-0 px-4 sm:px-0 mb-0 sm:mb-8 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
+                            className={`mb-0 sm:mb-8 mt-4 sm:mt-6 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
                         >
                             {tabs.map((ta) => {
                                 const TabIcon = ta.Icon;
@@ -179,6 +189,7 @@ export default function AccountPage() {
                                 );
                             })}
                         </nav>
+                        </div>
                     </header>
 
                     {
@@ -187,12 +198,13 @@ export default function AccountPage() {
                                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
                             </div>
                         ) : (
-                            <div className={'container overflow-x-hidden mx-auto mb-8 sm:mb-12 px-3 sm:px-4 lg:px-6'}>
+                            <div className={`${PAGE_WIDTH} mb-8 sm:mb-12 overflow-x-hidden`}>
                                 {tab === 'wish' && <Wishlist />}
                                 {tab === 'orders' && <Orders />}
                                 {tab === 'buying_requests' && <BuyingRequests />}
                                 {tab === 'chats' && <AccountChats />}
                                 {tab === 'profile' && <Settings />}
+                                {tab === 'notifications' && <NotificationSettings />}
                                 {tab === 'recently_viewed' && <RecentlyViewed />}
                             </div>
                         )

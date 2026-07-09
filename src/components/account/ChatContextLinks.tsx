@@ -16,7 +16,7 @@ type Props = {
     | "orderitem_number"
   >;
   /** Header on primary background */
-  variant?: "onPrimary" | "default";
+  variant?: "onPrimary" | "default" | "pills";
   className?: string;
 };
 
@@ -31,8 +31,10 @@ export default function ChatContextLinks({
 
   const linkClass =
     variant === "onPrimary"
-      ? "text-xs text-white underline underline-offset-2 hover:text-white/95"
-      : "text-xs text-primary font-medium hover:underline";
+      ? "inline-flex items-center rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-white/25"
+      : variant === "pills"
+        ? "inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        : "text-xs text-primary font-medium hover:underline";
 
   const items: { href: string; label: string }[] = [];
 
@@ -60,7 +62,7 @@ export default function ChatContextLinks({
   if (items.length === 0) return null;
 
   return (
-    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       {items.map((item) => (
         <Link key={item.href + item.label} href={item.href} className={linkClass}>
           {item.label}
