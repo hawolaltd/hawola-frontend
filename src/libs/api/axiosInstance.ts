@@ -52,17 +52,29 @@ axiosInstance.interceptors.request.use(
             config.headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const ttclid = getStoredTtclid();
-        if (ttclid) {
-            config.headers['X-TikTok-Ttclid'] = ttclid;
-        }
-        const ttp = getTtpCookie();
-        if (ttp) {
-            config.headers['X-TikTok-Ttp'] = ttp;
-        }
-        const tiktokEventId = consumeNextTikTokRequestEventId();
-        if (tiktokEventId) {
-            config.headers['X-TikTok-Event-Id'] = tiktokEventId;
+        // TikTok attribution headers trigger CORS preflight — only on conversion POSTs.
+        const method = (config.method || 'get').toLowerCase();
+        const requestUrl = config.url || '';
+        const isTikTokAttributionRequest =
+            method !== 'get' &&
+            method !== 'head' &&
+            (/\/cart\//i.test(requestUrl) ||
+                /\/orders\//i.test(requestUrl) ||
+                /\/authy\//i.test(requestUrl));
+
+        if (isTikTokAttributionRequest) {
+            const ttclid = getStoredTtclid();
+            if (ttclid) {
+                config.headers['X-TikTok-Ttclid'] = ttclid;
+            }
+            const ttp = getTtpCookie();
+            if (ttp) {
+                config.headers['X-TikTok-Ttp'] = ttp;
+            }
+            const tiktokEventId = consumeNextTikTokRequestEventId();
+            if (tiktokEventId) {
+                config.headers['X-TikTok-Event-Id'] = tiktokEventId;
+            }
         }
         
         // Log request details for login endpoint
