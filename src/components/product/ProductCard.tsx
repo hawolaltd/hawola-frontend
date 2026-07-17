@@ -14,6 +14,7 @@ import { ProductFull } from "@/types/home";
 import { useProductDetailPrefetch } from "@/hooks/useProductDetailPrefetch";
 import { saveProductDetailPreview } from "@/lib/pdpPreview";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import { trackTikTokAddToCart, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 function ProductCard({
   product,
   margin,
@@ -32,7 +33,8 @@ function ProductCard({
     Record<number, number>
   >({});
 
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, profile: authProfile } = useAppSelector((state) => state.auth);
+  const tikTokIdentity = tikTokIdentityFromProfile(authProfile);
   const { localCart } = useAppSelector((state) => state.products);
 
   const dispatch = useAppDispatch();
@@ -72,6 +74,16 @@ function ProductCard({
 
         if (res?.type.includes("fulfilled")) {
           dispatch(getCarts());
+          trackTikTokAddToCart(
+            {
+              id: product?.id,
+              name: product?.name,
+              price: product?.price,
+              discount_price: product?.discount_price,
+              qty: quantity,
+            },
+            tikTokIdentity
+          );
           toast.success("Added to cart");
         } else {
           toast("error");

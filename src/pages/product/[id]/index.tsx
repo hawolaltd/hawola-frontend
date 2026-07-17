@@ -35,6 +35,7 @@ import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import { TagIcon } from '@heroicons/react/24/outline';
 import { buildProductSeo } from "@/util/storefrontSeo";
 import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
+import { trackTikTokViewContent, trackTikTokAddToCart, trackTikTokAddToWishlist, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 import {
     DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML,
     DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML,
@@ -85,7 +86,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
     const displayName =
         product?.product?.name || preview?.name || "Product";
-    const {isAuthenticated} = useAppSelector(state => state.auth)
+    const {isAuthenticated, profile: authProfile} = useAppSelector(state => state.auth)
+    const tikTokIdentity = tikTokIdentityFromProfile(authProfile);
     const siteSettings = useAppSelector((state) => state.general.siteSettings)
     const contactMerchantOnly =
         isContactMerchantOnlyProduct(product?.product) ||
@@ -214,6 +216,15 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             );
             if (res?.type.includes("fulfilled")) {
                 toast.success("Added to wishlist");
+                trackTikTokAddToWishlist(
+                    {
+                        id: product?.product?.id,
+                        name: product?.product?.name,
+                        price: product?.product?.price,
+                        discount_price: product?.product?.discount_price,
+                    },
+                    tikTokIdentity
+                );
                 dispatch(getWishList());
             } else if (res?.type.includes("rejected")) {
                 toast.error("Could not add to wishlist.");
@@ -253,6 +264,16 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
                 if (res?.type.includes("fulfilled")) {
                     dispatch(getCarts());
+                    trackTikTokAddToCart(
+                        {
+                            id: product?.product?.id,
+                            name: product?.product?.name,
+                            price: product?.product?.price,
+                            discount_price: product?.product?.discount_price,
+                            qty: quantity,
+                        },
+                        tikTokIdentity
+                    );
                     toast.success("Added to cart");
                 } else if (res?.type.includes("rejected")) {
                     toast.error("Could not add to cart.");
@@ -408,7 +429,16 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             discount_price: p.discount_price,
             image_url: imageUrl,
         });
-    }, [(product as any)?.product?.id, (product as any)?.product?.slug]);
+        trackTikTokViewContent(
+            {
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                discount_price: p.discount_price,
+            },
+            tikTokIdentity
+        );
+    }, [(product as any)?.product?.id, (product as any)?.product?.slug, authProfile?.email]);
 
     useEffect(() => {
         if (!contactMerchantOnly) {

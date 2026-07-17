@@ -12,6 +12,7 @@ import {normalizeErrors} from "@/util";
 import { addToCarts, addToCartsLocal } from "@/redux/product/productSlice";
 import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
 import MerchantAuthPrompt from "@/components/auth/MerchantAuthPrompt";
+import { trackTikTokCompleteRegistration } from "@/lib/tiktokPixel";
 
 // Rate limiting constants
 const MAX_RESEND_ATTEMPTS = 2;
@@ -184,6 +185,7 @@ function RegisterForm() {
         console.log(res)
 
         if (res?.type.includes('fulfilled')) {
+            trackTikTokCompleteRegistration({ email: data.email });
             toast.success("Welcome to HAWOLA")
             reset()
             router.push(

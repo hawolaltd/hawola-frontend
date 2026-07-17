@@ -21,6 +21,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import MobileFloatingHint from "@/components/ui/MobileFloatingHint";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
+import { trackTikTokInitiateCheckout, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 
 interface OrderItem {
   product: number;
@@ -77,7 +78,8 @@ const CartPage = () => {
   const { carts, addresses, localCart, cartFetchStatus } = useAppSelector(
     (state) => state.products
   );
-  const { isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isLoading: authLoading, profile: authProfile } = useAppSelector((state) => state.auth);
+  const tikTokIdentity = tikTokIdentityFromProfile(authProfile);
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const escrowDisabled =
     siteSettings != null && siteSettings.accept_escrow_payment === false;
@@ -476,6 +478,25 @@ const CartPage = () => {
       }
 
       setCheckoutStep("creating");
+      const checkoutItems = cartItems.filter((item) => selectedItems.includes(item.id));
+      const checkoutContents = checkoutItems.map((item) => ({
+        content_id: String(item.product.id),
+        content_type: "product" as const,
+        content_name: item.product.name,
+        quantity: Math.max(1, item.qty + (pendingUpdates[item.id] || 0)),
+        price: Number(item.product.discount_price || item.product.price || 0),
+      }));
+      const checkoutValue = checkoutItems.reduce((sum, item) => {
+        const qty = Math.max(1, item.qty + (pendingUpdates[item.id] || 0));
+        const unit = Number(item.product.discount_price || item.product.price || 0);
+        return sum + unit * qty;
+      }, 0);
+      trackTikTokInitiateCheckout({
+        value: checkoutValue,
+        contents: checkoutContents,
+        identity: tikTokIdentity,
+      });
+
       // Create order payload
       const orderPayload = {
         shippingAddress_id: selectedAdd.id,

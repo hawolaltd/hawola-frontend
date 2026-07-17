@@ -35,6 +35,8 @@ import {
 import { clearLocalRecentlyViewedProducts, getLocalRecentlyViewedProductIds } from "@/lib/recentlyViewed";
 import productService from "@/redux/product/productService";
 import { initAmplitude } from "@/lib/amplitude";
+import { captureTikTokClickId } from "@/lib/tiktokAttribution";
+import { identifyTikTokUser, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
@@ -45,6 +47,7 @@ function AppContent({ Component, pageProps }: AppProps) {
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const authProfile = useSelector((state: RootState) => state.auth.profile);
   const [showLaunchConfetti, setShowLaunchConfetti] = useState(false);
   const [confettiPieces] = useState(() =>
     Array.from({ length: 120 }, (_, i) => ({
@@ -61,7 +64,15 @@ function AppContent({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     initAmplitude();
+    captureTikTokClickId();
   }, []);
+
+  useEffect(() => {
+    const identity = tikTokIdentityFromProfile(authProfile);
+    if (isAuthenticated && identity) {
+      void identifyTikTokUser(identity);
+    }
+  }, [isAuthenticated, authProfile]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

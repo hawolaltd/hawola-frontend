@@ -12,6 +12,11 @@ import { wrapper } from "@/store/store";
 import type { PaystackProps } from "react-paystack/libs/types";
 import Link from "next/link";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
+import {
+  buildContentsFromOrderItems,
+  trackTikTokAddPaymentInfo,
+  tikTokIdentityFromProfile,
+} from "@/lib/tiktokPixel";
 
 /** Opens Paystack once when mounted — no dependency on changing `config` objects (avoids re-initializing on every render). */
 const PaystackOpenOnce = dynamic(
@@ -41,6 +46,7 @@ const CheckoutPage = () => {
     (state) => state.products
   );
   const { profile } = useAppSelector((state) => state.auth);
+  const tikTokIdentity = tikTokIdentityFromProfile(profile);
   const siteSettings = useAppSelector((state) => state.general.siteSettings);
   const siteSettingsLoaded = useAppSelector(
     (state) => state.general.siteSettingsLoaded
@@ -72,7 +78,6 @@ const CheckoutPage = () => {
   /** Bumps when we open Paystack so the dynamic component remounts and runs `initializePayment` exactly once. */
   const [paystackMountKey, setPaystackMountKey] = useState(0);
 
-
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string;
 
   React.useEffect(() => {
@@ -83,6 +88,25 @@ const CheckoutPage = () => {
       toast.error("Payment configuration error. Please contact support.");
     }
   }, [publicKey]);
+
+  const checkoutContents = useMemo(
+    () => buildContentsFromOrderItems(orders?.orderItems || []),
+    [orders?.orderItems]
+  );
+  const checkoutValue = useMemo(
+    () => Number(orders?.totalPriceDue || orders?.totalPrice || 0),
+    [orders?.totalPriceDue, orders?.totalPrice]
+  );
+
+  useEffect(() => {
+    if (!orders?.order_number) return;
+    trackTikTokAddPaymentInfo({
+      value: checkoutValue,
+      contents: checkoutContents,
+      identity: tikTokIdentity,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders?.order_number]);
 
   const paystackConfig = useMemo<PaystackProps>(
     () => ({
@@ -172,6 +196,11 @@ const CheckoutPage = () => {
       );
 
       if (res.type.includes("fulfilled")) {
+        trackTikTokAddPaymentInfo({
+          value: checkoutValue,
+          contents: checkoutContents,
+          identity: tikTokIdentity,
+        });
         setPaystackMountKey((k) => k + 1);
         setShowPaystack(true);
       }

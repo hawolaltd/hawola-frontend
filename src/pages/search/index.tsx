@@ -24,6 +24,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import BuyingRequestSearchBanner from "@/components/search/BuyingRequestSearchBanner";
+import { trackTikTokSearch, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 
 const SearchPage = () => {
   const router = useRouter();
@@ -31,6 +32,8 @@ const SearchPage = () => {
   const { searchResults, suggestions, isLoading, currentQuery, error } = useAppSelector(
     (state) => state.search
   );
+  const authProfile = useAppSelector((state) => state.auth.profile);
+  const tikTokIdentity = tikTokIdentityFromProfile(authProfile);
   const [searchInput, setSearchInput] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "products" | "merchants">("all");
 
@@ -46,6 +49,8 @@ const SearchPage = () => {
         })
       );
 
+      trackTikTokSearch(query.trim(), [], tikTokIdentity);
+
       // Update URL without page reload
       router.push(
         {
@@ -56,7 +61,7 @@ const SearchPage = () => {
         { shallow: true }
       );
     },
-    [dispatch, router]
+    [dispatch, router, tikTokIdentity]
   );
 
   useEffect(() => {

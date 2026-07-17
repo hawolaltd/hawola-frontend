@@ -7,6 +7,12 @@ import Link from 'next/link';
 import { CheckCircleIcon, TruckIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import FeaturesSection from "@/components/home/FeaturesSection";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
+import {
+  buildContentsFromOrderItems,
+  trackTikTokPlaceAnOrder,
+  trackTikTokPurchase,
+  tikTokIdentityFromProfile,
+} from "@/lib/tiktokPixel";
 
 const OrderConfirmationPage = () => {
     const router = useRouter();
@@ -14,6 +20,7 @@ const OrderConfirmationPage = () => {
     const { orders } = useAppSelector(state => state.products);
     const { profile } = useAppSelector(state => state.auth);
     const siteSettings = useAppSelector((state) => state.general.siteSettings);
+    const tikTokIdentity = tikTokIdentityFromProfile(profile);
 
     const offlineMerchantPaymentNoticeSafe = useMemo(() => {
         if (!orders?.is_offline_payment) return "";
@@ -32,13 +39,29 @@ const OrderConfirmationPage = () => {
         return custom || "";
     }, [siteSettings?.offline_order_confirmation_badge_text]);
 
-    // Track conversion in analytics
     useEffect(() => {
-        if (orders && id) {
-            // Implement your analytics tracking here
-            console.log('Track conversion for order:', orders.id);
+        if (!orders || !id) return;
+
+        const contents = buildContentsFromOrderItems(orders.orderItems || []);
+        const value = Number(orders.totalPriceDue || orders.totalPrice || 0);
+        const orderId = String(orders.order_number || orders.id);
+
+        trackTikTokPlaceAnOrder({
+            orderId,
+            value,
+            contents,
+            identity: tikTokIdentity,
+        });
+
+        if (orders.isPaid) {
+            trackTikTokPurchase({
+                orderId,
+                value,
+                contents,
+                identity: tikTokIdentity,
+            });
         }
-    }, [orders, id]);
+    }, [orders, id, tikTokIdentity]);
 
     // Redirect to cart if no order data
     useEffect(() => {
@@ -56,8 +79,6 @@ const OrderConfirmationPage = () => {
             </AuthLayout>
         );
     }
-
-    console.log("orders--", orders)
 
     const orderDetailsSlug =
         orders.orderItems?.[0]?.orderitem_number?.trim() || String(orders.id);
@@ -108,15 +129,6 @@ const OrderConfirmationPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Delivery Information */}
                             <div>
-                                {/* <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
-                                    <TruckIcon className="w-5 h-5"/>
-                                    Delivery Information
-                                </h4>
-                                <p className="text-gray-600">
-                                    Estimated delivery: {new Date(
-                                    new Date().setDate(new Date().getDate() + 3)
-                                ).toLocaleDateString()}
-                                </p> */}
                                 <p className="text-gray-600 mt-2">
                                     {orders?.shipping_address?.address}<br/>
                                     {orders.shipping_address.city?.name}, {orders.shipping_address.state.name}<br/>

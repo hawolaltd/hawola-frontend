@@ -10,6 +10,7 @@ import {
     authTokenStorageKeyName,
 } from '@/constant';
 import { handleLogout, clearAllStorage, forceLogout } from '@/util';
+import { getStoredTtclid, getTtpCookie, consumeNextTikTokRequestEventId } from '@/lib/tiktokAttribution';
 import Cookies from 'js-cookie';
 import storage from 'redux-persist/lib/storage';
 
@@ -49,6 +50,19 @@ axiosInstance.interceptors.request.use(
         const token = getToken();
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const ttclid = getStoredTtclid();
+        if (ttclid) {
+            config.headers['X-TikTok-Ttclid'] = ttclid;
+        }
+        const ttp = getTtpCookie();
+        if (ttp) {
+            config.headers['X-TikTok-Ttp'] = ttp;
+        }
+        const tiktokEventId = consumeNextTikTokRequestEventId();
+        if (tiktokEventId) {
+            config.headers['X-TikTok-Event-Id'] = tiktokEventId;
         }
         
         // Log request details for login endpoint
