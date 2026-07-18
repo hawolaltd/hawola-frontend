@@ -129,6 +129,30 @@ html {
   background: #a8a8a8;
 }
 
+.chat-scroll-pane {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.chat-scroll-pane::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll-pane::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll-pane::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.55);
+  border-radius: 9999px;
+}
+
+.chat-scroll-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.75);
+}
+
 .animate-fade-in {
   animation: fade-in 0.6s ease-out forwards;
 }

@@ -23,9 +23,17 @@ export type BuyerChatMessage = {
   created_at: string;
 };
 
-export async function listBuyerChats() {
-  const { data } = await axiosInstance.get("/messaging/buyer-chats/");
-  return (data?.results || []) as BuyerChatConversation[];
+export type PaginatedBuyerChats = {
+  results: BuyerChatConversation[];
+  count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+};
+
+export async function listBuyerChats(params?: { page?: number; page_size?: number }) {
+  const { data } = await axiosInstance.get("/messaging/buyer-chats/", { params });
+  return data as PaginatedBuyerChats;
 }
 
 export async function startBuyerChat(payload: {

@@ -92,3 +92,5 @@ export function shouldShowDateDivider(messages: BuyerChatMessage[], index: numbe
   const curr = new Date(messages[index].created_at).toDateString();
   return prev !== curr;
 }
+
+export { sortConversationsByLastMessage } from "@/lib/buyerChatUtils";

@@ -22,6 +22,11 @@ import Link from "next/link";
 import MobileFloatingHint from "@/components/ui/MobileFloatingHint";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 import { trackTikTokInitiateCheckout, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
+import {
+  buildSelfPurchaseWarning,
+  getSelfPurchaseItemsFromCart,
+  SELF_PURCHASE_CHECKOUT_MESSAGE,
+} from "@/util/merchantSelfPurchase";
 
 interface OrderItem {
   product: number;
@@ -97,7 +102,10 @@ const CartPage = () => {
   const [pendingUpdates, setPendingUpdates] = useState<{
     [id: number]: number;
   }>({});
-  const [cartItems, setCartItems] = useState<(CartItem | any)[]>(carts["cart_items"] || []);
+  const cartItems = useMemo(
+    () => (carts?.cart_items ?? []) as (CartItem | any)[],
+    [carts?.cart_items]
+  );
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -182,13 +190,29 @@ const CartPage = () => {
     return { subtotal, shippingCost, total };
   }, [carts, cartItems, selectedItems, pendingUpdates, selectedAdd]);
 
+  const cartSelfPurchaseItems = useMemo(
+    () => getSelfPurchaseItemsFromCart(cartItems, authProfile),
+    [cartItems, authProfile]
+  );
+
+  const selectedSelfPurchaseItems = useMemo(() => {
+    const selected = cartItems.filter((item) => selectedItems.includes(item.id));
+    return getSelfPurchaseItemsFromCart(selected, authProfile);
+  }, [cartItems, selectedItems, authProfile]);
+
+  const selfPurchaseWarning = useMemo(
+    () => buildSelfPurchaseWarning(selectedSelfPurchaseItems),
+    [selectedSelfPurchaseItems]
+  );
+
+  const hasSelectedSelfPurchase = selectedSelfPurchaseItems.length > 0;
+
   const allSelected =
     cartItems?.length > 0 && selectedItems.length === cartItems.length;
 
   const fetchStatus = cartFetchStatus ?? "idle";
-  const showCartLinesLoading =
-    cartItems.length === 0 &&
-    (fetchStatus === "pending" || fetchStatus === "idle");
+  const showCartLinesLoading = isAuthenticated && fetchStatus === "pending";
+  const showCartLoadError = isAuthenticated && fetchStatus === "failed";
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const syncWithServer = useCallback(
@@ -443,6 +467,11 @@ const CartPage = () => {
       return;
     }
 
+    if (hasSelectedSelfPurchase) {
+      toast.error(SELF_PURCHASE_CHECKOUT_MESSAGE);
+      return;
+    }
+
     setCreatingOrder(true);
     setShippingError(null);
     setCheckoutStep("validating");
@@ -556,37 +585,26 @@ const CartPage = () => {
   // Fetch data on mount (only if authenticated)
   useEffect(() => {
     if (!isAuthenticated || authLoading) return;
-    
+
     dispatch(getAddress());
     dispatch(getAllStates());
-    dispatch(getCarts());
+    void dispatch(getCarts()).then((result) => {
+      if (getCarts.rejected.match(result)) {
+        toast.error("Could not load your cart. Please refresh the page.");
+      }
+    });
   }, [dispatch, isAuthenticated, authLoading]);
 
-  // Update cart items when carts change
+  // Keep selections in sync when cart lines are added or removed
   useEffect(() => {
-    const newCartItems = isAuthenticated ? (carts["cart_items"] || []) : (localCart?.items || []);
-
-    // Check if cart structure changed (items added/removed)
-    const getItemId = (item: any) => item.id || item.product?.id;
-    const currentItemIds = new Set(cartItems?.map(getItemId).filter(Boolean) || []);
-    const newItemIds = new Set(newCartItems?.map(getItemId).filter(Boolean) || []);
-
-    // Only reset selections if items were added or removed
-    const cartStructureChanged =
-      currentItemIds.size !== newItemIds.size ||
-      [...currentItemIds].some((id) => !newItemIds.has(id)) ||
-      [...newItemIds].some((id) => !currentItemIds.has(id));
-
-    setCartItems(newCartItems as any);
-
-    if (cartStructureChanged) {
-      // Reset selection when cart structure changes
-      setSelectedItems([]);
-    }
-
-    // Clear pending updates when cart data is refreshed from server
+    const validIds = new Set(
+      cartItems
+        .map((item) => item.id || item.product?.id)
+        .filter((id): id is number => typeof id === "number")
+    );
+    setSelectedItems((prev) => prev.filter((id) => validIds.has(id)));
     setPendingUpdates({});
-  }, [cartItems, carts, localCart, isAuthenticated]);
+  }, [cartItems]);
 
   // Shipping restriction message must reset when checkout context changes (e.g. user
   // deselects a non-shippable line and selects a valid one — error state was stuck).
@@ -634,6 +652,26 @@ const CartPage = () => {
         <h1 className="mb-8 text-3xl font-bold max-md:mb-4 max-md:text-xl max-md:font-bold">
           Your cart
         </h1>
+
+        {cartSelfPurchaseItems.length > 0 ? (
+          <div
+            className="mb-6 rounded-xl border border-amber-300/90 bg-amber-50 p-4 text-sm text-amber-950 shadow-sm ring-1 ring-amber-900/[0.07]"
+            role="alert"
+          >
+            <p className="font-semibold">You have your own products in this cart</p>
+            <p className="mt-1">
+              You can keep them here for reference, but you cannot check out items from your own
+              store. Deselect or remove them before proceeding.
+            </p>
+            <ul className="mt-3 space-y-1">
+              {cartSelfPurchaseItems.map((item) => (
+                <li key={`${item.name}-${item.store_name}`}>
+                  • {item.name} ({item.store_name})
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-8 lg:flex-row">
           {/* Products List */}
@@ -770,6 +808,19 @@ const CartPage = () => {
                       />
                     );
                   })
+                ) : showCartLoadError ? (
+                  <div className="flex min-h-[420px] flex-col items-center justify-center rounded-2xl bg-white p-6 text-center max-md:min-h-[50vh] md:min-h-[480px]">
+                    <p className="text-sm font-medium text-headerBg">
+                      We couldn&apos;t load your cart.
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-4 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                      onClick={() => void dispatch(getCarts())}
+                    >
+                      Try again
+                    </button>
+                  </div>
                 ) : (
                   <div className="flex min-h-[420px] items-center justify-center rounded-2xl bg-white p-6 max-md:min-h-[50vh] md:min-h-[480px]">
                     <EmptyCartCallout slogan={siteSettings?.app_slogan} />
@@ -808,6 +859,8 @@ const CartPage = () => {
               isAuthenticated={isAuthenticated}
               directMerchantMode={escrowDisabled}
               directMerchantNoticeHtml={nonEscrowCartNoticeSafe || undefined}
+              selfPurchaseWarning={selfPurchaseWarning}
+              checkoutBlockedBySelfPurchase={hasSelectedSelfPurchase}
             />
           </div>
         </div>

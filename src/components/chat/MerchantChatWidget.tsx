@@ -17,6 +17,8 @@ import {
   subscribeBuyerChat,
   CHAT_FALLBACK_POLL_MS,
 } from "@/lib/buyerChatSocket";
+import ChatMessageBody from "@/components/account/ChatMessageBody";
+import { mergeChatMessages } from "@/lib/buyerChatUtils";
 
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
@@ -60,6 +62,10 @@ export default function MerchantChatWidget({
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const messagesRef = useRef<BuyerChatMessage[]>([]);
+  const prevMessageCountRef = useRef(0);
+
+  messagesRef.current = messages;
 
   const contextLabel = orderitemNumber
     ? `Order ${orderitemNumber}`
@@ -69,26 +75,22 @@ export default function MerchantChatWidget({
         ? "Store"
         : "Chat";
 
-  const loadMessages = useCallback(
-    async (slug: string, merge = true) => {
+  const loadMessages = useCallback(async (slug: string, { merge = false } = {}) => {
+    try {
       const afterId =
-        merge && messages.length ? messages[messages.length - 1]?.id : undefined;
-      try {
-        const rows = await getBuyerChatMessages(slug, afterId);
-        if (merge && afterId && rows.length) {
-          setMessages((prev) => {
-            const ids = new Set(prev.map((m) => m.id));
-            return [...prev, ...rows.filter((m) => !ids.has(m.id))];
-          });
-        } else if (!merge) {
-          setMessages(rows);
-        }
-      } catch {
-        /* ignore poll errors */
+        merge && messagesRef.current.length
+          ? messagesRef.current[messagesRef.current.length - 1]?.id
+          : undefined;
+      const rows = await getBuyerChatMessages(slug, merge ? afterId : undefined);
+      if (merge && afterId && rows.length) {
+        setMessages((prev) => mergeChatMessages(prev, rows));
+      } else if (!merge) {
+        setMessages(rows);
       }
-    },
-    [messages]
-  );
+    } catch {
+      /* ignore poll errors */
+    }
+  }, []);
 
   const openChat = async () => {
     if (!hasAuthSession(isAuthenticated, profile, user)) {
@@ -112,6 +114,7 @@ export default function MerchantChatWidget({
       setConversation(conv);
       const rows = await getBuyerChatMessages(conv.slug);
       setMessages(rows);
+      prevMessageCountRef.current = rows.length;
     } catch (e: any) {
       const status = e?.response?.status;
       if (status === 401) {
@@ -138,16 +141,13 @@ export default function MerchantChatWidget({
     const startPoll = () => {
       stopPoll();
       pollRef.current = setInterval(() => {
-        void loadMessages(slug, true);
+        void loadMessages(slug, { merge: true });
       }, CHAT_FALLBACK_POLL_MS);
     };
 
     const unsubscribe = subscribeBuyerChat(slug, {
       onMessage: (msg) => {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg as BuyerChatMessage];
-        });
+        setMessages((prev) => mergeChatMessages(prev, [msg as BuyerChatMessage]));
       },
       onConnectedChange: (connected) => {
         if (connected) stopPoll();
@@ -162,8 +162,12 @@ export default function MerchantChatWidget({
   }, [open, conversation?.slug, loadMessages]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, open]);
+    const el = scrollRef.current;
+    if (!el || !open) return;
+    const grew = messages.length > prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+    el.scrollTo({ top: el.scrollHeight, behavior: grew ? "smooth" : "auto" });
+  }, [messages.length, open]);
 
   const send = async () => {
     const text = input.trim();
@@ -204,12 +208,12 @@ export default function MerchantChatWidget({
       </div>
 
       {open && (
-        <div className="fixed bottom-24 right-5 z-[60] flex w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-          <div className="bg-primary px-4 py-3 text-white">
+        <div className="fixed bottom-24 right-5 z-[60] flex h-[min(520px,58vh)] max-h-[560px] w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+          <div className="shrink-0 bg-primary px-4 py-3 text-white">
             <p className="font-semibold text-sm">{merchantStoreName || conversation?.merchant_store_name || "Merchant"}</p>
             <p className="text-xs mt-0.5 text-white/90">{contextLabel}</p>
           </div>
-          <div ref={scrollRef} className="flex-1 max-h-72 min-h-48 overflow-y-auto bg-white p-3 space-y-2">
+          <div ref={scrollRef} className="chat-scroll-pane min-h-0 flex-1 bg-white p-3 space-y-2">
             {loading ? (
               <p className="text-sm text-gray-500 text-center py-6">Loading…</p>
             ) : messages.length === 0 ? (
@@ -226,14 +230,14 @@ export default function MerchantChatWidget({
                           : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                       }`}
                     >
-                      {m.body}
+                      <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
                     </div>
                   </div>
                 );
               })
             )}
           </div>
-          <div className="border-t border-gray-200 bg-white p-2 flex gap-2">
+          <div className="shrink-0 border-t border-gray-200 bg-white p-2 flex gap-2">
             <input
               className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
               placeholder="Type a message…"

@@ -17,6 +17,10 @@ import {
   trackTikTokAddPaymentInfo,
   tikTokIdentityFromProfile,
 } from "@/lib/tiktokPixel";
+import {
+  orderHasSelfPurchase,
+  SELF_PURCHASE_CHECKOUT_MESSAGE,
+} from "@/util/merchantSelfPurchase";
 
 /** Opens Paystack once when mounted — no dependency on changing `config` objects (avoids re-initializing on every render). */
 const PaystackOpenOnce = dynamic(
@@ -69,6 +73,33 @@ const CheckoutPage = () => {
     return sanitizeRichNotice(raw);
   }, [siteSettings?.offline_payment_disclaimer]);
 
+  const shippingAddressLine = useMemo(() => {
+    const addr = orders?.shipping_address;
+    if (!addr) return "";
+    const city =
+      typeof addr.city === "object" && addr.city !== null
+        ? addr.city.name
+        : typeof addr.city === "string"
+          ? addr.city
+          : "";
+    const state =
+      typeof addr.state === "object" && addr.state !== null
+        ? addr.state.name
+        : typeof addr.state === "string"
+          ? addr.state
+          : "";
+    return [city, state].filter(Boolean).join(", ");
+  }, [orders?.shipping_address]);
+
+  const shippingCountryLine = useMemo(() => {
+    const country = orders?.shipping_address?.country;
+    if (!country) return "";
+    if (typeof country === "object" && country !== null && "name" in country) {
+      return String(country.name || "");
+    }
+    return typeof country === "string" ? country : "";
+  }, [orders?.shipping_address?.country]);
+
   const showUnpaidBadges =
     Boolean(orders) && (escrowDisabled || paymentMethod === "pod");
   const primaryIsUnpaid = showUnpaidBadges;
@@ -96,6 +127,11 @@ const CheckoutPage = () => {
   const checkoutValue = useMemo(
     () => Number(orders?.totalPriceDue || orders?.totalPrice || 0),
     [orders?.totalPriceDue, orders?.totalPrice]
+  );
+
+  const checkoutBlockedBySelfPurchase = useMemo(
+    () => orderHasSelfPurchase(orders?.orderItems, profile),
+    [orders?.orderItems, profile]
   );
 
   useEffect(() => {
@@ -144,6 +180,10 @@ const CheckoutPage = () => {
   const handleUnpaidComplete = useCallback(
     async (method: "pay_on_delivery" | "direct_merchant") => {
       if (!orders?.order_number) return;
+      if (checkoutBlockedBySelfPurchase) {
+        toast.error(SELF_PURCHASE_CHECKOUT_MESSAGE);
+        return;
+      }
       setProcessingPayment(true);
       try {
         if (typeof window !== "undefined") {
@@ -169,10 +209,14 @@ const CheckoutPage = () => {
         setProcessingPayment(false);
       }
     },
-    [dispatch, orders?.order_number, router]
+    [dispatch, orders?.order_number, router, checkoutBlockedBySelfPurchase]
   );
 
   const handleCardPay = async () => {
+    if (checkoutBlockedBySelfPurchase) {
+      toast.error(SELF_PURCHASE_CHECKOUT_MESSAGE);
+      return;
+    }
     if (escrowDisabled) {
       toast.error("Card payment is not available while escrow is disabled.");
       return;
@@ -212,6 +256,10 @@ const CheckoutPage = () => {
   };
 
   const onPrimaryCheckout = () => {
+    if (checkoutBlockedBySelfPurchase) {
+      toast.error(SELF_PURCHASE_CHECKOUT_MESSAGE);
+      return;
+    }
     if (escrowDisabled || paymentMethod === "pod") {
       void handleUnpaidComplete(escrowDisabled ? "direct_merchant" : "pay_on_delivery");
       return;
@@ -314,6 +362,25 @@ const CheckoutPage = () => {
           Checkout
         </h1>
 
+        {checkoutBlockedBySelfPurchase ? (
+          <div
+            className="mb-6 rounded-xl border border-amber-300/90 bg-amber-50 p-4 text-sm text-amber-950 shadow-sm"
+            role="alert"
+          >
+            <p className="font-semibold">{SELF_PURCHASE_CHECKOUT_MESSAGE}</p>
+            <p className="mt-2">
+              Remove your products from the cart and create a new order to continue.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/carts")}
+              className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-dark"
+            >
+              Back to cart
+            </button>
+          </div>
+        ) : null}
+
         {/* Single column on all breakpoints — matches mobile cart flow site-wide */}
         <div className="flex flex-col gap-4">
           <div className={cardShell}>
@@ -377,11 +444,8 @@ const CheckoutPage = () => {
               </h2>
               <div className="space-y-1.5 text-sm text-slate-700">
                 <p>{orders?.shipping_address?.address}</p>
-                <p>
-                  {orders?.shipping_address?.city.name},{" "}
-                  {orders?.shipping_address?.state.name}
-                </p>
-                <p>{orders?.shipping_address?.country?.name}</p>
+                {shippingAddressLine ? <p>{shippingAddressLine}</p> : null}
+                {shippingCountryLine ? <p>{shippingCountryLine}</p> : null}
                 <p className="pt-1 text-slate-600">
                   Phone: {orders?.shipping_address?.phone}
                 </p>
@@ -500,9 +564,9 @@ const CheckoutPage = () => {
                 <button
                   type="button"
                   onClick={() => void onPrimaryCheckout()}
-                  disabled={processingPayment}
+                  disabled={processingPayment || checkoutBlockedBySelfPurchase}
                   className={`mt-2 flex w-full items-center justify-center rounded-xl py-3.5 font-medium text-white transition ${
-                    processingPayment
+                    processingPayment || checkoutBlockedBySelfPurchase
                       ? "cursor-not-allowed bg-slate-300"
                       : "bg-primary hover:bg-primary-dark"
                   }`}
@@ -531,6 +595,8 @@ const CheckoutPage = () => {
                       </svg>
                       {primaryIsUnpaid ? "Placing order…" : "Processing payment…"}
                     </>
+                  ) : checkoutBlockedBySelfPurchase ? (
+                    "Cannot buy from your store"
                   ) : primaryIsUnpaid ? (
                     escrowDisabled ? (
                       "Complete order"

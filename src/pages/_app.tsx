@@ -20,6 +20,7 @@ import { checkTokenValidity, clearAllStorage } from "@/util";
 import { clearAuthState } from "@/redux/auth/authSlice";
 import {
   getAllCategories,
+  getCarts,
   syncLocalCartFromStorage,
 } from "@/redux/product/productSlice";
 import { getSiteSettings } from "@/redux/general/generalSlice";
@@ -117,6 +118,12 @@ function AppContent({ Component, pageProps }: AppProps) {
     const timer = window.setTimeout(() => setShowLaunchConfetti(false), 5200);
     return () => window.clearTimeout(timer);
   }, [siteSettingsLoaded]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getCarts());
+    }
+  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     // Check if tokens exist on app initialization

@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import { useState } from "react";
 import { useAppSelector } from "@/hook/useReduxTypes";
-import { formatCurrency } from "@/util";
+import { formatCurrency, orderItemImageUrl } from "@/util";
 import { useRouter } from "next/router";
 import {
   CheckCircleIcon,
@@ -146,7 +146,7 @@ const Orders: NextPage = () => {
                   <div className="flex items-start gap-3">
                     <div className="w-16 h-16 bg-gray-100 border border-gray-200 flex-shrink-0">
                       <img
-                        src={order?.image || "/placeholder.png"}
+                        src={orderItemImageUrl(order)}
                         alt={order?.name}
                         className="w-full h-full object-cover"
                       />
@@ -229,7 +229,7 @@ const Orders: NextPage = () => {
                   <div className="col-span-3 flex items-center gap-4">
                     <div className="w-14 h-14 bg-gray-100 border border-gray-200 flex-shrink-0">
                       <img
-                        src={order?.image || "/placeholder.png"}
+                        src={orderItemImageUrl(order)}
                         alt={order?.name}
                         className="w-full h-full object-cover"
                       />

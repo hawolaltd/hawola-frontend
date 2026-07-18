@@ -323,6 +323,34 @@ const getMerchantReviews = async (slug: string) => {
     return response.data;
 };
 
+const getMerchantStoreReviews = async (slug: string) => {
+    const response = await axiosInstance.get(API + `reviews/merchant/${slug}/`);
+    return response.data;
+};
+
+const getOrderReviewStatus = async (orderitemNumber: string) => {
+    const response = await axiosInstance.get(
+        API + `reviews/order-status/${encodeURIComponent(orderitemNumber)}/`
+    );
+    return response.data;
+};
+
+const submitProductReview = async (payload: {
+    orderitem_number: string;
+    title?: string;
+    rating_product: number;
+    rating_shipping: number;
+    rating_merchant: number;
+    comment?: string;
+    merchant_comment?: string;
+}) => {
+    const response = await axiosInstance.post(
+        API + `reviews/user-reviews-product/`,
+        payload
+    );
+    return response.data;
+};
+
 // get wishlist
 
 const getWishList = async () => {
@@ -409,6 +437,9 @@ const productService = {
     cancelCustomerOrderItem,
     getReviews,
     getMerchantReviews,
+    getMerchantStoreReviews,
+    getOrderReviewStatus,
+    submitProductReview,
     clearProductById,
     getWishList,
     addWishList,

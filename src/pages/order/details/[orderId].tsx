@@ -9,7 +9,7 @@ import * as yup from 'yup';
 import {useRouter} from "next/router";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
 import {getAddress, getSingleOrder} from "@/redux/product/productSlice";
-import {formatCurrency, getLatestStatus} from "@/util";
+import {formatCurrency, getLatestStatus, orderItemImageUrl} from "@/util";
 import productService from "@/redux/product/productService";
 import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import {
     storefrontMerchantPath,
     storefrontProductPath,
 } from "@/lib/storefrontUrls";
+import OrderReviewPanel from "@/components/order/OrderReviewPanel";
 
 /** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
 const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
@@ -256,6 +257,10 @@ const OrderDetails: NextPage = () => {
         !lineCancelled &&
         singleOrder?.isDelivered === true &&
         singleOrder?.user_confirm_order !== true;
+    const saleConcluded =
+        !lineCancelled &&
+        singleOrder?.isDelivered === true &&
+        singleOrder?.user_confirm_order === true;
     const messagingClosed =
         lineCancelled ||
         singleOrder?.isDelivered === true ||
@@ -383,10 +388,19 @@ const OrderDetails: NextPage = () => {
     };
     const handleConfirmDelivery = async () => {
         if (!orderitemNumber) return;
+        // eslint-disable-next-line no-alert
+        if (
+            !confirm(
+                'Confirm only when the item is in your hands. The seller will be notified.'
+            )
+        ) {
+            return;
+        }
         setConfirmingOrder(true);
         try {
             await productService.confirmOrderItem(orderitemNumber);
             dispatch(getSingleOrder(orderitemNumber));
+            toast.success('Thank you! We notified the seller that you received your order.');
         } catch (err: any) {
             toast.error(err?.response?.data?.detail || err?.response?.data?.error || 'Failed to confirm delivery');
         } finally {
@@ -495,6 +509,57 @@ const OrderDetails: NextPage = () => {
                                    Back to Orders
                                </button>
 
+                               {!lineCancelled ? (
+                                   <div className="container mx-auto mb-4 sm:mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                                           Order progress
+                                       </p>
+                                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs sm:text-sm">
+                                           {[
+                                               { label: 'Paid', done: Boolean(singleOrder?.payment_confirmed || singleOrder?.isPaid) },
+                                               { label: 'Shipped', done: Boolean(singleOrder?.isShipped) },
+                                               {
+                                                   label: isDeliveredAwaitingConfirmation ? 'Confirm receipt' : 'Delivered',
+                                                   done: Boolean(singleOrder?.isDelivered && singleOrder?.user_confirm_order),
+                                                   active: isDeliveredAwaitingConfirmation,
+                                               },
+                                               { label: 'Complete', done: Boolean(singleOrder?.user_confirm_order) },
+                                           ].map((step) => (
+                                               <div
+                                                   key={step.label}
+                                                   className={`rounded-lg px-2 py-3 border ${
+                                                       step.done
+                                                           ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                                           : step.active
+                                                             ? 'border-amber-300 bg-amber-50 text-amber-900'
+                                                             : 'border-gray-100 bg-gray-50 text-gray-500'
+                                                   }`}
+                                               >
+                                                   <span className="font-semibold">{step.label}</span>
+                                                   {step.done ? <span className="block mt-1">✓</span> : null}
+                                               </div>
+                                           ))}
+                                       </div>
+                                   </div>
+                               ) : null}
+
+                               {isDeliveredAwaitingConfirmation && !lineCancelled ? (
+                                   <div className="container mx-auto mb-4 sm:mb-6 rounded-xl border-2 border-amber-300 bg-amber-50 p-5 shadow-sm">
+                                       <h2 className="text-lg font-bold text-gray-900">Did your order arrive?</h2>
+                                       <p className="mt-2 text-sm text-gray-700">
+                                           Your seller marked this as delivered. Tap below when the item is in your hands.
+                                       </p>
+                                       <button
+                                           type="button"
+                                           onClick={() => void handleConfirmDelivery()}
+                                           disabled={confirmingOrder}
+                                           className="mt-4 px-5 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 disabled:opacity-50"
+                                       >
+                                           {confirmingOrder ? 'Saving…' : 'I received my order'}
+                                       </button>
+                                   </div>
+                               ) : null}
+
                                {lineCancelled && (
                                    <div
                                        role="status"
@@ -539,7 +604,7 @@ const OrderDetails: NextPage = () => {
 
                                                    <div className="flex items-center w-full mt-2">
                                                        <img
-                                                           src={singleOrder?.image}
+                                                           src={orderItemImageUrl(singleOrder)}
                                                            alt={singleOrder?.name}
                                                            className="w-full h-auto max-h-48 object-contain"
                                                        />
@@ -798,16 +863,8 @@ const OrderDetails: NextPage = () => {
                                        {isDeliveredAwaitingConfirmation && (
                                                <div className="px-4 py-3 rounded-lg border border-amber-200 bg-amber-50/50 flex flex-wrap items-center justify-between gap-2 mb-4">
                                                    <p className="text-sm text-gray-700">
-                                                       <span className="font-medium text-gray-800">Order delivered.</span> Please confirm you received it.
+                                                       <span className="font-medium text-gray-800">Waiting for your confirmation.</span> Use the button at the top of this page when your order arrives.
                                                    </p>
-                                                   <button
-                                                       type="button"
-                                                       onClick={handleConfirmDelivery}
-                                                       disabled={confirmingOrder}
-                                                       className="shrink-0 px-3 py-1.5 bg-primary text-white rounded-md hover:bg-primary/90 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                                   >
-                                                       {confirmingOrder ? 'Confirming…' : 'Confirm delivery'}
-                                                   </button>
                                                </div>
                                            )}
                                            {!hasDispute && (
@@ -1051,6 +1108,21 @@ const OrderDetails: NextPage = () => {
                                            </>
                                        )}
                                    </div>
+
+                                   {saleConcluded && orderitemNumber ? (
+                                       <div className="mt-6">
+                                           <OrderReviewPanel
+                                               orderitemNumber={orderitemNumber}
+                                               productName={singleOrder?.product?.name}
+                                               merchantStoreName={merchantStoreName}
+                                               onSubmitted={() => {
+                                                   if (orderitemNumber) {
+                                                       dispatch(getSingleOrder(orderitemNumber));
+                                                   }
+                                               }}
+                                           />
+                                       </div>
+                                   ) : null}
 
                                </div>
                            </div>

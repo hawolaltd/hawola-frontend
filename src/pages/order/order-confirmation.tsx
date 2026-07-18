@@ -39,6 +39,33 @@ const OrderConfirmationPage = () => {
         return custom || "";
     }, [siteSettings?.offline_order_confirmation_badge_text]);
 
+    const shippingAddressLine = useMemo(() => {
+        const addr = orders?.shipping_address;
+        if (!addr) return "";
+        const city =
+            typeof addr.city === "object" && addr.city !== null
+                ? addr.city.name
+                : typeof addr.city === "string"
+                  ? addr.city
+                  : "";
+        const state =
+            typeof addr.state === "object" && addr.state !== null
+                ? addr.state.name
+                : typeof addr.state === "string"
+                  ? addr.state
+                  : "";
+        return [city, state].filter(Boolean).join(", ");
+    }, [orders?.shipping_address]);
+
+    const shippingCountryLine = useMemo(() => {
+        const country = orders?.shipping_address?.country;
+        if (!country) return "";
+        if (typeof country === "object" && country !== null && "name" in country) {
+            return String(country.name || "");
+        }
+        return typeof country === "string" ? country : "";
+    }, [orders?.shipping_address?.country]);
+
     useEffect(() => {
         if (!orders || !id) return;
 
@@ -130,9 +157,19 @@ const OrderConfirmationPage = () => {
                             {/* Delivery Information */}
                             <div>
                                 <p className="text-gray-600 mt-2">
-                                    {orders?.shipping_address?.address}<br/>
-                                    {orders.shipping_address.city?.name}, {orders.shipping_address.state.name}<br/>
-                                    {orders.shipping_address?.country}
+                                    {orders?.shipping_address?.address}
+                                    {shippingAddressLine ? (
+                                        <>
+                                            <br />
+                                            {shippingAddressLine}
+                                        </>
+                                    ) : null}
+                                    {shippingCountryLine ? (
+                                        <>
+                                            <br />
+                                            {shippingCountryLine}
+                                        </>
+                                    ) : null}
                                 </p>
                             </div>
 

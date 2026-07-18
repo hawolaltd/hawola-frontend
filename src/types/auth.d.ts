@@ -68,6 +68,7 @@ export interface UserProfileResponse {
     is_merchant?: boolean;
     telegram_connected?: boolean;
     telegram_order_notifications_enabled?: boolean;
+    merchant_profile_id?: number | null;
 }
 
 export interface UpdateProfileDataType {

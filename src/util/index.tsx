@@ -389,3 +389,4 @@ export {
   featuredImageCardUrl,
 } from "./featuredImage";
 export type { FeaturedImageCardEntry } from "./featuredImage";
+export { orderItemImageUrl } from "./orderItemImage";

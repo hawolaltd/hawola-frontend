@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import {
@@ -26,8 +27,13 @@ import {
   getAvatarColor,
   getInitials,
   shouldShowDateDivider,
+  sortConversationsByLastMessage,
   storeDisplayName,
 } from "@/components/account/accountChatUtils";
+import { mergeChatMessages } from "@/lib/buyerChatUtils";
+import ChatMessageBody from "@/components/account/ChatMessageBody";
+
+const CHAT_LIST_PAGE_SIZE = 20;
 
 function ContextBadge({ kind }: { kind: "order" | "product" | "store" }) {
   const styles = {
@@ -100,8 +106,13 @@ function StoreAvatar({
 }
 
 export default function AccountChats() {
+  const router = useRouter();
   const [conversations, setConversations] = useState<BuyerChatConversation[]>([]);
   const [listLoading, setListLoading] = useState(true);
+  const [listLoadingMore, setListLoadingMore] = useState(false);
+  const [listPage, setListPage] = useState(1);
+  const [listHasMore, setListHasMore] = useState(false);
+  const [listTotalCount, setListTotalCount] = useState(0);
   const [selected, setSelected] = useState<BuyerChatConversation | null>(null);
   const [messages, setMessages] = useState<BuyerChatMessage[]>([]);
   const [threadLoading, setThreadLoading] = useState(false);
@@ -111,13 +122,32 @@ export default function AccountChats() {
   const [mobileThread, setMobileThread] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inboxScrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const messagesRef = useRef<BuyerChatMessage[]>([]);
+  const prevMessageCountRef = useRef(0);
 
-  const refreshList = useCallback(async () => {
-    setListLoading(true);
+  messagesRef.current = messages;
+
+  const refreshList = useCallback(async (silent = false) => {
+    if (!silent) setListLoading(true);
     try {
-      const rows = await listBuyerChats();
-      setConversations(rows);
+      const data = await listBuyerChats({ page: 1, page_size: CHAT_LIST_PAGE_SIZE });
+      setListTotalCount(data.count || 0);
+      setListHasMore((data.page || 1) < (data.total_pages || 1));
+      if (silent) {
+        setConversations((prev) => {
+          const bySlug = new Map(prev.map((c) => [c.slug, c]));
+          for (const row of data.results) {
+            bySlug.set(row.slug, row);
+          }
+          return sortConversationsByLastMessage([...bySlug.values()]);
+        });
+      } else {
+        setListPage(data.page || 1);
+        setConversations(sortConversationsByLastMessage(data.results));
+      }
     } catch (e: unknown) {
       const detail =
         typeof e === "object" && e !== null && "response" in e
@@ -125,48 +155,78 @@ export default function AccountChats() {
           : undefined;
       toast.error(detail || "Could not load chats");
     } finally {
-      setListLoading(false);
+      if (!silent) setListLoading(false);
     }
   }, []);
+
+  const loadMoreConversations = useCallback(async () => {
+    if (listLoading || listLoadingMore || !listHasMore) return;
+    setListLoadingMore(true);
+    try {
+      const nextPage = listPage + 1;
+      const data = await listBuyerChats({ page: nextPage, page_size: CHAT_LIST_PAGE_SIZE });
+      setListTotalCount(data.count || 0);
+      setListPage(data.page || nextPage);
+      setListHasMore((data.page || nextPage) < (data.total_pages || 1));
+      setConversations((prev) => {
+        const seen = new Set(prev.map((c) => c.slug));
+        const appended = data.results.filter((c) => !seen.has(c.slug));
+        return sortConversationsByLastMessage([...prev, ...appended]);
+      });
+    } catch (e: unknown) {
+      const detail =
+        typeof e === "object" && e !== null && "response" in e
+          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : undefined;
+      toast.error(detail || "Could not load more chats");
+    } finally {
+      setListLoadingMore(false);
+    }
+  }, [listHasMore, listLoading, listLoadingMore, listPage]);
 
   useEffect(() => {
     void refreshList();
   }, [refreshList]);
 
-  const loadMessages = useCallback(
-    async (slug: string, merge = true) => {
+  const loadMessages = useCallback(async (slug: string, { merge = false } = {}) => {
+    try {
       const afterId =
-        merge && messages.length ? messages[messages.length - 1]?.id : undefined;
-      try {
-        const rows = await getBuyerChatMessages(slug, merge ? afterId : undefined);
-        if (merge && afterId && rows.length) {
-          setMessages((prev) => {
-            const ids = new Set(prev.map((m) => m.id));
-            return [...prev, ...rows.filter((m) => !ids.has(m.id))];
-          });
-        } else if (!merge) {
-          setMessages(rows);
-        }
-      } catch {
-        /* ignore poll errors */
+        merge && messagesRef.current.length
+          ? messagesRef.current[messagesRef.current.length - 1]?.id
+          : undefined;
+      const rows = await getBuyerChatMessages(slug, merge ? afterId : undefined);
+      if (merge && afterId && rows.length) {
+        setMessages((prev) => mergeChatMessages(prev, rows));
+      } else if (!merge) {
+        setMessages(rows);
       }
-    },
-    [messages]
-  );
+    } catch {
+      /* ignore poll errors */
+    }
+  }, []);
 
   const openConversation = useCallback((conversation: BuyerChatConversation) => {
     setSelected(conversation);
     setMobileThread(true);
+    setMessages([]);
+    prevMessageCountRef.current = 0;
   }, []);
+
+  useEffect(() => {
+    const slug = router.query.conversation;
+    if (typeof slug !== "string" || !slug || listLoading || !conversations.length) return;
+    const match = conversations.find((c) => c.slug === slug);
+    if (match) {
+      openConversation(match);
+    }
+  }, [router.query.conversation, conversations, listLoading, openConversation]);
 
   useEffect(() => {
     if (!selected?.slug) return undefined;
 
     const slug = selected.slug;
     setThreadLoading(true);
-    void getBuyerChatMessages(slug)
-      .then((rows) => setMessages(rows))
-      .finally(() => setThreadLoading(false));
+    void loadMessages(slug, { merge: false }).finally(() => setThreadLoading(false));
 
     const stopPoll = () => {
       if (pollRef.current) {
@@ -177,16 +237,14 @@ export default function AccountChats() {
     const startPoll = () => {
       stopPoll();
       pollRef.current = setInterval(() => {
-        void loadMessages(slug, true);
+        void loadMessages(slug, { merge: true });
       }, CHAT_FALLBACK_POLL_MS);
     };
 
     const unsubscribe = subscribeBuyerChat(slug, {
       onMessage: (msg) => {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg as BuyerChatMessage];
-        });
+        setMessages((prev) => mergeChatMessages(prev, [msg as BuyerChatMessage]));
+        void refreshList(true);
       },
       onConnectedChange: (connected) => {
         setWsConnected(connected);
@@ -200,16 +258,22 @@ export default function AccountChats() {
       stopPoll();
       setWsConnected(false);
     };
-  }, [selected?.slug, loadMessages]);
+  }, [selected?.slug, loadMessages, refreshList]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, selected?.slug, threadLoading]);
+    if (threadLoading) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const grew = messages.length > prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+    el.scrollTo({ top: el.scrollHeight, behavior: grew ? "smooth" : "auto" });
+  }, [messages.length, selected?.slug, threadLoading]);
 
   const filteredConversations = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return conversations;
-    return conversations.filter((c) => {
+    const sorted = sortConversationsByLastMessage(conversations);
+    if (!q) return sorted;
+    return sorted.filter((c) => {
       const haystack = [
         c.merchant_store_name,
         c.last_message_preview,
@@ -224,6 +288,24 @@ export default function AccountChats() {
     });
   }, [conversations, searchQuery]);
 
+  useEffect(() => {
+    const root = inboxScrollRef.current;
+    const sentinel = loadMoreSentinelRef.current;
+    if (!root || !sentinel || !listHasMore || listLoading || listLoadingMore) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void loadMoreConversations();
+        }
+      },
+      { root, rootMargin: "120px", threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredConversations.length, listHasMore, listLoading, listLoadingMore, loadMoreConversations]);
+
   const send = async () => {
     const text = input.trim();
     if (!text || !selected?.slug) return;
@@ -232,7 +314,7 @@ export default function AccountChats() {
       const msg = await sendBuyerChatMessage(selected.slug, text);
       setMessages((prev) => [...prev, msg]);
       setInput("");
-      void refreshList();
+      void refreshList(true);
     } catch (e: unknown) {
       const detail =
         typeof e === "object" && e !== null && "response" in e
@@ -248,11 +330,11 @@ export default function AccountChats() {
   const storeHref = selected ? storefrontMerchantPath(selected.merchant_slug) : null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-detailsBorder bg-white shadow-[0_8px_30px_rgba(14,34,77,0.08)]">
-      <div className="flex min-h-[min(68vh,640px)] flex-col md:grid md:grid-cols-12">
+    <div className="h-[min(600px,65vh)] max-h-[640px] overflow-hidden rounded-2xl border border-detailsBorder bg-white shadow-[0_8px_30px_rgba(14,34,77,0.08)]">
+      <div className="flex h-full min-h-0 flex-col md:grid md:grid-cols-12">
         {/* Inbox */}
         <div
-          className={`flex flex-col border-detailsBorder md:col-span-4 md:border-r ${
+          className={`flex h-full min-h-0 flex-col border-detailsBorder md:col-span-4 md:border-r ${
             mobileThread ? "hidden md:flex" : "flex"
           }`}
         >
@@ -261,7 +343,8 @@ export default function AccountChats() {
               <div>
                 <p className="text-sm font-semibold text-gray-900">Seller messages</p>
                 <p className="text-xs text-gray-500">
-                  {conversations.length} conversation{conversations.length === 1 ? "" : "s"}
+                  {listTotalCount || conversations.length} conversation
+                  {(listTotalCount || conversations.length) === 1 ? "" : "s"}
                 </p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-sm">
@@ -283,8 +366,8 @@ export default function AccountChats() {
             </label>
           </div>
 
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex items-center justify-end border-b border-gray-100 px-4 py-2">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 items-center justify-end border-b border-gray-100 px-4 py-2">
               <button
                 type="button"
                 className="text-xs font-semibold text-primary hover:underline disabled:opacity-50"
@@ -295,7 +378,7 @@ export default function AccountChats() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div ref={inboxScrollRef} className="chat-scroll-pane min-h-0 flex-1">
               {listLoading ? (
                 <div className="flex justify-center py-16">
                   <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -356,7 +439,7 @@ export default function AccountChats() {
                                 </span>
                               </div>
                               {c.last_message_preview ? (
-                                <p className="mt-1.5 line-clamp-2 text-sm text-gray-600 group-hover:text-gray-700">
+                                <p className="mt-1.5 line-clamp-1 text-sm text-gray-600 group-hover:text-gray-700">
                                   {c.last_message_preview}
                                 </p>
                               ) : (
@@ -370,18 +453,27 @@ export default function AccountChats() {
                   })}
                 </ul>
               )}
+              {!listLoading && filteredConversations.length > 0 && listHasMore ? (
+                <div ref={loadMoreSentinelRef} className="flex justify-center py-4">
+                  {listLoadingMore ? (
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    <span className="text-xs text-gray-400">Scroll for more conversations</span>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
 
         {/* Thread */}
         <div
-          className={`flex min-h-[360px] flex-col md:col-span-8 ${
+          className={`flex h-full min-h-0 flex-col overflow-hidden md:col-span-8 ${
             mobileThread ? "flex" : "hidden md:flex"
           }`}
         >
           {!selected ? (
-            <div className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6 text-center">
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-primary shadow-sm ring-1 ring-detailsBorder">
                 <ChatBubbleLeftRightIcon className="h-8 w-8" aria-hidden />
               </div>
@@ -391,8 +483,8 @@ export default function AccountChats() {
               </p>
             </div>
           ) : (
-            <>
-              <div className="border-b border-detailsBorder bg-gradient-to-r from-primary via-headerBg to-[#1E3A8A] px-3 py-3 text-white md:px-4">
+            <div className="flex h-full min-h-0 flex-col overflow-hidden">
+              <div className="shrink-0 border-b border-detailsBorder bg-gradient-to-r from-primary via-headerBg to-[#1E3A8A] px-3 py-2.5 text-white md:px-4">
                 <div className="flex items-start gap-2">
                   <button
                     type="button"
@@ -430,7 +522,7 @@ export default function AccountChats() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 border-t border-white/15 pt-2">
+                <div className="mt-2 border-t border-white/15 pt-1.5">
                   <ContentModerationActions
                     className="[&_button]:text-white/90 [&_button:hover]:text-white"
                     blockLabel="Block store"
@@ -451,7 +543,7 @@ export default function AccountChats() {
 
               <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_1px_1px,rgba(148,163,184,0.16)_1px,transparent_0)] [background-size:18px_18px] bg-gray-50/90 px-3 py-4 sm:px-4"
+                className="chat-scroll-pane min-h-0 flex-1 bg-[radial-gradient(circle_at_1px_1px,rgba(148,163,184,0.16)_1px,transparent_0)] [background-size:18px_18px] bg-gray-50/90 px-3 py-3 sm:px-4"
               >
                 {threadLoading ? (
                   <div className="flex justify-center py-16">
@@ -491,7 +583,7 @@ export default function AccountChats() {
                                     : "rounded-bl-md border border-detailsBorder bg-white text-gray-800"
                                 }`}
                               >
-                                {m.body}
+                                <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
                               </div>
                               <span
                                 className={`px-1 text-[10px] text-gray-400 ${
@@ -509,7 +601,7 @@ export default function AccountChats() {
                 )}
               </div>
 
-              <div className="border-t border-detailsBorder bg-white p-3 sm:p-4">
+              <div className="shrink-0 border-t border-detailsBorder bg-white p-3 sm:p-4">
                 <div className="flex items-end gap-2 rounded-2xl border border-detailsBorder bg-gray-50 p-2">
                   <textarea
                     rows={1}
@@ -539,7 +631,7 @@ export default function AccountChats() {
                   Press Enter to send · Shift+Enter for a new line
                 </p>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

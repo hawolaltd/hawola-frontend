@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import {useAppDispatch, useAppSelector} from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
-import { amountFormatter } from '@/util';
+import { amountFormatter, orderItemImageUrl } from '@/util';
 import Link from 'next/link';
 import { TruckIcon, CreditCardIcon, ShoppingBagIcon, EnvelopeIcon, PrinterIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -104,7 +104,7 @@ const OrderDetailsPage = () => {
                                         <div className="flex gap-4 mb-4 md:mb-0">
                                             <div className="w-20 h-20 bg-gray-200 rounded-md flex-shrink-0">
                                                 <img
-                                                    src={item.image}
+                                                    src={orderItemImageUrl(item)}
                                                     alt={item.product.name}
                                                     className="w-full h-full object-cover"
                                                 />
