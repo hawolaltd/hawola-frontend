@@ -18,7 +18,6 @@ export default function AccountTelegramConnectPrompt({
     telegramLoading,
     telegramConnectUrl,
     telegramConnectModalOpen,
-    telegramOpenMode,
     closeModal,
     handleConnectTelegram,
     modalConnected,
@@ -86,7 +85,7 @@ export default function AccountTelegramConnectPrompt({
         connectUrl={telegramConnectUrl}
         connected={modalConnected}
         waiting={modalWaiting}
-        openMode={telegramOpenMode}
+        loading={telegramLoading && !telegramConnectUrl}
       />
     </>
   );

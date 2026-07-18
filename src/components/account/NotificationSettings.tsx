@@ -105,7 +105,6 @@ export default function NotificationSettings() {
     telegramLoading,
     telegramConnectUrl,
     telegramConnectModalOpen,
-    telegramOpenMode,
     closeModal,
     handleConnectTelegram,
     modalConnected,
@@ -208,7 +207,7 @@ export default function NotificationSettings() {
         connectUrl={telegramConnectUrl}
         connected={modalConnected}
         waiting={modalWaiting}
-        openMode={telegramOpenMode}
+        loading={telegramLoading && !telegramConnectUrl}
       />
 
       <header className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary via-headerBg to-[#1E3A8A] p-6 text-white shadow-lg md:p-8">

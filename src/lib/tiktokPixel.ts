@@ -14,6 +14,7 @@ declare global {
     ttq?: {
       load: (pixelId: string, options?: Record<string, unknown>) => void;
       page: () => void;
+      push?: (command: unknown[]) => void;
       ready?: (callback: () => void) => void;
       track: (
         event: string,
