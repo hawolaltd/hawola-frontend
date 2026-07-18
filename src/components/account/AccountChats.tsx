@@ -125,8 +125,11 @@ export default function AccountChats() {
   const inboxScrollRef = useRef<HTMLDivElement>(null);
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollActiveRef = useRef(false);
   const messagesRef = useRef<BuyerChatMessage[]>([]);
   const prevMessageCountRef = useRef(0);
+  const selectedSlugRef = useRef<string | null>(null);
+  const refreshListRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
 
   messagesRef.current = messages;
 
@@ -158,6 +161,8 @@ export default function AccountChats() {
       if (!silent) setListLoading(false);
     }
   }, []);
+
+  refreshListRef.current = refreshList;
 
   const loadMoreConversations = useCallback(async () => {
     if (listLoading || listLoadingMore || !listHasMore) return;
@@ -206,8 +211,13 @@ export default function AccountChats() {
   }, []);
 
   const openConversation = useCallback((conversation: BuyerChatConversation) => {
-    setSelected(conversation);
     setMobileThread(true);
+    if (selectedSlugRef.current === conversation.slug) {
+      setSelected(conversation);
+      return;
+    }
+    selectedSlugRef.current = conversation.slug;
+    setSelected(conversation);
     setMessages([]);
     prevMessageCountRef.current = 0;
   }, []);
@@ -215,10 +225,9 @@ export default function AccountChats() {
   useEffect(() => {
     const slug = router.query.conversation;
     if (typeof slug !== "string" || !slug || listLoading || !conversations.length) return;
+    if (selectedSlugRef.current === slug) return;
     const match = conversations.find((c) => c.slug === slug);
-    if (match) {
-      openConversation(match);
-    }
+    if (match) openConversation(match);
   }, [router.query.conversation, conversations, listLoading, openConversation]);
 
   useEffect(() => {
@@ -229,13 +238,16 @@ export default function AccountChats() {
     void loadMessages(slug, { merge: false }).finally(() => setThreadLoading(false));
 
     const stopPoll = () => {
+      pollActiveRef.current = false;
       if (pollRef.current) {
         clearInterval(pollRef.current);
         pollRef.current = null;
       }
     };
     const startPoll = () => {
-      stopPoll();
+      if (pollActiveRef.current) return;
+      pollActiveRef.current = true;
+      void loadMessages(slug, { merge: true });
       pollRef.current = setInterval(() => {
         void loadMessages(slug, { merge: true });
       }, CHAT_FALLBACK_POLL_MS);
@@ -244,7 +256,7 @@ export default function AccountChats() {
     const unsubscribe = subscribeBuyerChat(slug, {
       onMessage: (msg) => {
         setMessages((prev) => mergeChatMessages(prev, [msg as BuyerChatMessage]));
-        void refreshList(true);
+        void refreshListRef.current(true);
       },
       onConnectedChange: (connected) => {
         setWsConnected(connected);
@@ -258,7 +270,7 @@ export default function AccountChats() {
       stopPoll();
       setWsConnected(false);
     };
-  }, [selected?.slug, loadMessages, refreshList]);
+  }, [selected?.slug, loadMessages]);
 
   useEffect(() => {
     if (threadLoading) return;
@@ -533,6 +545,7 @@ export default function AccountChats() {
                     onBlock={async () => {
                       if (!selected?.slug) return;
                       await blockBuyerChat(selected.slug);
+                      selectedSlugRef.current = null;
                       setSelected(null);
                       setMobileThread(false);
                       void refreshList();

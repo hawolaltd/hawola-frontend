@@ -139,7 +139,8 @@ export default function MerchantChatWidget({
       }
     };
     const startPoll = () => {
-      stopPoll();
+      if (pollRef.current) return;
+      void loadMessages(slug, { merge: true });
       pollRef.current = setInterval(() => {
         void loadMessages(slug, { merge: true });
       }, CHAT_FALLBACK_POLL_MS);

@@ -2,7 +2,8 @@ import Cookies from "js-cookie";
 import { API } from "@/constant";
 import { authTokenStorageKeyName } from "@/constant";
 
-const RECONNECT_MS = 3000;
+const RECONNECT_BASE_MS = 3000;
+const RECONNECT_MAX_MS = 60000;
 export const CHAT_FALLBACK_POLL_MS = 30000;
 
 export type BuyerChatWsMessage = {
@@ -50,20 +51,59 @@ export function subscribeBuyerChat(
   let ws: WebSocket | null = null;
   let stopped = false;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let reconnectAttempt = 0;
+  let wasConnected = false;
+  let reportedDisconnected = false;
+
+  const notifyDisconnected = () => {
+    if (reportedDisconnected) return;
+    reportedDisconnected = true;
+    onConnectedChange?.(false);
+  };
+
+  const scheduleReconnect = () => {
+    if (stopped) return;
+    const delay = Math.min(
+      RECONNECT_BASE_MS * 2 ** reconnectAttempt,
+      RECONNECT_MAX_MS
+    );
+    reconnectAttempt += 1;
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      void connect();
+    }, delay);
+  };
 
   const connect = async () => {
     if (stopped) return;
+
+    if (ws) {
+      try {
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close();
+      } catch {
+        /* ignore */
+      }
+      ws = null;
+    }
+
     const token = await Promise.resolve(getToken());
     if (!token) {
-      onConnectedChange?.(false);
-      reconnectTimer = setTimeout(connect, RECONNECT_MS);
+      notifyDisconnected();
+      scheduleReconnect();
       return;
     }
 
     const url = buildBuyerChatWsUrl(slug, token, apiBase);
     ws = new WebSocket(url);
 
-    ws.onopen = () => onConnectedChange?.(true);
+    ws.onopen = () => {
+      reconnectAttempt = 0;
+      wasConnected = true;
+      reportedDisconnected = false;
+      onConnectedChange?.(true);
+    };
 
     ws.onmessage = (event) => {
       try {
@@ -77,11 +117,14 @@ export function subscribeBuyerChat(
     };
 
     ws.onclose = () => {
-      onConnectedChange?.(false);
       ws = null;
-      if (!stopped) {
-        reconnectTimer = setTimeout(connect, RECONNECT_MS);
+      if (wasConnected) {
+        wasConnected = false;
+        notifyDisconnected();
+      } else {
+        notifyDisconnected();
       }
+      if (!stopped) scheduleReconnect();
     };
 
     ws.onerror = () => {
@@ -94,7 +137,16 @@ export function subscribeBuyerChat(
   return () => {
     stopped = true;
     if (reconnectTimer) clearTimeout(reconnectTimer);
-    ws?.close();
+    reconnectTimer = null;
+    if (ws) {
+      try {
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close();
+      } catch {
+        /* ignore */
+      }
+    }
     ws = null;
   };
 }
