@@ -37,6 +37,7 @@ import productService from "@/redux/product/productService";
 import { initAmplitude } from "@/lib/amplitude";
 import { captureTikTokClickId } from "@/lib/tiktokAttribution";
 import { identifyTikTokUser, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
+import TikTokPixelLoader from "@/components/TikTokPixelLoader";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
@@ -302,6 +303,7 @@ export default function App({ Component, pageProps, router }: AppProps) {
     <PersistGate persistor={persistor}>
       <GoogleOAuthProvider clientId={googleClientId}>
         <Provider store={store}>
+        <TikTokPixelLoader />
         <AppContent
           Component={Component}
           pageProps={pageProps}

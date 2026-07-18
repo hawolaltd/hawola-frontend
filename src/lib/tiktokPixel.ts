@@ -54,13 +54,29 @@ type TikTokTrackOptions = {
 
 function whenTtqReady(run: () => void): void {
   if (typeof window === "undefined" || !PIXEL_ID) return;
-  const ttq = window.ttq;
-  if (!ttq) return;
-  if (typeof ttq.ready === "function") {
-    ttq.ready(run);
-    return;
-  }
-  run();
+
+  const start = Date.now();
+  const attempt = () => {
+    const ttq = window.ttq;
+    if (!ttq) {
+      if (Date.now() - start < 10000) {
+        window.setTimeout(attempt, 150);
+      }
+      return;
+    }
+    if (typeof ttq.ready === "function") {
+      ttq.ready(run);
+      return;
+    }
+    if (typeof ttq.track === "function") {
+      run();
+      return;
+    }
+    if (Date.now() - start < 10000) {
+      window.setTimeout(attempt, 150);
+    }
+  };
+  attempt();
 }
 
 async function hashSha256(value: string): Promise<string> {
