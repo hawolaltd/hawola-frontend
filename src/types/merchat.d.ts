@@ -66,6 +66,7 @@ interface MerchantDetailsResponse {
     youtube: string | null;
     date_added: string;
     is_active: boolean;
+    is_verified_store?: boolean;
     slug: string;
     merchant_user: number;
     /** Curated store reels (MerchantStreamsVideo), public merchant profile API. */
@@ -159,6 +160,7 @@ interface MerchantDetails {
   youtube: string | null;
   date_added: string;
   is_active: boolean;
+  is_verified_store?: boolean;
   slug: string;
   merchant_user: number;
   merchant_reels?: Array<{

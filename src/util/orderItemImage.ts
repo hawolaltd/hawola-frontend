@@ -13,10 +13,15 @@ export function orderItemImageUrl(
   item: OrderItemImageSource,
   placeholder = "/placeholder.png"
 ): string {
+  const fromApi = normalizeMediaSrc(item?.image);
+  if (fromApi) {
+    return fromApi;
+  }
+
   const fromFeatured = featuredImageCardSrc(item?.product?.featured_image?.[0]);
   if (fromFeatured) {
     return normalizeMediaSrc(fromFeatured) || placeholder;
   }
-  const fromSnapshot = normalizeMediaSrc(item?.image);
-  return fromSnapshot || placeholder;
+
+  return placeholder;
 }

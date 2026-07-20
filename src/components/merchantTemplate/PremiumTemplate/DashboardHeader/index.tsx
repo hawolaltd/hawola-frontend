@@ -6,6 +6,7 @@ interface Merchant {
   logo: string;
   primary_color: string;
   is_active: boolean;
+  is_verified_store?: boolean;
   merchant_level: {
     name: string;
   };
@@ -52,7 +53,7 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
                   fallbackTextClassName="text-xl font-bold"
                 />
               </div>
-              {merchant?.is_active && (
+              {merchant?.is_verified_store === true && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>

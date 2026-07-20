@@ -327,7 +327,7 @@ export default function NormalMerchantPage() {
                       imgClassName="h-full w-full object-cover"
                       fallbackTextClassName="text-3xl font-bold"
                     />
-                    {merchantData?.merchant_details?.is_active && (
+                    {merchantData?.merchant_details?.is_verified_store === true && (
                       <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
                     )}
                   </div>

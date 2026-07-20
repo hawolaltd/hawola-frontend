@@ -207,7 +207,8 @@ const BasicTemplate = () => {
                   <h1 className="text-xl font-bold text-gray-900">
                     {merchant_details?.store_name}
                   </h1>
-                  {merchant_details?.is_active && (
+                  {/* Verified Store badge — shown only after merchant KYC (is_verified_store) */}
+                  {merchant_details?.is_verified_store === true && (
                     <span className="text-xs text-green-600 font-medium">
                       ✓ Verified Store
                     </span>

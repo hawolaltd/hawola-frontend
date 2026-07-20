@@ -26,6 +26,10 @@ import {
 import {HI_SM} from "@/lib/hawolaIconTheme";
 import { addToCartsLocal } from "@/redux/product/productSlice";
 import AccountTelegramConnectPrompt from "@/components/account/AccountTelegramConnectPrompt";
+import AccountMerchantPromoSidebar, {
+    readMerchantPromoDismissed,
+} from "@/components/account/AccountMerchantPromoSidebar";
+import AccountMerchantDashboardButton from "@/components/account/AccountMerchantDashboardButton";
 
 /** Matches MainHeader / Footer content width */
 const PAGE_WIDTH = "mx-auto w-full max-w-screen-xl px-6 xl:px-0";
@@ -44,6 +48,7 @@ export default function AccountPage() {
     const router = useRouter();
     const {profile: user} = useAppSelector(state => state.auth);
     const [loading, setLoading] = useState(false)
+    const [promoDismissed, setPromoDismissed] = useState(true);
 
     const [tab, setTab] = useState<string>("orders");
 
@@ -116,7 +121,10 @@ export default function AccountPage() {
     useEffect(() => {
         dispatch(getAddress());
         dispatch(getUserProfile());
+        setPromoDismissed(readMerchantPromoDismissed());
     }, [dispatch]);
+
+    const showMerchantPromo = !user?.is_merchant && !promoDismissed;
 
 
     useEffect(() => {
@@ -151,14 +159,17 @@ export default function AccountPage() {
                                 </p>
                                 <AccountTelegramConnectPrompt connected={!!user?.telegram_connected} />
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleSignOut}
-                                className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-deepOrange px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-                            >
-                                <ArrowRightOnRectangleIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
-                                Sign out
-                            </button>
+                            <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+                                {user?.is_merchant && <AccountMerchantDashboardButton />}
+                                <button
+                                    type="button"
+                                    onClick={handleSignOut}
+                                    className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-deepOrange px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                                >
+                                    <ArrowRightOnRectangleIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+                                    Sign out
+                                </button>
+                            </div>
                         </div>
                         <nav
                             className={`mb-0 sm:mb-8 mt-4 sm:mt-6 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
@@ -199,13 +210,28 @@ export default function AccountPage() {
                             </div>
                         ) : (
                             <div className={`${PAGE_WIDTH} mb-8 sm:mb-12 overflow-x-hidden`}>
-                                {tab === 'wish' && <Wishlist />}
-                                {tab === 'orders' && <Orders />}
-                                {tab === 'buying_requests' && <BuyingRequests />}
-                                {tab === 'chats' && <AccountChats />}
-                                {tab === 'profile' && <Settings />}
-                                {tab === 'notifications' && <NotificationSettings />}
-                                {tab === 'recently_viewed' && <RecentlyViewed />}
+                                <div className="flex flex-col gap-6 lg:flex-row">
+                                    <div
+                                        className={`min-w-0 ${
+                                            showMerchantPromo ? "lg:w-[70%]" : "w-full"
+                                        }`}
+                                    >
+                                        {tab === 'wish' && <Wishlist />}
+                                        {tab === 'orders' && <Orders />}
+                                        {tab === 'buying_requests' && <BuyingRequests />}
+                                        {tab === 'chats' && <AccountChats />}
+                                        {tab === 'profile' && <Settings />}
+                                        {tab === 'notifications' && <NotificationSettings />}
+                                        {tab === 'recently_viewed' && <RecentlyViewed />}
+                                    </div>
+                                    {showMerchantPromo && (
+                                        <div className="w-full lg:w-[30%]">
+                                            <AccountMerchantPromoSidebar
+                                                onDismissChange={() => setPromoDismissed(true)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )
                     }
