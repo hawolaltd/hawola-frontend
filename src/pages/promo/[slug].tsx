@@ -114,6 +114,15 @@ export default function PromoLandingPage() {
     setNotFound(false);
     try {
       const data = await productService.getSalesLandingPage(slug, { include: "landing" });
+      if (data?.inactive && data?.redirect_url) {
+        const target = String(data.redirect_url);
+        if (/^https?:\/\//i.test(target)) {
+          window.location.replace(target);
+        } else {
+          void router.replace(target.startsWith("/") ? target : `/${target}`);
+        }
+        return false;
+      }
       setLanding(parseLandingMeta(data?.landing as Record<string, unknown>));
       return true;
     } catch {
@@ -123,7 +132,7 @@ export default function PromoLandingPage() {
     } finally {
       setMetaLoading(false);
     }
-  }, [slug]);
+  }, [slug, router]);
 
   const loadContent = useCallback(
     async (page: number, { productsOnly = false }: { productsOnly?: boolean } = {}) => {
@@ -137,6 +146,10 @@ export default function PromoLandingPage() {
           shuffle_seed: shuffleSeedRef.current,
           include: productsOnly ? PRODUCTS_INCLUDE : CONTENT_INCLUDE,
         });
+
+        if (data?.inactive && data?.redirect_url) {
+          return;
+        }
 
         if (!productsOnly) {
           setFeatured(mapProducts(data?.featured_products));
