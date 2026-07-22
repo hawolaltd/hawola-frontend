@@ -20,11 +20,14 @@ function ProductCard({
   margin,
   viewMode,
   isPromoted,
+  deferImage = false,
 }: {
   product: ProductFull;
   margin?: string;
   viewMode?: "grid" | "list";
   isPromoted?: boolean;
+  /** Lazy-load product thumbnail (promo grids, below-fold lists). */
+  deferImage?: boolean;
 }) {
   const [quantity, setQuantity] = useState(1);
 
@@ -187,6 +190,8 @@ function ProductCard({
           <img
             src={featuredImageCardUrl(product.featured_image?.[0])}
             alt={product.name}
+            loading={deferImage ? "lazy" : "eager"}
+            decoding="async"
             style={{
               height: "150px",
             }}

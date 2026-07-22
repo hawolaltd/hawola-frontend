@@ -31,6 +31,16 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Promo landing pages: flat cards/sections on mobile (no drop shadows) */
+  @media (max-width: 639px) {
+    .promo-landing,
+    .promo-landing * {
+      --tw-shadow: 0 0 #0000 !important;
+      --tw-shadow-colored: 0 0 #0000 !important;
+      box-shadow: none !important;
+    }
+  }
 }
 
 /* Uniform cart line checkboxes (native inputs size inconsistently across rows/browsers) */

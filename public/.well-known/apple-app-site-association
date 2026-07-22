@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "REPLACE_WITH_APPLE_TEAM_ID.com.hawola.app",
+        "paths": [
+          "/promo/*",
+          "/product/*",
+          "/search",
+          "/search/*",
+          "/store/*",
+          "NOT /api/*",
+          "NOT /_next/*",
+          "NOT /auth/*"
+        ]
+      }
+    ]
+  }
+}

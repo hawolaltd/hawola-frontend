@@ -136,6 +136,22 @@ const getCuratedSurfaceProducts = async (surfaceSlug: string) => {
     return response.data;
 };
 
+const getSalesLandingPage = async (
+    slug: string,
+    params?: {
+        page?: number;
+        page_size?: number;
+        shuffle_seed?: string;
+        /** Comma-separated: landing, featured_products, reel_products, promo_graphic_blocks, products, pagination */
+        include?: string;
+    }
+) => {
+    const response = await axios.get(API + `products/sales-landing/${slug}/`, {
+        params,
+    });
+    return response.data;
+};
+
 // Get all produts unique to a Sub-category.
 const getAllProductBaseOnSubCategories = async (
     slug: string,
@@ -448,6 +464,7 @@ const productService = {
     getMerchants,
     getAllProductBaseOnCategories,
     getCuratedSurfaceProducts,
+    getSalesLandingPage,
     getAllProductBaseOnSubCategories,
     getAllProductBaseOnSecondLevelSubCategories,
     getMerchantsProducts,

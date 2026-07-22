@@ -387,6 +387,7 @@ export const isContactMerchantOnlyProduct = (product: any): boolean => {
 export {
   featuredImageCardSrc,
   featuredImageCardUrl,
+  PRODUCT_IMAGE_PLACEHOLDER,
 } from "./featuredImage";
 export type { FeaturedImageCardEntry } from "./featuredImage";
 export { orderItemImageUrl } from "./orderItemImage";

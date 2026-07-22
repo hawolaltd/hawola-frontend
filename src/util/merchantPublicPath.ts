@@ -25,6 +25,7 @@ const RESERVED_MERCHANT_STORE_SLUGS = new Set([
   "search",
   "wishlist",
   "cars",
+  "promo",
   "404",
 ]);
 
