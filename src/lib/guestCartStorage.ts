@@ -67,7 +67,8 @@ export function addProductToGuestCart(args: {
   const existingItemIndex = cartItems.findIndex((item) => {
     if (item.product?.id !== product.id) return false;
     if (!variants && !item.variant) return true;
-    if (variants?.length !== item.variant?.length) return false;
+    if (!variants || !item.variant) return false;
+    if (variants.length !== item.variant.length) return false;
     return variants.every((v) =>
       item.variant?.some(
         (iv) => iv.variant === v.variant && iv.variant_value === v.variant_value

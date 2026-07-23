@@ -39,6 +39,7 @@ import { initAmplitude } from "@/lib/amplitude";
 import { captureTikTokClickId } from "@/lib/tiktokAttribution";
 import { identifyTikTokUser, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 import TikTokPixelLoader from "@/components/TikTokPixelLoader";
+import TikTokOpenInBrowserPrompt from "@/components/storefront/TikTokOpenInBrowserPrompt";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
@@ -263,6 +264,7 @@ function AppContent({ Component, pageProps }: AppProps) {
       <Component {...pageProps} />
       <ToastContainer closeButton />
       <Toaster position="top-right" closeButton />
+      <TikTokOpenInBrowserPrompt />
       {showLaunchConfetti ? (
         <>
           <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden>

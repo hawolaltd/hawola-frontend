@@ -33,15 +33,44 @@ export function isLikelyRestrictedWebView(userAgent?: string): boolean {
   return detectInAppBrowser(userAgent).isInApp;
 }
 
+export function isTikTokInAppBrowser(userAgent?: string): boolean {
+  return detectInAppBrowser(userAgent).kind === "tiktok";
+}
+
+/**
+ * Build the exact page URL to open externally (path, query, and hash preserved).
+ * Pass `pagePath` from Next.js `router.asPath` when available for SPA navigations.
+ */
+export function buildExternalBrowserUrl(pagePath?: string): string {
+  if (typeof window === "undefined") return "";
+  const origin = window.location.origin;
+  const path = pagePath ?? `${window.location.pathname}${window.location.search}`;
+  const hash = window.location.hash || "";
+  return `${origin}${path.startsWith("/") ? path : `/${path}`}${hash}`;
+}
+
 /** Best-effort nudge to open the current page in the system browser. */
 export function tryOpenInExternalBrowser(url?: string): "opened" | "copied" | "manual" {
   if (typeof window === "undefined") return "manual";
-  const target = url || window.location.href;
+  const target = url || buildExternalBrowserUrl();
+  const ua = navigator.userAgent;
 
-  if (/android/i.test(navigator.userAgent)) {
+  if (/iphone|ipad|ipod/i.test(ua)) {
+    try {
+      const withoutProtocol = target.replace(/^https:\/\//i, "");
+      window.location.href = `x-safari-https://${withoutProtocol}`;
+      return "opened";
+    } catch {
+      /* fall through */
+    }
+  }
+
+  if (/android/i.test(ua)) {
     try {
       const stripped = target.replace(/^https?:\/\//i, "");
-      window.location.href = `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href =
+        `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;` +
+        `S.browser_fallback_url=${encodeURIComponent(target)};end`;
       return "opened";
     } catch {
       /* fall through */
@@ -49,8 +78,8 @@ export function tryOpenInExternalBrowser(url?: string): "opened" | "copied" | "m
   }
 
   try {
-    window.open(target, "_blank", "noopener,noreferrer");
-    return "opened";
+    const opened = window.open(target, "_blank", "noopener,noreferrer");
+    if (opened) return "opened";
   } catch {
     /* fall through */
   }
@@ -60,6 +89,17 @@ export function tryOpenInExternalBrowser(url?: string): "opened" | "copied" | "m
     return "copied";
   } catch {
     return "manual";
+  }
+}
+
+export async function copyExternalBrowserUrl(url?: string): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const target = url || buildExternalBrowserUrl();
+  try {
+    await navigator.clipboard.writeText(target);
+    return true;
+  } catch {
+    return false;
   }
 }
 
