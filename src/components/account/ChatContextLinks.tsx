@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import {
   storefrontMerchantPath,
   storefrontOrderPath,
@@ -63,11 +64,18 @@ export default function ChatContextLinks({
 
   return (
     <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
-      {items.map((item) => (
-        <Link key={item.href + item.label} href={item.href} className={linkClass}>
-          {item.label}
-        </Link>
-      ))}
+      {conversation.merchant_slug ? (
+        <MerchantStoreLink slug={conversation.merchant_slug} className={linkClass}>
+          {conversation.merchant_store_name?.trim() || "View store"}
+        </MerchantStoreLink>
+      ) : null}
+      {items
+        .filter((item) => item.href !== storeHref)
+        .map((item) => (
+          <Link key={item.href + item.label} href={item.href} className={linkClass}>
+            {item.label}
+          </Link>
+        ))}
     </div>
   );
 }

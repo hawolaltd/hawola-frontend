@@ -1,15 +1,21 @@
 import React, { useState } from "react";
-import Link from "next/link";
 import {
   ChevronDownIcon,
   HeartIcon,
+  ShareIcon,
   ShieldCheckIcon,
   TagIcon,
 } from "@heroicons/react/24/outline";
+import {
+  FaFacebookF,
+  FaLinkedinIn,
+  FaTwitter,
+  FaWhatsapp,
+} from "react-icons/fa";
 import { formatCurrency } from "@/util";
 import type { ProductByIdResponse } from "@/types/product";
 import type { StockStatusPayload } from "@/types/product";
-import { merchantStorePublicPath } from "@/util/merchantPublicPath";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
@@ -31,6 +37,8 @@ type Props = {
   outsideStateShippingCost: string | number | null | undefined;
   onWishList: () => void;
   addToWishlistPendingProductId: number | null;
+  onShare: (platform: string) => void;
+  onCopyLink: () => void;
 };
 
 export default function ProductDetailMobileBuyBox({
@@ -49,6 +57,8 @@ export default function ProductDetailMobileBuyBox({
   outsideStateShippingCost,
   onWishList,
   addToWishlistPendingProductId,
+  onShare,
+  onCopyLink,
 }: Props) {
   const [shippingOpen, setShippingOpen] = useState(true);
   const p = product?.product;
@@ -83,8 +93,8 @@ export default function ProductDetailMobileBuyBox({
 
       <div className="flex flex-wrap items-center gap-2">
         {merchantSlug ? (
-          <Link
-            href={merchantStorePublicPath(merchantSlug)}
+          <MerchantStoreLink
+            slug={merchantSlug}
             className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
           >
             <MerchantLogoOrInitial
@@ -98,7 +108,7 @@ export default function ProductDetailMobileBuyBox({
               fallbackTextClassName="text-[8px] font-bold leading-none"
             />
             <span className="truncate">Sold by {storeName}</span>
-          </Link>
+          </MerchantStoreLink>
         ) : null}
         <span className="text-xs text-slate-500">
           {p?.numReviews ?? 0} review{(p?.numReviews ?? 0) === 1 ? "" : "s"}
@@ -262,6 +272,52 @@ export default function ProductDetailMobileBuyBox({
           ))}
         </div>
       ) : null}
+
+      <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-4">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+          <ShareIcon className="h-4 w-4 text-primary" aria-hidden />
+          Share
+        </span>
+        <button
+          type="button"
+          onClick={() => onShare("facebook")}
+          className="rounded-lg bg-primary p-2 transition hover:opacity-90"
+          title="Share on Facebook"
+        >
+          <FaFacebookF className="text-sm text-white" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onShare("linkedin")}
+          className="rounded-full bg-primary p-2 transition hover:opacity-90"
+          title="Share on LinkedIn"
+        >
+          <FaLinkedinIn className="text-sm text-white" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onShare("twitter")}
+          className="rounded-lg p-1 transition hover:opacity-80"
+          title="Share on Twitter"
+        >
+          <FaTwitter className="text-lg text-primary" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onShare("whatsapp")}
+          className="rounded-md bg-[#25D366] p-2 transition hover:opacity-90"
+          title="Share on WhatsApp"
+        >
+          <FaWhatsapp className="text-sm text-white" />
+        </button>
+        <button
+          type="button"
+          onClick={onCopyLink}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-slate-50"
+        >
+          Copy link
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import Link from "next/link";
 import {
   MapPinIcon,
   PhoneIcon,
@@ -9,7 +8,7 @@ import {
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
-import { merchantStorePublicPath } from "@/util/merchantPublicPath";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import type { Merchant, ProductByIdResponse } from "@/types/product";
 
 interface MerchantAboutProps {
@@ -126,14 +125,14 @@ function MerchantAbout({ product }: MerchantAboutProps) {
               </div>
 
               {slug ? (
-                <Link
-                  href={merchantStorePublicPath(slug)}
+                <MerchantStoreLink
+                  slug={slug}
                   className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition hover:opacity-95 hover:shadow-md ${onBrandClass}`}
                   style={{ backgroundColor: brand }}
                 >
                   <BuildingStorefrontIcon className="h-5 w-5" aria-hidden />
                   Visit store
-                </Link>
+                </MerchantStoreLink>
               ) : null}
             </div>
           </div>

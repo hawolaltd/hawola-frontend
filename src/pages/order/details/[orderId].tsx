@@ -16,9 +16,9 @@ import { toast } from "sonner";
 import { API } from "@/constant";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import Link from "next/link";
 import {
-    storefrontMerchantPath,
     storefrontProductPath,
 } from "@/lib/storefrontUrls";
 import OrderReviewPanel from "@/components/order/OrderReviewPanel";
@@ -299,7 +299,6 @@ const OrderDetails: NextPage = () => {
             ? (singleOrder.merchant as { store_name?: string }).store_name
             : undefined);
     const productHref = storefrontProductPath(productSlug);
-    const merchantHref = storefrontMerchantPath(merchantSlug);
 
     useEffect(() => {
         if (!orderitemNumber) return;
@@ -611,7 +610,7 @@ const OrderDetails: NextPage = () => {
                                                    </div>
 
                                                    <h2 className="text-sm font-semibold text-gray-700 mt-1 break-words">{singleOrder?.product?.name}</h2>
-                                                   {(productHref || merchantHref) ? (
+                                                   {(productHref || merchantSlug) ? (
                                                        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                                                            {productHref ? (
                                                                <Link
@@ -621,15 +620,15 @@ const OrderDetails: NextPage = () => {
                                                                    View product page
                                                                </Link>
                                                            ) : null}
-                                                           {merchantHref ? (
-                                                               <Link
-                                                                   href={merchantHref}
+                                                           {merchantSlug ? (
+                                                               <MerchantStoreLink
+                                                                   slug={merchantSlug}
                                                                    className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-primary hover:bg-gray-100"
                                                                >
                                                                    {merchantStoreName
                                                                        ? `View ${merchantStoreName}`
                                                                        : "View seller store"}
-                                                               </Link>
+                                                               </MerchantStoreLink>
                                                            ) : null}
                                                        </div>
                                                    ) : null}

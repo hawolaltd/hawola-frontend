@@ -2,7 +2,6 @@ import React, {useCallback, useEffect, useLayoutEffect, useMemo, useState} from 
 import Head from 'next/head';
 import type { GetServerSideProps } from "next";
 import AuthLayout from "@/components/layout/AuthLayout";
-import {FaFacebookF, FaLinkedinIn, FaTwitter, FaWhatsapp} from 'react-icons/fa';
 import ProductInfo from "@/components/product/ProductInfo";
 import RelatedProduct from "@/components/product/RelatedProduct";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
@@ -27,7 +26,7 @@ import {ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import ProductDetailMobileBuyBox from "@/components/product/detail/ProductDetailMobileBuyBox";
-import ProductDetailShippingLines from "@/components/product/detail/ProductDetailShippingLines";
+import ProductDetailDesktopBuyBox from "@/components/product/detail/ProductDetailDesktopBuyBox";
 import ProductDetailGallerySkeleton from "@/components/product/detail/ProductDetailGallerySkeleton";
 import ProductDetailBuyBoxSkeleton from "@/components/product/detail/ProductDetailBuyBoxSkeleton";
 import ProductDetailTabsSkeleton from "@/components/product/detail/ProductDetailTabsSkeleton";
@@ -37,9 +36,7 @@ import {
     readProductDetailPreview,
     type ProductDetailPreview,
 } from "@/lib/pdpPreview";
-import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
-import { TagIcon } from '@heroicons/react/24/outline';
 import { buildProductSeo } from "@/util/storefrontSeo";
 import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
 import { trackTikTokViewContent, trackTikTokAddToCart, trackTikTokAddToWishlist, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
@@ -48,8 +45,7 @@ import {
     DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML,
     sanitizeRichNotice,
 } from "@/util/sanitizeRichNotice";
-import { merchantStorePublicPath } from "@/util/merchantPublicPath";
-import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
 import ProductGalleryLightbox from "@/components/product/ProductGalleryLightbox";
 import FallbackProductImage from "@/components/product/FallbackProductImage";
@@ -671,12 +667,12 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                                 </h1>
                                 <p className="mt-2 text-sm text-slate-300 leading-relaxed">
                                     Listed by{" "}
-                                    <Link
-                                        href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
+                                    <MerchantStoreLink
+                                        slug={product?.product?.merchant?.slug ?? ""}
                                         className="font-semibold text-cyan-300 underline-offset-2 hover:underline"
                                     >
                                         {product?.product?.merchant?.store_name}
-                                    </Link>
+                                    </MerchantStoreLink>
                                 </p>
 
                                 <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-900/70 p-4 shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
@@ -826,7 +822,7 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
 
                 {galleryLoading && routeGalleryImages.length === 0 ? (
                     heroImageCandidates.length > 0 ? (
-                        <div className="flex w-full flex-1 items-center justify-center rounded-2xl bg-[#f8fafc] p-4 lg:flex-[3]">
+                        <div className="flex w-full flex-1 items-center justify-center rounded-2xl bg-slate-300 p-4 lg:flex-[3]">
                             <FallbackProductImage
                                 candidates={heroImageCandidates}
                                 alt={displayName}
@@ -840,13 +836,17 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                 <div className="flex w-full flex-col gap-3 lg:flex-[3] lg:flex-row lg:gap-4">
 
                     {/* Thumbnail Gallery — desktop sidebar */}
-                    <div className={'hidden lg:flex flex-col gap-3 h-[75vh] w-fit overflow-y-auto rounded-2xl bg-[#f8fbff] p-2'}>
+                    <div className="hidden lg:flex h-[75vh] w-fit flex-col gap-3 overflow-y-auto rounded-2xl bg-slate-200 p-2">
                         {routeGalleryImages.map((imageUrl, key) => (
                             <button
                                 type="button"
                                 key={key}
                                 onClick={() => setSelectedGalleryIndex(key)}
-                                className={`cursor-pointer transition-all duration-300 flex items-center justify-center rounded-lg h-[96px] w-[96px] bg-white overflow-hidden shadow-sm ${selectedGalleryIndex === key ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-slate-200/40'}`}
+                                className={`flex h-[96px] w-[96px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-300 ${
+                                    selectedGalleryIndex === key
+                                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-200'
+                                        : 'ring-1 ring-slate-300/70'
+                                }`}
                             >
                                 <img
                                     src={routeGalleryThumbnails[key] || imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
@@ -858,8 +858,8 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                     </div>
 
                     {/* Main Image Display */}
-                    <div className="flex flex-1 flex-col">
-                        <div className="relative flex h-[42vh] min-h-[220px] items-center justify-center overflow-hidden rounded-none bg-[#f8fafc] sm:rounded-2xl sm:h-[52vh] sm:min-h-[280px] sm:shadow-inner lg:h-[75vh]">
+                    <div className="flex w-full min-w-0 flex-1 flex-col">
+                        <div className="relative flex h-[42vh] min-h-[220px] w-full items-center justify-center overflow-hidden rounded-none bg-slate-300 sm:rounded-2xl sm:h-[52vh] sm:min-h-[280px] lg:h-[75vh]">
 
                             {/* Zoomable Main Image — desktop hover zoom; tap opens gallery on mobile */}
                             <button
@@ -889,13 +889,13 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
 
                         {/* Mobile Thumbnail Navigation — below hero so taps are not blocked */}
                         {routeGalleryImages.length > 1 ? (
-                            <div className="lg:hidden flex gap-2 overflow-x-auto py-1 w-full">
+                            <div className="lg:hidden flex w-full gap-2 overflow-x-auto rounded-xl bg-slate-200 px-2 py-2">
                                 {routeGalleryImages.map((imageUrl, key) => (
                                     <button
                                         type="button"
                                         key={key}
                                         onClick={() => setSelectedGalleryIndex(key)}
-                                        className={`h-14 w-14 shrink-0 rounded-lg cursor-pointer overflow-hidden shadow-sm ${selectedGalleryIndex === key ? 'ring-2 ring-primary' : 'ring-1 ring-slate-200/50'}`}
+                                        className={`h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-white shadow-sm ${selectedGalleryIndex === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-200' : 'ring-1 ring-slate-300/70'}`}
                                     >
                                         <img
                                             src={routeGalleryThumbnails[key] || imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
@@ -911,11 +911,7 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                 )}
 
                 {/* Product Image ends */}
-                <div className="flex w-full flex-col rounded-none px-3 py-4 sm:rounded-2xl sm:px-4 lg:flex-[4] lg:p-4 bg-gradient-to-b from-white to-[#f9fbff]">
-                    <h1 className="hidden lg:block text-3xl font-bold text-primary mb-4 capitalize leading-tight">
-                        {displayName}
-                    </h1>
-
+                <div className="flex w-full flex-col rounded-none px-3 py-4 sm:rounded-2xl sm:px-4 lg:flex-[4] lg:p-6 lg:pl-4">
                     {mainLoading && !preview ? (
                         <ProductDetailBuyBoxSkeleton />
                     ) : null}
@@ -964,384 +960,33 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                         outsideStateShippingCost={outsideStateShippingCost}
                         onWishList={handleWishList}
                         addToWishlistPendingProductId={addToWishlistPendingProductId}
+                        onShare={handleShare}
+                        onCopyLink={handleCopyLink}
                     />
 
-                    <div className="hidden lg:block">
-                    <div
-                        className={'mb-5 flex flex-row items-center justify-between pb-4 w-full'}>
-                        <div>
-                            <p className="text-primary text-sm font-bold">
-                                <span className="text-[#8c9ec5] text-xs font-bold">by</span>{" "}
-                                <Link
-                                        href={merchantStorePublicPath(product?.product?.merchant?.slug ?? "")}
-                                        className="underline-offset-2 hover:underline"
-                                    >
-                                        {product?.product?.merchant?.store_name}
-                                    </Link>
-                            </p>
-                            <div className="mt-0.5 flex items-center text-xs text-[#8c9ec5] font-bold">
-                                <span>⭐⭐⭐⭐⭐ ({product?.product?.numReviews} reviews)</span>
-                            </div>
-                        </div>
-                        <div className={'flex items-center gap-2 overflow-x-auto pb-1 lg:gap-4 lg:justify-end lg:overflow-visible lg:pb-0'}>
-
-                            <button
-                                type="button"
-                                onClick={() => void handleWishList()}
-                                disabled={
-                                    addToWishlistPendingProductId === product?.product?.id
-                                }
-                                className="flex shrink-0 items-center gap-1.5 rounded-md p-0.5 text-left transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
-                            >
-                                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white shadow-sm">
-                                    {addToWishlistPendingProductId ===
-                                    product?.product?.id ? (
-                                        <InlineButtonSpinner className="h-3.5 w-3.5 text-rose-500" />
-                                    ) : (
-                                        <img
-                                            src="/assets/love2.svg"
-                                            alt=""
-                                            className="h-4 w-4"
-                                            width={16}
-                                            height={16}
-                                        />
-                                    )}
-                                </span>
-                                <span className="text-[11px] font-medium text-primary sm:text-xs">
-                                    {addToWishlistPendingProductId === product?.product?.id
-                                        ? "Saving…"
-                                        : "Wishlist"}
-                                </span>
-                            </button>
-
-                            {product?.product && (
-                                <AddToCompareButton product={product.product} variant="inline" />
-                            )}
-
-                            <div onClick={()=>{
-                                const ms = product?.product?.merchant?.slug;
-                                if (ms) router.push(merchantStorePublicPath(ms));
-                            }} className={'flex shrink-0 cursor-pointer items-center gap-2'}>
-                            <span
-                                className={'flex items-center justify-center p-0.5 rounded-md bg-white shadow-sm'}>
-                                <MerchantLogoOrInitial
-                                    logoThumbnailUrl={product?.product?.merchant?.logo_thumbnail}
-                                    logoUrl={product?.product?.merchant?.logo}
-                                    storeName={product?.product?.merchant?.store_name ?? "Store"}
-                                    primaryColor={product?.product?.merchant?.primary_color}
-                                    alt=""
-                                    className="h-4 w-4 overflow-hidden rounded-full"
-                                    imgClassName="h-full w-full object-cover rounded-full"
-                                    fallbackTextClassName="text-[7px] font-bold leading-none"
-                                />
-                            </span>
-                            <p className={'text-primary font-[500] text-xs cursor-pointer'}>View Merchant Profile</p>
-                        </div>
-                        </div>
-                    </div>
-
-
-                    <div className="mb-5 flex items-end gap-3 rounded-2xl bg-slate-50/80 p-4">
-                        <p className="text-2xl lg:text-4xl font-bold text-primary">
-                            {formatCurrency(product.product?.discount_price)}
-                        </p>
-                        {product?.product?.price && product?.product?.discount_price && (
-                            <>
-                                <span className="line-through text-base lg:text-xl font-medium text-[#8c9ec5]">
-                                    {formatCurrency(product?.product?.price)}
-                                </span>
-                                {(Number(product?.product?.price) > Number(product?.product?.discount_price)) && (
-                                    <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">
-                                        {Math.round(((Number(product?.product?.price) - Number(product?.product?.discount_price)) / (Number(product?.product?.price) || 1)) * 100)}% OFF
-                                    </span>
-                                )}
-                            </>
-                        )}
-                    </div>
-
-                    {/* Product Condition */}
-                    {(product?.product as any)?.product_condition && (
-                        <div className="mb-3 lg:mb-4">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium shadow-sm sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Condition: {(product.product as any).product_condition}
-                            </span>
-                        </div>
-                    )}
-
-                    {inventoryUnavailable && stockStatus?.tracks_inventory ? (
-                        <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-r from-rose-50 via-white to-amber-50/80 p-4 shadow-sm">
-                            <div className="flex flex-wrap items-start gap-3">
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-600 to-rose-800 text-lg font-black text-white shadow-md shadow-rose-600/25">
-                                    !
-                                </span>
-                                <div className="min-w-0 flex-1 space-y-1">
-                                    <p className="text-base font-semibold text-rose-950">Currently out of stock</p>
-                                    <p className="text-sm leading-relaxed text-rose-900/85">
-                                        This listing is not available for purchase right now.
-                                        We&apos;ll notify your seller by email so they know shoppers are viewing this
-                                        product—it helps them prioritize restocking.
-                                    </p>
-                                    <p className="text-xs font-medium uppercase tracking-wide text-rose-800/75">
-                                        You can bookmark the page or contact the merchant from their store profile.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ) : null}
-
-                    {!inventoryUnavailable && inventoryLow && stockStatus?.tracks_inventory ? (
-                        <div className="mb-4 rounded-2xl bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
-                            <span className="font-semibold">Limited quantity left</span>
-                            {" · "}
-                            Only a few units remain at this price—order soon.
-                        </div>
-                    ) : null}
-
-                    {merchantCollectsNoticeSafe ? (
-                        <div
-                            className="mb-4 rounded-2xl border border-amber-200/90 bg-amber-50/95 p-4 text-sm text-amber-950 shadow-sm prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline"
-                            dangerouslySetInnerHTML={{ __html: merchantCollectsNoticeSafe }}
-                        />
-                    ) : null}
-
-                    {(product?.product?.accept_payment_on_delivery ||
-                        !(siteSettings != null && siteSettings.accept_escrow_payment === false)) && (
-                    <div className={`mb-3 self-start w-full inline-flex items-center gap-2 sm:mb-4 sm:w-fit sm:gap-3 sm:px-4 sm:py-3 ${
-                        product?.product?.accept_payment_on_delivery 
-                            ? 'bg-green-50 text-green-700 px-3 py-2 rounded-xl' 
-                            : 'bg-gray-50 text-gray-500 px-3 py-2 rounded-xl'
-                    } shadow-sm transition-all duration-200`}>
-                        <div className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${
-                            product?.product?.accept_payment_on_delivery 
-                                ? 'bg-green-100' 
-                                : 'bg-gray-100'
-                        }`}>
-                            <TagIcon className={`w-4 h-4 ${
-                                product?.product?.accept_payment_on_delivery 
-                                    ? 'text-green-600' 
-                                    : 'text-gray-400'
-                            }`}/>
-                        </div>
-                        <div>
-                            <p className={`text-xs font-medium sm:text-sm ${
-                                product?.product?.accept_payment_on_delivery 
-                                    ? 'text-green-800' 
-                                    : 'text-gray-600'
-                            }`}>
-                                {product?.product?.accept_payment_on_delivery 
-                                    ? 'Payment on Delivery Available' 
-                                    : 'Online Payment Only'
-                                }
-                            </p>
-                            {!product?.product?.accept_payment_on_delivery ? (
-                            <p className="text-xs text-gray-500">
-                                Secure online payment required
-                            </p>
-                            ) : null}
-                        </div>
-                        {product?.product?.accept_payment_on_delivery && (
-                            <div className="flex items-center">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            </div>
-                        )}
-                    </div>
-                    )}
-                    {/* Info strip: delivery, returns, warranty - commented out for now */}
-                    {/* <div className="mt-4 flex flex-wrap gap-3">
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">
-                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h13l5 5-5 5H3V7z" />
-                            </svg>
-                            <div>
-                                <p className="text-sm font-medium text-primary">Fast Delivery</p>
-                                <p className="text-xs text-gray-500">2–5 business days</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">
-                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v16h16M8 12l3 3 5-7" />
-                            </svg>
-                            <div>
-                                <p className="text-sm font-medium text-primary">7-Day Returns</p>
-                                <p className="text-xs text-gray-500">Conditions apply</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-200">
-                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                                <p className="text-sm font-medium text-primary">Warranty</p>
-                                <p className="text-xs text-gray-500">Merchant-backed</p>
-                            </div>
-                        </div>
-                    </div> */}
-                    <div className="mb-6 rounded-2xl bg-[#fbfcff] px-4 py-4 shadow-sm">
-                        <p className="mb-3 text-sm font-semibold text-primary">Shipping & seller info</p>
-                        <ProductDetailShippingLines
-                            product={product as ProductByIdResponse}
-                            hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
-                            outsideVicinityShippingCost={outsideVicinityShippingCost}
-                            hasOutsideStateShippingCost={hasOutsideStateShippingCost}
-                            outsideStateShippingCost={outsideStateShippingCost}
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        {/* Variant Selection */}
-                        {product?.product_variant?.length > 0 && (
-                            <div className="mb-6">
-                                {product.product_variant.map((variantGroup) => (
-                                    <div key={variantGroup.variant.id} className="mb-4">
-                                        <p className="font-medium text-sm text-primary mb-2">
-                                            {variantGroup.variant.name}:
-                                            <span className="text-sm font-bold text-deepOrange ml-1">
-                                                {variantGroup.value.find((v: { id: number; }) => v.id === selectedVariants[variantGroup.variant.id])?.value ||
-                                                    `Select ${variantGroup.variant.name}`}
-                                             </span>
-                                        </p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {variantGroup.value.map((variantValue: { id: any; countInStock: number; value: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }) => (
-                                                <button
-                                                    key={variantValue.id}
-                                                    onClick={() => handleVariantSelect(variantGroup.variant.id, variantValue.id)}
-                                                    className={`rounded-lg text-xs px-3 py-1 shadow-sm ${
-                                                        selectedVariants[variantGroup.variant.id] === variantValue.id
-                                                            ? 'text-deepOrange bg-orange-50 ring-2 ring-orange-200/80'
-                                                            : 'bg-slate-100 text-textPadded hover:bg-slate-200/80'
-                                                    } ${
-                                                        variantValue.countInStock <= 0 ? 'opacity-50 cursor-not-allowed' : ''
-                                                    }`}
-                                                    disabled={variantValue.countInStock <= 0}
-                                                >
-                                                    {variantValue.value}
-                                                    {variantValue.countInStock <= 0 && ' (Out of stock)'}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Quantity — desktop */}
-                        <div className={'mt-6'}>
-                            <p className="text-gray-500 mb-2 text-sm">Quantity</p>
-                            <div className={'flex flex-row items-center gap-4'}>
-                                <div className="flex items-center w-fit space-x-3 rounded-xl bg-slate-50 px-3 py-1">
-                                        <button onClick={() => handleQuantityChange(-1)}
-                                                className="font-normal text-primary w-8 h-8 flex items-center justify-center text-3xl">-
-                                        </button>
-                                        <span className="text-primary w-8 text-2xl h-8 text-center">{quantity}</span>
-                                        <button onClick={() => handleQuantityChange(1)}
-                                                className="font-normal text-primary w-8 h-8 flex items-center justify-center text-3xl"> +
-                                        </button>
-                                    </div>
-                                    <div className={`flex items-center gap-4 ${inventoryUnavailable ? "opacity-50" : ""}`}>
-                                        {(() => {
-                                            const cartPid = product?.product?.id;
-                                            const cartBusy =
-                                                typeof cartPid === "number" &&
-                                                addToCartPendingProductId === cartPid;
-                                            return (
-                                                <>
-                                        <button
-                                            type="button"
-                                            disabled={inventoryUnavailable || cartBusy}
-                                            onClick={() => handleAddToCart(product as ProductByIdResponse)}
-                                            className={`inline-flex min-h-[42px] min-w-[140px] items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-colors ring-2 ring-primary/30 bg-white ${
-                                                inventoryUnavailable || cartBusy
-                                                    ? "cursor-not-allowed text-primary/70 ring-primary/15"
-                                                    : "text-primary hover:bg-primary/5"
-                                            }`}
-                                        >
-                                            {cartBusy ? (
-                                                <InlineButtonSpinner className="h-4 w-4 text-primary" />
-                                            ) : null}
-                                            {cartBusy ? "Adding…" : "Add to cart"}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            disabled={inventoryUnavailable || cartBusy}
-                                            onClick={() => handleAddToCart(product as ProductByIdResponse)}
-                                            className={`inline-flex min-h-[42px] min-w-[140px] items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-colors ${
-                                                inventoryUnavailable || cartBusy
-                                                    ? "cursor-not-allowed bg-primary/35 text-white"
-                                                    : "bg-primary text-white hover:bg-primary/90"
-                                            }`}
-                                        >
-                                            {cartBusy ? (
-                                                <InlineButtonSpinner className="h-4 w-4 text-white" />
-                                            ) : null}
-                                            {cartBusy ? "Adding…" : "Buy now"}
-                                        </button>
-                                                </>
-                                            );
-                                        })()}
-                                    </div>
-
-                            </div>
-                        </div>
-
-
-                        {/* Additional info */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-500 mt-10 pt-8">
-                            {/* <div>
-                                <p className="font-bold text-primary flex items-center gap-0 text-sm">Free
-                                    Delivery</p>
-                                <p className={'text-textPadded font-semibold flex items-center gap-0 text-sm'}>Available
-                                    for all locations.</p>
-                                <p className="text-textPadded font-semibold flex items-center gap-0 text-sm">Delivery
-                                    Options & Info</p>
-                            </div> */}
-
-                        {/* Social icons */}
-                            <div className="flex gap-4 items-end ">
-                                <span className="text-primary font-bold">Share</span>
-                                <button 
-                                    onClick={() => handleShare('facebook')}
-                                    className={'pt-1 pl-1 bg-primary hover:bg-opacity-80 transition-all'}
-                                    title="Share on Facebook"
-                                >
-                                    <FaFacebookF className="text-white cursor-pointer"/>
-                                </button>
-                                <button 
-                                    onClick={() => handleShare('linkedin')}
-                                    className={'p-[0.2rem] rounded-full bg-primary hover:bg-opacity-80 transition-all'}
-                                    title="Share on LinkedIn"
-                                >
-                                    <FaLinkedinIn className="text-white cursor-pointer"/>
-                                </button>
-                                <button 
-                                    onClick={() => handleShare('twitter')}
-                                    className={'hover:opacity-80 transition-all'}
-                                    title="Share on Twitter"
-                                >
-                                    <FaTwitter className="text-primary cursor-pointer"/>
-                                </button>
-                                <button 
-                                    onClick={() => handleShare('whatsapp')}
-                                    className={'p-[0.3rem] rounded-[4px] bg-[#25D366] hover:bg-opacity-80 transition-all'}
-                                    title="Share on WhatsApp"
-                                >
-                                    <FaWhatsapp className="text-white cursor-pointer"/>
-                                </button>
-                                <button 
-                                    onClick={handleCopyLink}
-                                    className={'px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs text-primary font-semibold transition-all whitespace-nowrap'}
-                                    title="Copy link"
-                                >
-                                    Copy Link
-                                </button>
-                            </div>
-                        </div>
-
-
-                    </div>
-                    </div>
+                    <ProductDetailDesktopBuyBox
+                        displayName={displayName}
+                        product={product as ProductByIdResponse}
+                        quantity={quantity}
+                        onQuantityChange={handleQuantityChange}
+                        selectedVariants={selectedVariants}
+                        onVariantSelect={handleVariantSelect}
+                        inventoryUnavailable={inventoryUnavailable}
+                        inventoryLow={inventoryLow}
+                        stockStatus={stockStatus}
+                        merchantCollectsNoticeSafe={merchantCollectsNoticeSafe}
+                        siteSettings={siteSettings as Record<string, unknown> | null}
+                        hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
+                        outsideVicinityShippingCost={outsideVicinityShippingCost}
+                        hasOutsideStateShippingCost={hasOutsideStateShippingCost}
+                        outsideStateShippingCost={outsideStateShippingCost}
+                        onWishList={handleWishList}
+                        addToWishlistPendingProductId={addToWishlistPendingProductId}
+                        onAddToCart={() => handleAddToCart(product as ProductByIdResponse)}
+                        addToCartPendingProductId={addToCartPendingProductId}
+                        onShare={handleShare}
+                        onCopyLink={handleCopyLink}
+                    />
                     </>
                     ) : null}
 

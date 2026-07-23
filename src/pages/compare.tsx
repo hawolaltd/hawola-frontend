@@ -18,7 +18,7 @@ import {
   isContactMerchantOnlyProduct,
 } from "@/util";
 import { toast } from "sonner";
-import { merchantStorePublicPath } from "@/util/merchantPublicPath";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 
 /** Shown until Redux Persist restores `compareProducts` (no empty flash). */
@@ -299,12 +299,12 @@ export default function ComparePage() {
                       {compareProducts.map((p) => (
                         <td key={p.id} className="px-4 py-3 text-sm text-gray-900">
                           {p.merchant?.slug && p.merchant?.store_name ? (
-                            <Link
-                              href={merchantStorePublicPath(p.merchant.slug)}
+                            <MerchantStoreLink
+                              slug={p.merchant.slug}
                               className="font-medium text-primary hover:underline"
                             >
                               {p.merchant.store_name}
-                            </Link>
+                            </MerchantStoreLink>
                           ) : (
                             (p.merchant?.store_name ?? "—")
                           )}

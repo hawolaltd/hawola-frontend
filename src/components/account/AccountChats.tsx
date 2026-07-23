@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import { useRouter } from "next/router";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
@@ -15,7 +16,6 @@ import {
   CHAT_FALLBACK_POLL_MS,
 } from "@/lib/buyerChatSocket";
 import ChatContextLinks from "@/components/account/ChatContextLinks";
-import { storefrontMerchantPath } from "@/lib/storefrontUrls";
 import ContentModerationActions from "@/components/moderation/ContentModerationActions";
 import { blockBuyerChat, reportBuyerChat } from "@/lib/contentModerationApi";
 import {
@@ -339,7 +339,6 @@ export default function AccountChats() {
   };
 
   const selectedName = selected ? storeDisplayName(selected) : "";
-  const storeHref = selected ? storefrontMerchantPath(selected.merchant_slug) : null;
 
   return (
     <div className="h-[min(600px,65vh)] max-h-[640px] overflow-hidden rounded-2xl border border-detailsBorder bg-white shadow-[0_8px_30px_rgba(14,34,77,0.08)]">
@@ -415,7 +414,6 @@ export default function AccountChats() {
                     const active = selected?.slug === c.slug;
                     const name = storeDisplayName(c);
                     const kind = conversationContextKind(c);
-                    const href = storefrontMerchantPath(c.merchant_slug);
                     return (
                       <li key={c.slug}>
                         <button
@@ -429,14 +427,14 @@ export default function AccountChats() {
                             <StoreAvatar name={name} size="sm" />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
-                                {href ? (
-                                  <Link
-                                    href={href}
+                                {c.merchant_slug ? (
+                                  <MerchantStoreLink
+                                    slug={c.merchant_slug}
                                     onClick={(e) => e.stopPropagation()}
                                     className="truncate text-sm font-semibold text-primary hover:underline"
                                   >
                                     {name}
-                                  </Link>
+                                  </MerchantStoreLink>
                                 ) : (
                                   <p className="truncate text-sm font-semibold text-gray-900">{name}</p>
                                 )}
@@ -508,10 +506,13 @@ export default function AccountChats() {
                   </button>
                   <StoreAvatar name={selectedName} />
                   <div className="min-w-0 flex-1">
-                    {storeHref ? (
-                      <Link href={storeHref} className="truncate text-base font-semibold hover:underline">
+                    {selected?.merchant_slug ? (
+                      <MerchantStoreLink
+                        slug={selected.merchant_slug}
+                        className="truncate text-base font-semibold hover:underline"
+                      >
                         {selectedName}
-                      </Link>
+                      </MerchantStoreLink>
                     ) : (
                       <p className="truncate text-base font-semibold">{selectedName}</p>
                     )}

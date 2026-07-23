@@ -48,7 +48,7 @@ function advertToSlide(a: AdvertBanner): HeroCreativeSlide {
     key: `advert-${a.id}`,
     image: advertImageSrc(a),
     href,
-    external: isExternalHref(href),
+    external: isExternalHref(href) || Boolean(a.merchant?.slug),
   };
 }
 

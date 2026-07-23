@@ -21,7 +21,7 @@ import {
 import ProductCard from "@/components/product/ProductCard";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { merchantStorePublicPath } from "@/util/merchantPublicPath";
+import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import BuyingRequestSearchBanner from "@/components/search/BuyingRequestSearchBanner";
 import { trackTikTokSearch, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
@@ -418,9 +418,9 @@ const SearchPage = () => {
                           {merchantItems.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {merchantItems.map((merchant: any) => (
-                                <Link
+                                <MerchantStoreLink
                                   key={merchant.id}
-                                  href={merchantStorePublicPath(merchant.slug)}
+                                  slug={merchant.slug}
                                   className="block p-6 bg-white rounded-lg border border-gray-200 hover:border-deepOrange hover:shadow-md transition-all"
                                 >
                                   <div className="flex items-start gap-4">
@@ -450,7 +450,7 @@ const SearchPage = () => {
                                       )}
                                     </div>
                                   </div>
-                                </Link>
+                                </MerchantStoreLink>
                               ))}
                             </div>
                           ) : (
