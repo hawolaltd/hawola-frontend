@@ -18,17 +18,23 @@ function pickUrl(v: unknown): string | undefined {
   return s || undefined;
 }
 
-function resolveEntryUrl(entry: FeaturedImageCardEntry): string | null {
+function resolveEntryUrl(
+  entry: FeaturedImageCardEntry,
+  preferFullSize = false
+): string | null {
   if (typeof entry.image === "string") {
     const direct = pickUrl(entry.image);
     return direct ? normalizeMediaSrc(direct) || direct : null;
   }
   if (entry.image && typeof entry.image === "object") {
     const img = entry.image as Record<string, unknown>;
-    const fromVersatile =
-      pickUrl(img.thumbnail) ||
-      pickUrl(img.thumbnail_100) ||
-      pickUrl(img.full_size);
+    const fromVersatile = preferFullSize
+      ? pickUrl(img.full_size) ||
+        pickUrl(img.thumbnail) ||
+        pickUrl(img.thumbnail_100)
+      : pickUrl(img.thumbnail) ||
+        pickUrl(img.thumbnail_100) ||
+        pickUrl(img.full_size);
     if (fromVersatile) return normalizeMediaSrc(fromVersatile) || fromVersatile;
   }
   const fromField = pickUrl(entry.image_url);
@@ -40,7 +46,45 @@ export function featuredImageCardSrc(
   entry: FeaturedImageCardEntry | null | undefined
 ): string | null {
   if (!entry) return null;
-  return resolveEntryUrl(entry);
+  return resolveEntryUrl(entry, false);
+}
+
+function pushUniqueUrl(urls: string[], v: unknown) {
+  const u = pickUrl(v);
+  if (!u) return;
+  const normalized = normalizeMediaSrc(u) || u;
+  if (normalized && !urls.includes(normalized)) {
+    urls.push(normalized);
+  }
+}
+
+/** Ordered URLs to try for PDP hero/lightbox (full size first, then sized fallbacks). */
+export function featuredImageDisplayCandidates(
+  entry: FeaturedImageCardEntry | null | undefined
+): string[] {
+  if (!entry) return [];
+
+  const urls: string[] = [];
+  if (typeof entry.image === "string") {
+    pushUniqueUrl(urls, entry.image);
+  } else if (entry.image && typeof entry.image === "object") {
+    const img = entry.image as Record<string, unknown>;
+    pushUniqueUrl(urls, img.full_size);
+    pushUniqueUrl(urls, entry.image_url);
+    pushUniqueUrl(urls, img.thumbnail);
+    pushUniqueUrl(urls, img.thumbnail_100);
+  } else {
+    pushUniqueUrl(urls, entry.image_url);
+  }
+  return urls;
+}
+
+/** Full-size URL for product detail hero / lightbox, or null. */
+export function featuredImageDetailSrc(
+  entry: FeaturedImageCardEntry | null | undefined
+): string | null {
+  if (!entry) return null;
+  return featuredImageDisplayCandidates(entry)[0] ?? null;
 }
 
 export function featuredImageCardUrl(

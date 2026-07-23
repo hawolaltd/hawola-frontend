@@ -2,13 +2,21 @@ import Link from "next/link";
 import { ProductFull } from "@/types/home";
 import { featuredImageCardUrl, formatCurrency } from "@/util";
 
+import { onPromoProductClick, promoProductPath } from "@/lib/promoAnalytics";
+
 type VehicleShowcaseCardProps = {
   product: ProductFull;
   promoted?: boolean;
+  promoSlug?: string;
 };
 
-export default function VehicleShowcaseCard({ product, promoted }: VehicleShowcaseCardProps) {
-  const productHref = product?.slug ? `/product/${encodeURIComponent(product.slug)}` : "#";
+export default function VehicleShowcaseCard({ product, promoted, promoSlug }: VehicleShowcaseCardProps) {
+  const productHref =
+    product?.slug && promoSlug
+      ? promoProductPath(product.slug, promoSlug)
+      : product?.slug
+        ? `/product/${encodeURIComponent(product.slug)}`
+        : "#";
   const hasDiscount =
     product?.discount_price != null &&
     product?.price != null &&
@@ -18,6 +26,11 @@ export default function VehicleShowcaseCard({ product, promoted }: VehicleShowca
   return (
     <Link
       href={productHref}
+      onClick={() => {
+        if (promoSlug && product?.id) {
+          onPromoProductClick(promoSlug, product.id);
+        }
+      }}
       className="group relative block overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900 via-slate-950 to-black p-3 shadow-[0_14px_40px_rgba(0,0,0,0.45)] transition duration-300 hover:-translate-y-1 hover:border-amber-400/70"
     >
       {promoted && (

@@ -3,10 +3,13 @@ import { featuredImageCardSrc, PRODUCT_IMAGE_PLACEHOLDER } from "@/util/featured
 import { formatCurrency } from "@/util";
 import { ProductFull } from "@/types/home";
 
+import { onPromoProductClick, promoProductPath } from "@/lib/promoAnalytics";
+
 type Props = {
   title: string;
   products: ProductFull[];
   className?: string;
+  promoSlug?: string;
   /** When true, reel stays inside padded content (no edge bleed). */
   inset?: boolean;
   eyebrowClass?: string;
@@ -18,6 +21,7 @@ export default function PromoProductReel({
   title,
   products,
   className = "",
+  promoSlug,
   inset = false,
   eyebrowClass = "text-rose-500",
   countBadgeClass = "bg-slate-100 text-slate-600",
@@ -64,7 +68,16 @@ export default function PromoProductReel({
             return (
               <Link
                 key={product.id}
-                href={`/product/${product.slug}`}
+                href={
+                  promoSlug
+                    ? promoProductPath(product.slug, promoSlug)
+                    : `/product/${product.slug}`
+                }
+                onClick={() => {
+                  if (promoSlug) {
+                    onPromoProductClick(promoSlug, product.id);
+                  }
+                }}
                 role="listitem"
                 className="group flex w-[42vw] max-w-[168px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[160px] md:w-[172px]"
               >

@@ -4,10 +4,12 @@ import Sidebar from "@/components/auth/Sidebar";
 import LoginForm from "@/components/auth/LoginForm";
 import Footer from "@/components/home/Footer";
 import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
+import InAppBrowserBanner from "@/components/storefront/InAppBrowserBanner";
 
 function AuthLayout({children}: { children: ReactNode }) {
     return (
         <div className="min-h-screen flex flex-col">
+            <InAppBrowserBanner />
             <Header/>
             <div className="flex flex-1">
                 {/*<div className={'w-[4%]  border-r border-r-[#D5DFE4] overflow-x-hidden'}>*/}

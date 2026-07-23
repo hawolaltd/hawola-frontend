@@ -17,6 +17,7 @@ import {
     WishlistResponse,
 } from '@/types/product';
 import { RootState } from '@/store/store';
+import { readGuestCartItems } from '@/lib/guestCartStorage';
 
 /** Max items in the compare list (UI + Redux). */
 export const MAX_COMPARE_PRODUCTS = 20;
@@ -245,9 +246,11 @@ export const fetchProductDetailGallery = createAsyncThunk(
 
 export const fetchProductDetailMain = createAsyncThunk(
     'products/detail-main',
-    async (slug: string, thunkAPI) => {
+    async (arg: string | { slug: string; promoSlug?: string }, thunkAPI) => {
+        const slug = typeof arg === 'string' ? arg : arg.slug;
+        const promoSlug = typeof arg === 'string' ? undefined : arg.promoSlug;
         try {
-            return await productService.getProductDetailMain(slug);
+            return await productService.getProductDetailMain(slug, { promoSlug });
         } catch (error: any) {
             const message =
                 (error.response &&
@@ -425,6 +428,23 @@ export const addToCarts = createAsyncThunk(
                 error.message ||
                 error.toString();
 
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+export const mergeGuestCart = createAsyncThunk(
+    'products/merge-guest-cart',
+    async (_, thunkAPI) => {
+        try {
+            return await productService.mergeGuestCart();
+        } catch (error: any) {
+            const message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message ||
+                error.toString();
             return thunkAPI.rejectWithValue(message);
         }
     }
@@ -809,12 +829,10 @@ const productSlice = createSlice({
             state.wishlistFetchStatus = 'idle';
         },
         syncLocalCartFromStorage: (state) => {
-            // Sync localCart from localStorage on app start
             if (typeof window !== 'undefined') {
                 try {
-                    const cartItems = localStorage.getItem('cartItems');
-                    if (cartItems) {
-                        const items = JSON.parse(cartItems);
+                    const items = readGuestCartItems();
+                    if (items.length) {
                         state.localCart = { items };
                     }
                 } catch (error) {
@@ -882,12 +900,9 @@ const productSlice = createSlice({
                 state.compareNavFlashCount = 0;
                 if (typeof window !== 'undefined') {
                     try {
-                        const cartItems = localStorage.getItem('cartItems');
-                        if (cartItems) {
-                            const items = JSON.parse(cartItems);
-                            if (state) {
-                                state.localCart = { items };
-                            }
+                        const items = readGuestCartItems();
+                        if (items.length && state) {
+                            state.localCart = { items };
                         }
                     } catch (error) {
                         console.error(
@@ -1048,6 +1063,13 @@ const productSlice = createSlice({
             .addCase(addToCarts.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.addToCartPendingProductId = null;
+            })
+            .addCase(mergeGuestCart.fulfilled, (state, action) => {
+                const payload = action.payload as CartResponse | undefined;
+                if (payload?.cart_items) {
+                    state.carts = payload;
+                    state.cartFetchStatus = 'succeeded';
+                }
             })
             .addCase(addToCarts.rejected, (state, action) => {
                 state.isLoading = false;

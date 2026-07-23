@@ -320,6 +320,7 @@ export interface AddToCartItem {
     qty: number;
     product: number;
     variant?: CartVariant[];
+    promo_slug?: string;
 }
 
 export interface AddToCartType {

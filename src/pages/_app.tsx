@@ -120,9 +120,7 @@ function AppContent({ Component, pageProps }: AppProps) {
   }, [siteSettingsLoaded]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(getCarts());
-    }
+    dispatch(getCarts());
   }, [dispatch, isAuthenticated]);
 
   useEffect(() => {

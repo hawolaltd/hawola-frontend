@@ -141,15 +141,21 @@ export function PromoFeaturedSection({
         {featured.map((product) =>
           wrapClass ? (
             <div key={product.id} className={wrapClass}>
-              <PromoProductTile product={product} variant={theme.productCardVariant} isPromoted />
+              <PromoProductTile
+                product={product}
+                variant={theme.productCardVariant}
+                isPromoted
+                promoSlug={landing.slug}
+              />
             </div>
           ) : (
-            <PromoProductTile
-              key={product.id}
-              product={product}
-              variant={theme.productCardVariant}
-              isPromoted
-            />
+              <PromoProductTile
+                key={product.id}
+                product={product}
+                variant={theme.productCardVariant}
+                isPromoted
+                promoSlug={landing.slug}
+              />
           )
         )}
       </div>
@@ -222,7 +228,12 @@ export function PromoProductsSection({
         <div className={theme.productGridClass}>
           {gridItems.map((item) =>
             item.kind === "product" ? (
-              <PromoProductTile key={item.key} product={item.product} variant={theme.productCardVariant} />
+              <PromoProductTile
+                key={item.key}
+                product={item.product}
+                variant={theme.productCardVariant}
+                promoSlug={landing.slug}
+              />
             ) : (
               <PromoGraphicRow key={item.key} block={item.block} />
             )
@@ -351,6 +362,7 @@ export function PromoBody({
             <PromoProductReel
               title={landing.reel_section_title || "Shop the reel"}
               products={reelProducts}
+              promoSlug={landing.slug}
               className="mb-10 sm:mb-12"
               inset={theme.reelInset}
               eyebrowClass={theme.reelEyebrowClass}

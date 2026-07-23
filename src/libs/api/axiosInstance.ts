@@ -11,6 +11,7 @@ import {
 } from '@/constant';
 import { handleLogout, clearAllStorage, forceLogout } from '@/util';
 import { getStoredTtclid, getTtpCookie, consumeNextTikTokRequestEventId } from '@/lib/tiktokAttribution';
+import { getGuestCartSessionId } from '@/lib/guestCartSession';
 import Cookies from 'js-cookie';
 import storage from 'redux-persist/lib/storage';
 
@@ -50,6 +51,8 @@ axiosInstance.interceptors.request.use(
         const token = getToken();
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
+        } else {
+            config.headers['X-Guest-Cart-Session'] = getGuestCartSessionId();
         }
 
         // TikTok attribution headers trigger CORS preflight — only on conversion POSTs.

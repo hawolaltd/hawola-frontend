@@ -34,6 +34,7 @@ const CartModal = () => {
 
   // Determine which cart to show
   const hasAuthenticatedCart = isAuthenticated && carts?.cart_items && carts.cart_items.length > 0;
+  const hasServerGuestCart = !isAuthenticated && carts?.cart_items && carts.cart_items.length > 0;
   const hasLocalCart = localCart?.items && localCart.items.length > 0;
 
   const emptyImg =
@@ -49,11 +50,11 @@ const CartModal = () => {
       aria-label="Cart preview"
     >
       <div className={"h-[250px] overflow-x-hidden"}>
-        {!hasAuthenticatedCart && !hasLocalCart ? (
+        {!hasAuthenticatedCart && !hasServerGuestCart && !hasLocalCart ? (
           <div className="flex h-full items-center justify-center px-1 py-2">
             <EmptyCartCallout compact slogan={siteSettings?.app_slogan} />
           </div>
-        ) : hasAuthenticatedCart
+        ) : hasAuthenticatedCart || hasServerGuestCart
           ? carts?.cart_items?.map((item) => (
               <div key={item.id} className="flex items-start space-x-4 mb-4">
                 <div className="w-[60px] h-[60px] flex-shrink-0 bg-gray-200 rounded-md overflow-hidden">
@@ -124,7 +125,7 @@ const CartModal = () => {
         <p className="text-black">
           N
           {amountFormatter(
-            (hasAuthenticatedCart
+            (hasAuthenticatedCart || hasServerGuestCart
               ? totalPrice
               : totalLocalPrice
             ).toFixed(2)
@@ -138,7 +139,7 @@ const CartModal = () => {
           onClick={() => {
             router.push("/carts");
           }}
-          disabled={!hasAuthenticatedCart && !hasLocalCart}
+          disabled={!hasAuthenticatedCart && !hasServerGuestCart && !hasLocalCart}
         >
           View cart
         </button>

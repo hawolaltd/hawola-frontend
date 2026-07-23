@@ -2,12 +2,19 @@ import Link from "next/link";
 import { ProductFull } from "@/types/home";
 import { featuredImageCardUrl, formatCurrency } from "@/util";
 
+import { onPromoProductClick, promoProductPath } from "@/lib/promoAnalytics";
+
 type RealEstateShowcaseCardProps = {
   product: ProductFull;
   promoted?: boolean;
+  promoSlug?: string;
 };
 
-export default function RealEstateShowcaseCard({ product, promoted }: RealEstateShowcaseCardProps) {
+export default function RealEstateShowcaseCard({
+  product,
+  promoted,
+  promoSlug,
+}: RealEstateShowcaseCardProps) {
   const hasDiscount =
     product?.discount_price != null &&
     product?.price != null &&
@@ -16,7 +23,16 @@ export default function RealEstateShowcaseCard({ product, promoted }: RealEstate
 
   return (
     <Link
-      href={`/product/${product?.slug}`}
+      href={
+        promoSlug && product?.slug
+          ? promoProductPath(product.slug, promoSlug)
+          : `/product/${product?.slug}`
+      }
+      onClick={() => {
+        if (promoSlug && product?.id) {
+          onPromoProductClick(promoSlug, product.id);
+        }
+      }}
       className="group relative block overflow-hidden rounded-2xl border border-emerald-200/70 bg-white p-3 shadow-[0_14px_36px_rgba(16,24,40,0.12)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_45px_rgba(16,24,40,0.18)]"
     >
       {promoted && (

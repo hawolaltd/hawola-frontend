@@ -9,7 +9,7 @@ import {toast} from "sonner";
 import {useRouter} from "next/router";
 import Link from "next/link";
 import {normalizeErrors} from "@/util";
-import { addToCarts, addToCartsLocal } from "@/redux/product/productSlice";
+import { mergeGuestCartAfterLogin } from "@/lib/guestCartClient";
 import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
 import MerchantAuthPrompt from "@/components/auth/MerchantAuthPrompt";
 import { trackTikTokCompleteRegistration } from "@/lib/tiktokPixel";
@@ -399,15 +399,7 @@ function RegisterForm() {
                                             const res = await dispatch(loginWithGoogle(token));
                                             if (res?.type?.includes?.("fulfilled")) {
                                                 toast.success("Welcome to HAWOLA");
-                                                if (localCart?.items?.length > 0) {
-                                                    dispatch(addToCarts({
-                                                        items: localCart.items.map((cart: { qty: number; product: { id: number } }) => ({
-                                                            qty: cart.qty,
-                                                            product: cart?.product?.id,
-                                                        })),
-                                                    }));
-                                                    dispatch(addToCartsLocal({ items: [] }));
-                                                }
+                                                void mergeGuestCartAfterLogin(dispatch, localCart?.items || []);
                                                 router.push("/");
                                             } else if (res?.type?.includes?.("rejected") && res?.payload) {
                                                 toast.error(String(res.payload), {

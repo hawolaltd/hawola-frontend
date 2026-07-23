@@ -14,11 +14,16 @@ import {
     getCarts,
     getWishList,
 } from "@/redux/product/productSlice";
+import {
+  recordProductDetailView,
+} from "@/lib/promoAnalytics";
+import { addToCartErrorMessage } from "@/lib/addToCartFeedback";
+import { addToCartAsGuest } from "@/lib/guestCartClient";
 import { ensureProductDetailLoaded } from "@/lib/productDetailPrefetch";
 import { useRouter } from "next/router";
 import {amountFormatter, formatCurrency, isContactMerchantOnlyProduct} from "@/util";
 import Link from "next/link";
-import {LocalCartItem, ProductByIdResponse} from "@/types/product";
+import {ProductByIdResponse} from "@/types/product";
 import {toast} from "sonner";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import ProductDetailGallerySkeleton from "@/components/product/detail/ProductDetailGallerySkeleton";
@@ -44,14 +49,22 @@ import {
 import { merchantStorePublicPath } from "@/util/merchantPublicPath";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
+import ProductGalleryLightbox from "@/components/product/ProductGalleryLightbox";
+import FallbackProductImage from "@/components/product/FallbackProductImage";
+import {
+    featuredImageCardSrc,
+    featuredImageDetailSrc,
+    featuredImageDisplayCandidates,
+} from "@/util/featuredImage";
 
 type ProductPageProps = {
     serverNotFound?: boolean;
+    serverShell?: ProductDetailPreview | null;
 };
 
-const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
+const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPageProps) => {
     const [quantity, setQuantity] = useState(1);
-    const [currentImage, setCurrentImage] = useState<string | null>(null);
+    const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
     const [position, setPosition] = useState({x: "50%", y: "50%"});
     const [isHovered, setIsHovered] = useState(false);
     const [clientNotFound, setClientNotFound] = useState(false);
@@ -61,6 +74,8 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const router = useRouter();
     const { query, isReady: routerIsReady } = router;
+    const promoSlug =
+        typeof query.from_promo === "string" ? query.from_promo.trim() : "";
 
     const dispatch = useAppDispatch()
 
@@ -117,6 +132,67 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         productSlug && product?.product?.slug === productSlug
     );
 
+    const routeGalleryImages = useMemo(() => {
+        if (!productMatchesRoute) return [];
+        return (product?.product_images || [])
+            .map((img) => featuredImageDetailSrc(img))
+            .filter(Boolean) as string[];
+    }, [productMatchesRoute, product?.product_images]);
+
+    const routeGalleryThumbnails = useMemo(() => {
+        if (!productMatchesRoute) return [];
+        return (product?.product_images || [])
+            .map((img) => featuredImageCardSrc(img))
+            .filter(Boolean) as string[];
+    }, [productMatchesRoute, product?.product_images]);
+
+    const heroImageCandidates = useMemo(() => {
+        if (productMatchesRoute) {
+            const images = product?.product_images || [];
+            const entry = images[selectedGalleryIndex] ?? images[0];
+            const fromEntry = entry ? featuredImageDisplayCandidates(entry) : [];
+            if (fromEntry.length) return fromEntry;
+            const fromFeatured = featuredImageDisplayCandidates(
+                product?.product?.featured_image?.[0]
+            );
+            if (fromFeatured.length) return fromFeatured;
+        }
+        const previewForRoute =
+            preview?.slug === productSlug ? preview : null;
+        const previewUrl = previewImageFromPreview(previewForRoute);
+        return previewUrl ? [previewUrl] : [];
+    }, [
+        productMatchesRoute,
+        product?.product_images,
+        selectedGalleryIndex,
+        product?.product?.featured_image,
+        preview,
+        productSlug,
+    ]);
+
+    const effectiveGalleryCandidates = useMemo(() => {
+        if (productMatchesRoute) {
+            const fromImages = (product?.product_images || [])
+                .map((img) => featuredImageDisplayCandidates(img))
+                .filter((candidates) => candidates.length > 0);
+            if (fromImages.length) return fromImages;
+            const featured = featuredImageDisplayCandidates(
+                product?.product?.featured_image?.[0]
+            );
+            if (featured.length) return [featured];
+        }
+        const previewForRoute =
+            preview?.slug === productSlug ? preview : null;
+        const previewUrl = previewImageFromPreview(previewForRoute);
+        return previewUrl ? [[previewUrl]] : [];
+    }, [
+        productMatchesRoute,
+        product?.product_images,
+        product?.product?.featured_image,
+        preview,
+        productSlug,
+    ]);
+
     const productSeo = useMemo(() => {
         const p = product?.product;
         if (!p?.id || !productSlug) return null;
@@ -126,8 +202,6 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
             pathSlug: productSlug,
         });
     }, [siteSettings, product?.product, productSlug]);
-
-    const [mainImage, setMainImage] = useState("");
 
     // Get current product URL for sharing
     const getProductUrl = () => {
@@ -190,7 +264,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     };
 
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
         const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - left) / width) * 100;
         const y = ((e.clientY - top) / height) * 100;
@@ -257,6 +331,7 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                 qty: quantity,
                                 product: product?.product?.id,
                                 ...(variants && { variant: variants }),
+                                ...(promoSlug ? { promo_slug: promoSlug } : {}),
                             },
                         ],
                     })
@@ -275,61 +350,37 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         tikTokIdentity
                     );
                     toast.success("Added to cart");
+                } else if (addToCarts.rejected.match(res)) {
+                    toast.error(addToCartErrorMessage(res.payload));
                 } else if (res?.type.includes("rejected")) {
-                    toast.error("Could not add to cart.");
+                    toast.error(addToCartErrorMessage(null));
                 }
             } else {
-                // Get current cart from localStorage or initialize empty array
-                const cartItems: LocalCartItem[] = JSON.parse(localStorage.getItem("cartItems") || "[]");
-
-                // Check if item already exists in cart with the same variants
-                const existingItemIndex = cartItems.findIndex(item => {
-                    if (item.product?.id !== product?.product?.id) return false;
-
-                    // If no variants, match on product only
-                    if (!variants && !item.variant) return true;
-
-                    // Compare variants
-                    if (variants?.length !== item.variant?.length) return false;
-
-                    // Check each variant matches
-                    return variants?.every(v =>
-                        item.variant?.some(iv =>
-                            iv.variant === v.variant &&
-                            iv.variant_value === v.variant_value
-                        )
-                    );
+                const guestResult = await addToCartAsGuest(dispatch, {
+                    product: product?.product,
+                    qty: quantity,
+                    variants,
+                    promoSlug: promoSlug || undefined,
                 });
 
-                if (existingItemIndex >= 0) {
-                    // Item exists - increment quantity
-                    cartItems[existingItemIndex].qty += quantity;
-                } else {
-                    // Item doesn't exist - add new item
-                    cartItems.push({
-                        qty: quantity,
-                        product: product?.product,
-                        ...(variants && { variant: variants })
-                    });
+                if (!guestResult.ok) {
+                    toast.error("Could not add to cart. Try opening in Safari or Chrome.");
+                    return;
                 }
 
-                // Update localStorage
-                localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
-                // Update Redux state to match localStorage
-                dispatch(addToCartsLocal({
-                    items: cartItems.map(item => ({
-                        qty: item.qty,
-                        product: item.product,
-                        ...(item.variant && { variant: item.variant })
-                    }))
-                }));
-
-                toast.success('Added to cart');
+                toast.success("Added to cart");
+                if (guestResult.warning) {
+                    toast.warning(guestResult.warning, { duration: 6000 });
+                } else if (guestResult.source === "local") {
+                    toast.warning(
+                        "Saved on this device only — open in Safari or Chrome to keep your cart.",
+                        { duration: 5000 }
+                    );
+                }
             }
         } catch (e) {
             console.error("Error adding to cart:", e);
-            toast.error("Failed to add to cart");
+            toast.error(addToCartErrorMessage(e, "Failed to add to cart."));
         }
     }
 
@@ -341,7 +392,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         setClientNotFound(false);
 
         try {
-            const { notFound } = await ensureProductDetailLoaded(dispatch, slug);
+            const { notFound } = await ensureProductDetailLoaded(dispatch, slug, {
+                promoSlug: promoSlug || undefined,
+            });
             if (notFound) {
                 setClientNotFound(true);
                 return;
@@ -352,18 +405,14 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         } finally {
             setLoadingReview(false);
         }
-    }, [dispatch, productSlug]);
+    }, [dispatch, productSlug, promoSlug]);
 
     useLayoutEffect(() => {
         if (!productSlug || typeof window === "undefined") return;
         const cached = readProductDetailPreview(productSlug);
-        setPreview(cached);
-        const img = previewImageFromPreview(cached);
-        if (img) {
-            setMainImage(img);
-            setCurrentImage(img);
-        }
-    }, [productSlug]);
+        const initial = cached ?? serverShell;
+        setPreview(initial);
+    }, [productSlug, serverShell]);
 
     useEffect(() => {
         if (serverNotFound) {
@@ -381,19 +430,17 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
     }, [serverNotFound, routerIsReady, productSlug, init]);
 
     useEffect(() => {
-        if (product?.product?.slug !== productSlug) return;
-        if (product?.product?.featured_image?.[0]?.image_url) {
-            setCurrentImage(product.product?.featured_image?.[0]?.image_url);
+        setSelectedGalleryIndex(0);
+    }, [productSlug]);
+
+    useEffect(() => {
+        if (
+            routeGalleryImages.length > 0 &&
+            selectedGalleryIndex >= routeGalleryImages.length
+        ) {
+            setSelectedGalleryIndex(0);
         }
-        if (product?.product_images?.length) {
-            setMainImage(product?.product_images?.[0]?.image_url);
-        }
-    }, [
-        productSlug,
-        product?.product?.slug,
-        product?.product?.featured_image,
-        product?.product_images,
-    ]);
+    }, [routeGalleryImages.length, selectedGalleryIndex]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -515,20 +562,6 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         preview?.slug === productSlug ? preview : null;
     const previewImageUrl = previewImageFromPreview(previewForRoute) || "";
 
-    const routeGalleryImages = (productMatchesRoute
-        ? product?.product_images || []
-        : []
-    )
-        .map((img) => img?.image_url)
-        .filter(Boolean) as string[];
-
-    const heroImageUrl = productMatchesRoute
-        ? mainImage ||
-          routeGalleryImages[0] ||
-          product?.product?.featured_image?.[0]?.image_url ||
-          previewImageUrl ||
-          ""
-        : previewImageUrl;
 
     const tagNames = product?.product?.tags?.map((t) => t?.name).filter(Boolean) || [];
     const keywordsCombined = [productSeo?.keywords, tagNames.join(", ")]
@@ -559,32 +592,17 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
         .replace(/&#39;/g, "'")
         .replace(/\s+/g, " ")
         .trim();
-    const effectiveGalleryImages =
-        routeGalleryImages.length > 0
-            ? routeGalleryImages
-            : previewImageUrl
-              ? [previewImageUrl]
-              : productMatchesRoute &&
-                  product?.product?.featured_image?.[0]?.image_url
-                ? [product.product.featured_image[0].image_url]
-                : [];
 
-    const openLightboxAt = (src: string) => {
-        const idx = effectiveGalleryImages.findIndex((url) => url === src);
-        setLightboxIndex(idx >= 0 ? idx : 0);
+    const openLightboxAtIndex = (index: number) => {
+        if (!effectiveGalleryCandidates.length) return;
+        const safeIndex = Math.max(
+            0,
+            Math.min(index, effectiveGalleryCandidates.length - 1)
+        );
+        setLightboxIndex(safeIndex);
         setLightboxOpen(true);
     };
     const closeLightbox = () => setLightboxOpen(false);
-    const showPrevImage = () => {
-        if (!effectiveGalleryImages.length) return;
-        setLightboxIndex((prev) =>
-            (prev - 1 + effectiveGalleryImages.length) % effectiveGalleryImages.length
-        );
-    };
-    const showNextImage = () => {
-        if (!effectiveGalleryImages.length) return;
-        setLightboxIndex((prev) => (prev + 1) % effectiveGalleryImages.length);
-    };
     if (contactMerchantOnly) {
         return (
             <AuthLayout>
@@ -617,11 +635,11 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         <div className="grid grid-cols-1 lg:grid-cols-12">
                             <div className="border-b border-slate-800 lg:col-span-8 lg:border-b-0 lg:border-r lg:border-slate-800 p-5 lg:p-7">
                                 <div className="aspect-[16/10] w-full rounded-2xl border border-slate-700 bg-slate-900 flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
-                                    <img
-                                        src={heroImageUrl}
+                                    <FallbackProductImage
+                                        candidates={heroImageCandidates}
                                         alt={displayName}
                                         className="w-full h-full object-contain cursor-zoom-in"
-                                        onClick={() => openLightboxAt(heroImageUrl || "")}
+                                        onClick={() => openLightboxAtIndex(selectedGalleryIndex)}
                                     />
                                 </div>
                                 {routeGalleryImages.length > 1 ? (
@@ -629,9 +647,9 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                                         {routeGalleryImages.slice(0, 10).map((imageUrl, idx) => (
                                             <button
                                                 key={idx}
-                                                onClick={() => setMainImage(imageUrl)}
+                                                onClick={() => setSelectedGalleryIndex(idx)}
                                                 className={`h-16 rounded-lg border overflow-hidden transition ${
-                                                    mainImage === imageUrl ? "border-amber-400 ring-1 ring-amber-400/30" : "border-slate-700"
+                                                    selectedGalleryIndex === idx ? "border-amber-400 ring-1 ring-amber-400/30" : "border-slate-700"
                                                 }`}
                                             >
                                                 <img
@@ -724,53 +742,13 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                     </div>
                 </div>
 
-                {lightboxOpen && effectiveGalleryImages.length > 0 ? (
-                    <div
-                        className="fixed inset-0 z-[120] bg-black/85 flex items-center justify-center p-4"
-                        onClick={closeLightbox}
-                    >
-                        <button
-                            type="button"
-                            onClick={closeLightbox}
-                            className="absolute top-4 right-4 text-white text-3xl leading-none"
-                            aria-label="Close image viewer"
-                        >
-                            &times;
-                        </button>
-                        {effectiveGalleryImages.length > 1 ? (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        showPrevImage();
-                                    }}
-                                    className="absolute left-4 md:left-8 text-white text-4xl px-3 py-2"
-                                    aria-label="Previous image"
-                                >
-                                    &#8249;
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        showNextImage();
-                                    }}
-                                    className="absolute right-4 md:right-8 text-white text-4xl px-3 py-2"
-                                    aria-label="Next image"
-                                >
-                                    &#8250;
-                                </button>
-                            </>
-                        ) : null}
-                        <img
-                            src={effectiveGalleryImages[lightboxIndex]}
-                            alt={`${product?.product?.name || "Listing"} image ${lightboxIndex + 1}`}
-                            className="max-h-[90vh] max-w-[92vw] object-contain rounded-lg shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                    </div>
-                ) : null}
+                <ProductGalleryLightbox
+                    open={lightboxOpen}
+                    imageCandidates={effectiveGalleryCandidates}
+                    initialIndex={lightboxIndex}
+                    onClose={closeLightbox}
+                    altPrefix={product?.product?.name || "Listing"}
+                />
                 {product?.product?.slug ? (
                     <MerchantChatWidget
                         productSlug={product.product.slug}
@@ -839,16 +817,16 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                 </nav>
             </div>
         </div>
-        <div className="max-w-[1320px] mx-auto px-4 py-8">
+        <div className="mx-auto max-w-[1320px] px-4 py-8 pb-24 lg:pb-8">
             {/* Product Image start*/}
             <div className="flex flex-col md:flex-row gap-4 rounded-3xl bg-white p-4 md:p-5 sm:shadow-[0_4px_32px_rgba(15,23,42,0.06)]">
                 {/* Image Display */}
 
                 {galleryLoading && routeGalleryImages.length === 0 ? (
-                    heroImageUrl ? (
+                    heroImageCandidates.length > 0 ? (
                         <div style={{ flex: 3 }} className="flex flex-1 items-center justify-center rounded-2xl bg-[#f8fafc] p-4">
-                            <img
-                                src={heroImageUrl}
+                            <FallbackProductImage
+                                candidates={heroImageCandidates}
                                 alt={displayName}
                                 className="max-h-[75vh] w-full object-contain opacity-90"
                             />
@@ -857,65 +835,75 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
                         <ProductDetailGallerySkeleton />
                     )
                 ) : (
-                <div style={{flex: 3}} className="flex gap-4">
+                <div style={{flex: 3}} className="flex flex-col gap-3 lg:flex-row lg:gap-4">
 
-                    {/* Thumbnail Gallery */}
+                    {/* Thumbnail Gallery — desktop sidebar */}
                     <div className={'hidden lg:flex flex-col gap-3 h-[75vh] w-fit overflow-y-auto rounded-2xl bg-[#f8fbff] p-2'}>
                         {routeGalleryImages.map((imageUrl, key) => (
-                            <div
+                            <button
+                                type="button"
                                 key={key}
-                                onClick={() => setMainImage(imageUrl)}
-                                className={`cursor-pointer transition-all duration-300 flex items-center justify-center rounded-lg h-[96px] w-[96px] bg-white overflow-hidden shadow-sm ${mainImage === imageUrl ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-slate-200/40'}`}
+                                onClick={() => setSelectedGalleryIndex(key)}
+                                className={`cursor-pointer transition-all duration-300 flex items-center justify-center rounded-lg h-[96px] w-[96px] bg-white overflow-hidden shadow-sm ${selectedGalleryIndex === key ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-slate-200/40'}`}
                             >
                                 <img
-                                    src={imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
-                                    alt="Product Thumbnail"
+                                    src={routeGalleryThumbnails[key] || imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
+                                    alt={`Product thumbnail ${key + 1}`}
                                     className="h-full w-full object-cover"
                                 />
-                            </div>
+                            </button>
                         ))}
                     </div>
 
                     {/* Main Image Display */}
-                    <div className="flex-1 flex flex-col items-center justify-center bg-[#f8fafc] h-[75vh] rounded-2xl relative overflow-hidden shadow-inner">
+                    <div className="flex flex-1 flex-col">
+                        <div className="relative flex h-[52vh] min-h-[280px] items-center justify-center overflow-hidden rounded-2xl bg-[#f8fafc] shadow-inner sm:h-[60vh] lg:h-[75vh]">
 
-                        {/* Mobile Thumbnail Navigation */}
-                        <div className="lg:hidden flex gap-2 overflow-x-auto py-2 w-full justify-center absolute bottom-2 left-0 right-0">
-                            {routeGalleryImages.map((imageUrl, key) => (
-                                <div
-                                    key={key}
-                                    onClick={() => setMainImage(imageUrl)}
-                                    className={`w-12 h-12 rounded-lg cursor-pointer overflow-hidden shadow-sm ${mainImage === imageUrl ? 'ring-2 ring-primary' : 'ring-1 ring-slate-200/50'}`}
-                                >
-                                    <img
-                                        src={imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
-                                        alt="Product Thumbnail"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            ))}
+                            {/* Zoomable Main Image — desktop hover zoom; tap opens gallery on mobile */}
+                            <button
+                                type="button"
+                                aria-label="Open product image gallery"
+                                className="relative h-full w-full overflow-hidden lg:cursor-crosshair"
+                                onClick={() => openLightboxAtIndex(selectedGalleryIndex)}
+                                onMouseEnter={() => setIsHovered(true)}
+                                onMouseLeave={() => setIsHovered(false)}
+                                onMouseMove={handleMouseMove}
+                            >
+                                <FallbackProductImage
+                                    candidates={heroImageCandidates}
+                                    alt={displayName}
+                                    className={`h-full w-full object-contain transition-transform duration-300 max-lg:scale-100 ${
+                                        isHovered ? "lg:scale-150" : "lg:scale-100"
+                                    }`}
+                                    style={{
+                                        transformOrigin: `${position.x} ${position.y}`,
+                                    }}
+                                />
+                                <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-medium text-white lg:hidden">
+                                    Tap to zoom
+                                </span>
+                            </button>
                         </div>
 
-                        {/* Zoomable Main Image */}
-                        <div
-                            className="relative w-full h-full overflow-hidden cursor-crosshair"
-                            onMouseEnter={() => setIsHovered(true)}
-                            onMouseLeave={() => setIsHovered(false)}
-                            onMouseMove={handleMouseMove}
-                        >
-                            <img
-                                src={heroImageUrl || "/imgs/page/product/img-gallery-1.jpg"}
-                                alt="Product"
-                                className={`absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 ${
-                                    isHovered ? "scale-150" : "scale-100"
-                                }`}
-                                style={{
-                                    transformOrigin: `${position.x} ${position.y}`,
-                                    maxWidth: 'none',
-                                    maxHeight: 'none'
-                                }}
-                            />
-                        </div>
+                        {/* Mobile Thumbnail Navigation — below hero so taps are not blocked */}
+                        {routeGalleryImages.length > 1 ? (
+                            <div className="lg:hidden flex gap-2 overflow-x-auto py-1 w-full">
+                                {routeGalleryImages.map((imageUrl, key) => (
+                                    <button
+                                        type="button"
+                                        key={key}
+                                        onClick={() => setSelectedGalleryIndex(key)}
+                                        className={`h-14 w-14 shrink-0 rounded-lg cursor-pointer overflow-hidden shadow-sm ${selectedGalleryIndex === key ? 'ring-2 ring-primary' : 'ring-1 ring-slate-200/50'}`}
+                                    >
+                                        <img
+                                            src={routeGalleryThumbnails[key] || imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
+                                            alt={`Product thumbnail ${key + 1}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        ) : null}
                     </div>
                 </div>
                 )}
@@ -1519,11 +1507,56 @@ const ProductPage = ({ serverNotFound = false }: ProductPageProps) => {
 
             </div>
         </div>
+        {!contactMerchantOnly && product?.product?.id ? (
+            (() => {
+                const stickyCartPid = product.product.id;
+                const stickyCartBusy =
+                    typeof stickyCartPid === "number" &&
+                    addToCartPendingProductId === stickyCartPid;
+                const stickyPrice =
+                    product.product?.discount_price ?? product.product?.price;
+                return (
+                    <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-slate-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_24px_rgba(15,23,42,0.12)] lg:hidden pb-[env(safe-area-inset-bottom)]">
+                        <div className="mx-auto flex max-w-[1320px] items-center gap-3 px-4 py-3">
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-slate-500">Price</p>
+                                <p className="text-lg font-bold text-primary">
+                                    {formatCurrency(stickyPrice)}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                disabled={inventoryUnavailable || stickyCartBusy}
+                                onClick={() => handleAddToCart(product as ProductByIdResponse)}
+                                className={`inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
+                                    inventoryUnavailable || stickyCartBusy
+                                        ? "cursor-not-allowed bg-primary/35 text-white"
+                                        : "bg-primary text-white hover:bg-primary/90"
+                                }`}
+                            >
+                                {stickyCartBusy ? (
+                                    <InlineButtonSpinner className="h-4 w-4 text-white" />
+                                ) : null}
+                                {stickyCartBusy ? "Adding…" : "Add to cart"}
+                            </button>
+                        </div>
+                    </div>
+                );
+            })()
+        ) : null}
+        <ProductGalleryLightbox
+            open={lightboxOpen}
+            imageCandidates={effectiveGalleryCandidates}
+            initialIndex={lightboxIndex}
+            onClose={closeLightbox}
+            altPrefix={displayName}
+        />
         {product?.product?.slug ? (
             <MerchantChatWidget
                 productSlug={product.product.slug}
                 productName={product.product.name}
                 merchantStoreName={product.product.merchant?.store_name}
+                stackAboveStickyFooter={!contactMerchantOnly && Boolean(product?.product?.id)}
             />
         ) : null}
     </AuthLayout>);
@@ -1534,10 +1567,41 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
     const slug = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] ?? "" : "";
     if (!slug) {
         context.res.statusCode = 404;
-        return { props: { serverNotFound: true } };
+        return { props: { serverNotFound: true, serverShell: null } };
     }
-    // 404 is resolved on the client from section APIs — avoid blocking navigation on a full detail fetch.
-    return { props: { serverNotFound: false } };
+
+    let serverShell: ProductDetailPreview | null = null;
+    const apiRoot = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(
+        /\/+$/,
+        ""
+    );
+
+    try {
+        const res = await fetch(
+            `${apiRoot}/products/detail/${encodeURIComponent(slug)}/gallery/`,
+            {
+                headers: { Accept: "application/json" },
+                signal: AbortSignal.timeout(8000),
+            }
+        );
+        if (res.status === 404) {
+            context.res.statusCode = 404;
+            return { props: { serverNotFound: true, serverShell: null } };
+        }
+        if (res.ok) {
+            const data = await res.json();
+            serverShell = {
+                slug: String(data.slug || slug),
+                name: String(data.name || data.product?.name || "Product"),
+                featured_image: data.product?.featured_image || data.product_images || [],
+                contact_merchant_only: Boolean(data.product?.contact_merchant_only),
+            };
+        }
+    } catch {
+        /* Client section APIs resolve the rest; shell is a nice-to-have for webviews. */
+    }
+
+    return { props: { serverNotFound: false, serverShell } };
 };
 
 export default ProductPage;

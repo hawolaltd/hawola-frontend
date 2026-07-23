@@ -7,12 +7,15 @@ import {
   formatCurrency,
 } from "@/util";
 
+import { onPromoProductClick, promoProductPath } from "@/lib/promoAnalytics";
+
 type Props = {
   product: ProductFull;
   featured?: boolean;
+  promoSlug?: string;
 };
 
-export default function PromoProductCard({ product, featured }: Props) {
+export default function PromoProductCard({ product, featured, promoSlug }: Props) {
   const initialSrc = featuredImageCardUrl(product?.featured_image?.[0]);
   const [imgSrc, setImgSrc] = useState(initialSrc);
 
@@ -24,7 +27,16 @@ export default function PromoProductCard({ product, featured }: Props) {
 
   return (
     <Link
-      href={`/product/${product.slug}`}
+      href={
+        promoSlug && product.slug
+          ? promoProductPath(product.slug, promoSlug)
+          : `/product/${product.slug}`
+      }
+      onClick={() => {
+        if (promoSlug && product.id) {
+          onPromoProductClick(promoSlug, product.id);
+        }
+      }}
       className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         featured
           ? "border-rose-200 ring-2 ring-rose-200/70 ring-offset-2 ring-offset-[#faf8f6]"

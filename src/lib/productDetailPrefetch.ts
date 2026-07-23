@@ -13,6 +13,7 @@ import {
   getMerchantReviews,
   setProductDetailBundle,
 } from "@/redux/product/productSlice";
+import { recordProductDetailView } from "@/lib/promoAnalytics";
 
 type ProductDetailLoadState = {
   gallery: ProductDetailSectionStatus;
@@ -120,9 +121,9 @@ async function fetchIntoCache(slug: string): Promise<void> {
   };
 
   const [gallery, main, related] = await Promise.allSettled([
-    productService.getProductDetailGallery(slug),
-    productService.getProductDetailMain(slug),
-    productService.getProductDetailRelated(slug),
+    productService.getProductDetailGallery(slug, { intent: "prefetch" }),
+    productService.getProductDetailMain(slug, { intent: "prefetch" }),
+    productService.getProductDetailRelated(slug, { intent: "prefetch" }),
   ]);
 
   if (gallery.status === "fulfilled") {
@@ -211,12 +212,15 @@ export function getCachedProductDetailBundle(
  */
 export async function ensureProductDetailLoaded(
   dispatch: AppDispatch,
-  slug: string
+  slug: string,
+  options?: { promoSlug?: string }
 ): Promise<{ notFound: boolean }> {
+  const promoSlug = options?.promoSlug;
   const cached = getCachedProductDetailBundle(slug);
   if (cached) {
     dispatch(setProductDetailBundle(cached));
     dispatchMerchantReviewsDeduped(dispatch, slug);
+    void recordProductDetailView(slug, promoSlug);
     if (cached.productDetailLoad.related !== "succeeded") {
       const relatedRes = await dispatch(fetchProductDetailRelated(slug));
       if (fetchProductDetailRelated.fulfilled.match(relatedRes)) {
@@ -236,7 +240,7 @@ export async function ensureProductDetailLoaded(
 
   const [galleryRes, mainRes, relatedRes] = await Promise.all([
     dispatch(fetchProductDetailGallery(slug)),
-    dispatch(fetchProductDetailMain(slug)),
+    dispatch(fetchProductDetailMain({ slug, promoSlug })),
     dispatch(fetchProductDetailRelated(slug)),
   ]);
 

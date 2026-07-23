@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { formatProductCardTitle } from "@/util/formatProductCardTitle";
-import { LocalCartItem, Product, ProductByIdResponse } from "@/types/product";
+import { Product, ProductByIdResponse } from "@/types/product";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   addToCarts,
@@ -15,12 +15,16 @@ import { useProductDetailPrefetch } from "@/hooks/useProductDetailPrefetch";
 import { saveProductDetailPreview } from "@/lib/pdpPreview";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import { trackTikTokAddToCart, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
+import { onPromoProductClick, promoProductPath } from "@/lib/promoAnalytics";
+import { addToCartErrorMessage } from "@/lib/addToCartFeedback";
+import { addToCartAsGuest } from "@/lib/guestCartClient";
 function ProductCard({
   product,
   margin,
   viewMode,
   isPromoted,
   deferImage = false,
+  promoSlug,
 }: {
   product: ProductFull;
   margin?: string;
@@ -28,6 +32,8 @@ function ProductCard({
   isPromoted?: boolean;
   /** Lazy-load product thumbnail (promo grids, below-fold lists). */
   deferImage?: boolean;
+  /** When set, product links carry promo attribution for funnel analytics. */
+  promoSlug?: string;
 }) {
   const [quantity, setQuantity] = useState(1);
 
@@ -70,12 +76,13 @@ function ProductCard({
                 qty: quantity,
                 product: product?.id,
                 ...(variants && { variant: variants }),
+                ...(promoSlug ? { promo_slug: promoSlug } : {}),
               },
             ],
           })
         );
 
-        if (res?.type.includes("fulfilled")) {
+        if (addToCarts.fulfilled.match(res)) {
           dispatch(getCarts());
           trackTikTokAddToCart(
             {
@@ -88,65 +95,37 @@ function ProductCard({
             tikTokIdentity
           );
           toast.success("Added to cart");
+        } else if (addToCarts.rejected.match(res)) {
+          toast.error(addToCartErrorMessage(res.payload));
         } else {
-          toast("error");
+          toast.error(addToCartErrorMessage(null));
         }
       } else {
-        // Get current cart from localStorage or initialize empty array
-        const cartItems: LocalCartItem[] = JSON.parse(
-          localStorage.getItem("cartItems") || "[]"
-        );
-
-        // Check if item already exists in cart with the same variants
-        const existingItemIndex = cartItems.findIndex((item) => {
-          if (item.product?.id !== product?.id) return false;
-
-          // If no variants, match on product only
-          if (!variants && !item.variant) return true;
-
-          // Compare variants
-          if (variants?.length !== item.variant?.length) return false;
-
-          // Check each variant matches
-          return variants?.every((v) =>
-            item.variant?.some(
-              (iv) =>
-                iv.variant === v.variant && iv.variant_value === v.variant_value
-            )
-          );
+        const guestResult = await addToCartAsGuest(dispatch, {
+          product,
+          qty: quantity,
+          variants,
+          promoSlug,
         });
 
-        if (existingItemIndex >= 0) {
-          // Item exists - increment quantity
-          cartItems[existingItemIndex].qty += quantity;
-        } else {
-          // Item doesn't exist - add new item
-          cartItems.push({
-            qty: quantity,
-            product: product,
-            ...(variants && { variant: variants }),
-          });
+        if (!guestResult.ok) {
+          toast.error("Could not add to cart. Try opening in Safari or Chrome.");
+          return;
         }
 
-        // Update localStorage
-        localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
-        // Update Redux state to match localStorage
-        dispatch(
-          addToCartsLocal({
-            items: cartItems.map((item) => ({
-              qty: item.qty,
-              product: item.product,
-              ...(item.variant && { variant: item.variant }),
-            })),
-          })
-        );
-
         toast.success("Added to cart");
+        if (guestResult.warning) {
+          toast.warning(guestResult.warning, { duration: 6000 });
+        } else if (guestResult.source === "local") {
+          toast.warning(
+            "Saved on this device only — open in Safari or Chrome to keep your cart.",
+            { duration: 5000 }
+          );
+        }
       }
     } catch (e) {
       console.error("Error adding to cart:", e);
-      toast.error("Failed to add to cart");
+      toast.error(addToCartErrorMessage(e, "Failed to add to cart."));
     }
   };
 
@@ -167,13 +146,22 @@ function ProductCard({
       )}
 
       <Link
-        href={`/product/${product?.slug}`}
+        href={
+          promoSlug && product?.slug
+            ? promoProductPath(product.slug, promoSlug)
+            : `/product/${product?.slug}`
+        }
         prefetch
         onMouseEnter={prefetchHandlers.onMouseEnter}
         onMouseLeave={prefetchHandlers.onMouseLeave}
         onFocus={prefetchHandlers.onFocus}
         onTouchStart={prefetchHandlers.onTouchStart}
-        onClick={() => saveProductDetailPreview(product)}
+        onClick={() => {
+          saveProductDetailPreview(product);
+          if (promoSlug && product?.id) {
+            onPromoProductClick(promoSlug, product.id);
+          }
+        }}
         className={
           isList
             ? "flex items-center gap-4 p-4"

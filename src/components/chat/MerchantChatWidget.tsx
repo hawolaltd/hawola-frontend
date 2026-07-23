@@ -27,6 +27,8 @@ type Props = {
   productName?: string;
   orderitemNumber?: string;
   merchantStoreName?: string;
+  /** Lift FAB above a fixed mobile footer (e.g. PDP sticky add-to-cart). */
+  stackAboveStickyFooter?: boolean;
 };
 
 function hasAuthSession(
@@ -50,6 +52,7 @@ export default function MerchantChatWidget({
   productName,
   orderitemNumber,
   merchantStoreName,
+  stackAboveStickyFooter = false,
 }: Props) {
   const router = useRouter();
   const { isAuthenticated, profile, user } = useAppSelector((state) => state.auth);
@@ -185,9 +188,18 @@ export default function MerchantChatWidget({
     }
   };
 
+  const fabBottomClass = stackAboveStickyFooter
+    ? "bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-5"
+    : "bottom-5";
+  const panelBottomClass = stackAboveStickyFooter
+    ? "bottom-[calc(9.75rem+env(safe-area-inset-bottom))] lg:bottom-24"
+    : "bottom-24";
+
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-[60] flex flex-row items-center justify-end gap-2 sm:gap-3">
+      <div
+        className={`fixed right-5 z-[60] flex flex-row items-center justify-end gap-2 sm:gap-3 ${fabBottomClass}`}
+      >
         <span className="max-w-[10rem] rounded-2xl border border-primary/25 bg-white px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug text-primary shadow-md sm:max-w-[14rem] sm:px-3 sm:py-2 sm:text-sm">
           Chat with this seller
         </span>
@@ -209,7 +221,9 @@ export default function MerchantChatWidget({
       </div>
 
       {open && (
-        <div className="fixed bottom-24 right-5 z-[60] flex h-[min(520px,58vh)] max-h-[560px] w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div
+          className={`fixed right-5 z-[60] flex h-[min(520px,58vh)] max-h-[560px] w-[min(100vw-2rem,380px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ${panelBottomClass}`}
+        >
           <div className="shrink-0 bg-primary px-4 py-3 text-white">
             <p className="font-semibold text-sm">{merchantStoreName || conversation?.merchant_store_name || "Merchant"}</p>
             <p className="text-xs mt-0.5 text-white/90">{contextLabel}</p>

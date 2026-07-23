@@ -41,26 +41,68 @@ const getProductBySlug = async (slug: string) => {
 
 const PDP_SECTION_TIMEOUT_MS = 45000;
 
-const getProductDetailGallery = async (slug: string) => {
+type ProductDetailRequestOptions = {
+    intent?: 'prefetch';
+    promoSlug?: string;
+};
+
+function productDetailHeaders(options?: ProductDetailRequestOptions) {
+    if (options?.intent === 'prefetch') {
+        return { 'X-Hawola-Intent': 'prefetch' };
+    }
+    return undefined;
+}
+
+function productDetailParams(options?: ProductDetailRequestOptions) {
+    const params: Record<string, string> = {};
+    if (options?.intent === 'prefetch') {
+        params.intent = 'prefetch';
+    }
+    if (options?.promoSlug) {
+        params.from_promo = options.promoSlug;
+    }
+    return Object.keys(params).length ? params : undefined;
+}
+
+const getProductDetailGallery = async (
+    slug: string,
+    options?: ProductDetailRequestOptions
+) => {
     const response = await axiosInstance.get(
         API + API_URL + 'detail/' + encodeURIComponent(slug) + '/gallery/',
-        { timeout: PDP_SECTION_TIMEOUT_MS }
+        {
+            timeout: PDP_SECTION_TIMEOUT_MS,
+            headers: productDetailHeaders(options),
+        }
     );
     return response.data;
 };
 
-const getProductDetailMain = async (slug: string) => {
+const getProductDetailMain = async (
+    slug: string,
+    options?: ProductDetailRequestOptions
+) => {
     const response = await axiosInstance.get(
         API + API_URL + 'detail/' + encodeURIComponent(slug) + '/main/',
-        { timeout: PDP_SECTION_TIMEOUT_MS }
+        {
+            timeout: PDP_SECTION_TIMEOUT_MS,
+            headers: productDetailHeaders(options),
+            params: productDetailParams(options),
+        }
     );
     return response.data;
 };
 
-const getProductDetailRelated = async (slug: string) => {
+const getProductDetailRelated = async (
+    slug: string,
+    options?: ProductDetailRequestOptions
+) => {
     const response = await axiosInstance.get(
         API + API_URL + 'detail/' + encodeURIComponent(slug) + '/related/',
-        { timeout: PDP_SECTION_TIMEOUT_MS }
+        {
+            timeout: PDP_SECTION_TIMEOUT_MS,
+            headers: productDetailHeaders(options),
+        }
     );
     return response.data;
 };
@@ -208,7 +250,12 @@ const addToCarts = async (data: AddToCartType) => {
     return response.data;
 };
 
-// add to carts
+const mergeGuestCart = async () => {
+    const response = await axiosInstance.post(API + `cart/merge-guest/`, {});
+    return response.data;
+};
+
+// add to carts local (legacy fallback)
 const addToCartsLocal = async (data: LocalCart) => {
     console.log(data);
     return data;
@@ -437,6 +484,7 @@ const productService = {
     getProductDetailRelated,
     getCarts,
     addToCarts,
+    mergeGuestCart,
     addToCartsLocal,
     deleteCart,
     updateCart,
