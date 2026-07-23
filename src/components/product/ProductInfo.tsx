@@ -97,7 +97,7 @@ function ProductInfo({
                 className={
                     embedded
                         ? "flex flex-wrap items-center gap-2 rounded-xl bg-white/90 p-2 shadow-sm"
-                        : "flex flex-col gap-1 pb-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-0"
+                        : "flex gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:pb-2 sm:gap-0 lg:flex-row lg:items-end"
                 }
             >
                 {productInfoHeaders.map((header, key) => {
@@ -111,12 +111,12 @@ function ProductInfo({
                             onClick={() => setTab(header.value)}
                             className={
                                 embedded
-                                    ? `relative cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
+                                    ? `relative shrink-0 cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
                                         active
                                             ? "bg-[color:var(--tab-brand)] text-white shadow-sm"
                                             : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                                     }`
-                                    : `relative cursor-pointer px-1 py-3 text-left text-sm font-bold transition-colors sm:px-4 sm:py-3.5 md:text-base lg:text-lg ${
+                                    : `relative shrink-0 cursor-pointer whitespace-nowrap px-3 py-2.5 text-left text-sm font-bold transition-colors sm:px-4 sm:py-3.5 md:text-base lg:text-lg ${
                                         active ? "text-slate-900" : "text-slate-500 hover:text-slate-800"
                                     }`
                             }

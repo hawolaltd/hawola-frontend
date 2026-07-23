@@ -261,10 +261,10 @@ function AppContent({ Component, pageProps }: AppProps) {
         ) : null}
       </Head>
       <RouteChangeProgress />
+      <TikTokOpenInBrowserPrompt />
       <Component {...pageProps} />
       <ToastContainer closeButton />
       <Toaster position="top-right" closeButton />
-      <TikTokOpenInBrowserPrompt />
       {showLaunchConfetti ? (
         <>
           <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden>
