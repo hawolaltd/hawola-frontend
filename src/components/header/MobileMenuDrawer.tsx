@@ -11,6 +11,7 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { HI_FRAME_HEADER, HI_FRAME_WELL, HI_FRAME_WELL_EMERALD, HI_MD, HI_SM } from '@/lib/hawolaIconTheme';
+import HawolaAppDownloadLink from '@/components/header/HawolaAppDownloadLink';
 import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
 import { getCarsCopy, getRealEstateCopy } from '@/util/curatedVerticalCopy';
 import { addToCartsLocal } from '@/redux/product/productSlice';
@@ -237,6 +238,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     Request for a product
                                 </span>
                             </Link>
+
+                            <HawolaAppDownloadLink variant="drawer" onNavigate={onClose} />
 
                             {/* Browse by aisle / curated categories — temporarily hidden
                             <CuratedPopularCategoriesDrawer onNavigate={onClose} />
