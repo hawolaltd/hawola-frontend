@@ -19,7 +19,7 @@ import EmptyCartCallout from "@/components/cart/EmptyCartCallout";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import MobileFloatingHint from "@/components/ui/MobileFloatingHint";
+import { formatCurrency } from "@/util";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 import { trackTikTokInitiateCheckout, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 import {
@@ -27,6 +27,13 @@ import {
   getSelfPurchaseItemsFromCart,
   SELF_PURCHASE_CHECKOUT_MESSAGE,
 } from "@/util/merchantSelfPurchase";
+import { validateCoupon } from "@/services/couponService";
+import { getOrCreatePresenceSessionKey } from "@/lib/presenceContext";
+import {
+  clearPendingCouponCode,
+  resolvePendingCouponCode,
+  savePendingCouponCode,
+} from "@/lib/pendingCoupon";
 
 interface OrderItem {
   product: number;
@@ -98,6 +105,13 @@ const CartPage = () => {
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<string>("");
   const [shippingError, setShippingError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  /** Codes we've already auto-applied successfully this visit */
+  const couponAutoAppliedRef = React.useRef<string>("");
+  const couponApplyGenRef = React.useRef(0);
   const router = useRouter();
   const [pendingUpdates, setPendingUpdates] = useState<{
     [id: number]: number;
@@ -207,12 +221,165 @@ const CartPage = () => {
 
   const hasSelectedSelfPurchase = selectedSelfPurchaseItems.length > 0;
 
-  const allSelected =
-    cartItems?.length > 0 && selectedItems.length === cartItems.length;
-
   const fetchStatus = cartFetchStatus ?? "idle";
   const showCartLinesLoading = isAuthenticated && fetchStatus === "pending";
   const showCartLoadError = isAuthenticated && fetchStatus === "failed";
+
+  // Goods total for coupon validation: selected lines, or all cart lines if none selected yet
+  const couponGoodsTotal = useMemo(() => {
+    if (selectedSubtotal > 0) return selectedSubtotal;
+    return (
+      cartItems?.reduce((sum, product) => {
+        const effectiveQty = Math.max(
+          1,
+          product?.qty + (pendingUpdates[product?.id] || 0)
+        );
+        return (
+          sum +
+          (product?.product?.discount_price
+            ? +product?.product?.discount_price
+            : +product?.product?.price) *
+            effectiveQty
+        );
+      }, 0) || 0
+    );
+  }, [selectedSubtotal, cartItems, pendingUpdates]);
+
+  const applyCouponCode = useCallback(
+    async (
+      rawCode: string,
+      {
+        silent = false,
+        goodsTotal,
+        shippingTotal,
+      }: {
+        silent?: boolean;
+        goodsTotal?: number;
+        shippingTotal?: number;
+      } = {}
+    ) => {
+      const code = (rawCode || "").trim().toUpperCase();
+      if (!code) return;
+      const goods = goodsTotal ?? couponGoodsTotal ?? 0;
+      const shipping = shippingTotal ?? shippingCost ?? 0;
+
+      setCouponCode(code);
+      savePendingCouponCode(code);
+
+      const gen = ++couponApplyGenRef.current;
+      if (!silent) {
+        setCouponBusy(true);
+        setCouponError(null);
+      }
+
+      try {
+        const data = await validateCoupon({
+          code,
+          goods_total: goods,
+          shipping_total: shipping,
+        });
+        if (gen !== couponApplyGenRef.current) return;
+        const applied = (data.code || code).trim().toUpperCase();
+        setCouponDiscount(Number(data.amount_saved) || 0);
+        setCouponCode(applied);
+        setCouponError(null);
+        savePendingCouponCode(applied);
+        // Only lock auto-apply once we had a real cart total (or empty cart)
+        if (!silent || goods > 0) {
+          couponAutoAppliedRef.current = applied;
+        }
+        if (!silent) toast.success("Coupon applied");
+      } catch (e: any) {
+        if (gen !== couponApplyGenRef.current) return;
+        setCouponDiscount(0);
+        setCouponCode(code);
+        // Silent auto-apply: don't flash errors while cart is still settling
+        if (!silent) {
+          setCouponError(e?.response?.data?.detail || "Invalid coupon code");
+        } else if (goods > 0) {
+          // Stop retry loops once cart has a real total
+          couponAutoAppliedRef.current = code;
+        }
+      } finally {
+        if (gen === couponApplyGenRef.current && !silent) {
+          setCouponBusy(false);
+        }
+      }
+    },
+    [couponGoodsTotal, shippingCost]
+  );
+
+  // Seed code into the field once (no validate yet — avoids error flicker)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const pending = resolvePendingCouponCode(router.query.coupon);
+    if (!pending) return;
+    setCouponCode((prev) => prev || pending);
+    if (router.query.coupon) {
+      const { coupon: _drop, ...rest } = router.query;
+      void router.replace(
+        { pathname: router.pathname, query: rest },
+        undefined,
+        { shallow: true }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady]);
+
+  // Auto-apply pending coupon once when cart totals are ready
+  useEffect(() => {
+    const cartReady =
+      !isAuthenticated ||
+      fetchStatus === "succeeded" ||
+      fetchStatus === "failed";
+
+    if (!cartReady) return;
+    // Wait for a real goods total when the cart has lines
+    if (cartItems.length > 0 && couponGoodsTotal <= 0) return;
+
+    const pending = (resolvePendingCouponCode() || "").trim().toUpperCase();
+    if (!pending) return;
+    if (couponAutoAppliedRef.current === pending) return;
+
+    const timer = window.setTimeout(() => {
+      if (couponAutoAppliedRef.current === pending) return;
+      void applyCouponCode(pending, {
+        silent: true,
+        goodsTotal: couponGoodsTotal,
+        shippingTotal: shippingCost,
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    couponGoodsTotal,
+    shippingCost,
+    applyCouponCode,
+    isAuthenticated,
+    fetchStatus,
+    cartItems.length,
+  ]);
+
+  // External Keep/Copy while already on cart
+  useEffect(() => {
+    const onPending = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ code?: string }>).detail;
+      const code = (detail?.code || "").trim().toUpperCase();
+      if (!code) return;
+      couponAutoAppliedRef.current = "";
+      setCouponCode(code);
+      void applyCouponCode(code, {
+        silent: true,
+        goodsTotal: couponGoodsTotal,
+        shippingTotal: shippingCost,
+      });
+    };
+    window.addEventListener("hawola:pending-coupon", onPending);
+    return () => window.removeEventListener("hawola:pending-coupon", onPending);
+  }, [applyCouponCode, couponGoodsTotal, shippingCost]);
+
+  const allSelected =
+    cartItems?.length > 0 && selectedItems.length === cartItems.length;
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const syncWithServer = useCallback(
@@ -479,21 +646,48 @@ const CartPage = () => {
     try {
       console.log("Starting checkout process...", { selectedItems, cartItems: cartItems.length });
       
-      // Prepare order items
-      const orderItems: OrderItem[] = cartItems
-        .filter((item) => selectedItems.includes(item.id))
-        .map((item) => ({
+      // Prepare order items (guard missing merchant / product data)
+      const selectedCartLines = cartItems.filter((item) =>
+        selectedItems.includes(item.id)
+      );
+      const missingMerchant = selectedCartLines.filter((item) => {
+        const m = item?.product?.merchant;
+        const merchantId =
+          typeof m === "number" || typeof m === "string"
+            ? Number(m)
+            : Number(m?.id);
+        return !item?.product?.id || !Number.isFinite(merchantId) || merchantId <= 0;
+      });
+      if (missingMerchant.length > 0) {
+        const names = missingMerchant
+          .map((item) => item?.product?.name || "an item")
+          .join(", ");
+        toast.error(
+          `Cannot checkout: missing seller info for ${names}. Remove those items or refresh the cart.`
+        );
+        setCreatingOrder(false);
+        setCheckoutStep("");
+        return;
+      }
+
+      const orderItems: OrderItem[] = selectedCartLines.map((item) => {
+        const m = item.product.merchant as any;
+        const merchantId =
+          typeof m === "number" || typeof m === "string" ? Number(m) : Number(m.id);
+        return {
           product: item.product.id,
           qty: Math.max(1, item.qty + (pendingUpdates[item.id] || 0)),
           price: +item.product.price,
           shipping_cost: calculateShippingCostForItem(item.product),
-          merchant: item.product.merchant.id,
-          // Add variants if they exist
-          variant: item?.cart_variant?.map((v: any) => ({
-            variant: v.variant.id,
-            variant_value: v.variant_value.id,
-          })),
-        }));
+          merchant: merchantId,
+          variant: (item?.cart_variant || [])
+            .map((v: any) => ({
+              variant: v?.variant?.id,
+              variant_value: v?.variant_value?.id,
+            }))
+            .filter((v: any) => v.variant && v.variant_value),
+        };
+      });
 
       console.log("Checking shipping for items:", orderItems.length);
       const shippingIssues = await checkMerchantShipping(orderItems);
@@ -527,13 +721,17 @@ const CartPage = () => {
       });
 
       // Create order payload
-      const orderPayload = {
+      const orderPayload: Record<string, unknown> = {
         shippingAddress_id: selectedAdd.id,
         orderItems: orderItems.map((item) => ({
           qty: item.qty,
           product_id: item.product,
         })),
+        session_key: getOrCreatePresenceSessionKey(),
       };
+      if (couponCode.trim() && couponDiscount > 0) {
+        orderPayload.coupon_code = couponCode.trim();
+      }
       
       console.log("Creating order with payload:", orderPayload);
       // Dispatch order creation
@@ -542,6 +740,10 @@ const CartPage = () => {
 
       if (result?.type.includes("fulfilled")) {
         setCheckoutStep("redirecting");
+        clearPendingCouponCode();
+        couponAutoAppliedRef.current = "";
+        setCouponCode("");
+        setCouponDiscount(0);
         console.log("Order created successfully, redirecting to checkout");
         setTimeout(() => {
           router.push(`/carts/checkout`);
@@ -595,14 +797,18 @@ const CartPage = () => {
     });
   }, [dispatch, isAuthenticated, authLoading]);
 
-  // Keep selections in sync when cart lines are added or removed
+  // Keep selections in sync when cart lines are added or removed.
+  // If nothing is selected after cart load, select all so totals/coupons work.
   useEffect(() => {
-    const validIds = new Set(
-      cartItems
-        .map((item) => item.id || item.product?.id)
-        .filter((id): id is number => typeof id === "number")
-    );
-    setSelectedItems((prev) => prev.filter((id) => validIds.has(id)));
+    const ids = cartItems
+      .map((item) => item.id || item.product?.id)
+      .filter((id): id is number => typeof id === "number");
+    const validIds = new Set(ids);
+    setSelectedItems((prev) => {
+      const kept = prev.filter((id) => validIds.has(id));
+      if (kept.length > 0) return kept;
+      return ids;
+    });
     setPendingUpdates({});
   }, [cartItems]);
 
@@ -648,7 +854,7 @@ const CartPage = () => {
         warningText={`You are about to delete from your cart Are you really sure about this? This action cannot be undone`}
       />
 
-      <div className="mx-auto w-full max-w-screen-xl max-md:bg-slate-100 max-md:px-3 max-md:py-5 md:px-6 md:py-8 xl:px-0">
+      <div className="mx-auto w-full max-w-screen-xl max-md:bg-slate-100 max-md:px-3 max-md:py-5 max-lg:pb-[calc(7.25rem+env(safe-area-inset-bottom))] md:px-6 md:py-8 xl:px-0">
         <h1 className="mb-8 text-3xl font-bold max-md:mb-4 max-md:text-xl max-md:font-bold">
           Your cart
         </h1>
@@ -861,6 +1067,31 @@ const CartPage = () => {
               directMerchantNoticeHtml={nonEscrowCartNoticeSafe || undefined}
               selfPurchaseWarning={selfPurchaseWarning}
               checkoutBlockedBySelfPurchase={hasSelectedSelfPurchase}
+              couponCode={couponCode}
+              couponDiscount={couponDiscount}
+              couponBusy={couponBusy}
+              couponError={couponError}
+              onCouponChange={(code) => {
+                setCouponCode(code);
+                setCouponError(null);
+                if (!code.trim()) {
+                  setCouponDiscount(0);
+                  clearPendingCouponCode();
+                  couponAutoAppliedRef.current = "";
+                }
+              }}
+              onApplyCoupon={() => {
+                if (!couponCode.trim()) return;
+                void applyCouponCode(couponCode);
+              }}
+              onRemoveCoupon={() => {
+                setCouponCode("");
+                setCouponDiscount(0);
+                setCouponError(null);
+                clearPendingCouponCode();
+                couponAutoAppliedRef.current = "";
+                toast.message("Coupon removed");
+              }}
             />
           </div>
         </div>
@@ -875,17 +1106,81 @@ const CartPage = () => {
         </div>
       </div>
 
-      {cartItems?.length > 0 &&
-      selectedItems.length > 0 &&
-      !creatingOrder &&
-      !showCartLinesLoading ? (
-        <MobileFloatingHint
-          onClick={scrollToCheckoutSummary}
-          hintTitle="Go to delivery address"
-          ariaLabel="When finished selecting items, scroll down for your delivery address"
-          title="Address & order summary below"
-          description="When you're done selecting what to buy, scroll down to choose your delivery address. Tap here to jump straight there."
-        />
+      {/* Mobile: order total + checkout fixed at base */}
+      {cartItems?.length > 0 && !showCartLinesLoading ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-4 pt-3 shadow-[0_-8px_30px_rgba(15,23,42,0.12)] lg:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="mx-auto flex max-w-screen-xl items-end justify-between gap-3">
+            <button
+              type="button"
+              onClick={scrollToCheckoutSummary}
+              className="min-w-0 flex-1 text-left"
+            >
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
+                Order total
+              </p>
+              <p className="mt-0.5 truncate text-xl font-bold tabular-nums text-headerBg">
+                {formatCurrency(
+                  Math.max(0, (total || 0) - (couponDiscount || 0)).toFixed(2)
+                )}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                {selectedItems.length === 0
+                  ? "Select items to check out"
+                  : !selectedAdd
+                    ? "Tap to set delivery address"
+                    : escrowDisabled
+                      ? "Direct payment to seller"
+                      : `Ship to ${
+                          typeof selectedAdd.city === "object" &&
+                          selectedAdd.city?.name
+                            ? selectedAdd.city.name
+                            : "your address"
+                        }`}
+                {couponDiscount > 0 ? " · coupon on" : ""}
+              </p>
+            </button>
+            <button
+              type="button"
+              disabled={
+                creatingOrder ||
+                showCartLinesLoading ||
+                selectedItems.length === 0 ||
+                total <= 0 ||
+                !isAuthenticated ||
+                hasSelectedSelfPurchase
+              }
+              onClick={() => {
+                if (!selectedAdd) {
+                  scrollToCheckoutSummary();
+                  return;
+                }
+                void handleProceedToCheckout();
+              }}
+              className={`shrink-0 rounded-xl px-5 py-3.5 text-sm font-bold text-white transition ${
+                creatingOrder ||
+                showCartLinesLoading ||
+                selectedItems.length === 0 ||
+                total <= 0 ||
+                !isAuthenticated ||
+                hasSelectedSelfPurchase
+                  ? "cursor-not-allowed bg-slate-300"
+                  : !selectedAdd
+                    ? "bg-[#425A8B] active:bg-[#0E224D]"
+                    : "bg-primary active:bg-primary-dark"
+              }`}
+            >
+              {creatingOrder
+                ? "…"
+                : !isAuthenticated
+                  ? "Log in"
+                  : hasSelectedSelfPurchase
+                    ? "Blocked"
+                    : !selectedAdd
+                      ? "Address"
+                      : "Checkout"}
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {/* Checkout Loading Modal */}

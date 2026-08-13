@@ -17,10 +17,12 @@ export default function FallbackProductImage({
   ...props
 }: FallbackProductImageProps) {
   const [index, setIndex] = useState(0);
+  // Content key — array identity alone is unreliable for resetting after thumb switches
+  const candidatesKey = candidates.join("\0");
 
   useEffect(() => {
     setIndex(0);
-  }, [candidates]);
+  }, [candidatesKey]);
 
   const src = candidates[index] || candidates[0] || placeholder;
 

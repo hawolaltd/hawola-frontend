@@ -14,6 +14,7 @@ import {
   getCarts,
 } from "@/redux/product/productSlice";
 import { toast } from "sonner";
+import { richTextHasVisibleContent } from "@/util/sanitizeRichNotice";
 
 /** Tailwind `md` is 768px — sheet matches max-md */
 function useIsNarrowViewport() {
@@ -53,6 +54,13 @@ const OrderSummary = ({
   cartDataLoading = false,
   selfPurchaseWarning = null,
   checkoutBlockedBySelfPurchase = false,
+  couponCode = "",
+  couponDiscount = 0,
+  onCouponChange,
+  onApplyCoupon,
+  onRemoveCoupon,
+  couponBusy = false,
+  couponError = null,
 }: {
   subtotal: number;
   shippingCost: number;
@@ -78,6 +86,13 @@ const OrderSummary = ({
   cartDataLoading?: boolean;
   /** Warning when selected items include the merchant's own products. */
   selfPurchaseWarning?: string | null;
+  couponCode?: string;
+  couponDiscount?: number;
+  onCouponChange?: (code: string) => void;
+  onApplyCoupon?: () => void;
+  onRemoveCoupon?: () => void;
+  couponBusy?: boolean;
+  couponError?: string | null;
   checkoutBlockedBySelfPurchase?: boolean;
 }) => {
   const [openDelete, setOpenDelete] = useState<boolean | string | null>(null);
@@ -156,20 +171,28 @@ const OrderSummary = ({
           </>
         )}
 
-        {/* Address Section */}
+        {/* Address Section — scroll when more than two saved addresses */}
         {addresses.addresses?.length > 0 ? (
-          addresses?.addresses?.map((address: AddressData) => (
-            <AddressCard
-              key={address?.id}
-              address={address}
-              onEdit={() => onEditAddress(address)}
-              onSelect={() => onSelectAddress(address)}
-              isSelected={selectedAdd?.id === address.id}
-              onDelete={() => {
-                setOpenDelete(address?.id as unknown as string);
-              }}
-            />
-          ))
+          <div
+            className={
+              addresses.addresses.length > 2
+                ? "max-h-[17.5rem] space-y-3 overflow-y-auto overscroll-contain pr-1"
+                : "space-y-3"
+            }
+          >
+            {addresses.addresses.map((address: AddressData) => (
+              <AddressCard
+                key={address?.id}
+                address={address}
+                onEdit={() => onEditAddress(address)}
+                onSelect={() => onSelectAddress(address)}
+                isSelected={selectedAdd?.id === address.id}
+                onDelete={() => {
+                  setOpenDelete(address?.id as unknown as string);
+                }}
+              />
+            ))}
+          </div>
         ) : (
           <p className="text-gray-500 mb-4">
             No saved address yet. Add one below when you are ready.
@@ -273,14 +296,42 @@ const OrderSummary = ({
           </div>
         ) : null}
 
-        <div className="border-t pt-4 flex justify-between">
-          <span className="font-bold">Total:</span>
+        <div className="border-t pt-4 space-y-2">
           {cartDataLoading ? (
-            <span className="h-7 w-28 rounded-md bg-slate-200 animate-pulse" />
+            <div className="flex justify-between">
+              <span className="font-bold">Total:</span>
+              <span className="h-7 w-28 rounded-md bg-slate-200 animate-pulse" />
+            </div>
+          ) : couponDiscount > 0 ? (
+            <>
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>Total before coupon</span>
+                <span className="font-medium tabular-nums">
+                  {formatCurrency(total.toFixed(2))}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm text-emerald-700">
+                <span>Coupon discount</span>
+                <span className="font-medium tabular-nums">
+                  -{formatCurrency(couponDiscount.toFixed(2))}
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline gap-3">
+                <span className="font-bold">Total after coupon</span>
+                <span className="font-bold text-lg tabular-nums text-[#0E224D]">
+                  {formatCurrency(
+                    Math.max(0, total - (couponDiscount || 0)).toFixed(2)
+                  )}
+                </span>
+              </div>
+            </>
           ) : (
-            <span className="font-bold text-lg">
-              {formatCurrency(total.toFixed(2))}
-            </span>
+            <div className="flex justify-between">
+              <span className="font-bold">Total:</span>
+              <span className="font-bold text-lg tabular-nums">
+                {formatCurrency(total.toFixed(2))}
+              </span>
+            </div>
           )}
         </div>
       </div>
@@ -291,19 +342,49 @@ const OrderSummary = ({
         <div className="flex">
           <input
             type="text"
+            value={couponCode}
+            onChange={(e) => onCouponChange?.(e.target.value)}
             placeholder="Enter coupon code"
             className="flex-1 p-2 border rounded-l-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
-          <button className="px-4 py-2 bg-primary text-white rounded-r-md transition">
-            Apply
+          <button
+            type="button"
+            disabled={couponBusy || !couponCode?.trim()}
+            onClick={() => onApplyCoupon?.()}
+            className="px-4 py-2 bg-primary text-white rounded-r-md transition disabled:opacity-60"
+          >
+            {couponBusy ? "…" : "Apply"}
           </button>
+        </div>
+        <div className="mt-2 min-h-[1.25rem]">
+          {couponError ? (
+            <p className="text-xs text-rose-600">{couponError}</p>
+          ) : couponDiscount > 0 ? (
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-emerald-700">
+                Coupon applied. You can remove it anytime.
+              </p>
+              {onRemoveCoupon ? (
+                <button
+                  type="button"
+                  onClick={() => onRemoveCoupon()}
+                  className="shrink-0 text-xs font-semibold text-rose-600 underline-offset-2 hover:underline"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          ) : couponBusy ? (
+            <p className="text-xs text-slate-500">Checking coupon…</p>
+          ) : null}
         </div>
       </div>
 
-      {directMerchantMode && directMerchantNoticeHtml ? (
+      {directMerchantMode &&
+      richTextHasVisibleContent(directMerchantNoticeHtml) ? (
         <div
           className="mt-4 rounded-lg border border-yellow-300/90 bg-yellow-50 p-4 text-sm font-medium text-yellow-950 shadow-sm ring-1 ring-yellow-900/[0.07] dark:border-yellow-300/90 dark:bg-yellow-50 dark:text-yellow-950 dark:ring-yellow-900/10 [&_a]:font-semibold [&_a]:text-yellow-900 [&_a]:underline dark:[&_a]:text-yellow-900"
-          dangerouslySetInnerHTML={{ __html: directMerchantNoticeHtml }}
+          dangerouslySetInnerHTML={{ __html: directMerchantNoticeHtml! }}
         />
       ) : null}
 
@@ -347,7 +428,7 @@ const OrderSummary = ({
         </div>
       )}
 
-      {/* Checkout Button */}
+      {/* Checkout Button — desktop/tablet; mobile uses fixed bar on cart page */}
       <button
         disabled={
           cartDataLoading ||
@@ -358,16 +439,16 @@ const OrderSummary = ({
           checkoutBlockedBySelfPurchase
         }
         onClick={onCheckout}
-        className={`w-full mt-6 py-3 ${
+        className={`mt-6 hidden w-full items-center justify-center py-3 font-medium text-white transition lg:flex ${
           cartDataLoading ||
           !selectedAdd ||
           total <= 0 ||
           loading ||
           !isAuthenticated ||
           checkoutBlockedBySelfPurchase
-            ? "bg-blue-200 cursor-not-allowed"
+            ? "cursor-not-allowed bg-blue-200"
             : "bg-primary hover:bg-primary-dark"
-        } text-white font-medium rounded-md transition flex justify-center items-center`}
+        } rounded-md`}
       >
         {cartDataLoading ? (
           <>

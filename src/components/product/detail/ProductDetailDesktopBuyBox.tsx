@@ -29,6 +29,8 @@ type Props = {
   inventoryUnavailable: boolean;
   inventoryLow: boolean;
   stockStatus?: StockStatusPayload | null;
+  onNotifyBackInStock?: () => void;
+  backInStockSubscribed?: boolean;
   merchantCollectsNoticeSafe: string;
   siteSettings: Record<string, unknown> | null;
   hasOutsideVicinityShippingCost: boolean;
@@ -53,6 +55,8 @@ export default function ProductDetailDesktopBuyBox({
   inventoryUnavailable,
   inventoryLow,
   stockStatus,
+  onNotifyBackInStock,
+  backInStockSubscribed,
   merchantCollectsNoticeSafe,
   siteSettings,
   hasOutsideVicinityShippingCost,
@@ -191,6 +195,21 @@ export default function ProductDetailDesktopBuyBox({
           <p className="mt-1 leading-relaxed text-rose-800/90">
             This listing is not available for purchase right now.
           </p>
+          {onNotifyBackInStock ? (
+            <button
+              type="button"
+              onClick={onNotifyBackInStock}
+              className={`mt-3 w-full rounded-xl px-4 py-2.5 text-sm font-semibold ${
+                backInStockSubscribed
+                  ? "border border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
+                  : "bg-rose-700 text-white hover:bg-rose-800"
+              }`}
+            >
+              {backInStockSubscribed
+                ? "We've got you covered"
+                : "Notify me when available"}
+            </button>
+          ) : null}
         </div>
       ) : null}
 

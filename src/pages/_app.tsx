@@ -40,6 +40,7 @@ import { captureTikTokClickId } from "@/lib/tiktokAttribution";
 import { identifyTikTokUser, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 import TikTokPixelLoader from "@/components/TikTokPixelLoader";
 import TikTokOpenInBrowserPrompt from "@/components/storefront/TikTokOpenInBrowserPrompt";
+import PresenceFlashHost from "@/components/engagement/PresenceFlashHost";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
@@ -263,6 +264,7 @@ function AppContent({ Component, pageProps }: AppProps) {
       <RouteChangeProgress />
       <TikTokOpenInBrowserPrompt />
       <Component {...pageProps} />
+      <PresenceFlashHost />
       <ToastContainer closeButton />
       <Toaster position="top-right" closeButton />
       {showLaunchConfetti ? (

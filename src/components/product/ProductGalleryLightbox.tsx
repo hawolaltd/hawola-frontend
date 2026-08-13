@@ -6,6 +6,8 @@ type ProductGalleryLightboxProps = {
     imageCandidates: string[][];
     initialIndex?: number;
     onClose: () => void;
+    /** Keep PDP thumbnail selection in sync while browsing the lightbox */
+    onIndexChange?: (index: number) => void;
     altPrefix?: string;
 };
 
@@ -16,6 +18,7 @@ export default function ProductGalleryLightbox({
     imageCandidates,
     initialIndex = 0,
     onClose,
+    onIndexChange,
     altPrefix = "Product",
 }: ProductGalleryLightboxProps) {
     const [index, setIndex] = useState(initialIndex);
@@ -26,6 +29,11 @@ export default function ProductGalleryLightbox({
             setIndex(initialIndex);
         }
     }, [open, initialIndex]);
+
+    useEffect(() => {
+        if (!open) return;
+        onIndexChange?.(index);
+    }, [open, index, onIndexChange]);
 
     const showPrev = useCallback(() => {
         if (!imageCandidates.length) return;
@@ -128,6 +136,7 @@ export default function ProductGalleryLightbox({
             ) : null}
 
             <FallbackProductImage
+                key={`lightbox-${index}-${(imageCandidates[index] ?? [])[0] || "empty"}`}
                 candidates={imageCandidates[index] ?? []}
                 alt={`${altPrefix} image ${index + 1}`}
                 className="max-h-[90vh] max-w-[92vw] select-none rounded-lg object-contain shadow-2xl"

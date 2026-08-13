@@ -1195,9 +1195,13 @@ const productSlice = createSlice({
             })
             .addCase(updatePayment.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const payload = action.payload as { order?: OrderDetailsResponse } | undefined;
+                const payload = action.payload as { order?: Partial<OrderDetailsResponse> } | undefined;
                 if (payload?.order) {
-                    state.orders = payload.order;
+                    // Payment endpoint returns a light order (no nested items). Merge
+                    // so checkout confirmation keeps shipping/items from create-order.
+                    state.orders = state.orders
+                        ? { ...state.orders, ...payload.order }
+                        : (payload.order as OrderDetailsResponse);
                 }
             })
             .addCase(updatePayment.rejected, (state, action) => {

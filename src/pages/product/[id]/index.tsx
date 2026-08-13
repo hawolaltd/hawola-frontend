@@ -27,6 +27,12 @@ import {toast} from "sonner";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import ProductDetailMobileBuyBox from "@/components/product/detail/ProductDetailMobileBuyBox";
 import ProductDetailDesktopBuyBox from "@/components/product/detail/ProductDetailDesktopBuyBox";
+import BackInStockModal from "@/components/product/BackInStockModal";
+import { getBackInStockStatus } from "@/services/backInStockService";
+import {
+    clearPresenceContext,
+    setPresenceContext,
+} from "@/lib/presenceContext";
 import ProductDetailGallerySkeleton from "@/components/product/detail/ProductDetailGallerySkeleton";
 import ProductDetailBuyBoxSkeleton from "@/components/product/detail/ProductDetailBuyBoxSkeleton";
 import ProductDetailTabsSkeleton from "@/components/product/detail/ProductDetailTabsSkeleton";
@@ -53,6 +59,7 @@ import {
     featuredImageCardSrc,
     featuredImageDetailSrc,
     featuredImageDisplayCandidates,
+    PRODUCT_IMAGE_PLACEHOLDER,
 } from "@/util/featuredImage";
 
 type ProductPageProps = {
@@ -70,6 +77,11 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
     const [loadingReview, setLoadingReview] = useState(!serverNotFound);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
+    const [backInStockOpen, setBackInStockOpen] = useState(false);
+    const [backInStockSubscribed, setBackInStockSubscribed] = useState(false);
+    const [backInStockRegisteredLabel, setBackInStockRegisteredLabel] = useState<
+        string | null
+    >(null);
     const router = useRouter();
     const { query, isReady: routerIsReady } = router;
     const promoSlug =
@@ -114,6 +126,46 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
             stockStatus?.is_low_stock &&
             !stockStatus?.is_out_of_stock
     );
+
+    useEffect(() => {
+        const productId = product?.product?.id;
+        if (!isAuthenticated || !productId || !inventoryUnavailable) {
+            return;
+        }
+        let cancelled = false;
+        getBackInStockStatus(productId)
+            .then((data) => {
+                if (cancelled) return;
+                setBackInStockSubscribed(Boolean(data.subscribed));
+                setBackInStockRegisteredLabel(data.registered_date_label || null);
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [isAuthenticated, product?.product?.id, inventoryUnavailable]);
+
+    useEffect(() => {
+        const p = product?.product;
+        if (!p?.id) return;
+        setPresenceContext({
+            page_type: "product",
+            product: {
+                id: p.id,
+                slug: p.slug,
+                name: p.name,
+            },
+            store: p.merchant
+                ? {
+                      id: p.merchant.id,
+                      slug: (p.merchant as any).slug,
+                      name: p.merchant.store_name,
+                  }
+                : undefined,
+        });
+        return () => clearPresenceContext();
+    }, [product?.product?.id, product?.product?.slug, product?.product?.name]);
+
     const [contactDisclaimerSafe, setContactDisclaimerSafe] = useState("");
     const [buyerProtectionSafe, setBuyerProtectionSafe] = useState("");
     const [merchantCollectsNoticeSafe, setMerchantCollectsNoticeSafe] = useState("");
@@ -130,66 +182,83 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
         productSlug && product?.product?.slug === productSlug
     );
 
-    const routeGalleryImages = useMemo(() => {
+    /**
+     * Stable gallery slides — one entry per product image with aligned indices.
+     * Do not separately filter detail vs thumb URLs (that desynced thumbnails
+     * from the hero and made other images look unresponsive).
+     */
+    const gallerySlides = useMemo(() => {
         if (!productMatchesRoute) return [];
-        return (product?.product_images || [])
-            .map((img) => featuredImageDetailSrc(img))
-            .filter(Boolean) as string[];
-    }, [productMatchesRoute, product?.product_images]);
+        const images = product?.product_images || [];
+        const slides = images
+            .map((img, originalIndex) => {
+                const candidates = featuredImageDisplayCandidates(img);
+                const detail =
+                    featuredImageDetailSrc(img) || candidates[0] || null;
+                const thumb =
+                    featuredImageCardSrc(img) || detail || candidates[0] || null;
+                if (!candidates.length && !detail && !thumb) return null;
+                return {
+                    originalIndex,
+                    candidates:
+                        candidates.length > 0
+                            ? candidates
+                            : ([detail || thumb].filter(Boolean) as string[]),
+                    detail: detail || thumb || PRODUCT_IMAGE_PLACEHOLDER,
+                    thumb: thumb || detail || PRODUCT_IMAGE_PLACEHOLDER,
+                };
+            })
+            .filter(Boolean) as Array<{
+            originalIndex: number;
+            candidates: string[];
+            detail: string;
+            thumb: string;
+        }>;
 
-    const routeGalleryThumbnails = useMemo(() => {
-        if (!productMatchesRoute) return [];
-        return (product?.product_images || [])
-            .map((img) => featuredImageCardSrc(img))
-            .filter(Boolean) as string[];
-    }, [productMatchesRoute, product?.product_images]);
+        if (slides.length) return slides;
 
-    const heroImageCandidates = useMemo(() => {
-        if (productMatchesRoute) {
-            const images = product?.product_images || [];
-            const entry = images[selectedGalleryIndex] ?? images[0];
-            const fromEntry = entry ? featuredImageDisplayCandidates(entry) : [];
-            if (fromEntry.length) return fromEntry;
-            const fromFeatured = featuredImageDisplayCandidates(
-                product?.product?.featured_image?.[0]
-            );
-            if (fromFeatured.length) return fromFeatured;
+        const featuredCandidates = featuredImageDisplayCandidates(
+            product?.product?.featured_image?.[0]
+        );
+        if (featuredCandidates.length) {
+            return [
+                {
+                    originalIndex: 0,
+                    candidates: featuredCandidates,
+                    detail: featuredCandidates[0],
+                    thumb: featuredCandidates[0],
+                },
+            ];
         }
+        return [];
+    }, [
+        productMatchesRoute,
+        product?.product_images,
+        product?.product?.featured_image,
+    ]);
+
+    const previewFallbackCandidates = useMemo(() => {
         const previewForRoute =
             preview?.slug === productSlug ? preview : null;
         const previewUrl = previewImageFromPreview(previewForRoute);
         return previewUrl ? [previewUrl] : [];
-    }, [
-        productMatchesRoute,
-        product?.product_images,
-        selectedGalleryIndex,
-        product?.product?.featured_image,
-        preview,
-        productSlug,
-    ]);
+    }, [preview, productSlug]);
+
+    const heroImageCandidates = useMemo(() => {
+        const slide =
+            gallerySlides[selectedGalleryIndex] ?? gallerySlides[0] ?? null;
+        if (slide?.candidates?.length) return slide.candidates;
+        return previewFallbackCandidates;
+    }, [gallerySlides, selectedGalleryIndex, previewFallbackCandidates]);
 
     const effectiveGalleryCandidates = useMemo(() => {
-        if (productMatchesRoute) {
-            const fromImages = (product?.product_images || [])
-                .map((img) => featuredImageDisplayCandidates(img))
-                .filter((candidates) => candidates.length > 0);
-            if (fromImages.length) return fromImages;
-            const featured = featuredImageDisplayCandidates(
-                product?.product?.featured_image?.[0]
-            );
-            if (featured.length) return [featured];
+        if (gallerySlides.length) {
+            return gallerySlides.map((s) => s.candidates);
         }
-        const previewForRoute =
-            preview?.slug === productSlug ? preview : null;
-        const previewUrl = previewImageFromPreview(previewForRoute);
-        return previewUrl ? [[previewUrl]] : [];
-    }, [
-        productMatchesRoute,
-        product?.product_images,
-        product?.product?.featured_image,
-        preview,
-        productSlug,
-    ]);
+        return previewFallbackCandidates.length
+            ? [previewFallbackCandidates]
+            : [];
+    }, [gallerySlides, previewFallbackCandidates]);
 
     const productSeo = useMemo(() => {
         const p = product?.product;
@@ -433,12 +502,12 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
 
     useEffect(() => {
         if (
-            routeGalleryImages.length > 0 &&
-            selectedGalleryIndex >= routeGalleryImages.length
+            gallerySlides.length > 0 &&
+            selectedGalleryIndex >= gallerySlides.length
         ) {
             setSelectedGalleryIndex(0);
         }
-    }, [routeGalleryImages.length, selectedGalleryIndex]);
+    }, [gallerySlides.length, selectedGalleryIndex]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -600,7 +669,13 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
         setLightboxIndex(safeIndex);
         setLightboxOpen(true);
     };
-    const closeLightbox = () => setLightboxOpen(false);
+    const closeLightbox = () => {
+        setLightboxOpen(false);
+    };
+    const handleLightboxIndexChange = useCallback((index: number) => {
+        setLightboxIndex(index);
+        setSelectedGalleryIndex(index);
+    }, []);
     if (contactMerchantOnly) {
         return (
             <AuthLayout>
@@ -634,24 +709,26 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                             <div className="border-b border-slate-800 lg:col-span-8 lg:border-b-0 lg:border-r lg:border-slate-800 p-5 lg:p-7">
                                 <div className="aspect-[16/10] w-full rounded-2xl border border-slate-700 bg-slate-900 flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
                                     <FallbackProductImage
+                                        key={`cm-hero-${selectedGalleryIndex}-${heroImageCandidates[0] || "empty"}`}
                                         candidates={heroImageCandidates}
                                         alt={displayName}
                                         className="w-full h-full object-contain cursor-zoom-in"
                                         onClick={() => openLightboxAtIndex(selectedGalleryIndex)}
                                     />
                                 </div>
-                                {routeGalleryImages.length > 1 ? (
+                                {gallerySlides.length > 1 ? (
                                     <div className="mt-4 grid grid-cols-5 gap-2 rounded-xl bg-slate-900/80 border border-slate-700 p-2">
-                                        {routeGalleryImages.slice(0, 10).map((imageUrl, idx) => (
+                                        {gallerySlides.slice(0, 10).map((slide, idx) => (
                                             <button
-                                                key={idx}
+                                                type="button"
+                                                key={slide.originalIndex}
                                                 onClick={() => setSelectedGalleryIndex(idx)}
                                                 className={`h-16 rounded-lg border overflow-hidden transition ${
                                                     selectedGalleryIndex === idx ? "border-amber-400 ring-1 ring-amber-400/30" : "border-slate-700"
                                                 }`}
                                             >
                                                 <img
-                                                    src={imageUrl}
+                                                    src={slide.thumb}
                                                     alt="Listing preview"
                                                     className="w-full h-full object-cover"
                                                 />
@@ -745,6 +822,7 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                     imageCandidates={effectiveGalleryCandidates}
                     initialIndex={lightboxIndex}
                     onClose={closeLightbox}
+                    onIndexChange={handleLightboxIndexChange}
                     altPrefix={product?.product?.name || "Listing"}
                 />
                 {product?.product?.slug ? (
@@ -820,27 +898,20 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
             <div className="flex flex-col gap-4 rounded-2xl bg-white p-0 sm:rounded-3xl sm:p-4 md:flex-row md:p-5 sm:shadow-[0_4px_32px_rgba(15,23,42,0.06)]">
                 {/* Image Display */}
 
-                {galleryLoading && routeGalleryImages.length === 0 ? (
-                    heroImageCandidates.length > 0 ? (
-                        <div className="flex w-full flex-1 items-center justify-center rounded-2xl bg-slate-300 p-4 lg:flex-[3]">
-                            <FallbackProductImage
-                                candidates={heroImageCandidates}
-                                alt={displayName}
-                                className="max-h-[75vh] w-full object-contain opacity-90"
-                            />
-                        </div>
-                    ) : (
-                        <ProductDetailGallerySkeleton />
-                    )
+                {galleryLoading &&
+                gallerySlides.length === 0 &&
+                heroImageCandidates.length === 0 ? (
+                    <ProductDetailGallerySkeleton />
                 ) : (
                 <div className="flex w-full flex-col gap-3 lg:flex-[3] lg:flex-row lg:gap-4">
 
                     {/* Thumbnail Gallery — desktop sidebar */}
+                    {gallerySlides.length > 0 ? (
                     <div className="hidden lg:flex h-[75vh] w-fit flex-col gap-3 overflow-y-auto rounded-2xl bg-slate-200 p-2">
-                        {routeGalleryImages.map((imageUrl, key) => (
+                        {gallerySlides.map((slide, key) => (
                             <button
                                 type="button"
-                                key={key}
+                                key={slide.originalIndex}
                                 onClick={() => setSelectedGalleryIndex(key)}
                                 className={`flex h-[96px] w-[96px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-300 ${
                                     selectedGalleryIndex === key
@@ -849,13 +920,14 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                                 }`}
                             >
                                 <img
-                                    src={routeGalleryThumbnails[key] || imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
+                                    src={slide.thumb || PRODUCT_IMAGE_PLACEHOLDER}
                                     alt={`Product thumbnail ${key + 1}`}
                                     className="h-full w-full object-cover"
                                 />
                             </button>
                         ))}
                     </div>
+                    ) : null}
 
                     {/* Main Image Display */}
                     <div className="flex w-full min-w-0 flex-1 flex-col">
@@ -872,6 +944,7 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                                 onMouseMove={handleMouseMove}
                             >
                                 <FallbackProductImage
+                                    key={`hero-${selectedGalleryIndex}-${heroImageCandidates[0] || "empty"}`}
                                     candidates={heroImageCandidates}
                                     alt={displayName}
                                     className={`h-full w-full object-contain transition-transform duration-300 max-lg:scale-100 ${
@@ -888,17 +961,17 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                         </div>
 
                         {/* Mobile Thumbnail Navigation — below hero so taps are not blocked */}
-                        {routeGalleryImages.length > 1 ? (
+                        {gallerySlides.length > 1 ? (
                             <div className="lg:hidden flex w-full gap-2 overflow-x-auto rounded-xl bg-slate-200 px-2 py-2">
-                                {routeGalleryImages.map((imageUrl, key) => (
+                                {gallerySlides.map((slide, key) => (
                                     <button
                                         type="button"
-                                        key={key}
+                                        key={slide.originalIndex}
                                         onClick={() => setSelectedGalleryIndex(key)}
                                         className={`h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-white shadow-sm ${selectedGalleryIndex === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-200' : 'ring-1 ring-slate-300/70'}`}
                                     >
                                         <img
-                                            src={routeGalleryThumbnails[key] || imageUrl || "/imgs/page/product/img-gallery-1.jpg"}
+                                            src={slide.thumb || PRODUCT_IMAGE_PLACEHOLDER}
                                             alt={`Product thumbnail ${key + 1}`}
                                             className="w-full h-full object-cover"
                                         />
@@ -952,6 +1025,8 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                         inventoryUnavailable={inventoryUnavailable}
                         inventoryLow={inventoryLow}
                         stockStatus={stockStatus}
+                        onNotifyBackInStock={() => setBackInStockOpen(true)}
+                        backInStockSubscribed={backInStockSubscribed}
                         merchantCollectsNoticeSafe={merchantCollectsNoticeSafe}
                         siteSettings={siteSettings as Record<string, unknown> | null}
                         hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
@@ -974,6 +1049,8 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                         inventoryUnavailable={inventoryUnavailable}
                         inventoryLow={inventoryLow}
                         stockStatus={stockStatus}
+                        onNotifyBackInStock={() => setBackInStockOpen(true)}
+                        backInStockSubscribed={backInStockSubscribed}
                         merchantCollectsNoticeSafe={merchantCollectsNoticeSafe}
                         siteSettings={siteSettings as Record<string, unknown> | null}
                         hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
@@ -1067,8 +1144,28 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
             imageCandidates={effectiveGalleryCandidates}
             initialIndex={lightboxIndex}
             onClose={closeLightbox}
+            onIndexChange={handleLightboxIndexChange}
             altPrefix={displayName}
         />
+        {product?.product?.id ? (
+            <BackInStockModal
+                isOpen={backInStockOpen}
+                onClose={() => setBackInStockOpen(false)}
+                productId={product.product.id}
+                productName={displayName}
+                isAuthenticated={Boolean(isAuthenticated)}
+                userEmail={authProfile?.email}
+                userPhone={(authProfile as any)?.phone_number}
+                alreadySubscribed={backInStockSubscribed}
+                registeredDateLabel={backInStockRegisteredLabel}
+                onSubscribed={(meta) => {
+                    setBackInStockSubscribed(true);
+                    if (meta?.registeredDateLabel) {
+                        setBackInStockRegisteredLabel(meta.registeredDateLabel);
+                    }
+                }}
+            />
+        ) : null}
         {product?.product?.slug ? (
             <MerchantChatWidget
                 productSlug={product.product.slug}

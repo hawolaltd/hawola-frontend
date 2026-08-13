@@ -93,6 +93,8 @@ export const clearAllStorage = () => {
   cartItems = localStorage.getItem("cartItems");
   sessionId = localStorage.getItem("hawola_session_id");
   const storefrontPreviewToken = localStorage.getItem(STOREFRONT_PREVIEW_LS_KEY);
+  // Keep live-presence key so guest→login does not spawn a second admin row
+  const presenceSessionKey = localStorage.getItem("hawola_presence_session_key");
 
   // Clear cookies
   Cookies.remove(authRefreshTokenStorageKeyName as string);
@@ -110,6 +112,9 @@ export const clearAllStorage = () => {
   }
   if (storefrontPreviewToken) {
     localStorage.setItem(STOREFRONT_PREVIEW_LS_KEY, storefrontPreviewToken);
+  }
+  if (presenceSessionKey) {
+    localStorage.setItem("hawola_presence_session_key", presenceSessionKey);
   }
 
   // Clear Redux persist storage
@@ -134,6 +139,7 @@ export const clearAllStorageWithPersistor = async (persistor: any) => {
   cartItems = localStorage.getItem("cartItems");
   sessionId = localStorage.getItem("hawola_session_id");
   const storefrontPreviewToken = localStorage.getItem(STOREFRONT_PREVIEW_LS_KEY);
+  const presenceSessionKey = localStorage.getItem("hawola_presence_session_key");
 
   // Clear cookies
   Cookies.remove(authRefreshTokenStorageKeyName as string);
@@ -151,6 +157,9 @@ export const clearAllStorageWithPersistor = async (persistor: any) => {
   }
   if (storefrontPreviewToken) {
     localStorage.setItem(STOREFRONT_PREVIEW_LS_KEY, storefrontPreviewToken);
+  }
+  if (presenceSessionKey) {
+    localStorage.setItem("hawola_presence_session_key", presenceSessionKey);
   }
 
   // Purge Redux persist storage using persistor

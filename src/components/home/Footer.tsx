@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
@@ -88,7 +89,13 @@ function normalizeLinks(raw: unknown, fallback: FooterLink[]): FooterLink[] {
 }
 
 const Footer = () => {
+  const { pathname } = useRouter();
   const siteSettings = useAppSelector((s) => s.general.siteSettings) as SiteSettingsData | null;
+  /** Cart / checkout mobile order bars sit at the viewport base — lift this control above them. */
+  const aboveOrderBar =
+    pathname === "/carts" ||
+    pathname === "/carts/checkout" ||
+    pathname.startsWith("/carts/");
 
   const footerConfig = useMemo(() => {
     const raw = siteSettings?.footer_config;
@@ -278,7 +285,11 @@ const Footer = () => {
       <button
         type="button"
         onClick={scrollTop}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-deepOrange text-white shadow-lg ring-2 ring-white/20 transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className={`fixed right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-deepOrange text-white shadow-lg ring-2 ring-white/20 transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+          aboveOrderBar
+            ? "bottom-[calc(7.75rem+env(safe-area-inset-bottom,0px))] lg:bottom-6"
+            : "bottom-6"
+        }`}
         aria-label="Back to top"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
