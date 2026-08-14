@@ -23,7 +23,7 @@ function specialsList(homePage: { data?: Record<string, unknown> } | null): Prod
  */
 const HawolaSpecials = ({ products: _products }: HawolaSpecialsProps) => {
   const { homePage } = useAppSelector((state) => state.general);
-  const list = specialsList(homePage).filter(Boolean).slice(0, 8);
+  const list = specialsList(homePage).filter(Boolean).slice(0, 10);
   if (!list.length) return null;
 
   return (
@@ -35,7 +35,7 @@ const HawolaSpecials = ({ products: _products }: HawolaSpecialsProps) => {
             <h2 className="text-xl font-semibold text-primary">Hawola Specials</h2>
           </div>
         </div>
-        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
           {list.map((product, key) => (
             <ProductCard key={product.id ?? key} product={product} />
           ))}

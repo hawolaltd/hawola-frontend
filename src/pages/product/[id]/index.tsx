@@ -811,7 +811,7 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                         </div>
                     </div>
 
-                    <div className="p-6">
+                    <div className="mt-6">
                         <RelatedProduct product={product} />
                     </div>
                     </div>
@@ -1080,13 +1080,14 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
              ) : product?.product?.id ? (
                 <ProductInfo product={product} />
              ) : null}
+            </div>
 
+            <div className="mt-4 sm:mt-6">
              {relatedLoading ? (
                 <ProductDetailRelatedSkeleton />
              ) : (
                 <RelatedProduct product={product} />
              )}
-
             </div>
         </div>
         {!contactMerchantOnly && product?.product?.id ? (

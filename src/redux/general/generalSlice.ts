@@ -50,6 +50,8 @@ export interface SiteSettingsData {
   support_phone_number?: string | null;
   /** Home banner layout: boxed_marketplace | cinema_wide | editorial_split | spotlight_rail */
   homepage_hero_theme?: string | null;
+  /** Home body after banner: classic_grid | midnight_market | deal_runway | curator_vault */
+  homepage_body_theme?: string | null;
   play_store_url?: string | null;
   app_store_url?: string | null;
   footer_config?: {

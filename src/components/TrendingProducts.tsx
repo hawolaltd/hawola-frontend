@@ -72,9 +72,9 @@ const TrendingProducts = ({ products: _products }: TrendingProductsProps) => {
               </div> */}
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 w-full">
             {homePage?.data?.recommended_products
-              ?.slice(0, 8)
+              ?.slice(0, 10)
               ?.map((product, key) => (
                 <ProductCard key={key} product={product} />
               ))}
@@ -86,7 +86,7 @@ const TrendingProducts = ({ products: _products }: TrendingProductsProps) => {
         </div>
 
         <aside className="w-full shrink-0 xl:max-w-[min(22rem,34%)] xl:w-[min(22rem,34%)]">
-          <ProductRankPanel title="Best Seller" products={bestSellingList} limit={5} />
+          <ProductRankPanel title="Best Seller" products={bestSellingList} limit={8} />
         </aside>
       </div>
     </section>

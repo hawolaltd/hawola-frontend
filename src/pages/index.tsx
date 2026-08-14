@@ -1,14 +1,9 @@
 import Head from "next/head";
 import HomeTopRegion from "@/components/home/HomeTopRegion";
-import ProductList from "@/components/ProductList";
+import HomeBodyRegion from "@/components/home/HomeBodyRegion";
 import Footer from "@/components/home/Footer";
 import Header from "@/components/header";
 import React, { useEffect } from "react";
-import TrendingProducts from "@/components/TrendingProducts";
-import HawolaSpecials from "@/components/home/HawolaSpecials";
-import TopRateProducts from "@/components/home/TopRateProducts";
-import TopSellingProducts from "@/components/home/TopSellingProducts";
-import RecentlyViewedSection from "@/components/shared/RecentlyViewedSection";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import {
   getCarts,
@@ -43,8 +38,8 @@ export default function Home() {
     <div>
       <Head>
         <title>{metaTitle}</title>
-        <meta 
-          name="description" 
+        <meta
+          name="description"
           content={metaDescription}
         />
         <meta property="og:title" content={metaTitle} />
@@ -53,13 +48,7 @@ export default function Home() {
       </Head>
       <Header />
       <HomeTopRegion />
-      {/* <Partner /> */}
-      {/* <ProductList products={products} /> */}
-      <TrendingProducts />
-      <HawolaSpecials />
-      <TopRateProducts />
-      <TopSellingProducts />
-      <RecentlyViewedSection />
+      <HomeBodyRegion />
       <Footer />
     </div>
   );

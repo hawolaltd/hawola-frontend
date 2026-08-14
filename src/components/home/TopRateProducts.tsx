@@ -26,8 +26,8 @@ const TopRateProducts = ({ products: _products }: TopRateProductsProps) => {
                 </h2>
               </div>
             </div>
-            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-3">
-              {topRated.map((product, key) => (
+            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+              {topRated.slice(0, 15).map((product, key) => (
                 <ProductCard key={product?.id ?? key} product={product} />
               ))}
             </div>

@@ -137,7 +137,7 @@ type ThemeProps = {
 
 function BoxedMarketplaceTheme({ carouselSlides, heroSidebarSlots }: ThemeProps) {
   return (
-    <section className="mx-auto max-w-screen-xl px-6 pb-4 pt-0 xl:px-0">
+    <section className="mx-auto max-w-screen-xl px-6 py-4 xl:px-0">
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="rounded-xl xl:col-span-9">
           <HeroCarousel
@@ -315,7 +315,7 @@ function SpotlightRailTheme({ carouselSlides, sideSlides, playStoreUrl, appStore
         }}
       />
 
-      <div className="mx-auto max-w-screen-xl px-5 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pt-10 xl:px-10">
+      <div className="mx-auto max-w-screen-xl px-6 pt-4 xl:px-0 sm:pt-6">
         <div className="overflow-hidden rounded-[1.35rem] shadow-[0_24px_60px_-28px_rgba(15,23,42,0.65)] ring-1 ring-white/15">
           <HeroCarousel
             slides={carouselSlides}

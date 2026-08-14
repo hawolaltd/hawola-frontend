@@ -18,7 +18,7 @@ import {
   TagIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import ProductCard from "@/components/product/ProductCard";
+import CompactProductTile from "@/components/product/CompactProductTile";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
@@ -376,9 +376,15 @@ const SearchPage = () => {
                             Products
                           </h2>
                         )}
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                           {searchResults.results.products.items.map((product: any) => (
-                            <ProductCard key={product.id} product={product} />
+                            <CompactProductTile
+                              key={product.id}
+                              product={product}
+                              tone="light"
+                              showCompare
+                              isPromoted={Boolean(product?.is_promoted || product?.promoted)}
+                            />
                           ))}
                         </div>
 
