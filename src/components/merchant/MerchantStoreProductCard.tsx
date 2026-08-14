@@ -52,15 +52,17 @@ export default function MerchantStoreProductCard({ product }: Props) {
           />
         </Link>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/25 to-transparent opacity-60" aria-hidden />
-        <div className="absolute right-2 top-2 z-20 sm:right-2.5 sm:top-2.5">
+        <div className="absolute left-2 top-2 z-20 sm:left-2.5 sm:top-2.5">
           <AddToCompareButton
             variant="icon"
             product={product}
-            className="[&_button]:h-9 [&_button]:w-9 [&_button]:rounded-xl [&_button]:border-white/80 [&_button]:bg-white/95 [&_button]:shadow-md"
+            accent="light"
+            tooltipPlacement="bottom"
+            className="[&_button]:h-9 [&_button]:w-9"
           />
         </div>
         {pct != null && pct > 0 ? (
-          <span className="absolute left-2 top-2 z-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md sm:left-2.5 sm:top-2.5">
+          <span className="absolute right-2 top-2 z-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md sm:right-2.5 sm:top-2.5">
             −{pct}%
           </span>
         ) : null}

@@ -8,6 +8,7 @@ import {
 } from "@/util";
 
 import { onPromoProductClick, promoProductPath } from "@/lib/promoAnalytics";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
 
 type Props = {
   product: ProductFull;
@@ -25,50 +26,70 @@ export default function PromoProductCard({ product, featured, promoSlug }: Props
     String(product.discount_price).trim() !== "" &&
     String(product.discount_price) !== String(product.price);
 
+  const href =
+    promoSlug && product.slug
+      ? promoProductPath(product.slug, promoSlug)
+      : `/product/${product.slug}`;
+
   return (
-    <Link
-      href={
-        promoSlug && product.slug
-          ? promoProductPath(product.slug, promoSlug)
-          : `/product/${product.slug}`
-      }
-      onClick={() => {
-        if (promoSlug && product.id) {
-          onPromoProductClick(promoSlug, product.id);
-        }
-      }}
-      className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+    <div
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         featured
           ? "border-rose-200 ring-2 ring-rose-200/70 ring-offset-2 ring-offset-[#faf8f6]"
           : "border-slate-200/90"
       }`}
     >
       <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
+        <AddToCompareButton
+          product={product}
+          className="absolute top-2.5 left-2.5 z-20"
+          accent="light"
+          tooltipPlacement="bottom"
+        />
         {featured ? (
-          <span className="absolute left-2 top-2 z-10 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow">
+          <span className="absolute right-2 top-2 z-10 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow">
             Top pick
           </span>
         ) : null}
-        {hasDiscount ? (
+        {hasDiscount && !featured ? (
           <span className="absolute right-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-900 shadow">
             Sale
           </span>
         ) : null}
-        <img
-          src={imgSrc}
-          alt={product.name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-          onError={() => {
-            if (imgSrc !== PRODUCT_IMAGE_PLACEHOLDER) {
-              setImgSrc(PRODUCT_IMAGE_PLACEHOLDER);
+        <Link
+          href={href}
+          className="absolute inset-0 block"
+          aria-label={product.name}
+          onClick={() => {
+            if (promoSlug && product.id) {
+              onPromoProductClick(promoSlug, product.id);
             }
           }}
-        />
+        >
+          <img
+            src={imgSrc}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+            onError={() => {
+              if (imgSrc !== PRODUCT_IMAGE_PLACEHOLDER) {
+                setImgSrc(PRODUCT_IMAGE_PLACEHOLDER);
+              }
+            }}
+          />
+        </Link>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3">
+      <Link
+        href={href}
+        onClick={() => {
+          if (promoSlug && product.id) {
+            onPromoProductClick(promoSlug, product.id);
+          }
+        }}
+        className="flex flex-1 flex-col gap-1 p-3"
+      >
         {product.merchant?.store_name ? (
           <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {product.merchant.store_name}
@@ -89,7 +110,7 @@ export default function PromoProductCard({ product, featured, promoSlug }: Props
             <p className="text-base font-black text-slate-900">{formatCurrency(product.price)}</p>
           )}
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }

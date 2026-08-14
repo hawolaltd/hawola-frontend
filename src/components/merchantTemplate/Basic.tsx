@@ -402,7 +402,12 @@ const BasicTemplate = () => {
                       key={product.id}
                       className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
                     >
-                      <AddToCompareButton product={product as Product} className="absolute top-3 right-3 z-20" />
+                      <AddToCompareButton
+                        product={product as Product}
+                        className="absolute top-2.5 left-2.5 z-20"
+                        accent="light"
+                        tooltipPlacement="bottom"
+                      />
                       <Link href={`/product/${product.slug}`} className="block">
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
@@ -413,7 +418,7 @@ const BasicTemplate = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         {product.discount_price && product.discount_price !== product.price && (
-                          <div className="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">
+                          <div className="absolute top-3 right-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">
                             {Math.round(((parseFloat(product.price) - parseFloat(product.discount_price)) / parseFloat(product.price)) * 100)}% OFF
                           </div>
                         )}
@@ -488,7 +493,12 @@ const BasicTemplate = () => {
                     key={product.id}
                     className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
                   >
-                    <AddToCompareButton product={product as Product} className="absolute top-3 right-3 z-20" />
+                    <AddToCompareButton
+                      product={product as Product}
+                      className="absolute top-2.5 left-2.5 z-20"
+                      accent="light"
+                      tooltipPlacement="bottom"
+                    />
                     <Link href={`/product/${product.slug}`} className="block">
                     <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         <img
@@ -499,7 +509,7 @@ const BasicTemplate = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       {product.discount_price && product.discount_price !== product.price && (
-                        <div className="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">
                           {Math.round(((parseFloat(product.price) - parseFloat(product.discount_price)) / parseFloat(product.price)) * 100)}% OFF
                         </div>
                       )}

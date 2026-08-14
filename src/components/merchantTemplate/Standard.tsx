@@ -222,11 +222,11 @@ const StandardTemplate = () => {
           style={{ outlineColor: primaryColor }}
           aria-label={`View ${product.name}`}
         />
-        <div className="relative z-[1] shrink-0 overflow-hidden bg-gray-100">
+        <div className="relative z-[1] aspect-[4/5] w-full shrink-0 overflow-hidden bg-gray-100 sm:aspect-square">
           <img
             src={featuredImageCardUrl(product.featured_image?.[0])}
             alt={product.name}
-            className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
         <div className="relative z-[1] flex flex-1 flex-col p-4">
@@ -245,11 +245,13 @@ const StandardTemplate = () => {
               )}
           </div>
         </div>
-        <div className="absolute left-3 top-3 z-20 sm:left-3.5 sm:top-3.5">
+        <div className="absolute left-2.5 top-2.5 z-20">
           <AddToCompareButton
             variant="icon"
             product={product}
-            className="[&_button]:h-10 [&_button]:w-10 [&_button]:rounded-xl [&_button]:border-white/85 [&_button]:bg-white/95 [&_button]:shadow-md [&_button]:backdrop-blur-sm"
+            accent="light"
+            tooltipPlacement="bottom"
+            className="[&_button]:h-9 [&_button]:w-9"
           />
         </div>
       </div>

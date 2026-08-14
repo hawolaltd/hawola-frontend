@@ -137,121 +137,161 @@ function ProductCard({
         isList ? "" : "flex h-full flex-col"
       }`}
     >
-      <AddToCompareButton product={product} className="absolute top-3 left-3" />
-
-      {isPromoted && (
-        <span className="absolute top-3 right-3 z-10 text-[10px] flex items-center justify-center bg-yellow-500 w-16 h-4 rounded-full text-white font-semibold">
-          Promoted
-        </span>
-      )}
-
-      <Link
-        href={
-          promoSlug && product?.slug
-            ? promoProductPath(product.slug, promoSlug)
-            : `/product/${product?.slug}`
-        }
-        prefetch
-        onMouseEnter={prefetchHandlers.onMouseEnter}
-        onMouseLeave={prefetchHandlers.onMouseLeave}
-        onFocus={prefetchHandlers.onFocus}
-        onTouchStart={prefetchHandlers.onTouchStart}
-        onClick={() => {
-          saveProductDetailPreview(product);
-          if (promoSlug && product?.id) {
-            onPromoProductClick(promoSlug, product.id);
-          }
-        }}
-        className={
-          isList
-            ? "flex items-center gap-4 p-4"
-            : "flex min-h-0 flex-1 flex-col gap-3 p-4"
-        }
-      >
-        <div
-          className={
-            isList
-              ? "flex w-full items-center justify-center"
-              : "flex h-[150px] w-full shrink-0 items-center justify-center"
-          }
-        >
-          <img
-            src={featuredImageCardUrl(product.featured_image?.[0])}
-            alt={product.name}
-            loading={deferImage ? "lazy" : "eager"}
-            decoding="async"
-            style={{
-              height: "150px",
-            }}
+      {isList ? (
+        <>
+          <AddToCompareButton
+            product={product}
+            className="absolute top-3 left-3 z-20"
+            accent="light"
+            tooltipPlacement="bottom"
           />
-        </div>
-        <div
-          className={
-            isList
-              ? "flex flex-col gap-1.5"
-              : "flex min-h-0 flex-1 flex-col gap-1"
-          }
-        >
-          <h3 className="line-clamp-1 text-[10px] font-semibold text-textPadded">
-            {product.merchant?.store_name}
-          </h3>
-          <h3
-            className={`text-xs font-semibold leading-tight text-primary break-words line-clamp-2 ${
-              isList ? "" : "min-h-0"
-            }`}
-          >
-            {formatProductCardTitle(product.name)}
-          </h3>
-          {/* Ratings hidden on product cards (per product policy)
-          <div className={"flex items-center gap-1"}>
-            {Array.from({
-              length: Math.min(5, Math.max(0, Math.round(Number(product?.rating) || 0))),
-            }).map((_, key) => (
-              <svg
-                className={"w-4 h-4"}
-                key={key}
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="m0 0h24v24h-24z"
-                  fill="#fff"
-                  opacity="0"
-                  transform="matrix(0 1 -1 0 24 0)"
-                />
-                <path
-                  d="m17.56 21a1 1 0 0 1 -.46-.11l-5.1-2.67-5.1 2.67a1 1 0 0 1 -1.45-1.06l1-5.63-4.12-4a1 1 0 0 1 -.25-1 1 1 0 0 1 .81-.68l5.7-.83 2.51-5.13a1 1 0 0 1 1.8 0l2.54 5.12 5.7.83a1 1 0 0 1 .81.68 1 1 0 0 1 -.25 1l-4.12 4 1 5.63a1 1 0 0 1 -.4 1 1 1 0 0 1 -.62.18z"
-                  fill="#FFB067"
-                />
-              </svg>
-            ))}
-            <span className={"text-[10px] text-textPadded font-normal"}>
-              {product?.numReviews}
+          {isPromoted && (
+            <span className="absolute top-3 right-3 z-20 text-[10px] flex items-center justify-center bg-yellow-500 w-16 h-4 rounded-full text-white font-semibold">
+              Promoted
             </span>
-          </div>
-          */}
-          <div
-            className={`border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5 ${
-              isList ? "mt-1" : "mt-2 shrink-0"
-            }`}
+          )}
+          <Link
+            href={
+              promoSlug && product?.slug
+                ? promoProductPath(product.slug, promoSlug)
+                : `/product/${product?.slug}`
+            }
+            prefetch
+            onMouseEnter={prefetchHandlers.onMouseEnter}
+            onMouseLeave={prefetchHandlers.onMouseLeave}
+            onFocus={prefetchHandlers.onFocus}
+            onTouchStart={prefetchHandlers.onTouchStart}
+            onClick={() => {
+              saveProductDetailPreview(product);
+              if (promoSlug && product?.id) {
+                onPromoProductClick(promoSlug, product.id);
+              }
+            }}
+            className="flex items-center gap-4 p-4"
           >
-            {hasDiscount ? (
-              <>
+            <div className="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-md bg-slate-100">
+              <img
+                src={featuredImageCardUrl(product.featured_image?.[0])}
+                alt={product.name}
+                loading={deferImage ? "lazy" : "eager"}
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h3 className="line-clamp-1 text-[10px] font-semibold text-textPadded">
+                {product.merchant?.store_name}
+              </h3>
+              <h3 className="text-xs font-semibold leading-tight text-primary break-words line-clamp-2">
+                {formatProductCardTitle(product.name)}
+              </h3>
+              <div className="mt-1 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
+                {hasDiscount ? (
+                  <>
+                    <p className="text-lg font-bold text-primary leading-tight">
+                      {formatCurrency(product.discount_price)}
+                    </p>
+                    <p className="text-xs text-textPadded line-through leading-tight">
+                      {formatCurrency(product.price)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-lg font-bold text-primary leading-tight">
+                    {formatCurrency(product.price)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </Link>
+        </>
+      ) : (
+        <>
+          <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-slate-100 sm:aspect-square">
+            <AddToCompareButton
+              product={product}
+              className="absolute top-2.5 left-2.5 z-20"
+              accent="light"
+              tooltipPlacement="bottom"
+            />
+            {isPromoted && (
+              <span className="absolute top-2.5 right-2.5 z-20 text-[10px] flex items-center justify-center bg-yellow-500 w-16 h-4 rounded-full text-white font-semibold">
+                Promoted
+              </span>
+            )}
+            <Link
+              href={
+                promoSlug && product?.slug
+                  ? promoProductPath(product.slug, promoSlug)
+                  : `/product/${product?.slug}`
+              }
+              prefetch
+              onMouseEnter={prefetchHandlers.onMouseEnter}
+              onMouseLeave={prefetchHandlers.onMouseLeave}
+              onFocus={prefetchHandlers.onFocus}
+              onTouchStart={prefetchHandlers.onTouchStart}
+              onClick={() => {
+                saveProductDetailPreview(product);
+                if (promoSlug && product?.id) {
+                  onPromoProductClick(promoSlug, product.id);
+                }
+              }}
+              className="absolute inset-0 block"
+              aria-label={product.name}
+            >
+              <img
+                src={featuredImageCardUrl(product.featured_image?.[0])}
+                alt={product.name}
+                loading={deferImage ? "lazy" : "eager"}
+                decoding="async"
+                className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+              />
+            </Link>
+          </div>
+
+          <Link
+            href={
+              promoSlug && product?.slug
+                ? promoProductPath(product.slug, promoSlug)
+                : `/product/${product?.slug}`
+            }
+            prefetch
+            onMouseEnter={prefetchHandlers.onMouseEnter}
+            onMouseLeave={prefetchHandlers.onMouseLeave}
+            onFocus={prefetchHandlers.onFocus}
+            onTouchStart={prefetchHandlers.onTouchStart}
+            onClick={() => {
+              saveProductDetailPreview(product);
+              if (promoSlug && product?.id) {
+                onPromoProductClick(promoSlug, product.id);
+              }
+            }}
+            className="flex min-h-0 flex-1 flex-col gap-1 p-4"
+          >
+            <h3 className="line-clamp-1 text-[10px] font-semibold text-textPadded">
+              {product.merchant?.store_name}
+            </h3>
+            <h3 className="min-h-0 text-xs font-semibold leading-tight text-primary break-words line-clamp-2">
+              {formatProductCardTitle(product.name)}
+            </h3>
+            <div className="mt-2 shrink-0 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
+              {hasDiscount ? (
+                <>
+                  <p className="text-lg font-bold text-primary leading-tight">
+                    {formatCurrency(product.discount_price)}
+                  </p>
+                  <p className="text-xs text-textPadded line-through leading-tight">
+                    {formatCurrency(product.price)}
+                  </p>
+                </>
+              ) : (
                 <p className="text-lg font-bold text-primary leading-tight">
-                  {formatCurrency(product.discount_price)}
-                </p>
-                <p className="text-xs text-textPadded line-through leading-tight">
                   {formatCurrency(product.price)}
                 </p>
-              </>
-            ) : (
-              <p className="text-lg font-bold text-primary leading-tight">
-                {formatCurrency(product.price)}
-              </p>
-            )}
-          </div>
-        </div>
-      </Link>
+              )}
+            </div>
+          </Link>
+        </>
+      )}
     </div>
   );
 }

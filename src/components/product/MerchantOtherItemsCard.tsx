@@ -1,9 +1,11 @@
 import React from "react";
-import { useRouter } from "next/router";
+import Link from "next/link";
 import { saveProductDetailPreview } from "@/lib/pdpPreview";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import { formatProductCardTitle } from "@/util/formatProductCardTitle";
 import { MerchantOtherProduct } from "@/types/product";
+import AddToCompareButton from "@/components/compare/AddToCompareButton";
+import type { ProductFull } from "@/types/home";
 
 const STAR_PATH =
   "m17.56 21a1 1 0 0 1 -.46-.11l-5.1-2.67-5.1 2.67a1 1 0 0 1 -1.45-1.06l1-5.63-4.12-4a1 1 0 0 1 -.25-1 1 1 0 0 1 .81-.68l5.7-.83 2.51-5.13a1 1 0 0 1 1.8 0l2.54 5.12 5.7.83a1 1 0 0 1 .81.68 1 1 0 0 1 -.25 1l-4.12 4 1 5.63a1 1 0 0 1 -.4 1 1 1 0 0 1 -.62.18z";
@@ -35,37 +37,55 @@ function RatingRow({ product }: { product: MerchantOtherProduct }) {
   );
 }
 
+function productHref(product: MerchantOtherProduct): string {
+  const slug = product?.slug?.trim();
+  if (!slug) return "#";
+  return slug.startsWith("/") ? slug : `/product/${slug}`;
+}
+
 function MerchantOtherItemsCard({
   product,
 }: {
   product: MerchantOtherProduct;
 }) {
-  const router = useRouter();
-
   const hasDiscount =
     product?.discount_price != null &&
     product?.price != null &&
     String(product.discount_price).trim() !== "" &&
     String(product.discount_price) !== String(product.price);
 
+  const href = productHref(product);
+
   return (
-    <div
-      onClick={() => {
-        saveProductDetailPreview(product);
-        router.push(`${product?.slug}`);
-      }}
-      className="relative flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-solid border-[#D5DFE4] bg-white p-4"
-    >
-      <div className="flex h-[150px] w-full shrink-0 items-center justify-center">
-        <img
-          src={featuredImageCardUrl(product?.featured_image?.[0])}
-          alt={product.name}
-          style={{
-            height: "150px",
-          }}
+    <div className="relative flex h-full min-h-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-solid border-[#D5DFE4] bg-white">
+      <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden bg-slate-100 sm:aspect-square">
+        <AddToCompareButton
+          product={product as unknown as ProductFull}
+          className="absolute top-2.5 left-2.5 z-20"
+          accent="light"
+          tooltipPlacement="bottom"
         />
+        <Link
+          href={href}
+          className="absolute inset-0 block"
+          aria-label={product.name}
+          onClick={() => saveProductDetailPreview(product)}
+        >
+          <img
+            src={featuredImageCardUrl(product?.featured_image?.[0])}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+          />
+        </Link>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1 pt-2">
+
+      <Link
+        href={href}
+        onClick={() => saveProductDetailPreview(product)}
+        className="flex min-h-0 flex-1 flex-col gap-1 p-4"
+      >
         <h3 className="line-clamp-1 shrink-0 text-[10px] font-semibold text-textPadded">
           {product.merchant?.store_name}
         </h3>
@@ -91,7 +111,7 @@ function MerchantOtherItemsCard({
             )}
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
