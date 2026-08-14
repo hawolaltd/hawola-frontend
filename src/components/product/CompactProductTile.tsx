@@ -139,10 +139,12 @@ export default function CompactProductTile({
           }
           style={isDark ? { color: "#fdba74" } : undefined}
         >
-          {formatCurrency(hasDiscount ? product.discount_price : product.price)}
+          {formatCurrency(
+            (hasDiscount ? product.discount_price : product.price) ?? ""
+          )}
           {hasDiscount && !isDark ? (
             <span className="ml-1.5 text-[11px] font-medium text-slate-400 line-through">
-              {formatCurrency(product.price)}
+              {formatCurrency(product.price ?? "")}
             </span>
           ) : null}
         </p>

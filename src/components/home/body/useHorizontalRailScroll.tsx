@@ -155,7 +155,7 @@ export function RailNavButtons({
   );
 }
 
-/** Touch swipe on paginated grids (left = next page, right = previous). */
+/** Touch / pointer swipe on paginated grids (left = next page, right = previous). */
 export function usePageSwipe(
   page: number,
   totalPages: number,
@@ -164,26 +164,58 @@ export function usePageSwipe(
   const startX = useRef(0);
   const startY = useRef(0);
   const tracking = useRef(false);
+  const pointerId = useRef<number | null>(null);
+
+  const begin = (x: number, y: number) => {
+    tracking.current = true;
+    startX.current = x;
+    startY.current = y;
+  };
+
+  const finish = (x: number, y: number) => {
+    if (!tracking.current) return;
+    tracking.current = false;
+    const dx = x - startX.current;
+    const dy = y - startY.current;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+    if (dx < 0 && page < totalPages - 1) setPage((p) => Math.min(totalPages - 1, p + 1));
+    if (dx > 0 && page > 0) setPage((p) => Math.max(0, p - 1));
+  };
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
-    tracking.current = true;
-    startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
+    begin(e.touches[0].clientX, e.touches[0].clientY);
   }, []);
 
   const onTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (!tracking.current || !e.changedTouches.length) return;
-      tracking.current = false;
-      const dx = e.changedTouches[0].clientX - startX.current;
-      const dy = e.changedTouches[0].clientY - startY.current;
-      if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
-      if (dx < 0 && page < totalPages - 1) setPage((p) => Math.min(totalPages - 1, p + 1));
-      if (dx > 0 && page > 0) setPage((p) => Math.max(0, p - 1));
+      if (!e.changedTouches.length) return;
+      finish(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     },
     [page, totalPages, setPage]
   );
 
-  return { onTouchStart, onTouchEnd };
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") return;
+    if (e.button !== 0) return;
+    pointerId.current = e.pointerId;
+    begin(e.clientX, e.clientY);
+  }, []);
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      if (pointerId.current !== e.pointerId) return;
+      pointerId.current = null;
+      finish(e.clientX, e.clientY);
+    },
+    [page, totalPages, setPage]
+  );
+
+  const onPointerCancel = useCallback(() => {
+    tracking.current = false;
+    pointerId.current = null;
+  }, []);
+
+  return { onTouchStart, onTouchEnd, onPointerDown, onPointerUp, onPointerCancel };
 }
