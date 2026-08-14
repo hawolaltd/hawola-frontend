@@ -388,7 +388,7 @@ const OrderHistoryPage = () => {
                                                                 // eslint-disable-next-line no-alert
                                                                 if (
                                                                     !confirm(
-                                                                        'Cancel this order? You can only cancel before payment is confirmed and before the item ships.'
+                                                                        'Cancel this order? You can only cancel before payment is confirmed, before proof of payment is uploaded, and before the item ships.'
                                                                     )
                                                                 ) {
                                                                     return;

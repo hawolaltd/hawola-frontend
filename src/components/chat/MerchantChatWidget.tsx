@@ -9,6 +9,7 @@ import { authTokenStorageKeyName } from "@/constant";
 import {
   getBuyerChatMessages,
   sendBuyerChatMessage,
+  sendBuyerChatProofOfPayment,
   startBuyerChat,
   type BuyerChatConversation,
   type BuyerChatMessage,
@@ -18,6 +19,7 @@ import {
   CHAT_FALLBACK_POLL_MS,
 } from "@/lib/buyerChatSocket";
 import ChatMessageBody from "@/components/account/ChatMessageBody";
+import ChatRichMessage from "@/components/account/ChatRichMessage";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 
 type Props = {
@@ -245,7 +247,19 @@ export default function MerchantChatWidget({
                           : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                       }`}
                     >
-                      <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
+                      {m.message_kind && m.message_kind !== "text" ? (
+                        <ChatRichMessage
+                          body={m.body}
+                          messageKind={m.message_kind}
+                          attachmentUrl={m.attachment_url}
+                          attachmentName={m.attachment_name}
+                          receiptHtmlUrl={m.receipt_html_url}
+                          variant={mine ? "customer" : "merchant"}
+                          viewer="customer"
+                        />
+                      ) : (
+                        <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
+                      )}
                     </div>
                   </div>
                 );
@@ -253,6 +267,37 @@ export default function MerchantChatWidget({
             )}
           </div>
           <div className="shrink-0 border-t border-gray-200 bg-white p-2 flex gap-2">
+            {(orderitemNumber || conversation?.orderitem_number) ? (
+              <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-300 text-[10px] font-bold text-primary">
+                PoP
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  disabled={!conversation || sending}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file || !conversation?.slug) return;
+                    setSending(true);
+                    try {
+                      const msg = await sendBuyerChatProofOfPayment(
+                        conversation.slug,
+                        file,
+                        input.trim() || undefined
+                      );
+                      setMessages((prev) => [...prev, msg]);
+                      setInput("");
+                      toast.success("Proof of payment sent");
+                    } catch (err: any) {
+                      toast.error(err?.response?.data?.detail || "Upload failed");
+                    } finally {
+                      setSending(false);
+                    }
+                  }}
+                />
+              </label>
+            ) : null}
             <input
               className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
               placeholder="Type a message…"

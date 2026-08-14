@@ -8,6 +8,7 @@ import {
   getBuyerChatMessages,
   listBuyerChats,
   sendBuyerChatMessage,
+  sendBuyerChatProofOfPayment,
   type BuyerChatConversation,
   type BuyerChatMessage,
 } from "@/lib/buyerChatApi";
@@ -32,6 +33,7 @@ import {
 } from "@/components/account/accountChatUtils";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageBody from "@/components/account/ChatMessageBody";
+import ChatRichMessage from "@/components/account/ChatRichMessage";
 
 const CHAT_LIST_PAGE_SIZE = 20;
 
@@ -121,6 +123,7 @@ export default function AccountChats() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileThread, setMobileThread] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
+  const proofInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inboxScrollRef = useRef<HTMLDivElement>(null);
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
@@ -335,6 +338,32 @@ export default function AccountChats() {
       toast.error(detail || "Failed to send");
     } finally {
       setSending(false);
+    }
+  };
+
+  const uploadProof = async (file: File | null | undefined) => {
+    if (!file || !selected?.slug || !selected.orderitem_number) return;
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("Proof file must be 1 MB or smaller.");
+      if (proofInputRef.current) proofInputRef.current.value = "";
+      return;
+    }
+    setSending(true);
+    try {
+      const msg = await sendBuyerChatProofOfPayment(selected.slug, file, input.trim() || undefined);
+      setMessages((prev) => [...prev, msg]);
+      setInput("");
+      void refreshList(true);
+      toast.success("Proof of payment sent. This order can no longer be cancelled.");
+    } catch (e: unknown) {
+      const detail =
+        typeof e === "object" && e !== null && "response" in e
+          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : undefined;
+      toast.error(detail || "Could not upload proof of payment");
+    } finally {
+      setSending(false);
+      if (proofInputRef.current) proofInputRef.current.value = "";
     }
   };
 
@@ -597,7 +626,19 @@ export default function AccountChats() {
                                     : "rounded-bl-md border border-detailsBorder bg-white text-gray-800"
                                 }`}
                               >
-                                <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
+                                {m.message_kind && m.message_kind !== "text" ? (
+                                  <ChatRichMessage
+                                    body={m.body}
+                                    messageKind={m.message_kind}
+                                    attachmentUrl={m.attachment_url}
+                                    attachmentName={m.attachment_name}
+                                    receiptHtmlUrl={m.receipt_html_url}
+                                    variant={mine ? "customer" : "merchant"}
+                                    viewer="customer"
+                                  />
+                                ) : (
+                                  <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
+                                )}
                               </div>
                               <span
                                 className={`px-1 text-[10px] text-gray-400 ${
@@ -616,7 +657,33 @@ export default function AccountChats() {
               </div>
 
               <div className="shrink-0 border-t border-detailsBorder bg-white p-3 sm:p-4">
+                {selected.orderitem_number ? (
+                  <p className="mb-2 text-[11px] text-gray-500">
+                    On this order chat you can attach proof of payment (image or PDF, max 1 MB). Orders with proof cannot be cancelled.
+                  </p>
+                ) : null}
                 <div className="flex items-end gap-2 rounded-2xl border border-detailsBorder bg-gray-50 p-2">
+                  {selected.orderitem_number ? (
+                    <>
+                      <input
+                        ref={proofInputRef}
+                        type="file"
+                        accept="image/*,application/pdf"
+                        className="hidden"
+                        onChange={(e) => void uploadProof(e.target.files?.[0])}
+                      />
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-detailsBorder bg-white text-xs font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
+                        disabled={sending}
+                        onClick={() => proofInputRef.current?.click()}
+                        aria-label="Attach proof of payment"
+                        title="Attach proof of payment"
+                      >
+                        PoP
+                      </button>
+                    </>
+                  ) : null}
                   <textarea
                     rows={1}
                     className="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"

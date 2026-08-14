@@ -1,46 +1,27 @@
 import type { NextPage } from 'next';
-import dynamic from 'next/dynamic';
 import {useEffect, useState} from 'react';
 import Head from "next/head";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import {useRouter} from "next/router";
 import {useAppDispatch, useAppSelector} from "@/hook/useReduxTypes";
-import {getAddress, getSingleOrder} from "@/redux/product/productSlice";
+import {getSingleOrder} from "@/redux/product/productSlice";
 import {formatCurrency, getLatestStatus, orderItemImageUrl} from "@/util";
 import productService from "@/redux/product/productService";
 import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
 import { API } from "@/constant";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
-import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import Link from "next/link";
 import {
     storefrontProductPath,
 } from "@/lib/storefrontUrls";
 import OrderReviewPanel from "@/components/order/OrderReviewPanel";
-
-/** Self-hosted TinyMCE from `public/tinymce` (copied on `npm install` via `scripts/copy-tinymce.cjs`). */
-const TINYMCE_SCRIPT_SRC = '/tinymce/tinymce.min.js';
-
-const tinymceInitBase = {
-    height: 220,
-    menubar: false,
-    promotion: false,
-    plugins: 'lists link',
-    toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link',
-    content_style: 'body { font-family: inherit; font-size: 14px; }',
-    base_url: '/tinymce',
-    suffix: '.min',
-} as const;
-
-const TinyMCEEditor = dynamic(
-    () => import('@tinymce/tinymce-react').then((mod) => mod.Editor),
-    { ssr: false }
-);
+import OrderBuyerChatPanel from "@/components/order/OrderBuyerChatPanel";
+import OrderDisputeFormCard from "@/components/order/OrderDisputeFormCard";
 
 /** Build full URL for dispute proof image (backend may return relative path). */
 function proofImageUrl(path: string | null | undefined): string | null {
@@ -69,14 +50,6 @@ function sanitizeCommentHtml(html: string): string {
         ALLOWED_ATTR: [],
     });
 }
-
-type OrderItemMessageType = {
-    id: number;
-    order_item: number;
-    sender_type: 'merchant' | 'customer';
-    message: string;
-    created_at: string;
-};
 
 type DisputeFormData = {
     orderitem_number: string;
@@ -122,10 +95,6 @@ const disputeSchema = yup.object({
 
 const OrderDetails: NextPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [messages, setMessages] = useState<OrderItemMessageType[]>([]);
-    const [messageInput, setMessageInput] = useState('');
-    const [loadingMessages, setLoadingMessages] = useState(false);
-    const [sendingMessage, setSendingMessage] = useState(false);
     const [disputeDetails, setDisputeDetails] = useState<{ dispute: DisputeDetailType; order_item?: unknown } | null>(null);
     const [disputeComments, setDisputeComments] = useState<DisputeCommentType[]>([]);
     const [loadingDisputeComments, setLoadingDisputeComments] = useState(false);
@@ -189,7 +158,7 @@ const OrderDetails: NextPage = () => {
 
         if (is_offline_payment) {
             return payment_confirmed
-                ? "Offline payment confirmed, please process order"
+                ? "Offline payment confirmed by merchant"
                 : "Offline payment pending confirmation";
         }
 
@@ -299,22 +268,22 @@ const OrderDetails: NextPage = () => {
             ? (singleOrder.merchant as { store_name?: string }).store_name
             : undefined);
     const productHref = storefrontProductPath(productSlug);
-
-    useEffect(() => {
-        if (!orderitemNumber) return;
-        const load = async () => {
-            setLoadingMessages(true);
-            try {
-                const list = await productService.getOrderItemMessages(orderitemNumber);
-                setMessages(Array.isArray(list) ? list : []);
-            } catch {
-                setMessages([]);
-            } finally {
-                setLoadingMessages(false);
-            }
-        };
-        load();
-    }, [orderitemNumber]);
+    const shipping = (singleOrder?.shipping_address || {}) as {
+        address?: string;
+        first_name?: string;
+        last_name?: string;
+        phone?: string;
+        phone2?: string;
+    };
+    const shippingName = [shipping.first_name, shipping.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+    const shippingPhone = shipping.phone || shipping.phone2 || "";
+    const shippingAltPhone =
+        shipping.phone2 && shipping.phone2 !== shippingPhone
+            ? shipping.phone2
+            : singleOrder?.additional_info || "";
 
     const hasDispute = Boolean(singleOrder?.user_open_dispute || singleOrder?.dispute_id != null);
     useEffect(() => {
@@ -368,7 +337,7 @@ const OrderDetails: NextPage = () => {
         // eslint-disable-next-line no-alert
         if (
             !confirm(
-                'Cancel this order line? You can only cancel before payment is confirmed and before the item ships.'
+                'Cancel this order line? You can only cancel before payment is confirmed, before proof of payment is uploaded, and before the item ships.'
             )
         ) {
             return;
@@ -407,21 +376,6 @@ const OrderDetails: NextPage = () => {
         }
     };
 
-    const handleSendMessage = async () => {
-        const text = messageInput.trim();
-        if (!orderitemNumber || !text) return;
-        setSendingMessage(true);
-        try {
-            const newMsg = await productService.sendOrderItemMessage(orderitemNumber, text);
-            setMessages((prev) => [...prev, newMsg]);
-            setMessageInput('');
-        } catch (err: any) {
-            toast.error(err?.response?.data?.error || err?.response?.data?.message?.[0] || 'Failed to send message');
-        } finally {
-            setSendingMessage(false);
-        }
-    };
-
     const formatMessageDate = (dateString: string) => {
         const d = new Date(dateString);
         return d.toLocaleDateString('en-NG', {
@@ -435,708 +389,556 @@ const OrderDetails: NextPage = () => {
 
     return (
         <AuthLayout>
-            <div className="!p-0 bg-gray-50">
+            <div className="!p-0 min-h-screen bg-[linear-gradient(180deg,#eef3fb_0%,#f7f8fb_28%,#f3f4f6_100%)]">
                 <Head>
-                    <title>Order Details</title>
+                    <title>
+                        {orderitemNumber ? `Order ${orderitemNumber}` : "Order details"} | Hawola
+                    </title>
                 </Head>
                 {isLoading ? (
-                        <div className="flex items-center justify-center h-[470px] bg-white rounded-lg">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-                        </div>
-                    ) :  !singleOrder ? (
-                        <div className="flex flex-col items-center justify-center h-[470px] bg-white rounded-lg p-6">
-                            <div className="mb-4">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-16 w-16 text-gray-400"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                    <div className="flex h-[470px] items-center justify-center">
+                        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#0B1B33] border-t-transparent" />
+                    </div>
+                ) : !singleOrder ? (
+                    <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-6 py-24 text-center">
+                        <h3 className="text-xl font-semibold text-slate-800">No order found</h3>
+                        <p className="mt-2 text-slate-500">We couldn&apos;t find the order you&apos;re looking for.</p>
+                        <button
+                            type="button"
+                            onClick={() => router.back()}
+                            className="mt-6 rounded-xl bg-[#0B1B33] px-4 py-2 text-sm font-semibold text-white"
+                        >
+                            Back
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <header className="bg-[#0B1B33] px-4 py-5 text-white sm:px-8 lg:px-16">
+                            <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-3">
+                                <div>
+                                    <button
+                                        type="button"
+                                        onClick={() => router.back()}
+                                        className="mb-3 inline-flex items-center gap-1 text-sm text-white/75 hover:text-white"
+                                    >
+                                        ← Back to orders
+                                    </button>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
+                                        Order details
+                                    </p>
+                                    <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                                        {singleOrder?.product?.name || "Your order"}
+                                    </h1>
+                                    <p className="mt-1 font-mono text-sm text-white/70">
+                                        {singleOrder?.orderitem_number}
+                                    </p>
+                                </div>
+                                <span
+                                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${displayOrderStatus.className}`}
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                    />
-                                </svg>
+                                    {displayOrderStatus.text}
+                                </span>
                             </div>
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Order Found</h3>
-                            <p className="text-gray-500 text-center mb-4">
-                                We couldn't find the order you're looking for.
-                            </p>
-                            <button
-                                onClick={() => router.back()}
-                                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-                            >
-                                Back
-                            </button>
+                        </header>
+
+                        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+                            {!lineCancelled ? (
+                                <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                    {[
+                                        {
+                                            label: "Paid",
+                                            done: Boolean(singleOrder?.payment_confirmed || singleOrder?.isPaid),
+                                        },
+                                        { label: "Shipped", done: Boolean(singleOrder?.isShipped) },
+                                        {
+                                            label: isDeliveredAwaitingConfirmation ? "Confirm receipt" : "Delivered",
+                                            done: Boolean(singleOrder?.isDelivered && singleOrder?.user_confirm_order),
+                                            active: isDeliveredAwaitingConfirmation,
+                                        },
+                                        { label: "Complete", done: Boolean(singleOrder?.user_confirm_order) },
+                                    ].map((step) => (
+                                        <div
+                                            key={step.label}
+                                            className={`rounded-xl border px-3 py-3 text-center text-xs font-semibold sm:text-sm ${
+                                                step.done
+                                                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                                    : step.active
+                                                      ? "border-amber-300 bg-amber-50 text-amber-900"
+                                                      : "border-white/70 bg-white/80 text-slate-500"
+                                            }`}
+                                        >
+                                            {step.label}
+                                            {step.done ? <span className="mt-1 block">✓</span> : null}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : null}
+
+                            {isDeliveredAwaitingConfirmation && !lineCancelled ? (
+                                <div className="mb-5 rounded-2xl border-2 border-amber-300 bg-amber-50 p-5">
+                                    <h2 className="text-lg font-bold text-slate-900">Did your order arrive?</h2>
+                                    <p className="mt-1 text-sm text-slate-700">
+                                        Your seller marked this as delivered. Confirm when the item is in your hands.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => void handleConfirmDelivery()}
+                                        disabled={confirmingOrder}
+                                        className="mt-4 rounded-xl bg-[#0B1B33] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                                    >
+                                        {confirmingOrder ? "Saving…" : "I received my order"}
+                                    </button>
+                                </div>
+                            ) : null}
+
+                            {lineCancelled ? (
+                                <div className="mb-5 rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">
+                                    This order line was cancelled. Messaging and fulfilment actions are closed.
+                                </div>
+                            ) : null}
+
+                            {!lineCancelled && hasDispute ? (
+                                <div className="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-900">
+                                    This item is disputed. Reply in the dispute thread below.
+                                </div>
+                            ) : null}
+
+                            {/* Hero summary */}
+                            <section className="mb-6 overflow-hidden rounded-2xl border border-[#d7e0ef] bg-white shadow-[0_12px_40px_rgba(11,27,51,0.06)]">
+                                <div className="grid gap-0 lg:grid-cols-[220px_1fr]">
+                                    <div className="flex items-center justify-center bg-slate-50 p-4 lg:border-r lg:border-[#e8eef7]">
+                                        <img
+                                            src={orderItemImageUrl(singleOrder)}
+                                            alt={singleOrder?.name || "Product"}
+                                            className="max-h-48 w-full object-contain"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col justify-between gap-4 p-5 sm:p-6">
+                                        <div>
+                                            <h2 className="text-xl font-semibold text-slate-900">
+                                                {singleOrder?.product?.name}
+                                            </h2>
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                Qty {singleOrder?.qty} · {formatCurrency(singleOrder?.order_price_subtotal)}
+                                                {singleOrder?.shipping_price
+                                                    ? ` + ${formatCurrency(singleOrder?.shipping_price)} shipping`
+                                                    : ""}
+                                            </p>
+                                            <p className="mt-3 text-sm text-slate-600">{getPaymentStatusMessage()}</p>
+                                            {singleOrder?.is_offline_payment ? (
+                                                <p className="mt-1 text-xs font-medium text-amber-800">
+                                                    Direct payment order — coordinate with the seller in chat and attach proof of payment there.
+                                                </p>
+                                            ) : (
+                                                <p className="mt-1 text-xs text-slate-500">
+                                                    Need to share a receipt or payment screenshot? Attach proof of payment in the chat.
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {productHref ? (
+                                                <Link
+                                                    href={productHref}
+                                                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-[#0B1B33] hover:bg-slate-100"
+                                                >
+                                                    View product
+                                                </Link>
+                                            ) : null}
+                                            {merchantSlug ? (
+                                                <MerchantStoreLink
+                                                    slug={merchantSlug}
+                                                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-[#0B1B33] hover:bg-slate-100"
+                                                >
+                                                    {merchantStoreName
+                                                        ? `View ${merchantStoreName}`
+                                                        : "View seller store"}
+                                                </MerchantStoreLink>
+                                            ) : null}
+                                            {singleOrder?.can_cancel && !lineCancelled ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCancelOrderCustomer}
+                                                    disabled={cancellingOrder}
+                                                    className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                                >
+                                                    {cancellingOrder ? "Cancelling…" : "Cancel order"}
+                                                </button>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                                <div className="space-y-5 xl:col-span-5">
+                                    <section className="rounded-2xl border border-[#d7e0ef] bg-white p-5 shadow-[0_10px_40px_rgba(11,27,51,0.05)]">
+                                        <h3 className="text-base font-semibold text-slate-900">Shipping</h3>
+                                        <dl className="mt-4 space-y-3 text-sm">
+                                            <div>
+                                                <dt className="text-slate-500">Name</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {shippingName || singleOrder?.user || "—"}
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-slate-500">Address</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {shipping.address || "—"}
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-slate-500">Phone</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {shippingPhone || "—"}
+                                                </dd>
+                                            </div>
+                                            {shippingAltPhone ? (
+                                                <div>
+                                                    <dt className="text-slate-500">Alt phone / note</dt>
+                                                    <dd className="font-medium text-slate-900">{shippingAltPhone}</dd>
+                                                </div>
+                                            ) : null}
+                                        </dl>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-[#d7e0ef] bg-white p-5 shadow-[0_10px_40px_rgba(11,27,51,0.05)]">
+                                        <h3 className="text-base font-semibold text-slate-900">Order totals</h3>
+                                        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <dt className="text-slate-500">Quantity</dt>
+                                                <dd className="font-medium text-slate-900">{singleOrder?.qty}</dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-slate-500">Item price</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {formatCurrency(singleOrder?.order_price)}
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-slate-500">Shipping</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {formatCurrency(singleOrder?.shipping_price)}
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-slate-500">Subtotal</dt>
+                                                <dd className="font-medium text-slate-900">
+                                                    {formatCurrency(singleOrder?.order_price_subtotal)}
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-[#d7e0ef] bg-white p-5 shadow-[0_10px_40px_rgba(11,27,51,0.05)]">
+                                        <h3 className="text-base font-semibold text-slate-900">Tracking</h3>
+                                        <div className="mt-4 space-y-4">
+                                            {(singleOrder?.shipping_info?.flatMap((info: any) => info?.shipping_status) || []).length ? (
+                                                singleOrder.shipping_info
+                                                    .flatMap((info: any) => info?.shipping_status || [])
+                                                    .map((update: any, index: number) => (
+                                                        <div key={index} className="flex gap-3">
+                                                            <div
+                                                                className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                                                                    update?.status === "delivered"
+                                                                        ? "bg-emerald-500"
+                                                                        : update?.status === "in-transit"
+                                                                          ? "bg-amber-500"
+                                                                          : "bg-indigo-500"
+                                                                }`}
+                                                            />
+                                                            <div>
+                                                                <p className="text-xs text-slate-500">{update?.created_at}</p>
+                                                                <p className="text-sm text-slate-800">{update?.note}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                            ) : (
+                                                <p className="text-sm text-slate-500">No tracking updates yet.</p>
+                                            )}
+                                        </div>
+                                        <div className="mt-5 grid gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
+                                            <div>
+                                                <p className="text-slate-500">Tracking number</p>
+                                                <p className="font-medium text-slate-900">
+                                                    {singleOrder?.tracking_number || "—"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500">Expected arrival</p>
+                                                <p className="font-medium text-slate-900">
+                                                    {singleOrder?.shipping_info?.[0]?.expected_date_of_arrival || "—"}
+                                                </p>
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <p className="text-slate-500">Logistics company</p>
+                                                <p className="font-medium text-slate-900">
+                                                    {singleOrder?.shipping_info?.[0]?.logistics_company_name || "—"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <div className="space-y-5 xl:col-span-7">
+                                    {orderitemNumber ? (
+                                        <OrderBuyerChatPanel
+                                            orderitemNumber={orderitemNumber}
+                                            merchantStoreName={merchantStoreName}
+                                            disabled={messagingClosed}
+                                            offlineNoticeHtml={
+                                                singleOrder?.is_offline_payment
+                                                    ? directPaymentMessagingSafe
+                                                    : ""
+                                            }
+                                            allowProofOfPayment={!messagingClosed}
+                                            hasOpenDispute={hasDispute}
+                                            defaultTab="chat"
+                                            disputeContent={
+                                                !hasDispute ? (
+                                                    <div
+                                                        className={
+                                                            lineCancelled || !isFormActive
+                                                                ? "opacity-60"
+                                                                : ""
+                                                        }
+                                                    >
+                                                        <OrderDisputeFormCard
+                                                            embedded
+                                                            isFormActive={isFormActive}
+                                                            isDelivered={Boolean(singleOrder?.isDelivered)}
+                                                            isSubmitting={isSubmitting}
+                                                            register={register}
+                                                            control={control}
+                                                            errors={errors}
+                                                            setValue={setValue}
+                                                            reset={reset}
+                                                            handleSubmit={handleSubmit}
+                                                            onSubmit={onSubmitDispute}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-5">
+                                                        {disputeDetails?.dispute ? (
+                                                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                                                <h3 className="text-base font-semibold text-slate-900">
+                                                                    Your dispute submission
+                                                                </h3>
+                                                                <div className="mt-3 space-y-3">
+                                                                    {disputeDetails.dispute.dispute_reason ? (
+                                                                        <div>
+                                                                            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                                                                                Reason
+                                                                            </span>
+                                                                            <div
+                                                                                className="prose prose-sm mt-0.5 max-w-none text-sm text-slate-900"
+                                                                                dangerouslySetInnerHTML={{
+                                                                                    __html: sanitizeCommentHtml(
+                                                                                        disputeDetails.dispute.dispute_reason
+                                                                                    ),
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    ) : null}
+                                                                    <div>
+                                                                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                                                                            Refund
+                                                                        </span>
+                                                                        <p className="mt-0.5 text-sm text-slate-900">
+                                                                            {disputeDetails.dispute.want_full_refund
+                                                                                ? "Full refund requested"
+                                                                                : disputeDetails.dispute.want_partial_refund ||
+                                                                                    disputeDetails.dispute.amount_requested
+                                                                                  ? `Partial refund${
+                                                                                        disputeDetails.dispute.amount_requested
+                                                                                            ? ` — ${disputeDetails.dispute.amount_requested}`
+                                                                                            : ""
+                                                                                    }`
+                                                                                  : "No full refund requested"}
+                                                                        </p>
+                                                                    </div>
+                                                                    {(disputeDetails.dispute.proof_image ||
+                                                                        (disputeDetails.dispute.dispute_images?.length ?? 0) >
+                                                                            0) && (
+                                                                        <div>
+                                                                            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                                                                                Proof
+                                                                            </span>
+                                                                            <div className="mt-1 flex flex-wrap gap-2">
+                                                                                {disputeDetails.dispute.proof_image
+                                                                                    ? (() => {
+                                                                                          const url = proofImageUrl(
+                                                                                              disputeDetails.dispute.proof_image
+                                                                                          );
+                                                                                          return url ? (
+                                                                                              <a
+                                                                                                  key="proof"
+                                                                                                  href={url}
+                                                                                                  target="_blank"
+                                                                                                  rel="noopener noreferrer"
+                                                                                              >
+                                                                                                  <img
+                                                                                                      src={url}
+                                                                                                      alt="Proof"
+                                                                                                      className="max-h-24 rounded border border-slate-200 object-cover"
+                                                                                                  />
+                                                                                              </a>
+                                                                                          ) : null;
+                                                                                      })()
+                                                                                    : null}
+                                                                                {disputeDetails.dispute.dispute_images?.map(
+                                                                                    (di) => (
+                                                                                        <a
+                                                                                            key={di.id}
+                                                                                            href={
+                                                                                                di.image?.full_size ||
+                                                                                                di.image?.thumbnail
+                                                                                            }
+                                                                                            target="_blank"
+                                                                                            rel="noopener noreferrer"
+                                                                                        >
+                                                                                            <img
+                                                                                                src={
+                                                                                                    di.image?.thumbnail ||
+                                                                                                    di.image?.full_size
+                                                                                                }
+                                                                                                alt="Proof"
+                                                                                                className="max-h-24 rounded border border-slate-200 object-cover"
+                                                                                            />
+                                                                                        </a>
+                                                                                    )
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                    {disputeDetails.dispute.created_at ? (
+                                                                        <p className="text-xs text-slate-500">
+                                                                            Submitted{" "}
+                                                                            {formatMessageDate(disputeDetails.dispute.created_at)}
+                                                                        </p>
+                                                                    ) : null}
+                                                                </div>
+                                                            </div>
+                                                        ) : null}
+
+                                                        <div>
+                                                            <h3 className="text-base font-semibold text-slate-900">
+                                                                Dispute thread
+                                                            </h3>
+                                                            <p className="mt-1 text-sm text-slate-600">
+                                                                Reply here (max 10 messages). The merchant is notified when you add a
+                                                                reply.
+                                                            </p>
+                                                            <div className="mt-4 max-h-[240px] space-y-3 overflow-y-auto rounded-xl bg-white p-3 ring-1 ring-slate-200">
+                                                                {loadingDisputeComments ? (
+                                                                    <p className="py-4 text-center text-sm text-slate-500">
+                                                                        Loading dispute thread…
+                                                                    </p>
+                                                                ) : (
+                                                                    <>
+                                                                        {disputeComments.map((c) => (
+                                                                            <div
+                                                                                key={c.id}
+                                                                                className={`flex ${
+                                                                                    c.by_customer ? "justify-end" : "justify-start"
+                                                                                }`}
+                                                                            >
+                                                                                <div
+                                                                                    className={`max-w-[85%] rounded-xl px-4 py-2 ${
+                                                                                        c.by_customer
+                                                                                            ? "rounded-br-md bg-[#0B1B33] text-white"
+                                                                                            : "rounded-bl-md bg-slate-200 text-slate-900"
+                                                                                    }`}
+                                                                                >
+                                                                                    <p className="mb-0.5 text-xs font-medium opacity-90">
+                                                                                        {c.by_customer ? "You" : "Merchant"}
+                                                                                    </p>
+                                                                                    <div
+                                                                                        className="break-words text-sm"
+                                                                                        dangerouslySetInnerHTML={{
+                                                                                            __html: sanitizeCommentHtml(c.comment || ""),
+                                                                                        }}
+                                                                                    />
+                                                                                    <p className="mt-1 text-xs opacity-75">
+                                                                                        {formatMessageDate(c.created_at)}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                        {disputeComments.length === 0 ? (
+                                                                            <p className="py-4 text-center text-sm text-slate-500">
+                                                                                No replies yet.
+                                                                            </p>
+                                                                        ) : null}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            {disputeComments.length < 10 ? (
+                                                                <div className="mt-4 space-y-3">
+                                                                    <textarea
+                                                                        value={disputeReplyText}
+                                                                        onChange={(e) => setDisputeReplyText(e.target.value)}
+                                                                        rows={3}
+                                                                        placeholder="Write a reply…"
+                                                                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                                                                        disabled={sendingDisputeComment}
+                                                                    />
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        multiple
+                                                                        onChange={(e) =>
+                                                                            setDisputeReplyFiles(
+                                                                                Array.from(e.target.files || [])
+                                                                            )
+                                                                        }
+                                                                        className="block w-full text-sm text-slate-500"
+                                                                    />
+                                                                    <div className="flex justify-end">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => void handleAddDisputeComment()}
+                                                                            disabled={
+                                                                                sendingDisputeComment || !disputeReplyText.trim()
+                                                                            }
+                                                                            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                                                                        >
+                                                                            {sendingDisputeComment ? "Sending…" : "Send reply"}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="mt-3 text-sm text-slate-500">
+                                                                    Maximum of 10 dispute messages reached.
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
+                                        />
+                                    ) : null}
+
+                                    {saleConcluded && orderitemNumber ? (
+                                        <OrderReviewPanel
+                                            orderitemNumber={orderitemNumber}
+                                            productName={singleOrder?.product?.name}
+                                            merchantStoreName={merchantStoreName}
+                                            onSubmitted={() => {
+                                                if (orderitemNumber) {
+                                                    dispatch(getSingleOrder(orderitemNumber));
+                                                }
+                                            }}
+                                        />
+                                    ) : null}
+                                </div>
+                            </div>
                         </div>
-                    )  :
-                   (
-                       <>
-                           <header className="mb-4 sm:mb-6 bg-headerBg px-4 sm:px-8 lg:px-20 py-4 sm:py-5 flex flex-col">
-                               <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white">Hello {userProfile?.first_name || userProfile?.username || 'Customer'}</h1>
-                               <p className="text-xs sm:text-sm text-white font-medium mt-2 ">
-                                   From your account dashboard, you can easily check & view your recent orders,
-                                   <span className="hidden sm:inline"><br/></span>
-                                   <span className="sm:hidden"> </span>
-                                   manage your shipping and billing addresses and edit your password and account details.
-                               </p>
-
-
-                           </header>
-
-                           <div className="min-h-screen px-3 sm:px-6 py-4">
-                               {/* Back Button */}
-                               <button
-                                   onClick={() => router.back()}
-                                   className="mb-4 sm:mb-6 flex items-center text-primary container mx-auto text-sm sm:text-base"
-                               >
-                                   <svg
-                                       xmlns="http://www.w3.org/2000/svg"
-                                       className="h-5 w-5 mr-2"
-                                       viewBox="0 0 20 20"
-                                       fill="currentColor"
-                                   >
-                                       <path
-                                           fillRule="evenodd"
-                                           d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                                           clipRule="evenodd"
-                                       />
-                                   </svg>
-                                   Back to Orders
-                               </button>
-
-                               {!lineCancelled ? (
-                                   <div className="container mx-auto mb-4 sm:mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-                                           Order progress
-                                       </p>
-                                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs sm:text-sm">
-                                           {[
-                                               { label: 'Paid', done: Boolean(singleOrder?.payment_confirmed || singleOrder?.isPaid) },
-                                               { label: 'Shipped', done: Boolean(singleOrder?.isShipped) },
-                                               {
-                                                   label: isDeliveredAwaitingConfirmation ? 'Confirm receipt' : 'Delivered',
-                                                   done: Boolean(singleOrder?.isDelivered && singleOrder?.user_confirm_order),
-                                                   active: isDeliveredAwaitingConfirmation,
-                                               },
-                                               { label: 'Complete', done: Boolean(singleOrder?.user_confirm_order) },
-                                           ].map((step) => (
-                                               <div
-                                                   key={step.label}
-                                                   className={`rounded-lg px-2 py-3 border ${
-                                                       step.done
-                                                           ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                                                           : step.active
-                                                             ? 'border-amber-300 bg-amber-50 text-amber-900'
-                                                             : 'border-gray-100 bg-gray-50 text-gray-500'
-                                                   }`}
-                                               >
-                                                   <span className="font-semibold">{step.label}</span>
-                                                   {step.done ? <span className="block mt-1">✓</span> : null}
-                                               </div>
-                                           ))}
-                                       </div>
-                                   </div>
-                               ) : null}
-
-                               {isDeliveredAwaitingConfirmation && !lineCancelled ? (
-                                   <div className="container mx-auto mb-4 sm:mb-6 rounded-xl border-2 border-amber-300 bg-amber-50 p-5 shadow-sm">
-                                       <h2 className="text-lg font-bold text-gray-900">Did your order arrive?</h2>
-                                       <p className="mt-2 text-sm text-gray-700">
-                                           Your seller marked this as delivered. Tap below when the item is in your hands.
-                                       </p>
-                                       <button
-                                           type="button"
-                                           onClick={() => void handleConfirmDelivery()}
-                                           disabled={confirmingOrder}
-                                           className="mt-4 px-5 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 disabled:opacity-50"
-                                       >
-                                           {confirmingOrder ? 'Saving…' : 'I received my order'}
-                                       </button>
-                                   </div>
-                               ) : null}
-
-                               {lineCancelled && (
-                                   <div
-                                       role="status"
-                                       className="container mx-auto mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 rounded-xl bg-slate-100 border border-slate-300"
-                                   >
-                                       <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-slate-600 text-white" aria-hidden>
-                                           <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                           </svg>
-                                       </span>
-                                       <p className="text-xs sm:text-sm font-semibold text-slate-900">
-                                           This order line was cancelled. Messaging and fulfilment actions are closed.
-                                       </p>
-                                   </div>
-                               )}
-                               {!lineCancelled && hasDispute && (
-                                   <div
-                                       role="alert"
-                                       className="container mx-auto mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 rounded-xl bg-red-100 border border-red-300"
-                                   >
-                                       <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white" aria-hidden>
-                                           <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                           </svg>
-                                       </span>
-                                       <p className="text-xs sm:text-sm font-semibold text-red-900">
-                                           This item is disputed. Reply in the dispute thread below (max 10 messages).
-                                       </p>
-                                   </div>
-                               )}
-
-                               <div
-                                   className="container mx-auto overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                   <div className={'flex flex-col gap-4'}>
-
-                                       {/* Order Header */}
-                                       <div className="p-4 sm:p-6 flex flex-col rounded-lg shadow bg-white border border-gray-100">
-                                           <div className="flex justify-between items-start w-full gap-2">
-                                               <div className={'flex-1 min-w-0'}>
-                                                   <h1 className="text-base sm:text-xl font-bold text-gray-800 break-words">Order Number: <span
-                                                       className={'text-xs break-all'}>{singleOrder?.orderitem_number}</span></h1>
-
-                                                   <div className="flex items-center w-full mt-2">
-                                                       <img
-                                                           src={orderItemImageUrl(singleOrder)}
-                                                           alt={singleOrder?.name}
-                                                           className="w-full h-auto max-h-48 object-contain"
-                                                       />
-                                                   </div>
-
-                                                   <h2 className="text-sm font-semibold text-gray-700 mt-1 break-words">{singleOrder?.product?.name}</h2>
-                                                   {(productHref || merchantSlug) ? (
-                                                       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                                                           {productHref ? (
-                                                               <Link
-                                                                   href={productHref}
-                                                                   className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-primary hover:bg-gray-100"
-                                                               >
-                                                                   View product page
-                                                               </Link>
-                                                           ) : null}
-                                                           {merchantSlug ? (
-                                                               <MerchantStoreLink
-                                                                   slug={merchantSlug}
-                                                                   className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-primary hover:bg-gray-100"
-                                                               >
-                                                                   {merchantStoreName
-                                                                       ? `View ${merchantStoreName}`
-                                                                       : "View seller store"}
-                                                               </MerchantStoreLink>
-                                                           ) : null}
-                                                       </div>
-                                                   ) : null}
-                                               </div>
-                                               <div className="text-right shrink-0">
-                                    <span className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${displayOrderStatus.className}`}>
-                                        {displayOrderStatus.text}
-                                    </span>
-                                               </div>
-                                           </div>
-                                       </div>
-
-                                       {/* Customer Information */}
-                                       <div className="p-4 sm:p-6 rounded-lg shadow flex flex-col bg-white border border-gray-100">
-                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Shipping Information</h3>
-                                           <div className="grid grid-cols-1 md:grid-cols-1 gap-3 sm:gap-4">
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Name:</p>
-                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.user}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Shipping address:</p>
-                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.shipping_address?.address}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Contact Phone:</p>
-                                                   <p className="text-gray-800 font-medium break-all">{singleOrder?.orderitem_number}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Alternative Contact Phone:</p>
-                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.additional_info}</p>
-                                               </div>
-                                           </div>
-                                       </div>
-
-                                       {/* Order Information */}
-                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Order Information</h3>
-                                           <div className="grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-4">
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Quantity:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.qty}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Order Price:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price)}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Shipping Price:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.shipping_price)}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Subtotal:</p>
-                                                   <p className="text-gray-800 font-medium">{formatCurrency(singleOrder?.order_price_subtotal)}</p>
-                                               </div>
-                                           </div>
-                                       </div>
-
-                                       {/* Payment Status */}
-                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Payment Status</h3>
-                                           <div className="flex items-center">
-                                               <div className={`w-3 h-3 rounded-full mr-2 ${
-                                                   singleOrder?.payment_confirmed
-                                                       ? 'bg-green-500'
-                                                       : singleOrder?.isPaid
-                                                           ? 'bg-yellow-500'
-                                                           : 'bg-red-500'
-                                               }`}></div>
-                                               <p className="text-gray-700">
-                                                   {getPaymentStatusMessage()}
-                                               </p>
-                                           </div>
-                                           {singleOrder?.is_offline_payment && (
-                                               <p className="mt-2 text-sm text-gray-500">
-                                                   This is an offline payment
-                                               </p>
-                                           )}
-                                           {singleOrder?.can_cancel && !lineCancelled && (
-                                               <div className="mt-4 pt-4 border-t border-gray-100">
-                                                   <button
-                                                       type="button"
-                                                       onClick={handleCancelOrderCustomer}
-                                                       disabled={cancellingOrder}
-                                                       className="w-full sm:w-auto px-4 py-2 rounded-md border border-slate-300 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
-                                                   >
-                                                       {cancellingOrder ? 'Cancelling…' : 'Cancel order line'}
-                                                   </button>
-                                                   <p className="mt-2 text-xs text-gray-500">
-                                                       Only available before payment is confirmed and before the merchant ships your order.
-                                                   </p>
-                                               </div>
-                                           )}
-                                       </div>
-
-                                   </div>
-
-                                   <div className={`flex flex-col gap-4`}>
-
-                                       {/* Shipping Updates */}
-                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Tracking Information</h3>
-                                           <div className="space-y-4">
-                                               {singleOrder?.shipping_info?.flatMap(info => info?.shipping_status).map((update, index) => (
-                                                   <div key={index} className="flex">
-                                                       <div className="flex flex-col items-center mr-4">
-                                                           <div className={`w-3 h-3 rounded-full ${
-                                                               update?.status === 'delivered' ? 'bg-green-500' :
-                                                                   update?.status === 'in-transit' ? 'bg-yellow-500' :
-                                                                       'bg-purple-500'
-                                                           }`}></div>
-                                                           {index < singleOrder?.shipping_info?.length - 1 && (
-                                                               <div className="w-px h-8 bg-gray-300 my-1"></div>
-                                                           )}
-                                                       </div>
-                                                       <div>
-                                                           <p className="text-sm text-gray-500">{update?.created_at}</p>
-                                                           <p className="text-gray-700">{update?.note}</p>
-                                                       </div>
-                                                   </div>
-                                               ))}
-                                           </div>
-                                       </div>
-
-                                       {/* Shipping Information */}
-                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Shipping Updates</h3>
-                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Tracking Number:</p>
-                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.tracking_number}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Expected Date of Arrival:</p>
-                                                   <p className="text-gray-800 font-medium">{singleOrder?.shipping_info?.[0]?.expected_date_of_arrival}</p>
-                                               </div>
-                                               <div>
-                                                   <p className="text-sm text-gray-600">Logistic Company:</p>
-                                                   <p className="text-gray-800 font-medium break-words">{singleOrder?.shipping_info?.[0]?.logistics_company_name}</p>
-                                               </div>
-                                           </div>
-                                       </div>
-
-                                       {/* Messages with merchant */}
-                                       <div className="p-4 sm:p-6 rounded-lg shadow bg-white border border-gray-100">
-                                           <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Messages</h3>
-                                           {singleOrder?.is_offline_payment && directPaymentMessagingSafe ? (
-                                               <div
-                                                   className="mb-4 rounded-lg border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950 prose prose-sm max-w-none"
-                                                   dangerouslySetInnerHTML={{ __html: directPaymentMessagingSafe }}
-                                               />
-                                           ) : null}
-                                           <p className="text-sm text-gray-600 mb-4">
-                                               {lineCancelled
-                                                   ? 'This order line was cancelled. You cannot send new messages.'
-                                                   : messagingClosed
-                                                   ? 'Order is closed. Use dispute below if there is an issue.'
-                                                   : 'Reply to the merchant here. They will get an email when you send a message.'}
-                                           </p>
-                                           <div className="min-h-[180px] max-h-[280px] overflow-y-auto space-y-3 mb-4 p-3 bg-gray-50 rounded-lg">
-                                               {loadingMessages ? (
-                                                   <p className="text-sm text-gray-500 text-center py-4">Loading messages...</p>
-                                               ) : messages.length === 0 ? (
-                                                   <p className="text-sm text-gray-500 text-center py-4">No messages yet. Send a message to start the conversation.</p>
-                                               ) : (
-                                                   messages.map((msg) => (
-                                                       <div
-                                                           key={msg.id}
-                                                           className={`flex ${msg.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}
-                                                       >
-                                                           <div
-                                                               className={`max-w-[85%] rounded-xl px-4 py-2 ${
-                                                                   msg.sender_type === 'customer'
-                                                                       ? 'bg-primary text-white rounded-br-md'
-                                                                       : 'bg-gray-200 text-gray-900 rounded-bl-md'
-                                                               }`}
-                                                           >
-                                                               <p className="text-xs font-medium opacity-90 mb-0.5">
-                                                                   {msg.sender_type === 'customer' ? 'You' : 'Merchant'}
-                                                               </p>
-                                                               <div
-                                                                   className="text-sm whitespace-pre-wrap break-words"
-                                                                   dangerouslySetInnerHTML={{ __html: sanitizeCommentHtml(msg.message || '') }}
-                                                               />
-                                                               <p className="text-xs opacity-75 mt-1">{formatMessageDate(msg.created_at)}</p>
-                                                           </div>
-                                                       </div>
-                                                   ))
-                                               )}
-                                           </div>
-                                           <div className="flex gap-2">
-                                               <textarea
-                                                   value={messageInput}
-                                                   onChange={(e) => setMessageInput(e.target.value)}
-                                                   onKeyDown={(e) => {
-                                                       if (e.key === 'Enter' && !e.shiftKey) {
-                                                           e.preventDefault();
-                                                           handleSendMessage();
-                                                       }
-                                                   }}
-                                                   placeholder={
-                                                       lineCancelled
-                                                           ? 'Order cancelled.'
-                                                           : messagingClosed
-                                                           ? 'Messaging closed. Use dispute below if there is an issue.'
-                                                           : 'Type a message...'
-                                                   }
-                                                   rows={2}
-                                                   className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-60 disabled:cursor-not-allowed"
-                                                   disabled={sendingMessage || messagingClosed}
-                                               />
-                                               <button
-                                                   type="button"
-                                                   onClick={handleSendMessage}
-                                                   disabled={sendingMessage || !messageInput.trim() || messagingClosed}
-                                                   className="self-end px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                               >
-                                                   {sendingMessage ? 'Sending…' : 'Send'}
-                                               </button>
-                                           </div>
-                                       </div>
-                                   </div>
-
-                                   {/* Same box: Confirm delivery, OR Submit Dispute form, OR Dispute thread */}
-                                   <div
-                                       className={`p-4 sm:p-6 rounded-lg shadow h-fit bg-white border border-gray-100 ${
-                                           lineCancelled || (!hasDispute && !isFormActive)
-                                               ? 'opacity-50 pointer-events-none'
-                                               : ''
-                                       }`}>
-                                       {isDeliveredAwaitingConfirmation && (
-                                               <div className="px-4 py-3 rounded-lg border border-amber-200 bg-amber-50/50 flex flex-wrap items-center justify-between gap-2 mb-4">
-                                                   <p className="text-sm text-gray-700">
-                                                       <span className="font-medium text-gray-800">Waiting for your confirmation.</span> Use the button at the top of this page when your order arrives.
-                                                   </p>
-                                               </div>
-                                           )}
-                                           {!hasDispute && (
-                                               <>
-                                                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">
-                                                       Submit Dispute
-                                                       {!isFormActive ? (
-                                                           <span className="ml-2 text-xs sm:text-sm text-red-500 block sm:inline mt-1 sm:mt-0">
-                                                               (Available after order is received)
-                                                           </span>
-                                                       ) : singleOrder?.isDelivered ? (
-                                                           <span className="ml-2 text-xs sm:text-sm text-gray-600 block sm:inline mt-1 sm:mt-0">
-                                                               You can confirm delivery above or submit a dispute if there is an issue.
-                                                           </span>
-                                                       ) : null}
-                                                   </h3>
-                                                   <form onSubmit={handleSubmit(onSubmitDispute, (validationErrors) => {
-                                                        const first = Object.keys(validationErrors)[0];
-                                                        if (first === 'dispute_reason') toast.error('Please enter a dispute reason.');
-                                                        else if (first) toast.error('Please check the form and try again.');
-                                                    })} className="space-y-4">
-                                                       <input type="hidden" {...register('orderitem_number')} />
-
-                                                       <div>
-                                                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                               Dispute Reason *
-                                                           </label>
-                                                           <Controller
-                                                               name="dispute_reason"
-                                                               control={control}
-                                                               defaultValue=""
-                                                               rules={{ required: 'Dispute reason is required', validate: (v) => !isRichTextEmpty(v) || 'Dispute reason is required' }}
-                                                               render={({ field }) => (
-                                                                   <TinyMCEEditor
-                                                                       tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
-                                                                       licenseKey="gpl"
-                                                                       value={field.value}
-                                                                       onEditorChange={(content) => field.onChange(content ?? '')}
-                                                                       init={{ ...tinymceInitBase }}
-                                                                       disabled={!isFormActive}
-                                                                   />
-                                                               )}
-                                                           />
-                                                           {errors?.dispute_reason && (
-                                                               <p className="mt-1 text-sm text-red-600">{errors?.dispute_reason.message}</p>
-                                                           )}
-                                                       </div>
-
-                                                       <div>
-                                                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                               Proof Image (Optional)
-                                                           </label>
-                                                           <input
-                                                               type="file"
-                                                               accept="image/*"
-                                                               onChange={(e) => {
-                                                                   const file = e.target.files?.[0];
-                                                                   if (file) setValue('proof_image', file, { shouldValidate: true });
-                                                                   else setValue('proof_image', null);
-                                                               }}
-                                                               className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                               disabled={!isFormActive}
-                                                           />
-                                                           {errors?.proof_image && (
-                                                               <p className="mt-1 text-sm text-red-600">{errors?.proof_image?.message}</p>
-                                                           )}
-                                                           <p className="mt-1 text-xs text-gray-500">Max 5MB (JPG, PNG, GIF)</p>
-                                                       </div>
-
-                                                       <div className="flex items-center">
-                                                           <input
-                                                               type="checkbox"
-                                                               id="want_full_refund"
-                                                               {...register('want_full_refund')}
-                                                               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                                               disabled={!isFormActive}
-                                                           />
-                                                           <label htmlFor="want_full_refund" className="ml-2 block text-sm text-gray-700">
-                                                               I want a full refund
-                                                           </label>
-                                                       </div>
-
-                                                       {isFormActive && (
-                                                           <div className="flex justify-end space-x-3 pt-4">
-                                                               <button
-                                                                   type="button"
-                                                                   onClick={() => reset()}
-                                                                   className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                                                               >
-                                                                   Reset
-                                                               </button>
-                                                               <button
-                                                                   type="submit"
-                                                                   disabled={isSubmitting}
-                                                                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                               >
-                                                                   {isSubmitting ? 'Submitting...' : 'Submit Dispute'}
-                                                               </button>
-                                                           </div>
-                                                       )}
-                                                   </form>
-                                               </>
-                                           )}
-                                       {hasDispute && (
-                                           <>
-                                               {/* What the customer submitted: reason, proof, refund preference — before the thread */}
-                                               {disputeDetails?.dispute && (
-                                                   <div className="mb-6 p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
-                                                       <h3 className="text-base font-semibold text-gray-800 mb-3">Your dispute submission</h3>
-                                                       <p className="text-sm text-gray-600 mb-1">What you submitted when you opened this dispute:</p>
-                                                       <div className="mt-3 space-y-3">
-                                                           {disputeDetails.dispute.dispute_reason && (
-                                                               <div>
-                                                                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reason</span>
-                                                                   <div className="text-sm break-words text-gray-900 mt-0.5 prose prose-sm max-w-none prose-p:my-0.5" dangerouslySetInnerHTML={{ __html: sanitizeCommentHtml(disputeDetails.dispute.dispute_reason) }} />
-                                                               </div>
-                                                           )}
-                                                           <div>
-                                                               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Refund</span>
-                                                               <p className="text-sm text-gray-900 mt-0.5">
-                                                                   {disputeDetails.dispute.want_full_refund
-                                                                       ? 'Full refund requested'
-                                                                       : disputeDetails.dispute.want_partial_refund || disputeDetails.dispute.amount_requested
-                                                                           ? `Partial refund${disputeDetails.dispute.amount_requested ? ` — ${disputeDetails.dispute.amount_requested}` : ''}`
-                                                                           : 'No full refund requested'}
-                                                               </p>
-                                                           </div>
-                                                           {(disputeDetails.dispute.proof_image || (disputeDetails.dispute.dispute_images?.length ?? 0) > 0) && (
-                                                               <div>
-                                                                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Proof</span>
-                                                                   <div className="flex flex-wrap gap-2 mt-1">
-                                                                       {disputeDetails.dispute.proof_image && (() => {
-                                                                           const url = proofImageUrl(disputeDetails.dispute.proof_image);
-                                                                           return url ? (
-                                                                               <a key="proof" href={url} target="_blank" rel="noopener noreferrer" className="block">
-                                                                                   <img src={url} alt="Proof" className="rounded border border-gray-200 max-h-24 object-cover" />
-                                                                               </a>
-                                                                           ) : null;
-                                                                       })()}
-                                                                       {disputeDetails.dispute.dispute_images?.map((di) => (
-                                                                           <a key={di.id} href={di.image?.full_size || di.image?.thumbnail} target="_blank" rel="noopener noreferrer" className="block">
-                                                                               <img src={di.image?.thumbnail || di.image?.full_size} alt="Proof" className="rounded border border-gray-200 max-h-24 object-cover" />
-                                                                           </a>
-                                                                       ))}
-                                                                   </div>
-                                                               </div>
-                                                           )}
-                                                           {disputeDetails.dispute.created_at && (
-                                                               <p className="text-xs text-gray-500 mt-1">Submitted {formatMessageDate(disputeDetails.dispute.created_at)}</p>
-                                                           )}
-                                                       </div>
-                                                   </div>
-                                               )}
-
-                                               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">Dispute thread</h3>
-                                               <p className="text-sm text-gray-600 mb-4">
-                                                   Reply here (max 10 messages). The merchant is notified when you add a reply.
-                                               </p>
-                                               <div className="min-h-[180px] max-h-[360px] overflow-y-auto space-y-3 mb-4 p-3 bg-gray-50 rounded-lg">
-                                                   {loadingDisputeComments ? (
-                                                       <p className="text-sm text-gray-500 text-center py-4">Loading dispute thread…</p>
-                                                   ) : (
-                                                       <>
-                                                           {disputeComments.map((c) => (
-                                                               <div
-                                                                   key={c.id}
-                                                                   className={`flex ${c.by_customer ? 'justify-end' : 'justify-start'}`}
-                                                               >
-                                                                   <div
-                                                                       className={`max-w-[85%] rounded-xl px-4 py-2 ${
-                                                                           c.by_customer
-                                                                               ? 'bg-primary text-white rounded-br-md'
-                                                                               : 'bg-gray-200 text-gray-900 rounded-bl-md'
-                                                                       }`}
-                                                                   >
-                                                                       <p className="text-xs font-medium opacity-90 mb-0.5">
-                                                                           {c.by_customer ? 'You' : 'Merchant'}
-                                                                       </p>
-                                                                       <div
-                                                                           className="text-sm break-words prose prose-sm max-w-none prose-p:my-0.5 prose-p:leading-snug"
-                                                                           dangerouslySetInnerHTML={{ __html: sanitizeCommentHtml(c.comment || '') }}
-                                                                       />
-                                                                       {c.image?.thumbnail && (
-                                                                           <a href={c.image?.full_size || c.image?.thumbnail} target="_blank" rel="noopener noreferrer" className="block mt-2">
-                                                                               <img src={c.image.thumbnail} alt="Proof" className="rounded max-h-24 object-cover" />
-                                                                           </a>
-                                                                       )}
-                                                                       {c.comment_images?.length ? (
-                                                                           <div className="flex flex-wrap gap-1 mt-2">
-                                                                               {c.comment_images.map((img) => (
-                                                                                   <a key={img.id} href={img.image?.full_size} target="_blank" rel="noopener noreferrer">
-                                                                                       <img src={img.image?.thumbnail || img.image?.full_size} alt="Proof" className="rounded max-h-20 object-cover" />
-                                                                                   </a>
-                                                                               ))}
-                                                                           </div>
-                                                                       ) : null}
-                                                                       <p className="text-xs opacity-75 mt-1">{formatMessageDate(c.created_at)}</p>
-                                                                   </div>
-                                                               </div>
-                                                           ))}
-                                                       </>
-                                                   )}
-                                               </div>
-                                               {!loadingDisputeComments && disputeComments.length >= 10 && (
-                                                   <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
-                                                       Maximum of 10 messages reached. No further replies can be added.
-                                                   </p>
-                                               )}
-                                               {!loadingDisputeComments && disputeComments.length < 10 && (
-                                                   <div className="space-y-3">
-                                                       <div className="rounded border border-gray-300 overflow-hidden">
-                                                           <TinyMCEEditor
-                                                               tinymceScriptSrc={TINYMCE_SCRIPT_SRC}
-                                                               licenseKey="gpl"
-                                                               value={disputeReplyText}
-                                                               onEditorChange={(content) => setDisputeReplyText(content ?? '')}
-                                                               init={{ ...tinymceInitBase }}
-                                                               disabled={sendingDisputeComment}
-                                                           />
-                                                       </div>
-                                                       <div className="flex flex-wrap items-center gap-2">
-                                                           <input
-                                                               type="file"
-                                                               accept="image/*"
-                                                               multiple
-                                                               onChange={(e) => setDisputeReplyFiles(e.target.files ? Array.from(e.target.files) : [])}
-                                                               className="text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700"
-                                                               disabled={sendingDisputeComment}
-                                                           />
-                                                           <button
-                                                               type="button"
-                                                               onClick={handleAddDisputeComment}
-                                                               disabled={sendingDisputeComment || isRichTextEmpty(disputeReplyText)}
-                                                               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                                           >
-                                                               {sendingDisputeComment ? 'Sending…' : 'Send reply'}
-                                                           </button>
-                                                       </div>
-                                                   </div>
-                                               )}
-                                           </>
-                                       )}
-                                   </div>
-
-                                   {saleConcluded && orderitemNumber ? (
-                                       <div className="mt-6">
-                                           <OrderReviewPanel
-                                               orderitemNumber={orderitemNumber}
-                                               productName={singleOrder?.product?.name}
-                                               merchantStoreName={merchantStoreName}
-                                               onSubmitted={() => {
-                                                   if (orderitemNumber) {
-                                                       dispatch(getSingleOrder(orderitemNumber));
-                                                   }
-                                               }}
-                                           />
-                                       </div>
-                                   ) : null}
-
-                               </div>
-                           </div>
-                       </>
-                      )}
+                    </>
+                )}
             </div>
-        {orderitemNumber && singleOrder?.product?.slug ? (
-            <MerchantChatWidget
-                orderitemNumber={orderitemNumber}
-                productName={singleOrder?.product?.name}
-                productSlug={singleOrder?.product?.slug}
-            />
-        ) : null}
         </AuthLayout>
     );
+
 };
 
 export default OrderDetails;

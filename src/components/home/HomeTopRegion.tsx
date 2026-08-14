@@ -316,25 +316,30 @@ function SpotlightRailTheme({ carouselSlides, sideSlides, playStoreUrl, appStore
       />
 
       <div className="mx-auto max-w-screen-xl px-6 pt-4 xl:px-0 sm:pt-6">
-        <div className="overflow-hidden rounded-[1.35rem] shadow-[0_24px_60px_-28px_rgba(15,23,42,0.65)] ring-1 ring-white/15">
+        <div className="overflow-hidden rounded-[1.35rem] bg-slate-900 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.65)] ring-1 ring-white/15">
           <HeroCarousel
             slides={carouselSlides}
-            frameClassName="min-h-[48vw] sm:min-h-[300px] md:min-h-[360px] lg:min-h-[400px]"
+            frameClassName="min-h-[52vw] sm:min-h-[300px] md:min-h-[360px] lg:min-h-[420px]"
             roundedClassName="rounded-none"
-            objectFit="cover"
+            objectFit="contain"
+            imageClassName="bg-slate-900"
             showDots
           />
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        {/* Mobile: 2 small banners on one row; app promo full width beneath.
+            sm+: three equal columns. */}
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           {rail.map((slide) => (
             <PromoTile
               key={slide.key}
               slide={slide}
-              className="min-h-[112px] rounded-xl shadow-sm ring-1 ring-slate-200/80 sm:min-h-[128px]"
+              className="min-h-[100px] rounded-xl shadow-sm ring-1 ring-slate-200/80 sm:min-h-[128px]"
             />
           ))}
-          <SpotlightAppDownloadBox playStoreUrl={playStoreUrl} appStoreUrl={appStoreUrl} />
+          <div className="col-span-2 sm:col-span-1">
+            <SpotlightAppDownloadBox playStoreUrl={playStoreUrl} appStoreUrl={appStoreUrl} />
+          </div>
         </div>
       </div>
     </section>

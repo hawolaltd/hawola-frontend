@@ -20,6 +20,11 @@ export type BuyerChatMessage = {
   id: number;
   sender_type: "customer" | "merchant" | "moderator" | "system";
   body: string;
+  message_kind?: "text" | "receipt" | "proof_of_payment" | string;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  receipt_html_url?: string | null;
+  order_item?: number | null;
   created_at: string;
 };
 
@@ -58,4 +63,35 @@ export async function sendBuyerChatMessage(slug: string, message: string) {
     message,
   });
   return data as BuyerChatMessage;
+}
+
+export async function sendBuyerChatProofOfPayment(
+  slug: string,
+  file: File,
+  note?: string
+) {
+  const form = new FormData();
+  form.append("attachment", file);
+  form.append("message_kind", "proof_of_payment");
+  if (note?.trim()) form.append("message", note.trim());
+  const { data } = await axiosInstance.post(`/messaging/buyer-chats/${slug}/messages/`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data as BuyerChatMessage;
+}
+
+export async function uploadOrderItemProofOfPayment(
+  orderitemNumber: string,
+  file: File,
+  note?: string
+) {
+  const form = new FormData();
+  form.append("file", file);
+  if (note?.trim()) form.append("note", note.trim());
+  const { data } = await axiosInstance.post(
+    `/orders/order-item/${encodeURIComponent(orderitemNumber)}/proofs/`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return data as { proof: Record<string, unknown>; message?: BuyerChatMessage };
 }
