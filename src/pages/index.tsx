@@ -51,9 +51,7 @@ export default function Home() {
         <meta property="og:description" content={metaDescription} />
         <meta property="og:type" content="website" />
       </Head>
-      <div className={"mb-4"}>
-        <Header />
-      </div>
+      <Header />
       <HomeTopRegion />
       {/* <Partner /> */}
       {/* <ProductList products={products} /> */}

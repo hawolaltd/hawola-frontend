@@ -48,6 +48,10 @@ export interface SiteSettingsData {
   youtube_support_link?: string | null;
   email_support_link?: string | null;
   support_phone_number?: string | null;
+  /** Home banner layout: boxed_marketplace | cinema_wide | editorial_split | spotlight_rail */
+  homepage_hero_theme?: string | null;
+  play_store_url?: string | null;
+  app_store_url?: string | null;
   footer_config?: {
     intro_text?: string;
     columns?: {
