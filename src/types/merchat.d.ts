@@ -120,6 +120,17 @@ interface MerchantDetailsResponse {
   is_streaming_now: boolean;
 }
 
+interface StorefrontCoupon {
+  id: number;
+  code: string;
+  name?: string;
+  discount_type: string;
+  value: string;
+  scope: string;
+  product_ids?: number[];
+  ends_at?: string | null;
+}
+
 interface MerchantProfile {
   merchant_details: MerchantDetails;
   home_page: Record<string, unknown>; // or more specific type if home_page structure is known
@@ -127,6 +138,7 @@ interface MerchantProfile {
   recent_products: Product[];
   merchant_categories: MerchantCategory[];
   is_streaming_now: boolean;
+  storefront_coupons?: StorefrontCoupon[];
 }
 
 interface MerchantDetails {

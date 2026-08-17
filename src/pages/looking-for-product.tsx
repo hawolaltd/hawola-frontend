@@ -255,7 +255,11 @@ const LookingForProductPage = () => {
                   <p className="text-xs text-gray-600">
                     By using this feature you agree to Hawola&apos;s usage terms and community
                     guidelines. Hawola is not liable for any issues that may arise between you and
-                    merchants. Please trade safely and read our community guidelines.
+                    merchants. Please trade safely and read our{" "}
+                    <a href="/community-safety-guide" className="underline">
+                      community guidelines
+                    </a>
+                    .
                   </p>
                 </div>
               </div>
@@ -499,7 +503,16 @@ const LookingForProductPage = () => {
               </ul>
               <div className="mt-5 pt-4 border-t border-gray-200 rounded-lg bg-gray-100/80 p-3">
                 <p className="text-xs text-gray-600">
-                  Hawola is not liable for any issues between buyers and merchants. By using this feature you agree to our usage terms and community guidelines. Please trade safely.
+                  Hawola is not liable for any issues between buyers and merchants. By using
+                  this feature you agree to our{" "}
+                  <a href="/terms" className="underline">
+                    usage terms
+                  </a>{" "}
+                  and{" "}
+                  <a href="/community-safety-guide" className="underline">
+                    community guidelines
+                  </a>
+                  . Please trade safely.
                 </p>
               </div>
             </div>

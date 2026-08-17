@@ -63,6 +63,20 @@ const nextConfig: NextConfig = {
         // Solution 2: Use the image-proxy API route for better timeout control
         // Solution 3: Set unoptimized: true globally (not recommended for performance)
     },
+    async redirects() {
+        return [
+            {
+                source: '/terms-of-use',
+                destination: '/terms',
+                permanent: true,
+            },
+            {
+                source: '/community-guidelines',
+                destination: '/community-safety-guide',
+                permanent: true,
+            },
+        ];
+    },
 };
 
 export default nextConfig;

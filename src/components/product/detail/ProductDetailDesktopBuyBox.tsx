@@ -18,6 +18,7 @@ import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrIniti
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import ProductDetailShippingLines from "@/components/product/detail/ProductDetailShippingLines";
+import ProductCouponApply from "@/components/product/detail/ProductCouponApply";
 
 type Props = {
   displayName: string;
@@ -145,6 +146,14 @@ export default function ProductDetailDesktopBuyBox({
           ) : null}
         </div>
       </div>
+
+      {typeof p?.id === "number" ? (
+        <ProductCouponApply
+          productId={p.id}
+          unitPrice={Number(discountPrice ?? price ?? 0)}
+          qty={quantity}
+        />
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <button

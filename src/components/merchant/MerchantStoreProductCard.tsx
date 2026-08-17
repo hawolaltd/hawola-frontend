@@ -2,6 +2,7 @@ import Link from "next/link";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import type { Product } from "@/types/product";
 import { capitalize, featuredImageCardUrl, formatCurrency } from "@/util";
+import { usePendingStoreCoupon } from "@/hooks/usePendingStoreCoupon";
 
 const EMPTY_IMG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500'%3E%3Crect fill='%23f1f5f9' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='system-ui,sans-serif' font-size='14'%3EPhoto%3C/text%3E%3C/svg%3E";
@@ -24,6 +25,7 @@ type Props = {
  * mobile-first, touch-friendly, compares well to major marketplaces.
  */
 export default function MerchantStoreProductCard({ product }: Props) {
+  const { priceFor } = usePendingStoreCoupon();
   const slug = product?.slug?.trim();
   const href = slug ? `/product/${slug}` : "#";
   const img = featuredImageCardUrl(product?.featured_image?.[0], EMPTY_IMG);
@@ -31,8 +33,21 @@ export default function MerchantStoreProductCard({ product }: Props) {
   const list = String(product?.price ?? "").trim();
   const sale = String(product?.discount_price ?? "").trim();
   const hasSale = Boolean(sale && list && sale !== list);
-  const displayPrice = hasSale ? sale : list;
-  const pct = hasSale ? salePercentOff(product.price, product.discount_price) : null;
+  const baseForCoupon = Number(hasSale ? sale : list) || 0;
+  const couponPrice = priceFor(baseForCoupon, product?.id);
+  const hasCoupon = couponPrice.couponApplied;
+  const displayPrice = hasCoupon
+    ? String(couponPrice.display)
+    : hasSale
+      ? sale
+      : list;
+  const showWas = hasCoupon || hasSale;
+  const wasPrice = hasCoupon ? String(couponPrice.list ?? baseForCoupon) : list;
+  const pct = hasCoupon
+    ? couponPrice.pct
+    : hasSale
+      ? salePercentOff(product.price, product.discount_price)
+      : null;
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ring-1 ring-slate-950/[0.03] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(15,23,42,0.12)] hover:ring-slate-300/70">
@@ -80,9 +95,14 @@ export default function MerchantStoreProductCard({ product }: Props) {
             <span className="text-lg font-bold tabular-nums tracking-tight text-slate-900 sm:text-xl">
               {formatCurrency(displayPrice || "0")}
             </span>
-            {hasSale && list ? (
+            {showWas && wasPrice ? (
               <span className="text-xs font-medium tabular-nums text-slate-400 line-through sm:text-sm">
-                {formatCurrency(list)}
+                {formatCurrency(wasPrice)}
+              </span>
+            ) : null}
+            {hasCoupon ? (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                Coupon
               </span>
             ) : null}
           </div>

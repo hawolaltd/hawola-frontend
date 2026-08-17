@@ -15,6 +15,7 @@ import {
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import MerchantStoreReviews from "@/components/merchant/MerchantStoreReviews";
+import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
@@ -421,7 +422,13 @@ export default function NormalMerchantPage() {
             </div>
 
             {/* Main Content */}
-            <div className="w-full md:w-2/3 lg:w-3/4">
+            <div className="w-full md:w-2/3 lg:w-3/4 space-y-6">
+              <StorefrontCouponCards
+                coupons={merchantData?.storefront_coupons}
+                storeName={merchantData?.merchant_details?.store_name}
+                logoUrl={merchantData?.merchant_details?.logo}
+                primaryColor={merchantData?.merchant_details?.primary_color}
+              />
               <div className="mt-1 overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] ring-1 ring-slate-950/[0.02] md:mt-0">
                 <nav
                   role="tablist"

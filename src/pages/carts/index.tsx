@@ -273,10 +273,30 @@ const CartPage = () => {
       }
 
       try {
+        const selectedLines = cartItems.filter((item) =>
+          selectedItems.includes(item.id)
+        );
+        const cart_items = selectedLines.map((item) => {
+          const unit = Number(
+            item?.product?.discount_price || item?.product?.price || 0
+          );
+          const effectiveQty = Math.max(
+            1,
+            Number(item?.qty || 1) + (pendingUpdates[item?.id] || 0)
+          );
+          return {
+            product_id: Number(item?.product?.id || item?.product || 0),
+            merchant_id: Number(item?.product?.merchant?.id || item?.merchant || 0) || undefined,
+            qty: effectiveQty,
+            unit_price: unit,
+            name: item?.product?.name || "",
+          };
+        });
         const data = await validateCoupon({
           code,
           goods_total: goods,
           shipping_total: shipping,
+          cart_items,
         });
         if (gen !== couponApplyGenRef.current) return;
         const applied = (data.code || code).trim().toUpperCase();
@@ -306,7 +326,7 @@ const CartPage = () => {
         }
       }
     },
-    [couponGoodsTotal, shippingCost]
+    [couponGoodsTotal, shippingCost, cartItems, selectedItems, pendingUpdates]
   );
 
   // Seed code into the field once (no validate yet — avoids error flicker)

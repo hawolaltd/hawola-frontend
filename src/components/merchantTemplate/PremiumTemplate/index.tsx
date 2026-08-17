@@ -15,6 +15,7 @@ import { buildPremiumMerchantInlineCss } from "@/util/premiumMerchantInlineCss";
 import type { MerchantBannerImageSizes } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
+import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 
 const DashboardTemplate = () => {
   const {
@@ -147,6 +148,13 @@ const DashboardTemplate = () => {
                   }
                 />
               </div>
+
+              <StorefrontCouponCards
+                coupons={merchantData?.storefront_coupons}
+                storeName={merchantData?.merchant_details?.store_name}
+                logoUrl={merchantData?.merchant_details?.logo}
+                primaryColor={merchantData?.merchant_details?.primary_color}
+              />
 
               {/* Categories */}
               <div className="animate-fade-in delay-100">

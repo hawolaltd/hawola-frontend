@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,6 +7,7 @@ import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { featuredImageCardUrl } from "@/util";
 import type { Product as StoreProduct } from "@/types/product";
+import { usePendingStoreCoupon } from "@/hooks/usePendingStoreCoupon";
 
 interface Product {
   id: number;
@@ -36,8 +39,9 @@ const ProductShowcase = ({
   title,
   subtitle,
 }: ProductShowcaseProps) => {
-  const formatPrice = (price: string) => {
-    const numPrice = parseFloat(price);
+  const { priceFor } = usePendingStoreCoupon();
+  const formatPrice = (price: string | number) => {
+    const numPrice = parseFloat(String(price));
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
@@ -74,10 +78,21 @@ const ProductShowcase = ({
 
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
         {products.map((product: Product) => {
+          const base = Number(product.discount_price || product.price) || 0;
+          const coupon = priceFor(base, product.id);
           const showSaleBadge =
-            product.price !== product.discount_price &&
-            parseFloat(product.price) > 0 &&
-            Number.isFinite(parseFloat(product.discount_price));
+            coupon.couponApplied ||
+            (product.price !== product.discount_price &&
+              parseFloat(product.price) > 0 &&
+              Number.isFinite(parseFloat(product.discount_price)));
+          const badgePct = coupon.couponApplied
+            ? coupon.pct
+            : Math.round(
+                ((parseFloat(product.price) -
+                  parseFloat(product.discount_price)) /
+                  parseFloat(product.price)) *
+                  100
+              );
 
           return (
           <div
@@ -163,15 +178,9 @@ const ProductShowcase = ({
                     </div>
                   )}
                 </div>
-                {showSaleBadge && (
+                {showSaleBadge && badgePct != null && badgePct > 0 && (
                   <div className="merchant-badge-sale-premium pointer-events-none shrink-0 rounded-full px-2 py-1 text-xs font-bold shadow-sm">
-                    {Math.round(
-                      ((parseFloat(product.price) -
-                        parseFloat(product.discount_price)) /
-                        parseFloat(product.price)) *
-                        100
-                    )}
-                    % OFF
+                    {badgePct}% OFF
                   </div>
                 )}
               </div>
@@ -192,13 +201,22 @@ const ProductShowcase = ({
               </h3>
 
               {/* Price */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-lg font-bold text-gray-900">
-                  {formatPrice(product.discount_price)}
+                  {formatPrice(
+                    coupon.couponApplied
+                      ? coupon.display
+                      : product.discount_price
+                  )}
                 </span>
-                {product.price !== product.discount_price && (
+                {(coupon.couponApplied ||
+                  product.price !== product.discount_price) && (
                   <span className="text-sm text-gray-400 line-through">
-                    {formatPrice(product.price)}
+                    {formatPrice(
+                      coupon.couponApplied
+                        ? coupon.list ?? base
+                        : product.price
+                    )}
                   </span>
                 )}
               </div>

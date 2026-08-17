@@ -1,6 +1,6 @@
 import DOMPurify from "dompurify";
 
-export const DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML = `<p><strong>Disclaimer:</strong> Contact and transactions happen directly between buyer and merchant. Hawola does not verify every listing detail and is not a party to direct deals. Please review our <a href="/terms-of-use" target="_blank" rel="noopener noreferrer">Terms of Use</a> before proceeding.</p>`;
+export const DEFAULT_CONTACT_MERCHANT_DISCLAIMER_HTML = `<p><strong>Disclaimer:</strong> Contact and transactions happen directly between buyer and merchant. Hawola does not verify every listing detail and is not a party to direct deals. Please review our <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Use</a> before proceeding.</p>`;
 export const DEFAULT_CONTACT_MERCHANT_BUYER_PROTECTION_HTML = `<ul><li>Meet in a safe public place.</li><li>Inspect the item/property before payment.</li><li>Confirm ownership and documentation.</li><li>Keep chats and payment evidence for records.</li></ul>`;
 
 /**

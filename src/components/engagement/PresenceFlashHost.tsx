@@ -10,9 +10,12 @@ import {
   type FlashAlertPayload,
   type FlashOutcome,
 } from "@/lib/presenceSocket";
+import { getOrCreatePresenceSessionKey } from "@/lib/presenceContext";
 import { savePendingCouponCode } from "@/lib/pendingCoupon";
 import { RootState } from "@/store/store";
 import { toast } from "sonner";
+import { API, authTokenStorageKeyName } from "@/constant";
+import Cookies from "js-cookie";
 
 const FLASH_MS = 30000;
 
@@ -109,6 +112,142 @@ function FlashCard({
     item.header ||
     item.body ||
     (item.coupon_code ? `Code ${item.coupon_code}` : "A note for you");
+
+  if (item.display_style === "promo") {
+    const expiresLabel = item.expires_at
+      ? `Ends: ${new Date(item.expires_at).toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`
+      : item.detail || "";
+    return (
+      <div
+        className="pointer-events-auto w-[min(100vw-1.25rem,20.5rem)] animate-[hawolaPromoIn_0.38s_cubic-bezier(0.22,1,0.36,1)]"
+        role="status"
+      >
+        <div className="relative overflow-hidden rounded-[1.25rem] bg-[#E11D48] shadow-[0_22px_50px_-14px_rgba(136,19,55,0.55)] ring-1 ring-black/10">
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={() => onDismiss(item.localId)}
+            className="absolute right-2.5 top-2.5 z-10 rounded-full bg-black/15 px-2 py-0.5 text-xs font-bold text-white/90"
+          >
+            ✕
+          </button>
+          <div className="px-4 pb-2.5 pt-4 text-white">
+            <p className="text-[10px] font-semibold tracking-wide text-white/90">
+              {item.eyebrow || "Hawola deal"}
+            </p>
+            <p className="mt-1 flex items-start gap-1.5 text-[1.15rem] font-extrabold leading-tight">
+              <span className="min-w-0">{item.header || "Limited-time offer"}</span>
+              <span aria-hidden>✦</span>
+            </p>
+          </div>
+          <div className="mx-2.5 mb-2.5 rounded-[1rem] bg-white px-3.5 pb-3.5 pt-4">
+            {item.highlight || item.coupon_code ? (
+              <p className="text-center text-[1.45rem] font-black leading-none text-[#E11D48]">
+                {item.highlight ||
+                  (item.coupon_code ? `Code ${item.coupon_code}` : "")}
+              </p>
+            ) : null}
+            {item.subline || item.body ? (
+              <p className="mt-1.5 text-center text-sm font-semibold text-[#E11D48]/90">
+                {item.subline || item.body}
+              </p>
+            ) : null}
+            {expiresLabel ? (
+              <p className="mt-2.5 text-center text-[11px] font-medium text-slate-700">
+                {expiresLabel}
+              </p>
+            ) : null}
+            {item.coupon_code ? (
+              <button
+                type="button"
+                onClick={() => void copyCode(item.coupon_code)}
+                className="mt-3 w-full rounded-xl border border-[#E11D48]/25 bg-[#E11D48]/5 px-3 py-2 font-mono text-sm font-bold text-[#E11D48]"
+              >
+                {item.coupon_code} · Copy
+              </button>
+            ) : null}
+            {item.allow_opt_out ? (
+              <label className="mt-3 flex cursor-pointer items-start gap-2 text-left text-[11px] text-slate-600">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  onChange={(e) => {
+                    (item as FlashItem & { _optOut?: boolean })._optOut =
+                      e.target.checked;
+                  }}
+                />
+                <span>Do not show tips like this again</span>
+              </label>
+            ) : null}
+            <div className="mt-3.5 space-y-2">
+              {item.cta_url ? (
+                <Link
+                  href={item.cta_url}
+                  onClick={() => {
+                    if (item.coupon_code) stashCouponForCart(item.coupon_code);
+                    if ((item as FlashItem & { _optOut?: boolean })._optOut) {
+                      void fetch(
+                        `${(API || "http://localhost:8000/api").replace(/\/?$/, "/")}engagement/preference/`,
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            do_not_show: true,
+                            session_key: getOrCreatePresenceSessionKey(),
+                          }),
+                        }
+                      );
+                    }
+                    onDismiss(item.localId, "cta_clicked");
+                  }}
+                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-b from-neutral-800 to-black px-4 py-2.5 text-sm font-bold text-white"
+                >
+                  {item.cta_label || "Collect"}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (item.coupon_code) stashCouponForCart(item.coupon_code);
+                    if ((item as FlashItem & { _optOut?: boolean })._optOut) {
+                      void fetch(
+                        `${(API || "http://localhost:8000/api").replace(/\/?$/, "/")}engagement/preference/`,
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            do_not_show: true,
+                            session_key: getOrCreatePresenceSessionKey(),
+                          }),
+                        }
+                      );
+                    }
+                    onKeep(item.localId);
+                  }}
+                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-b from-neutral-800 to-black px-4 py-2.5 text-sm font-bold text-white"
+                >
+                  {item.cta_label || (item.coupon_code ? "Collect" : "Got it")}
+                </button>
+              )}
+            </div>
+            {!item.kept ? (
+              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full bg-[#E11D48] transition-[width] duration-100 ease-linear"
+                  style={{ width: `${Math.round(progress * 100)}%` }}
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -374,6 +513,53 @@ export default function PresenceFlashHost() {
     });
   }, []);
 
+  // Tip of the day (promo), at most once per calendar day
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const apiBase = (API || "http://localhost:8000/api").replace(/\/?$/, "/");
+        const sessionKey = getOrCreatePresenceSessionKey();
+        const token = Cookies.get(authTokenStorageKeyName as string) || null;
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await fetch(
+          `${apiBase}engagement/tip-of-day/?session_key=${encodeURIComponent(sessionKey)}&client=web`,
+          { headers, credentials: "include" }
+        );
+        const data = await res.json().catch(() => null);
+        if (cancelled || !data?.show || !data?.tip) return;
+        const payload = data.tip as FlashAlertPayload;
+        const alertId = payload?.id != null ? String(payload.id) : "";
+        if (alertId) {
+          if (seenAlertIds.current.has(alertId)) return;
+          seenAlertIds.current.add(alertId);
+        }
+        const localId = `tip-${alertId || Date.now()}`;
+        setItems((prev) => {
+          if (prev.some((i) => i.display_style === "promo")) return prev;
+          return [
+            {
+              ...payload,
+              display_style: "promo",
+              localId,
+              startedAt: Date.now(),
+              kept: false,
+            },
+            ...prev,
+          ].slice(0, 2);
+        });
+      } catch {
+        /* ignore */
+      }
+    };
+    const t = window.setTimeout(run, 1800);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [isAuthenticated]);
+
   // Resubscribe when auth flips so the socket carries the JWT and the
   // previous guest connection can disconnect cleanly (one admin row).
   useEffect(() => {
@@ -419,28 +605,49 @@ export default function PresenceFlashHost() {
 
   if (!items.length) return null;
 
+  const promoItems = items.filter((i) => i.display_style === "promo");
+  const toastItems = items.filter((i) => i.display_style !== "promo");
+
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[190] flex flex-col sm:inset-x-0 sm:bottom-auto sm:top-0 sm:items-end sm:gap-3 sm:p-5 sm:pt-14">
-      {items.slice(0, 1).map((item) => (
-        <FlashCard
+    <>
+      {promoItems.slice(0, 1).map((item) => (
+        <div
           key={item.localId}
-          item={item}
-          onDismiss={dismiss}
-          onKeep={keep}
-        />
-      ))}
-      {/* Keep a second card only on desktop */}
-      {items.slice(1, 2).map((item) => (
-        <div key={item.localId} className="hidden sm:contents">
-          <FlashCard
-            item={item}
-            onDismiss={dismiss}
-            onKeep={keep}
-          />
+          className="pointer-events-none fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] right-3 z-[10050] sm:bottom-44 sm:right-6"
+        >
+          <FlashCard item={item} onDismiss={dismiss} onKeep={keep} />
         </div>
       ))}
 
+      {toastItems.length ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[190] flex flex-col sm:inset-x-0 sm:bottom-auto sm:top-0 sm:items-end sm:gap-3 sm:p-5 sm:pt-14">
+          {toastItems.slice(0, 1).map((item) => (
+            <FlashCard
+              key={item.localId}
+              item={item}
+              onDismiss={dismiss}
+              onKeep={keep}
+            />
+          ))}
+          {toastItems.slice(1, 2).map((item) => (
+            <div key={item.localId} className="hidden sm:contents">
+              <FlashCard item={item} onDismiss={dismiss} onKeep={keep} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <style jsx global>{`
+        @keyframes hawolaPromoIn {
+          from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
         @keyframes hawolaStripIn {
           from {
             opacity: 0;
@@ -507,6 +714,6 @@ export default function PresenceFlashHost() {
           }
         }
       `}</style>
-    </div>
+    </>
   );
 }

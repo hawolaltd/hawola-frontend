@@ -19,6 +19,13 @@ export type FlashAlertPayload = {
   cta_url?: string;
   coupon_code?: string | null;
   expires_at?: string | null;
+  display_style?: "toast" | "promo" | string;
+  eyebrow?: string;
+  highlight?: string;
+  subline?: string;
+  detail?: string;
+  source?: string;
+  allow_opt_out?: boolean;
 };
 
 function apiOrigin(): string {

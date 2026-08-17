@@ -13,6 +13,7 @@ import { stripHtmlForMeta } from "@/util/merchantRichText";
 import { buildMerchantHeroSlides } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
+import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -520,6 +521,14 @@ const StandardTemplate = () => {
               </div>
             </div>
           </div>
+
+          <StorefrontCouponCards
+            coupons={merchantData?.storefront_coupons}
+            storeName={merchant_details?.store_name}
+            logoUrl={merchant_details?.logo}
+            primaryColor={primaryColor}
+            className="mb-8"
+          />
 
           {/* Navigation Tabs */}
           <div className="bg-white rounded-2xl shadow-sm mb-8">

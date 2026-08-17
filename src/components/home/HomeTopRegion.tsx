@@ -327,8 +327,7 @@ function SpotlightRailTheme({ carouselSlides, sideSlides, playStoreUrl, appStore
           />
         </div>
 
-        {/* Mobile: 2 small banners on one row; app promo full width beneath.
-            sm+: three equal columns. */}
+        {/* Mobile: 2 small banners on one row. App promo hidden on mobile, full rail on sm+. */}
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           {rail.map((slide) => (
             <PromoTile
@@ -337,7 +336,7 @@ function SpotlightRailTheme({ carouselSlides, sideSlides, playStoreUrl, appStore
               className="min-h-[100px] rounded-xl shadow-sm ring-1 ring-slate-200/80 sm:min-h-[128px]"
             />
           ))}
-          <div className="col-span-2 sm:col-span-1">
+          <div className="hidden sm:block sm:col-span-1">
             <SpotlightAppDownloadBox playStoreUrl={playStoreUrl} appStoreUrl={appStoreUrl} />
           </div>
         </div>

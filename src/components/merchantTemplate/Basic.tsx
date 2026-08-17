@@ -17,6 +17,7 @@ import {
 } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
+import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
@@ -124,6 +125,7 @@ const BasicTemplate = () => {
     banners,
     home_page,
     is_streaming_now,
+    storefront_coupons,
   } = merchantData;
 
   const merchantReels = merchant_details?.merchant_reels ?? [];
@@ -310,6 +312,13 @@ const BasicTemplate = () => {
           {/* Overview Section */}
           {activeSection === "overview" && (
             <div className="space-y-16">
+              <StorefrontCouponCards
+                coupons={storefront_coupons}
+                storeName={merchant_details?.store_name}
+                logoUrl={merchant_details?.logo}
+                primaryColor={primaryColor}
+              />
+
               {/* Stats Bar */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
