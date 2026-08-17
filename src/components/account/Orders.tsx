@@ -2,6 +2,11 @@ import type { NextPage } from "next";
 import { useState } from "react";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import { formatCurrency, orderItemImageUrl } from "@/util";
+import {
+  formatCouponDiscountLabel,
+  getOrderAmountDue,
+  getOrderCouponDiscount,
+} from "@/util/orderCoupon";
 import { useRouter } from "next/router";
 import {
   CheckCircleIcon,
@@ -181,8 +186,15 @@ const Orders: NextPage = () => {
                     <div>
                       <p className="text-gray-500 mb-0.5">Total</p>
                       <p className="font-bold text-gray-900 truncate">
-                        {formatCurrency(order?.order_price_subtotal)}
+                        {formatCurrency(
+                          getOrderAmountDue(order) ?? order?.order_price_subtotal
+                        )}
                       </p>
+                      {getOrderCouponDiscount(order) > 0 ? (
+                        <p className="text-[10px] font-medium text-emerald-700 truncate">
+                          {formatCouponDiscountLabel(order, formatCurrency)}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 
@@ -277,8 +289,15 @@ const Orders: NextPage = () => {
                   {/* Total */}
                   <div className="col-span-1 flex flex-col justify-center text-right">
                     <p className="text-base font-bold text-gray-900">
-                      {formatCurrency(order?.order_price_subtotal)}
+                      {formatCurrency(
+                        getOrderAmountDue(order) ?? order?.order_price_subtotal
+                      )}
                     </p>
+                    {getOrderCouponDiscount(order) > 0 ? (
+                      <p className="text-[11px] font-medium text-emerald-700 mt-0.5">
+                        {formatCouponDiscountLabel(order, formatCurrency)}
+                      </p>
+                    ) : null}
                     {order?.payment_confirmed && (
                       <p className="text-xs text-green-600 mt-0.5 flex items-center gap-1 justify-end">
                         <CheckCircleIcon className="w-3 h-3" />

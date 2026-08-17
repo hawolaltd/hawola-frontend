@@ -626,6 +626,48 @@ const OrderDetails: NextPage = () => {
                                                     {formatCurrency(singleOrder?.order_price_subtotal)}
                                                 </dd>
                                             </div>
+                                            {Number(
+                                                singleOrder?.coupon_discount ||
+                                                    singleOrder?.order?.coupon_discount ||
+                                                    0
+                                            ) > 0 ? (
+                                                <div className="col-span-2">
+                                                    <dt className="text-slate-500">
+                                                        Coupon
+                                                        {(
+                                                            singleOrder?.coupon_code ||
+                                                            singleOrder?.order?.coupon_code
+                                                        )
+                                                            ? ` (${
+                                                                  singleOrder?.coupon_code ||
+                                                                  singleOrder?.order?.coupon_code
+                                                              })`
+                                                            : ""}
+                                                    </dt>
+                                                    <dd className="font-medium text-emerald-700">
+                                                        −
+                                                        {formatCurrency(
+                                                            singleOrder?.coupon_discount ||
+                                                                singleOrder?.order?.coupon_discount
+                                                        )}
+                                                    </dd>
+                                                </div>
+                                            ) : null}
+                                            {Number(
+                                                singleOrder?.order_total_due ||
+                                                    singleOrder?.order?.totalPriceDue ||
+                                                    0
+                                            ) > 0 ? (
+                                                <div className="col-span-2 border-t border-slate-100 pt-3">
+                                                    <dt className="text-slate-500">Amount due (order)</dt>
+                                                    <dd className="text-base font-semibold text-slate-900">
+                                                        {formatCurrency(
+                                                            singleOrder?.order_total_due ||
+                                                                singleOrder?.order?.totalPriceDue
+                                                        )}
+                                                    </dd>
+                                                </div>
+                                            ) : null}
                                         </dl>
                                     </section>
 

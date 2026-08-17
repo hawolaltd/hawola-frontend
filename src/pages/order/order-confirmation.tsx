@@ -258,6 +258,22 @@ const OrderConfirmationPage = () => {
                           )}
                         </span>
                       </div>
+                      {Number(orders?.coupon_discount || 0) > 0 ? (
+                        <div className="flex justify-between text-emerald-700">
+                          <span>
+                            Coupon
+                            {orders?.coupon_code
+                              ? ` (${orders.coupon_code})`
+                              : ""}
+                          </span>
+                          <span className="font-semibold tabular-nums">
+                            −₦
+                            {amountFormatter(
+                              Number(orders.coupon_discount).toFixed(2)
+                            )}
+                          </span>
+                        </div>
+                      ) : null}
                       <div className="flex justify-between border-t border-[#CAD6EC] pt-2 font-bold text-headerBg">
                         <span>Total</span>
                         <span className="tabular-nums">

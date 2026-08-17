@@ -345,8 +345,22 @@ const OrderHistoryPage = () => {
                                                     <div>
                                                         <p className="text-xs text-gray-500 mb-1">Order Total</p>
                                                         <p className="font-bold text-primary text-lg">
-                                                            ₦{amountFormatter((+order.order_price_subtotal).toFixed(2))}
+                                                            ₦{amountFormatter(
+                                                                Number(
+                                                                    order.order_total_due ||
+                                                                    order.order?.totalPriceDue ||
+                                                                    order.order_price_subtotal
+                                                                ).toFixed(2)
+                                                            )}
                                                         </p>
+                                                        {Number(order.coupon_discount || order.order?.coupon_discount || 0) > 0 ? (
+                                                            <p className="text-xs font-medium text-emerald-700">
+                                                                Coupon −₦{amountFormatter(Number(order.coupon_discount || order.order?.coupon_discount).toFixed(2))}
+                                                                {(order.coupon_code || order.order?.coupon_code)
+                                                                    ? ` · ${order.coupon_code || order.order?.coupon_code}`
+                                                                    : ""}
+                                                            </p>
+                                                        ) : null}
                                                     </div>
                                                     <div>
                                                         <p className="text-xs text-gray-500 mb-1">Payment</p>

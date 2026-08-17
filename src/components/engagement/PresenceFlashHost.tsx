@@ -16,6 +16,7 @@ import { RootState } from "@/store/store";
 import { toast } from "sonner";
 import { API, authTokenStorageKeyName } from "@/constant";
 import Cookies from "js-cookie";
+import CustomerAutoTipModal from "@/components/engagement/CustomerAutoTipModal";
 
 const FLASH_MS = 30000;
 
@@ -470,6 +471,8 @@ export default function PresenceFlashHost() {
     (state: RootState) => state.auth.isAuthenticated
   );
   const [items, setItems] = useState<FlashItem[]>([]);
+  const [autoTipOptOut, setAutoTipOptOut] = useState(false);
+  const [autoTipResetHint, setAutoTipResetHint] = useState<string | null>(null);
   const timers = useRef<Record<string, number>>({});
   const seenAlertIds = useRef<Set<string>>(new Set());
 
@@ -530,6 +533,7 @@ export default function PresenceFlashHost() {
         const data = await res.json().catch(() => null);
         if (cancelled || !data?.show || !data?.tip) return;
         const payload = data.tip as FlashAlertPayload;
+        if (data?.reset_hint) setAutoTipResetHint(String(data.reset_hint));
         const alertId = payload?.id != null ? String(payload.id) : "";
         if (alertId) {
           if (seenAlertIds.current.has(alertId)) return;
@@ -537,11 +541,13 @@ export default function PresenceFlashHost() {
         }
         const localId = `tip-${alertId || Date.now()}`;
         setItems((prev) => {
-          if (prev.some((i) => i.display_style === "promo")) return prev;
+          if (prev.some((i) => i.display_style === "auto_tip" || i.source === "auto_tip"))
+            return prev;
           return [
             {
               ...payload,
-              display_style: "promo",
+              display_style: payload.display_style || "auto_tip",
+              source: payload.source || "auto_tip",
               localId,
               startedAt: Date.now(),
               kept: false,
@@ -605,11 +611,46 @@ export default function PresenceFlashHost() {
 
   if (!items.length) return null;
 
-  const promoItems = items.filter((i) => i.display_style === "promo");
-  const toastItems = items.filter((i) => i.display_style !== "promo");
+  const isAutoTip = (i: FlashItem) =>
+    i.display_style === "auto_tip" || i.source === "auto_tip";
+  const autoTipItems = items.filter(isAutoTip);
+  const promoItems = items.filter(
+    (i) => i.display_style === "promo" && !isAutoTip(i)
+  );
+  const toastItems = items.filter(
+    (i) => i.display_style !== "promo" && !isAutoTip(i)
+  );
 
   return (
     <>
+      {autoTipItems.slice(0, 1).map((item) => (
+        <CustomerAutoTipModal
+          key={item.localId}
+          item={item}
+          optOutChecked={autoTipOptOut}
+          onOptOutChange={setAutoTipOptOut}
+          resetHint={autoTipResetHint}
+          onDismiss={(localId, outcome) => {
+            if (outcome === "do_not_show") {
+              void fetch(
+                `${(API || "http://localhost:8000/api").replace(/\/?$/, "/")}engagement/preference/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    do_not_show: true,
+                    session_key: getOrCreatePresenceSessionKey(),
+                  }),
+                  keepalive: true,
+                }
+              );
+            }
+            dismiss(localId, outcome === "cta_clicked" ? "cta_clicked" : "dismissed");
+            setAutoTipOptOut(false);
+          }}
+        />
+      ))}
+
       {promoItems.slice(0, 1).map((item) => (
         <div
           key={item.localId}

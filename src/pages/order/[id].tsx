@@ -3,6 +3,11 @@ import { useRouter } from 'next/router';
 import {useAppDispatch, useAppSelector} from '@/hook/useReduxTypes';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { amountFormatter, orderItemImageUrl } from '@/util';
+import {
+  formatCouponDiscountLabel,
+  getOrderAmountDue,
+  getOrderCouponDiscount,
+} from '@/util/orderCoupon';
 import Link from 'next/link';
 import { TruckIcon, CreditCardIcon, ShoppingBagIcon, EnvelopeIcon, PrinterIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -191,19 +196,36 @@ const OrderDetailsPage = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span>Subtotal ({orders?.orderItems?.length} items):</span>
-                                    <span>${amountFormatter((+(orders?.totalPrice)).toFixed(2))}</span>
+                                    <span>₦{amountFormatter((+(orders?.totalPrice || 0)).toFixed(2))}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Shipping & Handling:</span>
-                                    <span>${amountFormatter((+(orders?.shippingPrice)).toFixed(2))}</span>
+                                    <span>₦{amountFormatter((+(orders?.shippingPrice || 0)).toFixed(2))}</span>
                                 </div>
+                                {getOrderCouponDiscount(orders) > 0 ? (
+                                    <div className="flex justify-between text-emerald-700">
+                                        <span>
+                                            {formatCouponDiscountLabel(orders) || "Coupon"}
+                                        </span>
+                                        <span>
+                                            −₦{amountFormatter(getOrderCouponDiscount(orders).toFixed(2))}
+                                        </span>
+                                    </div>
+                                ) : null}
                                 <div className="flex justify-between">
                                     <span>Tax:</span>
-                                    <span>${amountFormatter((+(orders?.taxPrice ?? 0.00)).toFixed(2))}</span>
+                                    <span>₦{amountFormatter((+(orders?.taxPrice ?? 0.00)).toFixed(2))}</span>
                                 </div>
                                 <div className="flex justify-between pt-3 border-t font-semibold">
                                     <span>Total:</span>
-                                    <span>${amountFormatter((+(orders?.paidAmount ?? 0.00)).toFixed(2))}</span>
+                                    <span>
+                                        ₦{amountFormatter(
+                                            (
+                                                getOrderAmountDue(orders) ??
+                                                Number(orders?.paidAmount ?? orders?.totalPriceDue ?? 0)
+                                            ).toFixed(2)
+                                        )}
+                                    </span>
                                 </div>
                             </div>
                         </div>
