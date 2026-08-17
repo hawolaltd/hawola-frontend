@@ -22,6 +22,11 @@ import {getOrderHistory} from "@/redux/product/productSlice";
 import ProductCard from "@/components/product/ProductCard";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import DisputeModal from "@/components/product/DisputeModal";
+import {
+    formatCouponDiscountLabel,
+    getOrderAmountDue,
+    getOrderCouponDiscount,
+} from "@/util/orderCoupon";
 
 const OrderHistoryPage = () => {
     const router = useRouter();
@@ -347,18 +352,16 @@ const OrderHistoryPage = () => {
                                                         <p className="font-bold text-primary text-lg">
                                                             ₦{amountFormatter(
                                                                 Number(
-                                                                    order.order_total_due ||
-                                                                    order.order?.totalPriceDue ||
+                                                                    getOrderAmountDue(order) ??
                                                                     order.order_price_subtotal
                                                                 ).toFixed(2)
                                                             )}
                                                         </p>
-                                                        {Number(order.coupon_discount || order.order?.coupon_discount || 0) > 0 ? (
+                                                        {getOrderCouponDiscount(order) > 0 ? (
                                                             <p className="text-xs font-medium text-emerald-700">
-                                                                Coupon −₦{amountFormatter(Number(order.coupon_discount || order.order?.coupon_discount).toFixed(2))}
-                                                                {(order.coupon_code || order.order?.coupon_code)
-                                                                    ? ` · ${order.coupon_code || order.order?.coupon_code}`
-                                                                    : ""}
+                                                                {formatCouponDiscountLabel(order, (n) =>
+                                                                    `₦${amountFormatter(Number(n).toFixed(2))}`
+                                                                )}
                                                             </p>
                                                         ) : null}
                                                     </div>
