@@ -358,7 +358,18 @@ const OrderSummary = ({
         </div>
         <div className="mt-2 min-h-[1.25rem]">
           {couponError ? (
-            <p className="text-xs text-rose-600">{couponError}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-rose-600">{couponError}</p>
+              {onRemoveCoupon && couponCode?.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => onRemoveCoupon()}
+                  className="shrink-0 text-xs font-semibold text-rose-600 underline-offset-2 hover:underline"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
           ) : couponDiscount > 0 ? (
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-emerald-700">
@@ -376,6 +387,16 @@ const OrderSummary = ({
             </div>
           ) : couponBusy ? (
             <p className="text-xs text-slate-500">Checking coupon…</p>
+          ) : couponCode?.trim() && onRemoveCoupon ? (
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => onRemoveCoupon()}
+                className="text-xs font-semibold text-rose-600 underline-offset-2 hover:underline"
+              >
+                Clear code
+              </button>
+            </div>
           ) : null}
         </div>
       </div>

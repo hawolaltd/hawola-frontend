@@ -281,12 +281,12 @@ function SpotlightAppDownloadBox({
   appStoreUrl?: string | null;
 }) {
   return (
-    <div className="flex min-h-[112px] flex-col items-center justify-center gap-3 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-4 text-center shadow-sm ring-1 ring-slate-800/80 sm:min-h-[128px]">
+    <div className="flex h-full min-h-[100px] flex-col items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-3 py-3 text-center shadow-sm ring-1 ring-slate-800/80 sm:min-h-[128px] sm:gap-3 sm:px-4 sm:py-4">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-200/90">
           Shop on the go
         </p>
-        <p className="mt-1 text-sm leading-snug text-slate-100">
+        <p className="mt-1 text-xs leading-snug text-slate-100 sm:text-sm">
           Get the Hawola app for faster checkout, live deals, and order tracking.
         </p>
       </div>
@@ -296,7 +296,7 @@ function SpotlightAppDownloadBox({
         variant="inline"
         tone="dark"
         layout="badgesOnly"
-        className="flex justify-center [&_img]:h-9"
+        className="flex justify-center [&_img]:h-8 sm:[&_img]:h-9"
       />
     </div>
   );
@@ -328,15 +328,15 @@ function SpotlightRailTheme({ carouselSlides, sideSlides, playStoreUrl, appStore
         </div>
 
         {/* Mobile: 2 small banners on one row. App promo hidden on mobile, full rail on sm+. */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="mt-5 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4">
           {rail.map((slide) => (
             <PromoTile
               key={slide.key}
               slide={slide}
-              className="min-h-[100px] rounded-xl shadow-sm ring-1 ring-slate-200/80 sm:min-h-[128px]"
+              className="aspect-[2.4/1] h-full min-h-[100px] rounded-xl shadow-sm ring-1 ring-slate-200/80 sm:min-h-[128px]"
             />
           ))}
-          <div className="hidden sm:block sm:col-span-1">
+          <div className="hidden aspect-[2.4/1] h-full min-h-[128px] sm:block sm:col-span-1">
             <SpotlightAppDownloadBox playStoreUrl={playStoreUrl} appStoreUrl={appStoreUrl} />
           </div>
         </div>

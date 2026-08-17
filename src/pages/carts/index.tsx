@@ -1095,7 +1095,9 @@ const CartPage = () => {
                 setCouponCode(code);
                 setCouponError(null);
                 if (!code.trim()) {
+                  couponApplyGenRef.current += 1;
                   setCouponDiscount(0);
+                  setCouponBusy(false);
                   clearPendingCouponCode();
                   couponAutoAppliedRef.current = "";
                 }
@@ -1105,9 +1107,11 @@ const CartPage = () => {
                 void applyCouponCode(couponCode);
               }}
               onRemoveCoupon={() => {
+                couponApplyGenRef.current += 1;
                 setCouponCode("");
                 setCouponDiscount(0);
                 setCouponError(null);
+                setCouponBusy(false);
                 clearPendingCouponCode();
                 couponAutoAppliedRef.current = "";
                 toast.message("Coupon removed");
