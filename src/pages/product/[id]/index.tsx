@@ -53,6 +53,7 @@ import {
 } from "@/util/sanitizeRichNotice";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
+import ProductNegotiationOfferHost from "@/components/product/detail/ProductNegotiationOfferHost";
 import ProductGalleryLightbox from "@/components/product/ProductGalleryLightbox";
 import FallbackProductImage from "@/components/product/FallbackProductImage";
 import {
@@ -1173,6 +1174,16 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
                 productName={product.product.name}
                 merchantStoreName={product.product.merchant?.store_name}
                 stackAboveStickyFooter={!contactMerchantOnly && Boolean(product?.product?.id)}
+            />
+        ) : null}
+        {productMatchesRoute &&
+        product?.product?.id &&
+        product.product.allow_price_negotiation &&
+        !contactMerchantOnly ? (
+            <ProductNegotiationOfferHost
+                productId={product.product.id}
+                productSlug={product.product.slug}
+                enabled={mainReady}
             />
         ) : null}
     </AuthLayout>);

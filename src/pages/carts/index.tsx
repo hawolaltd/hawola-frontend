@@ -34,6 +34,13 @@ import {
   resolvePendingCouponCode,
   savePendingCouponCode,
 } from "@/lib/pendingCoupon";
+import {
+  clearNegotiationCartNudge,
+  readNegotiationCartNudge,
+  trackNegotiationEvent,
+  type NegotiationCartNudge,
+} from "@/services/negotiationService";
+import NegotiationCartNudgeBanner from "@/components/cart/NegotiationCartNudge";
 
 interface OrderItem {
   product: number;
@@ -112,6 +119,8 @@ const CartPage = () => {
   /** Codes we've already auto-applied successfully this visit */
   const couponAutoAppliedRef = React.useRef<string>("");
   const couponApplyGenRef = React.useRef(0);
+  const cartNudgeShownRef = React.useRef(false);
+  const [cartNudge, setCartNudge] = useState<NegotiationCartNudge | null>(null);
   const router = useRouter();
   const [pendingUpdates, setPendingUpdates] = useState<{
     [id: number]: number;
@@ -328,6 +337,37 @@ const CartPage = () => {
     },
     [couponGoodsTotal, shippingCost, cartItems, selectedItems, pendingUpdates]
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nudge = readNegotiationCartNudge();
+    if (!nudge) {
+      setCartNudge(null);
+      return;
+    }
+    const productInCart = cartItems.some(
+      (item) => Number(item?.product?.id) === Number(nudge.product_id)
+    );
+    const alreadyUsing =
+      (couponCode || "").trim().toUpperCase() === nudge.code ||
+      couponDiscount > 0;
+    if (!productInCart || alreadyUsing) {
+      setCartNudge(null);
+      return;
+    }
+    setCartNudge(nudge);
+  }, [cartItems, couponCode, couponDiscount]);
+
+  useEffect(() => {
+    if (!cartNudge || cartNudgeShownRef.current) return;
+    cartNudgeShownRef.current = true;
+    trackNegotiationEvent({
+      event: "cart_shown",
+      channel: "cart",
+      product_id: cartNudge.product_id,
+      coupon_code: cartNudge.code,
+    });
+  }, [cartNudge]);
 
   // Seed code into the field once (no validate yet — avoids error flicker)
   useEffect(() => {
@@ -1061,6 +1101,41 @@ const CartPage = () => {
             id="cart-order-summary"
             className="scroll-mt-4 max-md:rounded-2xl max-md:overflow-hidden max-md:shadow-sm lg:w-1/3"
           >
+            {cartNudge ? (
+              <NegotiationCartNudgeBanner
+                nudge={cartNudge}
+                busy={couponBusy}
+                onApply={() => {
+                  trackNegotiationEvent({
+                    event: "cart_applied",
+                    channel: "cart",
+                    product_id: cartNudge.product_id,
+                    coupon_code: cartNudge.code,
+                  });
+                  savePendingCouponCode(cartNudge.code, {
+                    discount_type: cartNudge.discount_type || "fixed",
+                    value: Number(cartNudge.value) || 0,
+                    scope: "products",
+                    product_ids: cartNudge.product_ids?.length
+                      ? cartNudge.product_ids
+                      : [cartNudge.product_id],
+                  });
+                  clearNegotiationCartNudge();
+                  setCartNudge(null);
+                  void applyCouponCode(cartNudge.code);
+                }}
+                onDismiss={() => {
+                  trackNegotiationEvent({
+                    event: "cart_dismissed",
+                    channel: "cart",
+                    product_id: cartNudge.product_id,
+                    coupon_code: cartNudge.code,
+                  });
+                  clearNegotiationCartNudge();
+                  setCartNudge(null);
+                }}
+              />
+            ) : null}
             <OrderSummary
               cartDataLoading={showCartLinesLoading}
               subtotal={selectedSubtotal || 0}

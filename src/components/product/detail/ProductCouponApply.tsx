@@ -42,7 +42,12 @@ export default function ProductCouponApply({
       const amount = Number(data.amount_saved) || 0;
       setSaved(amount);
       setApplied((data.code || raw).toUpperCase());
-      savePendingCouponCode(data.code || raw);
+      savePendingCouponCode(data.code || raw, {
+        discount_type: data.discount_type,
+        value: Number(data.value) || 0,
+        scope: "products",
+        product_ids: data.product_ids?.length ? data.product_ids : [productId],
+      });
       toast.success(
         amount > 0
           ? `Coupon applied — save ${formatCurrency(amount)}`

@@ -106,6 +106,8 @@ export interface Product {
     tags?: Array<{ id: number; name: string; slug: string }>;
     contact_merchant_only?: boolean;
     product_reels?: ProductReel[];
+    allow_price_negotiation?: boolean;
+    negotiation_floor_price?: string | null;
 }
 
 export interface ProductResponse {
