@@ -272,6 +272,12 @@ const confirmTwoFactorSetup = async (setupToken: string, code: string) => {
     setup_token: setupToken,
     code,
   });
+  if (response.data?.access) {
+    Cookies.set(authTokenStorageKeyName as string, response.data.access);
+  }
+  if (response.data?.refresh) {
+    Cookies.set(authRefreshTokenStorageKeyName as string, response.data.refresh);
+  }
   return response.data;
 };
 
