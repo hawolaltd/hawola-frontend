@@ -12,6 +12,7 @@ import { getUserProfile, updateProfile, changePassword } from "@/redux/auth/auth
 import { getAddress } from "@/redux/product/productSlice";
 import { capitalize } from "@/util";
 import { toast } from "sonner";
+import TwoFactorSettings from "@/components/account/TwoFactorSettings";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-detailsBorder bg-white px-4 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500";
@@ -381,6 +382,14 @@ const Settings: NextPage = () => {
                 </div>
               </div>
             )}
+          </SectionCard>
+
+          <SectionCard
+            title="Authenticator 2FA"
+            description="Strongly recommended. Adds a second verification step so a stolen password alone cannot access your account, orders, or saved addresses."
+            icon={KeyIcon}
+          >
+            <TwoFactorSettings />
           </SectionCard>
 
           <section className="rounded-2xl border border-red-200/80 bg-red-50/40 p-5 sm:p-6">

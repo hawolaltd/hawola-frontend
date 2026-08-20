@@ -212,6 +212,21 @@ export const verifyLoginCode = createAsyncThunk(
   }
 );
 
+export const verifyTwoFactorLogin = createAsyncThunk(
+  "auth/verifyTwoFactorLogin",
+  async (data: { pending_token: string; code: string }, thunkAPI) => {
+    try {
+      return await authService.verifyTwoFactorLogin(data.pending_token, data.code);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Invalid authenticator code.";
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // forgot Password
 export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
@@ -356,10 +371,11 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
+        if (action.payload?.requires_2fa) {
+          state.isAuthenticated = false;
+          return;
+        }
         state.isAuthenticated = true;
-        // dj-rest-auth login returns { access, refresh, user }
-        // keep only user object in state.user for UI simplicity
-        // but fall back gracefully if shape differs
         // @ts-ignore
         state.user = action.payload?.user || action.payload;
       })
@@ -368,6 +384,10 @@ const authSlice = createSlice({
       })
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
         state.isLoading = false;
+        if (action.payload?.requires_2fa) {
+          state.isAuthenticated = false;
+          return;
+        }
         state.isAuthenticated = true;
         // @ts-ignore
         state.user = action.payload?.user || action.payload;
@@ -480,12 +500,29 @@ const authSlice = createSlice({
       })
       .addCase(verifyLoginCode.fulfilled, (state, action) => {
         state.isLoading = false;
+        if (action.payload?.requires_2fa) {
+          state.isAuthenticated = false;
+          return;
+        }
         state.isAuthenticated = true;
-        // Response shape from /login/code/verify/ matches normal login
         // @ts-ignore
         state.user = action.payload?.user || action.payload;
       })
       .addCase(verifyLoginCode.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload;
+      })
+      .addCase(verifyTwoFactorLogin.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyTwoFactorLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload?.user || action.payload;
+        state.profile = action.payload?.user || state.profile;
+      })
+      .addCase(verifyTwoFactorLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = true;
         state.message = action.payload;

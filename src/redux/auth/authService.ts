@@ -72,13 +72,17 @@ const login = async (userData: LoginFormType) => {
     });
 
     if (response.data) {
-      Cookies.set(authTokenStorageKeyName as string, response.data.access);
-      Cookies.set(
-        authRefreshTokenStorageKeyName as string,
-        response.data.refresh
-      );
-      // localStorage.setItem(authTokenStorageKeyName as string, response.data.access)
-      // localStorage.setItem(authRefreshTokenStorageKeyName as string, response.data.refresh)
+      if (!response.data.requires_2fa) {
+        if (response.data.access) {
+          Cookies.set(authTokenStorageKeyName as string, response.data.access);
+        }
+        if (response.data.refresh) {
+          Cookies.set(
+            authRefreshTokenStorageKeyName as string,
+            response.data.refresh
+          );
+        }
+      }
     }
 
     return response.data;
@@ -111,12 +115,16 @@ const verifyLoginCode = async (data: LoginCodeVerifyPayload) => {
     data
   );
 
-  if (response.data) {
-    Cookies.set(authTokenStorageKeyName as string, response.data.access);
-    Cookies.set(
-      authRefreshTokenStorageKeyName as string,
-      response.data.refresh
-    );
+  if (response.data && !response.data.requires_2fa) {
+    if (response.data.access) {
+      Cookies.set(authTokenStorageKeyName as string, response.data.access);
+    }
+    if (response.data.refresh) {
+      Cookies.set(
+        authRefreshTokenStorageKeyName as string,
+        response.data.refresh
+      );
+    }
   }
 
   return response.data;
@@ -204,6 +212,9 @@ const googleLogin = async (authToken: string) => {
   );
 
   const data = response.data;
+  if (data?.requires_2fa) {
+    return data;
+  }
   const access = data.access || data.tokens?.access_token;
   const refresh = data.refresh || data.tokens?.refresh_token;
 
@@ -232,6 +243,46 @@ const requestAccountDeletion = async (message?: string) => {
   return response.data;
 };
 
+const verifyTwoFactorLogin = async (pendingToken: string, code: string) => {
+  const response = await axiosInstance.post(API + API_URL + "/2fa/verify/", {
+    pending_token: pendingToken,
+    code,
+  });
+  if (response.data?.access) {
+    Cookies.set(authTokenStorageKeyName as string, response.data.access);
+  }
+  if (response.data?.refresh) {
+    Cookies.set(authRefreshTokenStorageKeyName as string, response.data.refresh);
+  }
+  return response.data;
+};
+
+const getTwoFactorStatus = async () => {
+  const response = await axiosInstance.get(API + API_URL + "/2fa/status/");
+  return response.data;
+};
+
+const startTwoFactorSetup = async () => {
+  const response = await axiosInstance.post(API + API_URL + "/2fa/setup/start/", {});
+  return response.data;
+};
+
+const confirmTwoFactorSetup = async (setupToken: string, code: string) => {
+  const response = await axiosInstance.post(API + API_URL + "/2fa/setup/confirm/", {
+    setup_token: setupToken,
+    code,
+  });
+  return response.data;
+};
+
+const disableTwoFactor = async (code: string, password: string) => {
+  const response = await axiosInstance.post(API + API_URL + "/2fa/disable/", {
+    code,
+    password,
+  });
+  return response.data;
+};
+
 const authService = {
   register,
   logout,
@@ -239,6 +290,11 @@ const authService = {
   googleLogin,
   requestLoginCode,
   verifyLoginCode,
+  verifyTwoFactorLogin,
+  getTwoFactorStatus,
+  startTwoFactorSetup,
+  confirmTwoFactorSetup,
+  disableTwoFactor,
   changePassword,
   forgotPassword,
   resetPassword,

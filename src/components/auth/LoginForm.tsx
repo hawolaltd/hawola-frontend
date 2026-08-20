@@ -123,6 +123,16 @@ export default function LoginForm() {
             
             // @ts-ignore
             const hasAccessToken = isFulfilled && res?.payload?.access;
+            const requires2fa = isFulfilled && res?.payload?.requires_2fa;
+
+            if (requires2fa) {
+                const pending = res?.payload?.pending_token;
+                const twoFactorEmail = res?.payload?.email || loginPayload.email;
+                router.push(
+                    `/auth/two-factor?pending=${encodeURIComponent(pending)}&email=${encodeURIComponent(twoFactorEmail)}&redirect=${encodeURIComponent(redirectTarget)}`
+                );
+                return;
+            }
 
             if (hasAccessToken){
                 toast.success("Welcome Back to HAWOLA")
@@ -278,6 +288,12 @@ export default function LoginForm() {
                                     const token = credentialResponse.credential;
                                     if (!token) return;
                                     const res = await dispatch(loginWithGoogle(token));
+                                    if (res?.type?.includes?.("fulfilled") && res?.payload?.requires_2fa) {
+                                        router.push(
+                                            `/auth/two-factor?pending=${encodeURIComponent(res.payload.pending_token)}&email=${encodeURIComponent(res.payload.email || "")}&redirect=${encodeURIComponent(redirectTarget)}`
+                                        );
+                                        return;
+                                    }
                                     if (res?.type?.includes?.("fulfilled")) {
                                         toast.success("Welcome Back to HAWOLA");
                                         void mergeGuestCartAfterLogin(dispatch, localCart?.items || []);

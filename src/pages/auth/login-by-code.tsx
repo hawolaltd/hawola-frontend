@@ -30,6 +30,17 @@ export default function LoginByCode() {
       );
 
       if (res?.type.includes("fulfilled")) {
+        if ((res as { payload?: { requires_2fa?: boolean; pending_token?: string; email?: string } }).payload?.requires_2fa) {
+          const payload = (res as { payload: { pending_token: string; email?: string } }).payload;
+          const target =
+            typeof redirect === "string" && redirect.startsWith("/")
+              ? redirect
+              : "/";
+          router.replace(
+            `/auth/two-factor?pending=${encodeURIComponent(payload.pending_token)}&email=${encodeURIComponent(payload.email || email)}&redirect=${encodeURIComponent(target)}`
+          );
+          return;
+        }
         toast.success("You are now signed in.");
         const target =
           typeof redirect === "string" && redirect.startsWith("/")

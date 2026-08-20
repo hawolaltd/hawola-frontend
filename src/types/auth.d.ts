@@ -69,6 +69,7 @@ export interface UserProfileResponse {
     telegram_connected?: boolean;
     telegram_order_notifications_enabled?: boolean;
     merchant_profile_id?: number | null;
+    totp_enabled?: boolean;
 }
 
 export interface UpdateProfileDataType {
