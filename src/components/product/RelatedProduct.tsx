@@ -18,13 +18,45 @@ const RelatedProduct = ({ product }: ProductCardProps) => {
   const sameMerchant = useMemo(() => {
     const raw = product?.merchant_other_products;
     if (!Array.isArray(raw)) return [];
-    return raw.filter(Boolean).slice(0, RELATED_LIMIT);
+    const seen = new Set<number | string>();
+    const unique = [];
+    for (const item of raw) {
+      if (!item) continue;
+      const key = item.id ?? item.slug;
+      if (key == null || seen.has(key)) continue;
+      seen.add(key);
+      unique.push(item);
+      if (unique.length >= RELATED_LIMIT) break;
+    }
+    return unique;
   }, [product?.merchant_other_products]);
 
   const fromOthers = useMemo(() => {
     const raw = product?.recommended_products;
     if (!Array.isArray(raw)) return [];
-    return raw.filter(Boolean).slice(0, OTHER_SELLERS_LIMIT);
+    const seenIds = new Set<number | string>();
+    const seenMerchantTitles = new Set<string>();
+    const unique = [];
+    for (const item of raw) {
+      if (!item) continue;
+      const idKey = item.id ?? item.slug;
+      if (idKey == null || seenIds.has(idKey)) continue;
+      const merchantKey =
+        item.merchant?.id ??
+        item.merchant?.store_name ??
+        item.store_name ??
+        "";
+      const titleKey = `${merchantKey}::${String(item.name || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")}`;
+      if (seenMerchantTitles.has(titleKey)) continue;
+      seenIds.add(idKey);
+      seenMerchantTitles.add(titleKey);
+      unique.push(item);
+      if (unique.length >= OTHER_SELLERS_LIMIT) break;
+    }
+    return unique;
   }, [product?.recommended_products]);
 
   if (sameMerchant.length === 0 && fromOthers.length === 0) {
