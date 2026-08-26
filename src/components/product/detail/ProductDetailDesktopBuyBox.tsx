@@ -19,6 +19,7 @@ import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import ProductDetailShippingLines from "@/components/product/detail/ProductDetailShippingLines";
 import ProductCouponApply from "@/components/product/detail/ProductCouponApply";
+import ProductTitleReelLink from "@/components/product/detail/ProductTitleReelLink";
 
 type Props = {
   displayName: string;
@@ -101,6 +102,7 @@ export default function ProductDetailDesktopBuyBox({
         <h1 className="text-[1.75rem] font-bold leading-tight text-slate-900 capitalize xl:text-[2rem]">
           {displayName}
         </h1>
+        <ProductTitleReelLink reels={p?.product_reels} />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {merchantSlug ? (
             <MerchantStoreLink

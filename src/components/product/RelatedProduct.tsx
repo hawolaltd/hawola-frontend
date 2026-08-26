@@ -44,7 +44,6 @@ const RelatedProduct = ({ product }: ProductCardProps) => {
       const merchantKey =
         item.merchant?.id ??
         item.merchant?.store_name ??
-        item.store_name ??
         "";
       const titleKey = `${merchantKey}::${String(item.name || "")
         .trim()

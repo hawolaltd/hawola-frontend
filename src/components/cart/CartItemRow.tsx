@@ -16,6 +16,7 @@ const CartItemRow = ({
   canShip,
   shippingBlockReason,
   directMerchantMode,
+  couponLine = null,
 }: {
   cart: CartItem | any;
   updateQuantity: (id: number, change: number) => void;
@@ -28,6 +29,11 @@ const CartItemRow = ({
   canShip?: boolean;
   shippingBlockReason?: string;
   directMerchantMode?: boolean;
+  couponLine?: {
+    lineBefore: number;
+    lineAfter: number;
+    lineSaved: number;
+  } | null;
 }) => {
   const cartId = cart.id || cart.product?.id;
   const effectiveQty = Math.max(1, cart.qty + (pendingUpdates[cartId] || 0));
@@ -42,8 +48,59 @@ const CartItemRow = ({
     ? +cart.product.discount_price
     : +cart?.product?.price;
   const lineTotal = unitPrice * effectiveQty;
+  const showCouponPrice =
+    Boolean(couponLine) &&
+    Number(couponLine?.lineSaved || 0) > 0 &&
+    Number(couponLine?.lineAfter) < Number(couponLine?.lineBefore);
+  const displayLineTotal = showCouponPrice
+    ? Number(couponLine!.lineAfter)
+    : lineTotal;
+  const unitAfter = showCouponPrice
+    ? Math.round((Number(couponLine!.lineAfter) / effectiveQty) * 100) / 100
+    : unitPrice;
 
   const priceDisplay = (n: number) => formatCurrency(n.toFixed(2));
+
+  const linePriceBlock = (
+    <div className="flex flex-col items-end gap-0.5">
+      {showCouponPrice ? (
+        <>
+          <span className="text-xs text-slate-400 line-through tabular-nums">
+            {priceDisplay(lineTotal)}
+          </span>
+          <span className="text-xl font-bold tabular-nums text-emerald-700 md:text-base md:font-semibold">
+            {priceDisplay(displayLineTotal)}
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+            Coupon applied
+          </span>
+        </>
+      ) : (
+        <span className="text-xl font-bold tabular-nums text-primary md:text-base md:font-semibold md:text-inherit">
+          {priceDisplay(lineTotal)}
+        </span>
+      )}
+    </div>
+  );
+
+  const unitPriceBlock = (
+    <div className="flex flex-col items-end gap-0.5 md:items-center">
+      {showCouponPrice ? (
+        <>
+          <span className="text-xs text-slate-400 line-through tabular-nums">
+            {priceDisplay(unitPrice)}
+          </span>
+          <span className="text-sm font-semibold tabular-nums text-emerald-700">
+            {priceDisplay(unitAfter)}
+          </span>
+        </>
+      ) : (
+        <span className="text-sm font-semibold text-headerBg md:font-semibold">
+          {priceDisplay(unitPrice)}
+        </span>
+      )}
+    </div>
+  );
 
   const badges = (
     <>
@@ -205,9 +262,7 @@ const CartItemRow = ({
               <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                 Price each
               </span>
-              <span className="text-sm font-semibold text-headerBg">
-                {priceDisplay(unitPrice)}
-              </span>
+              {unitPriceBlock}
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-3">
@@ -222,9 +277,7 @@ const CartItemRow = ({
                 </p>
                 {shippingMeta}
               </div>
-              <p className="text-xl font-bold tabular-nums text-primary">
-                {priceDisplay(lineTotal)}
-              </p>
+              {linePriceBlock}
             </div>
           </div>
         </div>
@@ -304,7 +357,7 @@ const CartItemRow = ({
 
             <div className="col-span-2 text-center">
               <span className="mr-2 font-medium md:hidden">Price:</span>
-              <span className="font-semibold">{priceDisplay(unitPrice)}</span>
+              {unitPriceBlock}
             </div>
 
             <div className="col-span-2 flex justify-center">{desktopQty}</div>
@@ -312,7 +365,7 @@ const CartItemRow = ({
             <div className="col-span-2 text-center">
               <span className="mr-2 font-medium md:hidden">Subtotal:</span>
               <div className="flex flex-col items-center">
-                <span className="font-semibold">{priceDisplay(lineTotal)}</span>
+                {linePriceBlock}
                 {shippingCost !== undefined && shippingCost > 0 && (
                   <span className="mt-1 text-xs text-gray-500">
                     + {priceDisplay(shippingCost)} shipping

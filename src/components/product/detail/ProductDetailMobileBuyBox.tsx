@@ -21,6 +21,7 @@ import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import ProductDetailShippingLines from "@/components/product/detail/ProductDetailShippingLines";
 import ProductCouponApply from "@/components/product/detail/ProductCouponApply";
+import ProductTitleReelLink from "@/components/product/detail/ProductTitleReelLink";
 
 type Props = {
   displayName: string;
@@ -92,9 +93,12 @@ export default function ProductDetailMobileBuyBox({
 
   return (
     <div className="space-y-4 border-t border-slate-100 pt-4 lg:hidden">
-      <h1 className="text-[1.35rem] font-bold leading-snug text-slate-900 capitalize">
-        {displayName}
-      </h1>
+      <div>
+        <h1 className="text-[1.35rem] font-bold leading-snug text-slate-900 capitalize">
+          {displayName}
+        </h1>
+        <ProductTitleReelLink reels={p?.product_reels} />
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         {merchantSlug ? (

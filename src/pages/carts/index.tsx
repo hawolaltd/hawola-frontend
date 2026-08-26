@@ -41,6 +41,14 @@ import {
   type NegotiationCartNudge,
 } from "@/services/negotiationService";
 import NegotiationCartNudgeBanner from "@/components/cart/NegotiationCartNudge";
+import { allocateCartCouponByProduct } from "@/lib/storeCouponDiscount";
+
+type AppliedCouponMeta = {
+  amountSaved: number;
+  discountGoods: number;
+  discountShipping: number;
+  productIds: number[];
+};
 
 interface OrderItem {
   product: number;
@@ -114,6 +122,7 @@ const CartPage = () => {
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponMeta, setCouponMeta] = useState<AppliedCouponMeta | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
   /** Codes we've already auto-applied successfully this visit */
@@ -254,6 +263,46 @@ const CartPage = () => {
     );
   }, [selectedSubtotal, cartItems, pendingUpdates]);
 
+  const couponLineByProduct = useMemo(() => {
+    if (!couponMeta || couponDiscount <= 0) return {};
+    const goodsDiscount =
+      Number(couponMeta.discountGoods) > 0
+        ? Number(couponMeta.discountGoods)
+        : Number(couponMeta.discountShipping) > 0
+          ? 0
+          : couponDiscount;
+    if (goodsDiscount <= 0) return {};
+    const selectedLines = cartItems.filter((item) =>
+      selectedItems.includes(item.id)
+    );
+    const lines = (selectedLines.length ? selectedLines : cartItems).map(
+      (item) => {
+        const unit = Number(
+          item?.product?.discount_price || item?.product?.price || 0
+        );
+        const qty = Math.max(
+          1,
+          Number(item?.qty || 1) + (pendingUpdates[item?.id] || 0)
+        );
+        return {
+          productId: Number(item?.product?.id || 0),
+          lineTotal: unit * qty,
+        };
+      }
+    );
+    return allocateCartCouponByProduct(lines, {
+      amountSaved: couponMeta.amountSaved,
+      discountGoods: goodsDiscount,
+      productIds: couponMeta.productIds,
+    });
+  }, [
+    couponMeta,
+    couponDiscount,
+    cartItems,
+    selectedItems,
+    pendingUpdates,
+  ]);
+
   const applyCouponCode = useCallback(
     async (
       rawCode: string,
@@ -309,7 +358,16 @@ const CartPage = () => {
         });
         if (gen !== couponApplyGenRef.current) return;
         const applied = (data.code || code).trim().toUpperCase();
-        setCouponDiscount(Number(data.amount_saved) || 0);
+        const saved = Number(data.amount_saved) || 0;
+        setCouponDiscount(saved);
+        setCouponMeta({
+          amountSaved: saved,
+          discountGoods: Number(data.discount_goods) || 0,
+          discountShipping: Number(data.discount_shipping) || 0,
+          productIds: Array.isArray(data.product_ids)
+            ? data.product_ids.map(Number).filter((id: number) => id > 0)
+            : [],
+        });
         setCouponCode(applied);
         setCouponError(null);
         savePendingCouponCode(applied);
@@ -321,6 +379,7 @@ const CartPage = () => {
       } catch (e: any) {
         if (gen !== couponApplyGenRef.current) return;
         setCouponDiscount(0);
+        setCouponMeta(null);
         setCouponCode(code);
         // Silent auto-apply: don't flash errors while cart is still settling
         if (!silent) {
@@ -1071,6 +1130,11 @@ const CartPage = () => {
                         shippingType={itemShippingType}
                         canShip={canShipToAddress}
                         shippingBlockReason={shippingBlockReason}
+                        couponLine={
+                          couponLineByProduct[
+                            Number(cart?.product?.id || 0)
+                          ] || null
+                        }
                       />
                     );
                   })
@@ -1164,6 +1228,10 @@ const CartPage = () => {
               checkoutBlockedBySelfPurchase={hasSelectedSelfPurchase}
               couponCode={couponCode}
               couponDiscount={couponDiscount}
+              couponGoodsDiscount={
+                couponMeta?.discountGoods ||
+                (couponMeta?.discountShipping ? 0 : couponDiscount)
+              }
               couponBusy={couponBusy}
               couponError={couponError}
               onCouponChange={(code) => {
@@ -1172,6 +1240,7 @@ const CartPage = () => {
                 if (!code.trim()) {
                   couponApplyGenRef.current += 1;
                   setCouponDiscount(0);
+                  setCouponMeta(null);
                   setCouponBusy(false);
                   clearPendingCouponCode();
                   couponAutoAppliedRef.current = "";
@@ -1185,6 +1254,7 @@ const CartPage = () => {
                 couponApplyGenRef.current += 1;
                 setCouponCode("");
                 setCouponDiscount(0);
+                setCouponMeta(null);
                 setCouponError(null);
                 setCouponBusy(false);
                 clearPendingCouponCode();
@@ -1217,11 +1287,26 @@ const CartPage = () => {
               <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
                 Order total
               </p>
-              <p className="mt-0.5 truncate text-xl font-bold tabular-nums text-headerBg">
-                {formatCurrency(
-                  Math.max(0, (total || 0) - (couponDiscount || 0)).toFixed(2)
-                )}
-              </p>
+              {couponDiscount > 0 ? (
+                <div className="mt-0.5">
+                  <p className="text-sm text-slate-400 line-through tabular-nums">
+                    {formatCurrency((total || 0).toFixed(2))}
+                  </p>
+                  <p className="truncate text-xl font-bold tabular-nums text-emerald-700">
+                    {formatCurrency(
+                      Math.max(0, (total || 0) - (couponDiscount || 0)).toFixed(
+                        2
+                      )
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-0.5 truncate text-xl font-bold tabular-nums text-headerBg">
+                  {formatCurrency(
+                    Math.max(0, (total || 0) - (couponDiscount || 0)).toFixed(2)
+                  )}
+                </p>
+              )}
               <p className="mt-0.5 truncate text-xs text-slate-500">
                 {selectedItems.length === 0
                   ? "Select items to check out"

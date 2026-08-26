@@ -254,18 +254,25 @@ function FlashCard({
     <>
       {/* Mobile: fixed thin bottom strip */}
       <div
-        className="pointer-events-auto w-full animate-[hawolaStripIn_0.28s_ease-out] sm:hidden"
+        className="pointer-events-auto w-full animate-[hawolaStripIn_0.28s_ease-out,hawolaAttention_1.1s_ease-in-out_4] sm:hidden"
         role="status"
       >
-        <div className="border-t-2 border-[#FD9636] bg-[#0E224D] text-white shadow-[0_-6px_20px_rgba(0,0,0,0.2)]">
-          <div className="h-0.5 w-full bg-white/10">
+        <div className="relative border-t-2 border-[#FD9636] bg-[#0E224D] text-white shadow-[0_-6px_20px_rgba(0,0,0,0.2)]">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-2 -top-1 bottom-0 rounded-t-xl bg-[#FD9636]/35 blur-md animate-[hawolaGlowPulse_1.1s_ease-in-out_5]"
+          />
+          <div className="relative h-0.5 w-full bg-white/10">
             <div
               className="h-full bg-[#5BC694] transition-[width] duration-100 ease-linear"
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </div>
-          <div className="flex min-h-11 items-center gap-2 px-2.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-            <span className="shrink-0 text-base leading-none" aria-hidden>
+          <div className="relative flex min-h-11 items-center gap-2 px-2.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <span
+              className="inline-block shrink-0 origin-center text-base leading-none animate-[hawolaAttention_0.85s_ease-in-out_6]"
+              aria-hidden
+            >
               {meta.icon}
             </span>
             <div className="min-w-0 flex-1">

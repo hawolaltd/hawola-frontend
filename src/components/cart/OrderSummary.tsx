@@ -56,6 +56,7 @@ const OrderSummary = ({
   checkoutBlockedBySelfPurchase = false,
   couponCode = "",
   couponDiscount = 0,
+  couponGoodsDiscount = 0,
   onCouponChange,
   onApplyCoupon,
   onRemoveCoupon,
@@ -88,6 +89,8 @@ const OrderSummary = ({
   selfPurchaseWarning?: string | null;
   couponCode?: string;
   couponDiscount?: number;
+  /** Goods-only portion of the coupon (excludes free-shipping savings). */
+  couponGoodsDiscount?: number;
   onCouponChange?: (code: string) => void;
   onApplyCoupon?: () => void;
   onRemoveCoupon?: () => void;
@@ -157,9 +160,22 @@ const OrderSummary = ({
           <>
         <div className="flex justify-between">
           <span>Subtotal:</span>
-          <span className="font-semibold">
-            {formatCurrency(subtotal.toFixed(2))}
-          </span>
+          {couponGoodsDiscount > 0 ? (
+            <span className="flex flex-col items-end gap-0.5">
+              <span className="text-xs text-slate-400 line-through tabular-nums">
+                {formatCurrency(subtotal.toFixed(2))}
+              </span>
+              <span className="font-semibold tabular-nums text-emerald-700">
+                {formatCurrency(
+                  Math.max(0, subtotal - couponGoodsDiscount).toFixed(2)
+                )}
+              </span>
+            </span>
+          ) : (
+            <span className="font-semibold">
+              {formatCurrency(subtotal.toFixed(2))}
+            </span>
+          )}
         </div>
 
         <div className="flex justify-between">
@@ -373,7 +389,7 @@ const OrderSummary = ({
           ) : couponDiscount > 0 ? (
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-emerald-700">
-                Coupon applied. You can remove it anytime.
+                Coupon Applied
               </p>
               {onRemoveCoupon ? (
                 <button

@@ -6,6 +6,12 @@ export type StorefrontCouponMeta = {
   product_ids: number[];
 };
 
+export type CartLineCouponPrice = {
+  lineBefore: number;
+  lineAfter: number;
+  lineSaved: number;
+};
+
 export function couponAppliesToProduct(
   meta: StorefrontCouponMeta | null | undefined,
   productId: number | null | undefined
@@ -40,4 +46,71 @@ export function formatCouponOfferLabel(meta: {
   const valueNum = Number(meta.value) || 0;
   if (meta.discount_type === "percent") return `${valueNum}% off`;
   return `₦${valueNum.toLocaleString()} off`;
+}
+
+function money(n: number): number {
+  return Math.round(Math.max(0, n) * 100) / 100;
+}
+
+/**
+ * Split a validated coupon's goods discount across cart lines.
+ * - productIds present → only those products (product-scoped coupon)
+ * - productIds empty → all lines (cart/total coupon)
+ */
+export function allocateCartCouponByProduct(
+  lines: Array<{ productId: number; lineTotal: number }>,
+  opts: {
+    amountSaved?: number | string | null;
+    discountGoods?: number | string | null;
+    productIds?: Array<number | string> | null;
+  }
+): Record<number, CartLineCouponPrice> {
+  const goodsDiscount = money(
+    Number(
+      opts.discountGoods != null && opts.discountGoods !== ""
+        ? opts.discountGoods
+        : opts.amountSaved || 0
+    ) || 0
+  );
+  if (goodsDiscount <= 0) return {};
+
+  const scoped = Array.isArray(opts.productIds)
+    ? opts.productIds.map(Number).filter((id) => Number.isFinite(id) && id > 0)
+    : [];
+  const scopeSet = scoped.length ? new Set(scoped) : null;
+
+  const eligible = lines.filter((line) => {
+    const pid = Number(line.productId);
+    const total = Number(line.lineTotal) || 0;
+    if (!Number.isFinite(pid) || pid <= 0 || total <= 0) return false;
+    if (scopeSet && !scopeSet.has(pid)) return false;
+    return true;
+  });
+
+  const eligibleTotal = eligible.reduce(
+    (sum, line) => sum + (Number(line.lineTotal) || 0),
+    0
+  );
+  if (eligibleTotal <= 0) return {};
+
+  const out: Record<number, CartLineCouponPrice> = {};
+  let remaining = goodsDiscount;
+
+  eligible.forEach((line, index) => {
+    const pid = Number(line.productId);
+    const before = money(Number(line.lineTotal) || 0);
+    const isLast = index === eligible.length - 1;
+    let saved = isLast
+      ? remaining
+      : money((goodsDiscount * before) / eligibleTotal);
+    saved = Math.min(before, Math.min(remaining, saved));
+    remaining = money(remaining - saved);
+    out[pid] = {
+      lineBefore: before,
+      lineAfter: money(before - saved),
+      lineSaved: saved,
+    };
+  });
+
+  return out;
 }
