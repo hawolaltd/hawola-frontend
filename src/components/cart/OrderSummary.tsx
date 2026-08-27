@@ -417,6 +417,7 @@ const OrderSummary = ({
         </div>
       </div>
 
+      {/* Temporarily hidden — payment/escrow cart notice
       {directMerchantMode &&
       richTextHasVisibleContent(directMerchantNoticeHtml) ? (
         <div
@@ -424,6 +425,7 @@ const OrderSummary = ({
           dangerouslySetInnerHTML={{ __html: directMerchantNoticeHtml! }}
         />
       ) : null}
+      */}
 
       {/* Show shipping error if exists */}
       {shippingError && (

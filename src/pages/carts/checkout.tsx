@@ -24,6 +24,10 @@ import {
   orderHasSelfPurchase,
   SELF_PURCHASE_CHECKOUT_MESSAGE,
 } from "@/util/merchantSelfPurchase";
+import {
+  getOrderCouponCode,
+  getOrderCouponDiscount,
+} from "@/util/orderCoupon";
 
 /** Opens Paystack once when mounted — no dependency on changing `config` objects (avoids re-initializing on every render). */
 const PaystackOpenOnce = dynamic(
@@ -136,11 +140,11 @@ const CheckoutPage = () => {
   );
 
   const couponDiscount = useMemo(
-    () => Number((orders as any)?.coupon_discount || 0),
+    () => getOrderCouponDiscount(orders as any),
     [orders]
   );
   const couponCode = useMemo(
-    () => String((orders as any)?.coupon_code || "").trim(),
+    () => getOrderCouponCode(orders as any),
     [orders]
   );
   const goodsTotal = useMemo(
@@ -381,8 +385,10 @@ const CheckoutPage = () => {
         <p className="mt-3 text-xs text-white/70">{paymentHint}</p>
         {couponDiscount > 0 ? (
           <p className="mt-2 inline-flex rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-100">
-            Coupon savings {formatCurrency(couponDiscount.toFixed(2))}
+            Coupon Applied
             {couponCode ? ` · ${couponCode}` : ""}
+            {" · "}
+            savings {formatCurrency(couponDiscount.toFixed(2))}
           </p>
         ) : null}
       </div>
@@ -402,12 +408,29 @@ const CheckoutPage = () => {
             </span>
           </div>
           {couponDiscount > 0 ? (
-            <div className="flex justify-between text-secondaryTextColor">
-              <span>Coupon discount</span>
-              <span className="font-semibold tabular-nums">
-                -{formatCurrency(couponDiscount.toFixed(2))}
-              </span>
-            </div>
+            <>
+              <div className="flex justify-between text-slate-600">
+                <span>Total before coupon</span>
+                <span className="font-semibold tabular-nums text-headerBg">
+                  {formatCurrency(beforeCouponTotal.toFixed(2))}
+                </span>
+              </div>
+              <div className="flex justify-between text-secondaryTextColor">
+                <span>
+                  Coupon
+                  {couponCode ? ` (${couponCode})` : ""}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  -{formatCurrency(couponDiscount.toFixed(2))}
+                </span>
+              </div>
+              <div className="flex justify-between font-semibold text-headerBg">
+                <span>Total after coupon</span>
+                <span className="tabular-nums">
+                  {formatCurrency(dueTotal.toFixed(2))}
+                </span>
+              </div>
+            </>
           ) : null}
         </div>
 
@@ -654,6 +677,7 @@ const CheckoutPage = () => {
                   </h2>
                 </div>
                 <div className="mt-4 space-y-3">
+                  {/* Temporarily hidden — payment/escrow notices
                   {escrowDisabled &&
                   richTextHasVisibleContent(nonEscrowCheckoutNoticeSafe) ? (
                     <div
@@ -672,6 +696,7 @@ const CheckoutPage = () => {
                       }}
                     />
                   ) : null}
+                  */}
 
                   {escrowDisabled ? (
                     <p className="text-sm text-slate-600">

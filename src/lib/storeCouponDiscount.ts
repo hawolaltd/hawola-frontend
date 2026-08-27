@@ -53,9 +53,9 @@ function money(n: number): number {
 }
 
 /**
- * Split a validated coupon's goods discount across cart lines.
- * - productIds present → only those products (product-scoped coupon)
- * - productIds empty → all lines (cart/total coupon)
+ * Allocate a coupon's goods discount onto cart lines only when the coupon is
+ * product-scoped (merchant/product coupon with productIds).
+ * Cart/total coupons leave lines alone — discount shows only on the final total.
  */
 export function allocateCartCouponByProduct(
   lines: Array<{ productId: number; lineTotal: number }>,
@@ -77,14 +77,16 @@ export function allocateCartCouponByProduct(
   const scoped = Array.isArray(opts.productIds)
     ? opts.productIds.map(Number).filter((id) => Number.isFinite(id) && id > 0)
     : [];
-  const scopeSet = scoped.length ? new Set(scoped) : null;
+  // General / cart-total coupons: do not split across products.
+  if (!scoped.length) return {};
+
+  const scopeSet = new Set(scoped);
 
   const eligible = lines.filter((line) => {
     const pid = Number(line.productId);
     const total = Number(line.lineTotal) || 0;
     if (!Number.isFinite(pid) || pid <= 0 || total <= 0) return false;
-    if (scopeSet && !scopeSet.has(pid)) return false;
-    return true;
+    return scopeSet.has(pid);
   });
 
   const eligibleTotal = eligible.reduce(

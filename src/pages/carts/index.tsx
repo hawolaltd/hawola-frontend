@@ -31,6 +31,7 @@ import { validateCoupon } from "@/services/couponService";
 import { getOrCreatePresenceSessionKey } from "@/lib/presenceContext";
 import {
   clearPendingCouponCode,
+  readPendingCouponCode,
   resolvePendingCouponCode,
   savePendingCouponCode,
 } from "@/lib/pendingCoupon";
@@ -848,8 +849,11 @@ const CartPage = () => {
         })),
         session_key: getOrCreatePresenceSessionKey(),
       };
-      if (couponCode.trim() && couponDiscount > 0) {
-        orderPayload.coupon_code = couponCode.trim();
+      const codeToSend = (
+        couponCode.trim() || readPendingCouponCode() || ""
+      ).toUpperCase();
+      if (codeToSend) {
+        orderPayload.coupon_code = codeToSend;
       }
       
       console.log("Creating order with payload:", orderPayload);
