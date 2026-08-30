@@ -12,9 +12,10 @@ import {
   getMerchantProfile,
   hydrateMerchantProfileFromSsr,
 } from "@/redux/product/productSlice";
-import { buildMerchantSeo } from "@/util/storefrontSeo";
+import { buildMerchantSeo, resolveOgImageUrl } from "@/util/storefrontSeo";
 import { isReservedMerchantStoreSlug } from "@/util/merchantPublicPath";
 import MerchantChatWidget from "@/components/chat/MerchantChatWidget";
+import StorefrontSeoHead from "@/components/seo/StorefrontSeoHead";
 
 const MERCHANT_TEMPLATES_LOWER = ["standard", "premium", "basic", "normal"] as const;
 type MerchantTemplateKey = (typeof MERCHANT_TEMPLATES_LOWER)[number];
@@ -22,6 +23,7 @@ type MerchantTemplateKey = (typeof MERCHANT_TEMPLATES_LOWER)[number];
 type MerchantPageProps = {
   initialMerchantProfile: MerchantProfile | null;
   initialSiteSettings: SiteSettingsData | null;
+  merchantSlugFromServer: string;
 };
 
 function coerceMerchantTemplate(name: unknown): MerchantTemplateKey | null {
@@ -36,6 +38,12 @@ function coerceMerchantTemplate(name: unknown): MerchantTemplateKey | null {
     return lower as MerchantTemplateKey;
   }
   return null;
+}
+
+function merchantBannerUrl(defaultBanner: unknown): string | null {
+  if (!defaultBanner || typeof defaultBanner !== "object") return null;
+  const b = defaultBanner as { full_size?: string; image?: string };
+  return b.full_size?.trim() || b.image?.trim() || null;
 }
 
 /**
@@ -60,6 +68,7 @@ function resolveMerchantDisplayTemplate(
 export default function MerchantPage({
   initialMerchantProfile,
   initialSiteSettings,
+  merchantSlugFromServer,
 }: MerchantPageProps) {
   const router = useRouter();
   const { merchantSlug } = router.query;
@@ -80,28 +89,42 @@ export default function MerchantPage({
   }, [dispatch, initialMerchantProfile]);
 
   useEffect(() => {
-    if (!merchantSlug || typeof merchantSlug !== "string") return;
-    if (fetchedSlugRef.current === merchantSlug) return;
+    const slugStr =
+      typeof merchantSlug === "string"
+        ? merchantSlug
+        : Array.isArray(merchantSlug)
+          ? merchantSlug[0] ?? ""
+          : merchantSlugFromServer;
+    if (!slugStr) return;
+    if (fetchedSlugRef.current === slugStr) return;
 
     const slugMatchesSsr =
       initialMerchantProfile?.merchant_details != null &&
-      initialMerchantProfile.merchant_details.slug === merchantSlug;
+      initialMerchantProfile.merchant_details.slug === slugStr;
 
     if (slugMatchesSsr) {
-      fetchedSlugRef.current = merchantSlug;
+      fetchedSlugRef.current = slugStr;
       return;
     }
 
-    fetchedSlugRef.current = merchantSlug;
-    dispatch(getMerchantProfile(merchantSlug));
-  }, [merchantSlug, dispatch, initialMerchantProfile]);
+    fetchedSlugRef.current = slugStr;
+    dispatch(getMerchantProfile(slugStr));
+  }, [merchantSlug, dispatch, initialMerchantProfile, merchantSlugFromServer]);
 
-  const slugStr =
-    typeof merchantSlug === "string"
-      ? merchantSlug
-      : Array.isArray(merchantSlug)
-        ? merchantSlug[0] ?? ""
-        : "";
+  const slugStr = useMemo(() => {
+    if (typeof merchantSlug === "string" && merchantSlug.trim()) return merchantSlug.trim();
+    if (Array.isArray(merchantSlug) && merchantSlug[0]?.trim()) return merchantSlug[0].trim();
+    const fromProfile = initialMerchantProfile?.merchant_details?.slug?.trim();
+    if (fromProfile) return fromProfile;
+    const fromPath = router.asPath.match(/^\/([^/?#]+)/)?.[1];
+    if (fromPath && !isReservedMerchantStoreSlug(fromPath)) return fromPath;
+    return merchantSlugFromServer.trim();
+  }, [
+    merchantSlug,
+    initialMerchantProfile?.merchant_details?.slug,
+    router.asPath,
+    merchantSlugFromServer,
+  ]);
 
   /** Prefer live Redux; fall back to SSR payload before or without client fetch. */
   const profileSource: MerchantProfile | null = data?.merchant_details
@@ -120,6 +143,7 @@ export default function MerchantPage({
     if (!profileSource?.merchant_details || !slugStr) return null;
     const d = profileSource.merchant_details;
     const loc = [d.location?.name, d.state?.name].filter(Boolean).join(", ");
+    const logoThumbnail = (d as { logo_thumbnail?: string | null }).logo_thumbnail;
     return buildMerchantSeo({
       siteSettings: siteSettingsForSeo,
       storeName: d.store_name || "",
@@ -128,24 +152,37 @@ export default function MerchantPage({
       locationLine: loc,
       pathSlug: slugStr,
       logoUrl: d.logo || null,
+      logoThumbnail: logoThumbnail || null,
+      bannerUrl: merchantBannerUrl(d.default_banner),
     });
   }, [profileSource, slugStr, siteSettingsForSeo]);
 
-  const logoForFavicon = profileSource?.merchant_details?.logo?.trim() || null;
-
+  const logoForFavicon = resolveOgImageUrl(profileSource?.merchant_details?.logo?.trim() || null);
   const hasMerchantDetails = Boolean(profileSource?.merchant_details);
+
+  const ogLocale = (siteSettingsForSeo?.seo_og_locale as string) || "en_US";
+  const twitterSite = (siteSettingsForSeo?.seo_twitter_site as string)?.trim();
+  const siteName = siteSettingsForSeo?.app_name
+    ? String(siteSettingsForSeo.app_name)
+    : "Hawola";
+  const seoFallbackTitle = merchantSeo?.title || `${siteName} | Store`;
+
+  const seoHead = (
+    <StorefrontSeoHead
+      seo={merchantSeo}
+      fallbackTitle={seoFallbackTitle}
+      keywordsCombined={merchantSeo?.keywords || ""}
+      ogLocale={ogLocale}
+      siteName={siteSettingsForSeo?.app_name as string | undefined}
+      twitterSite={twitterSite}
+      faviconUrl={logoForFavicon}
+    />
+  );
 
   if (isLoading && !hasMerchantDetails) {
     return (
       <>
-        <Head>
-          <title>
-            {siteSettingsForSeo?.app_name != null &&
-            String(siteSettingsForSeo.app_name).trim() !== ""
-              ? `${String(siteSettingsForSeo.app_name)} | Store`
-              : "Hawola | Store"}
-          </title>
-        </Head>
+        {seoHead}
         <div className="flex min-h-screen items-center justify-center">
           <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
         </div>
@@ -153,16 +190,11 @@ export default function MerchantPage({
     );
   }
 
-  if (!merchantSlug) {
+  if (!slugStr) {
     return (
       <>
         <Head>
-          <title>
-            Merchant not found |{" "}
-            {siteSettingsForSeo?.app_name
-              ? String(siteSettingsForSeo.app_name)
-              : "Hawola"}
-          </title>
+          <title>Merchant not found | {siteName}</title>
           <meta name="robots" content="noindex,nofollow" />
         </Head>
         <div className="flex min-h-screen items-center justify-center">
@@ -176,12 +208,7 @@ export default function MerchantPage({
     return (
       <>
         <Head>
-          <title>
-            Merchant not found |{" "}
-            {siteSettingsForSeo?.app_name
-              ? String(siteSettingsForSeo.app_name)
-              : "Hawola"}
-          </title>
+          <title>Merchant not found | {siteName}</title>
           <meta name="robots" content="noindex,nofollow" />
         </Head>
         <div className="flex min-h-screen items-center justify-center">
@@ -191,62 +218,9 @@ export default function MerchantPage({
     );
   }
 
-  const ogLocale = (siteSettingsForSeo?.seo_og_locale as string) || "en_US";
-  const twitterSite = (siteSettingsForSeo?.seo_twitter_site as string)?.trim();
-
-  const ogImageHttps =
-    merchantSeo?.ogImage && merchantSeo.ogImage.startsWith("https://")
-      ? merchantSeo.ogImage
-      : null;
-
   return (
     <div>
-      {merchantSeo ? (
-        <Head>
-          <title>{merchantSeo.title}</title>
-          <meta name="description" content={merchantSeo.description} />
-          {merchantSeo.keywords ? (
-            <meta name="keywords" content={merchantSeo.keywords.slice(0, 512)} />
-          ) : null}
-          <meta name="robots" content={merchantSeo.robots} />
-          {merchantSeo.canonicalUrl ? (
-            <link rel="canonical" href={merchantSeo.canonicalUrl} />
-          ) : null}
-          <meta property="og:title" content={merchantSeo.ogTitle} />
-          <meta property="og:description" content={merchantSeo.ogDescription} />
-          <meta property="og:type" content={merchantSeo.ogType} />
-          <meta property="og:locale" content={ogLocale} />
-          {siteSettingsForSeo?.app_name ? (
-            <meta
-              property="og:site_name"
-              content={String(siteSettingsForSeo.app_name)}
-            />
-          ) : null}
-          {merchantSeo.canonicalUrl ? (
-            <meta property="og:url" content={merchantSeo.canonicalUrl} />
-          ) : null}
-          {merchantSeo.ogImage ? (
-            <meta property="og:image" content={merchantSeo.ogImage} />
-          ) : null}
-          {ogImageHttps ? (
-            <meta property="og:image:secure_url" content={ogImageHttps} />
-          ) : null}
-          <meta name="twitter:card" content="summary_large_image" />
-          {twitterSite ? <meta name="twitter:site" content={twitterSite} /> : null}
-          <meta name="twitter:title" content={merchantSeo.ogTitle} />
-          <meta name="twitter:description" content={merchantSeo.ogDescription} />
-          {merchantSeo.ogImage ? (
-            <meta name="twitter:image" content={merchantSeo.ogImage} />
-          ) : null}
-          {logoForFavicon ? <link rel="icon" href={logoForFavicon} /> : null}
-          {merchantSeo.jsonLd ? (
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(merchantSeo.jsonLd) }}
-            />
-          ) : null}
-        </Head>
-      ) : null}
+      {seoHead}
 
       {templateKey === "standard" && <StandardTemplate />}
       {templateKey === "premium" && <DashboardTemplate />}
@@ -282,6 +256,7 @@ export const getServerSideProps: GetServerSideProps<MerchantPageProps> = async (
       props: {
         initialMerchantProfile: null,
         initialSiteSettings: null,
+        merchantSlugFromServer: slug,
       },
     };
   }
@@ -294,9 +269,11 @@ export const getServerSideProps: GetServerSideProps<MerchantPageProps> = async (
       fetch(profileUrl, {
         headers: { Accept: "application/json" },
         redirect: "manual",
+        signal: AbortSignal.timeout(8000),
       }),
       fetch(settingsUrl, {
         headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
       }),
     ]);
 
@@ -309,6 +286,7 @@ export const getServerSideProps: GetServerSideProps<MerchantPageProps> = async (
         props: {
           initialMerchantProfile: null,
           initialSiteSettings: null,
+          merchantSlugFromServer: slug,
         },
       };
     }
@@ -323,6 +301,7 @@ export const getServerSideProps: GetServerSideProps<MerchantPageProps> = async (
       props: {
         initialMerchantProfile,
         initialSiteSettings,
+        merchantSlugFromServer: slug,
       },
     };
   } catch {
@@ -330,6 +309,7 @@ export const getServerSideProps: GetServerSideProps<MerchantPageProps> = async (
       props: {
         initialMerchantProfile: null,
         initialSiteSettings: null,
+        merchantSlugFromServer: slug,
       },
     };
   }

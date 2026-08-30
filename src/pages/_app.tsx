@@ -23,7 +23,7 @@ import {
   getCarts,
   syncLocalCartFromStorage,
 } from "@/redux/product/productSlice";
-import { getSiteSettings } from "@/redux/general/generalSlice";
+import { getSiteSettings, type SiteSettingsData } from "@/redux/general/generalSlice";
 import { RootState } from "@/store/store";
 import { useAppDispatch } from "@/hook/useReduxTypes";
 import LaunchPage from "@/components/LaunchPage";
@@ -46,10 +46,15 @@ const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
 function AppContent({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const skipGlobalSeo = router.pathname === "/[merchantSlug]";
+  const skipGlobalSeo =
+    router.pathname === "/[merchantSlug]" || router.pathname === "/product/[id]";
   const dispatch = useAppDispatch();
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
+  const pageSiteSettings =
+    (pageProps as { initialSiteSettings?: SiteSettingsData | null }).initialSiteSettings ??
+    null;
+  const effectiveSiteSettings = siteSettings ?? pageSiteSettings;
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const authProfile = useSelector((state: RootState) => state.auth.profile);
   const [showLaunchConfetti, setShowLaunchConfetti] = useState(false);
@@ -157,8 +162,9 @@ function AppContent({ Component, pageProps }: AppProps) {
   }, [dispatch]);
 
   // Only show launch page when API has returned and explicitly says under construction (false by default until API returns true)
-  const dateTimeTill = siteSettings
-    ? (siteSettings.date_time_till ?? (siteSettings as Record<string, unknown>).dateTimeTill)
+  const dateTimeTill = effectiveSiteSettings
+    ? (effectiveSiteSettings.date_time_till ??
+        (effectiveSiteSettings as Record<string, unknown>).dateTimeTill)
     : null;
   const launchCountdownActive =
     typeof dateTimeTill === "string" &&
@@ -166,7 +172,7 @@ function AppContent({ Component, pageProps }: AppProps) {
     new Date(dateTimeTill).getTime() > Date.now();
   const showLaunchPage =
     siteSettingsLoaded &&
-    siteSettings?.site_under_construction === true &&
+    effectiveSiteSettings?.site_under_construction === true &&
     launchCountdownActive;
 
   // Auto-refresh exactly when launch countdown ends so storefront goes live without manual reload.
@@ -189,34 +195,34 @@ function AppContent({ Component, pageProps }: AppProps) {
     return () => window.clearTimeout(timer);
   }, [showLaunchPage, dateTimeTill]);
 
-  // Show loader only on first visit when no cached settings exist
-  const hasCachedSiteSettings = siteSettings != null;
+  // Show loader only on first visit when no cached settings exist (SSR pages may pass initialSiteSettings).
+  const hasCachedSiteSettings = effectiveSiteSettings != null;
   if (!siteSettingsLoaded && !hasCachedSiteSettings) {
     return <SiteSettingsPreloader />;
   }
 
-  if (showLaunchPage && siteSettings) {
+  if (showLaunchPage && effectiveSiteSettings) {
     return (
       <>
         <Head>
-          <title>{siteSettings.app_name || "Hawola"} | Coming Soon</title>
+          <title>{effectiveSiteSettings.app_name || "Hawola"} | Coming Soon</title>
         </Head>
-        <LaunchPage siteSettings={siteSettings} />
+        <LaunchPage siteSettings={effectiveSiteSettings} />
       </>
     );
   }
 
-  const defaultTitle = siteSettings?.app_name
-    ? String(siteSettings.app_name)
+  const defaultTitle = effectiveSiteSettings?.app_name
+    ? String(effectiveSiteSettings.app_name)
     : "Hawola";
   const defaultDesc =
-    (siteSettings?.seo_site_default_description as string)?.trim() ||
-    (siteSettings?.app_slogan as string)?.trim() ||
+    (effectiveSiteSettings?.seo_site_default_description as string)?.trim() ||
+    (effectiveSiteSettings?.app_slogan as string)?.trim() ||
     "";
   const defaultRobots =
-    (siteSettings?.seo_default_robots as string)?.trim() || "index,follow";
+    (effectiveSiteSettings?.seo_default_robots as string)?.trim() || "index,follow";
   const canonicalBase =
-    (siteSettings?.seo_canonical_base_url as string)?.replace(/\/+$/, "") ||
+    (effectiveSiteSettings?.seo_canonical_base_url as string)?.replace(/\/+$/, "") ||
     (typeof process !== "undefined" &&
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "")) ||
     "";
@@ -230,10 +236,10 @@ function AppContent({ Component, pageProps }: AppProps) {
             {defaultDesc ? (
               <meta name="description" content={defaultDesc.slice(0, 320)} />
             ) : null}
-            {(siteSettings?.seo_site_default_keywords as string)?.trim() ? (
+            {(effectiveSiteSettings?.seo_site_default_keywords as string)?.trim() ? (
               <meta
                 name="keywords"
-                content={String(siteSettings?.seo_site_default_keywords).slice(0, 512)}
+                content={String(effectiveSiteSettings?.seo_site_default_keywords).slice(0, 512)}
               />
             ) : null}
             <meta name="robots" content={defaultRobots} />
@@ -243,19 +249,19 @@ function AppContent({ Component, pageProps }: AppProps) {
             {defaultDesc ? (
               <meta property="og:description" content={defaultDesc.slice(0, 320)} />
             ) : null}
-            {siteSettings?.app_name ? (
-              <meta property="og:site_name" content={String(siteSettings?.app_name)} />
+            {effectiveSiteSettings?.app_name ? (
+              <meta property="og:site_name" content={String(effectiveSiteSettings?.app_name)} />
             ) : null}
-            {(siteSettings?.seo_og_locale as string)?.trim() ? (
-              <meta property="og:locale" content={String(siteSettings?.seo_og_locale)} />
+            {(effectiveSiteSettings?.seo_og_locale as string)?.trim() ? (
+              <meta property="og:locale" content={String(effectiveSiteSettings?.seo_og_locale)} />
             ) : (
               <meta property="og:locale" content="en_US" />
             )}
             {canonicalBase ? <meta property="og:url" content={canonicalBase} /> : null}
-            {(siteSettings?.logo as { full_size?: string })?.full_size ? (
+            {(effectiveSiteSettings?.logo as { full_size?: string })?.full_size ? (
               <meta
                 property="og:image"
-                content={String((siteSettings?.logo as { full_size?: string }).full_size)}
+                content={String((effectiveSiteSettings?.logo as { full_size?: string }).full_size)}
               />
             ) : null}
           </>

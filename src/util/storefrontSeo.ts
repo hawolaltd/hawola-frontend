@@ -1,7 +1,17 @@
+import { normalizeMediaSrc } from "@/components/common/OptimizedImage";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
 import type { Product } from "@/types/product";
 import { formatCurrency } from "./index";
 import { applySeoTemplate, stripHtmlToText, truncateSeo, type SeoVars } from "./seoTemplate";
+
+/** Absolute URL for og:image — WhatsApp and other crawlers require a fetchable HTTPS link. */
+export function resolveOgImageUrl(raw: string | null | undefined): string | null {
+  const abs = normalizeMediaSrc(raw?.trim() || "");
+  if (!abs) return null;
+  if (abs.startsWith("https://")) return abs;
+  if (abs.startsWith("http://")) return abs.replace(/^http:\/\//, "https://");
+  return null;
+}
 
 function sstr(v: unknown): string {
   return v == null ? "" : String(v);
@@ -84,12 +94,13 @@ export function buildProductSeo(params: {
     : "";
 
   const img0 = product?.featured_image?.[0];
-  const ogImage =
+  const ogImage = resolveOgImageUrl(
     img0?.image_url ||
-    (img0?.image as { full_size?: string } | undefined)?.full_size ||
-    merchant?.logo_thumbnail ||
-    merchant?.logo ||
-    null;
+      (img0?.image as { full_size?: string } | undefined)?.full_size ||
+      merchant?.logo_thumbnail ||
+      merchant?.logo ||
+      null
+  );
 
   const robots = sstr(siteSettings?.seo_default_robots).trim() || "index,follow";
   const keywords = truncateSeo(
@@ -144,6 +155,8 @@ export function buildMerchantSeo(params: {
   locationLine: string;
   pathSlug: string;
   logoUrl: string | null;
+  logoThumbnail?: string | null;
+  bannerUrl?: string | null;
 }): BuiltSeo {
   const {
     siteSettings,
@@ -153,6 +166,8 @@ export function buildMerchantSeo(params: {
     locationLine,
     pathSlug,
     logoUrl,
+    logoThumbnail,
+    bannerUrl,
   } = params;
   const siteName = sstr(siteSettings?.app_name).trim() || "Hawola";
   const name = sstr(storeName).trim();
@@ -214,7 +229,7 @@ export function buildMerchantSeo(params: {
     canonicalUrl,
     ogTitle: truncateSeo(title, 70),
     ogDescription: description,
-    ogImage: logoUrl,
+    ogImage: resolveOgImageUrl(logoThumbnail || logoUrl || bannerUrl || null),
     ogType: "website",
     robots,
     keywords,

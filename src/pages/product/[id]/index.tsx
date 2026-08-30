@@ -44,6 +44,9 @@ import {
 } from "@/lib/pdpPreview";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import { buildProductSeo } from "@/util/storefrontSeo";
+import type { SiteSettingsData } from "@/redux/general/generalSlice";
+import type { Product } from "@/types/product";
+import StorefrontSeoHead from "@/components/seo/StorefrontSeoHead";
 import { saveLocalRecentlyViewedProduct } from "@/lib/recentlyViewed";
 import { trackTikTokViewContent, trackTikTokAddToCart, trackTikTokAddToWishlist, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 import {
@@ -66,9 +69,16 @@ import {
 type ProductPageProps = {
     serverNotFound?: boolean;
     serverShell?: ProductDetailPreview | null;
+    initialProductForSeo?: Product | null;
+    initialSiteSettings?: SiteSettingsData | null;
 };
 
-const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPageProps) => {
+const ProductPage = ({
+    serverNotFound = false,
+    serverShell = null,
+    initialProductForSeo = null,
+    initialSiteSettings = null,
+}: ProductPageProps) => {
     const [quantity, setQuantity] = useState(1);
     const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
     const [position, setPosition] = useState({x: "50%", y: "50%"});
@@ -261,15 +271,26 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
             : [];
     }, [gallerySlides, previewFallbackCandidates]);
 
+    const siteSettingsForSeo =
+        (initialSiteSettings as SiteSettingsData | null) ?? siteSettings;
+
+    const productForSeo = useMemo(() => {
+        const live = product?.product;
+        if (live?.id && live.slug === productSlug) return live;
+        if (initialProductForSeo?.id && initialProductForSeo.slug === productSlug) {
+            return initialProductForSeo;
+        }
+        return null;
+    }, [product?.product, initialProductForSeo, productSlug]);
+
     const productSeo = useMemo(() => {
-        const p = product?.product;
-        if (!p?.id || !productSlug) return null;
+        if (!productForSeo?.id || !productSlug) return null;
         return buildProductSeo({
-            siteSettings,
-            product: p,
+            siteSettings: siteSettingsForSeo,
+            product: productForSeo,
             pathSlug: productSlug,
         });
-    }, [siteSettings, product?.product, productSlug]);
+    }, [siteSettingsForSeo, productForSeo, productSlug]);
 
     // Get current product URL for sharing
     const getProductUrl = () => {
@@ -648,8 +669,11 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
         outsideStateShippingCost !== undefined &&
         String(outsideStateShippingCost).trim() !== "";
 
-    const ogLocale = (siteSettings?.seo_og_locale as string) || "en_US";
-    const twitterSite = (siteSettings?.seo_twitter_site as string)?.trim();
+    const ogLocale = (siteSettingsForSeo?.seo_og_locale as string) || "en_US";
+    const twitterSite = (siteSettingsForSeo?.seo_twitter_site as string)?.trim();
+    const seoFallbackTitle =
+        productSeo?.title ||
+        (preview?.name ? `${preview.name} | Hawola` : "Hawola | Product");
     const plainListingDescription = (product?.product?.description || "")
         .replace(/<[^>]+>/g, " ")
         .replace(/&nbsp;/gi, " ")
@@ -680,17 +704,14 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
     if (contactMerchantOnly) {
         return (
             <AuthLayout>
-                <Head>
-                    <title>
-                {productSeo?.title ||
-                    (preview?.name ? `${preview.name} | Hawola` : "Hawola | Product")}
-            </title>
-                    <meta name="description" content={productSeo?.description || ""} />
-                    {keywordsCombined ? (
-                        <meta name="keywords" content={keywordsCombined.slice(0, 512)} />
-                    ) : null}
-                    <meta name="robots" content={productSeo?.robots || "index,follow"} />
-                </Head>
+                <StorefrontSeoHead
+                    seo={productSeo}
+                    fallbackTitle={seoFallbackTitle}
+                    keywordsCombined={keywordsCombined}
+                    ogLocale={ogLocale}
+                    siteName={siteSettingsForSeo?.app_name as string | undefined}
+                    twitterSite={twitterSite}
+                />
                 <div className="w-full pt-0">
                     <div className="w-full bg-[#0b1f4d] text-white shadow-[0_2px_10px_rgba(11,31,77,0.25)]">
                         <div className="mx-auto flex max-w-[1320px] flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -838,50 +859,14 @@ const ProductPage = ({ serverNotFound = false, serverShell = null }: ProductPage
     }
 
     return (<AuthLayout>
-        <Head>
-            <title>
-                {productSeo?.title ||
-                    (preview?.name ? `${preview.name} | Hawola` : "Hawola | Product")}
-            </title>
-            <meta name="description" content={productSeo?.description || ""} />
-            {keywordsCombined ? (
-                <meta name="keywords" content={keywordsCombined.slice(0, 512)} />
-            ) : null}
-            <meta name="robots" content={productSeo?.robots || "index,follow"} />
-            {productSeo?.canonicalUrl ? (
-                <link rel="canonical" href={productSeo.canonicalUrl} />
-            ) : null}
-            <meta property="og:title" content={productSeo?.ogTitle || ""} />
-            <meta property="og:description" content={productSeo?.ogDescription || ""} />
-            <meta property="og:type" content={productSeo?.ogType || "product"} />
-            <meta property="og:locale" content={ogLocale} />
-            {siteSettings?.app_name ? (
-                <meta property="og:site_name" content={String(siteSettings.app_name)} />
-            ) : null}
-            {productSeo?.canonicalUrl ? (
-                <meta property="og:url" content={productSeo.canonicalUrl} />
-            ) : null}
-            {productSeo?.ogImage ? (
-                <meta property="og:image" content={productSeo.ogImage} />
-            ) : null}
-            <meta name="twitter:card" content="summary_large_image" />
-            {twitterSite ? <meta name="twitter:site" content={twitterSite} /> : null}
-            {productSeo?.ogTitle ? (
-                <meta name="twitter:title" content={productSeo.ogTitle} />
-            ) : null}
-            {productSeo?.ogDescription ? (
-                <meta name="twitter:description" content={productSeo.ogDescription} />
-            ) : null}
-            {productSeo?.ogImage ? (
-                <meta name="twitter:image" content={productSeo.ogImage} />
-            ) : null}
-            {productSeo?.jsonLd ? (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(productSeo.jsonLd) }}
-                />
-            ) : null}
-        </Head>
+        <StorefrontSeoHead
+            seo={productSeo}
+            fallbackTitle={seoFallbackTitle}
+            keywordsCombined={keywordsCombined}
+            ogLocale={ogLocale}
+            siteName={siteSettingsForSeo?.app_name as string | undefined}
+            twitterSite={twitterSite}
+        />
         <div className="hidden sm:block w-full bg-[#0b1f4d] text-white shadow-[0_2px_10px_rgba(11,31,77,0.25)]">
             <div className="mx-auto flex max-w-[1320px] flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#b9c7ea]">Product Listing</p>
@@ -1194,41 +1179,88 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
     const slug = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] ?? "" : "";
     if (!slug) {
         context.res.statusCode = 404;
-        return { props: { serverNotFound: true, serverShell: null } };
+        return {
+            props: {
+                serverNotFound: true,
+                serverShell: null,
+                initialProductForSeo: null,
+                initialSiteSettings: null,
+            },
+        };
     }
 
     let serverShell: ProductDetailPreview | null = null;
+    let initialProductForSeo: Product | null = null;
+    let initialSiteSettings: SiteSettingsData | null = null;
     const apiRoot = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(
         /\/+$/,
         ""
     );
 
     try {
-        const res = await fetch(
-            `${apiRoot}/products/detail/${encodeURIComponent(slug)}/gallery/`,
-            {
+        const [mainRes, siteRes] = await Promise.all([
+            fetch(`${apiRoot}/products/detail/${encodeURIComponent(slug)}/main/`, {
                 headers: { Accept: "application/json" },
                 signal: AbortSignal.timeout(8000),
-            }
-        );
-        if (res.status === 404) {
-            context.res.statusCode = 404;
-            return { props: { serverNotFound: true, serverShell: null } };
+            }),
+            fetch(`${apiRoot}/site/settings/`, {
+                headers: { Accept: "application/json" },
+                signal: AbortSignal.timeout(8000),
+            }),
+        ]);
+
+        if (siteRes.ok) {
+            initialSiteSettings = (await siteRes.json()) as SiteSettingsData;
         }
-        if (res.ok) {
-            const data = await res.json();
-            serverShell = {
-                slug: String(data.slug || slug),
-                name: String(data.name || data.product?.name || "Product"),
-                featured_image: data.product?.featured_image || data.product_images || [],
-                contact_merchant_only: Boolean(data.product?.contact_merchant_only),
+
+        if (mainRes.status === 404) {
+            context.res.statusCode = 404;
+            return {
+                props: {
+                    serverNotFound: true,
+                    serverShell: null,
+                    initialProductForSeo: null,
+                    initialSiteSettings,
+                },
             };
         }
+
+        if (mainRes.ok) {
+            const data = await mainRes.json();
+            const p = data?.product;
+            if (p?.id) {
+                initialProductForSeo = p as Product;
+                serverShell = {
+                    slug: String(p.slug || slug),
+                    name: String(p.name || "Product"),
+                    price: p.price,
+                    discount_price: p.discount_price,
+                    featured_image: p.featured_image || p.product_images || [],
+                    merchant: p.merchant
+                        ? {
+                              store_name: p.merchant.store_name,
+                              slug: p.merchant.slug,
+                              primary_color: p.merchant.primary_color,
+                              logo: p.merchant.logo,
+                              logo_thumbnail: p.merchant.logo_thumbnail,
+                          }
+                        : undefined,
+                    contact_merchant_only: Boolean(p.contact_merchant_only),
+                };
+            }
+        }
     } catch {
-        /* Client section APIs resolve the rest; shell is a nice-to-have for webviews. */
+        /* Client section APIs resolve the rest; SSR SEO is a nice-to-have for crawlers. */
     }
 
-    return { props: { serverNotFound: false, serverShell } };
+    return {
+        props: {
+            serverNotFound: false,
+            serverShell,
+            initialProductForSeo,
+            initialSiteSettings,
+        },
+    };
 };
 
 export default ProductPage;
