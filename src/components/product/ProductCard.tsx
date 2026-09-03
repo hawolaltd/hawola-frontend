@@ -115,11 +115,10 @@ function ProductCard({
 
         toast.success("Added to cart");
         if (guestResult.warning) {
-          toast.warning(guestResult.warning, { duration: 6000 });
+          toast.warning(guestResult.warning);
         } else if (guestResult.source === "local") {
           toast.warning(
-            "Saved on this device only — open in Safari or Chrome to keep your cart.",
-            { duration: 5000 }
+            "Saved on this device only — open in Safari or Chrome to keep your cart."
           );
         }
       }

@@ -15,6 +15,7 @@ function TopSellingProducts({ products: _products }: TopSellingProductsProps) {
     <HomeBodyAdvertBanners
       middle={(homePage?.data?.advert_banner_middle || []) as (AdvertBanner | null)[]}
       bottom={(homePage?.data?.advert_banner_bottom || []) as (AdvertBanner | null)[]}
+      showCoupons={false}
     />
   );
 }

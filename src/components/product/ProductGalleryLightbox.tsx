@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import FallbackProductImage from "@/components/product/FallbackProductImage";
+import { lockBodyScroll } from "@/lib/bodyScrollLock";
 
 type ProductGalleryLightboxProps = {
     open: boolean;
@@ -23,6 +24,8 @@ export default function ProductGalleryLightbox({
 }: ProductGalleryLightboxProps) {
     const [index, setIndex] = useState(initialIndex);
     const touchStartX = useRef<number | null>(null);
+    const onIndexChangeRef = useRef(onIndexChange);
+    onIndexChangeRef.current = onIndexChange;
 
     useEffect(() => {
         if (open) {
@@ -30,20 +33,28 @@ export default function ProductGalleryLightbox({
         }
     }, [open, initialIndex]);
 
-    useEffect(() => {
-        if (!open) return;
-        onIndexChange?.(index);
-    }, [open, index, onIndexChange]);
+    const emitIndexChange = useCallback((next: number) => {
+        onIndexChangeRef.current?.(next);
+    }, []);
 
     const showPrev = useCallback(() => {
         if (!imageCandidates.length) return;
-        setIndex((prev) => (prev - 1 + imageCandidates.length) % imageCandidates.length);
-    }, [imageCandidates.length]);
+        setIndex((prev) => {
+            const next =
+                (prev - 1 + imageCandidates.length) % imageCandidates.length;
+            emitIndexChange(next);
+            return next;
+        });
+    }, [emitIndexChange, imageCandidates.length]);
 
     const showNext = useCallback(() => {
         if (!imageCandidates.length) return;
-        setIndex((prev) => (prev + 1) % imageCandidates.length);
-    }, [imageCandidates.length]);
+        setIndex((prev) => {
+            const next = (prev + 1) % imageCandidates.length;
+            emitIndexChange(next);
+            return next;
+        });
+    }, [emitIndexChange, imageCandidates.length]);
 
     useEffect(() => {
         if (!open) return;
@@ -55,12 +66,11 @@ export default function ProductGalleryLightbox({
         };
 
         window.addEventListener("keydown", onKeyDown);
-        const previousOverflow = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
+        const unlockScroll = lockBodyScroll();
 
         return () => {
             window.removeEventListener("keydown", onKeyDown);
-            document.body.style.overflow = previousOverflow;
+            unlockScroll();
         };
     }, [open, onClose, showPrev, showNext]);
 
@@ -87,6 +97,8 @@ export default function ProductGalleryLightbox({
         }
         touchStartX.current = null;
     };
+
+    const activeCandidates = imageCandidates[index] ?? [];
 
     return (
         <div
@@ -136,8 +148,7 @@ export default function ProductGalleryLightbox({
             ) : null}
 
             <FallbackProductImage
-                key={`lightbox-${index}-${(imageCandidates[index] ?? [])[0] || "empty"}`}
-                candidates={imageCandidates[index] ?? []}
+                candidates={activeCandidates}
                 alt={`${altPrefix} image ${index + 1}`}
                 className="max-h-[90vh] max-w-[92vw] select-none rounded-lg object-contain shadow-2xl"
                 onClick={(event) => event.stopPropagation()}

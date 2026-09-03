@@ -11,6 +11,11 @@ import {
   type BuyerChatMessage,
 } from "@/lib/buyerChatApi";
 import {
+  PROOF_FILE_ACCEPT,
+  PROOF_FILE_HINT,
+  validateProofFile,
+} from "@/lib/proofOfPaymentUpload";
+import {
   subscribeBuyerChat,
   CHAT_FALLBACK_POLL_MS,
 } from "@/lib/buyerChatSocket";
@@ -188,8 +193,9 @@ export default function OrderBuyerChatPanel({
 
   const uploadProof = async (file: File | null | undefined) => {
     if (!file || !conversation?.slug || disabled || !allowProofOfPayment) return;
-    if (file.size > 1 * 1024 * 1024) {
-      toast.error("Proof file must be 1 MB or smaller.");
+    const validationError = validateProofFile(file);
+    if (validationError) {
+      toast.error(validationError);
       if (proofInputRef.current) proofInputRef.current.value = "";
       return;
     }
@@ -370,7 +376,7 @@ export default function OrderBuyerChatPanel({
                     <input
                       ref={proofInputRef}
                       type="file"
-                      accept="image/*,application/pdf"
+                      accept={PROOF_FILE_ACCEPT}
                       className="hidden"
                       onChange={(e) => void uploadProof(e.target.files?.[0])}
                     />
@@ -378,15 +384,12 @@ export default function OrderBuyerChatPanel({
                       type="button"
                       disabled={sending || !conversation?.slug}
                       onClick={() => proofInputRef.current?.click()}
-                      className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-100 disabled:opacity-50"
+                      className="text-left text-xs font-semibold text-emerald-900 underline-offset-2 hover:underline disabled:opacity-50"
                     >
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                        +
-                      </span>
                       Attach proof of payment
                     </button>
-                    <span className="text-[11px] text-slate-500">
-                      Image or PDF · max 1 MB · multiple proofs allowed
+                    <span className="mt-0.5 block text-[11px] text-slate-500">
+                      {PROOF_FILE_HINT} · multiple proofs allowed
                     </span>
                   </div>
                 ) : null}

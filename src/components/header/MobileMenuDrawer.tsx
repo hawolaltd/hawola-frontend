@@ -12,6 +12,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { HI_FRAME_HEADER, HI_FRAME_WELL, HI_FRAME_WELL_EMERALD, HI_MD, HI_SM } from '@/lib/hawolaIconTheme';
 import HawolaAppDownloadLink from '@/components/header/HawolaAppDownloadLink';
+import SignupBonusHeaderCta from '@/components/header/SignupBonusHeaderCta';
+import { useSignupBonusPromo } from '@/hook/useSignupBonusPromo';
 import { useAppDispatch, useAppSelector } from '@/hook/useReduxTypes';
 import { getCarsCopy, getRealEstateCopy } from '@/util/curatedVerticalCopy';
 import { addToCartsLocal } from '@/redux/product/productSlice';
@@ -39,6 +41,10 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     const realEstateNavLabel = getRealEstateCopy(siteSettings).navLabel;
 
     const displayEmail = profile?.email || user?.email || '';
+    const signupBonusPromo = useSignupBonusPromo(!isAuthenticated);
+    const hideSignupBonusCta =
+        router.pathname === '/auth/register' ||
+        router.pathname === '/auth/login';
 
     // const toggleExpand = (label: string) => {
     //     setExpandedItems(prev => ({
@@ -71,6 +77,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     // ];
 
     const accountLinks: DrawerLinkProps[] = [
+        { href: '/coupons', label: 'Coupon Center' },
         { href: '/account', label: 'My Account' },
         { href: '/account?tab=chats', label: 'Chats' },
         { href: '/wishlist', label: 'My Wishlist' },
@@ -151,6 +158,15 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                             </Link>
                         )}
                     </div>
+                    {!isAuthenticated && signupBonusPromo && !hideSignupBonusCta ? (
+                        <div className="shrink-0 border-b border-gray-200 px-4 pb-4">
+                            <SignupBonusHeaderCta
+                                promo={signupBonusPromo}
+                                variant="drawer"
+                                onNavigate={onClose}
+                            />
+                        </div>
+                    ) : null}
 
                     {isAuthenticated && (
                         <div className="shrink-0 space-y-3 border-b border-gray-200 p-4">

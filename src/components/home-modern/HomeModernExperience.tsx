@@ -5,6 +5,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import ProductCard from "@/components/product/ProductCard";
 import ProductCard2 from "@/components/product/ProductCard2";
+import HomeRandomCouponsSection from "@/components/home/HomeRandomCouponsSection";
 import { formatCurrency, featuredImageCardSrc } from "@/util";
 import type { AdvertBanner, PopularCategory, ProductFull } from "@/types/home";
 
@@ -647,6 +648,7 @@ export default function HomeModernExperience() {
       <AdShowcase banners={advertTop} label="Featured partners" variant="a" />
       <TopRatedBento products={topRated} bestSelling={bestSelling} />
       <AdShowcase banners={advertMid} label="In the spotlight" variant="b" />
+      <HomeRandomCouponsSection className="bg-slate-50" />
       <HawolaSpecialsBand products={hawolaSpecials} />
       <TopSellingStrip products={topSelling} />
       <TrustPulse />

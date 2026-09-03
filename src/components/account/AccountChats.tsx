@@ -13,6 +13,11 @@ import {
   type BuyerChatMessage,
 } from "@/lib/buyerChatApi";
 import {
+  PROOF_FILE_ACCEPT,
+  PROOF_FILE_HINT,
+  validateProofFile,
+} from "@/lib/proofOfPaymentUpload";
+import {
   subscribeBuyerChat,
   CHAT_FALLBACK_POLL_MS,
 } from "@/lib/buyerChatSocket";
@@ -343,8 +348,9 @@ export default function AccountChats() {
 
   const uploadProof = async (file: File | null | undefined) => {
     if (!file || !selected?.slug || !selected.orderitem_number) return;
-    if (file.size > 1 * 1024 * 1024) {
-      toast.error("Proof file must be 1 MB or smaller.");
+    const validationError = validateProofFile(file);
+    if (validationError) {
+      toast.error(validationError);
       if (proofInputRef.current) proofInputRef.current.value = "";
       return;
     }
@@ -658,32 +664,28 @@ export default function AccountChats() {
 
               <div className="shrink-0 border-t border-detailsBorder bg-white p-3 sm:p-4">
                 {selected.orderitem_number ? (
-                  <p className="mb-2 text-[11px] text-gray-500">
-                    On this order chat you can attach proof of payment (image or PDF, max 1 MB). Orders with proof cannot be cancelled.
-                  </p>
+                  <div className="mb-2">
+                    <input
+                      ref={proofInputRef}
+                      type="file"
+                      accept={PROOF_FILE_ACCEPT}
+                      className="hidden"
+                      onChange={(e) => void uploadProof(e.target.files?.[0])}
+                    />
+                    <button
+                      type="button"
+                      className="text-left text-xs font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                      disabled={sending}
+                      onClick={() => proofInputRef.current?.click()}
+                    >
+                      Attach proof of payment
+                    </button>
+                    <p className="mt-0.5 text-[11px] text-gray-500">
+                      {PROOF_FILE_HINT}. Orders with proof cannot be cancelled.
+                    </p>
+                  </div>
                 ) : null}
                 <div className="flex items-end gap-2 rounded-2xl border border-detailsBorder bg-gray-50 p-2">
-                  {selected.orderitem_number ? (
-                    <>
-                      <input
-                        ref={proofInputRef}
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="hidden"
-                        onChange={(e) => void uploadProof(e.target.files?.[0])}
-                      />
-                      <button
-                        type="button"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-detailsBorder bg-white text-xs font-semibold text-primary shadow-sm hover:bg-primary/5 disabled:opacity-50"
-                        disabled={sending}
-                        onClick={() => proofInputRef.current?.click()}
-                        aria-label="Attach proof of payment"
-                        title="Attach proof of payment"
-                      >
-                        PoP
-                      </button>
-                    </>
-                  ) : null}
                   <textarea
                     rows={1}
                     className="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"

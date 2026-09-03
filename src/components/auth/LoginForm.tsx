@@ -14,8 +14,7 @@ import MerchantAuthPrompt from "@/components/auth/MerchantAuthPrompt";
 
 export default function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
-    const [magicEmail, setMagicEmail] = useState("");
-    const [showPasswordLogin, setShowPasswordLogin] = useState(true);
+    const [magicLinkSending, setMagicLinkSending] = useState(false);
 
     const router = useRouter()
     const redirectTarget =
@@ -23,7 +22,7 @@ export default function LoginForm() {
         ? router.query.redirect
         : "/";
 
-    const { control, handleSubmit,  formState: { errors }, } = useForm<LoginFormType>();
+    const { control, handleSubmit, getValues, formState: { errors }, } = useForm<LoginFormType>();
 
     const dispatch = useAppDispatch()
 
@@ -61,7 +60,6 @@ export default function LoginForm() {
                             background: "#ef4444",
                             color: "white",
                         },
-                        duration: 5000,
                     });
                 }
             } catch (e) {
@@ -72,7 +70,6 @@ export default function LoginForm() {
                         background: "#ef4444",
                         color: "white",
                     },
-                    duration: 5000,
                 });
             }
         }
@@ -156,7 +153,7 @@ export default function LoginForm() {
                 if (payloadObj?.code === 'email_not_verified') {
                     const targetEmail =
                         payloadObj.email || loginPayload.email;
-                    toast.info(errorMessage, { duration: 6000 });
+                    toast.info(errorMessage);
                     router.push(
                         `/auth/verify-pending?email=${encodeURIComponent(targetEmail)}`
                     );
@@ -168,7 +165,6 @@ export default function LoginForm() {
                         background: "#ef4444",
                         color: "white",
                     },
-                    duration: 5000,
                 });
             } else {
                 // Unknown state - show generic error
@@ -177,7 +173,6 @@ export default function LoginForm() {
                         background: "#ef4444",
                         color: "white",
                     },
-                    duration: 5000,
                 });
             }
         } catch (error: any) {
@@ -208,18 +203,16 @@ export default function LoginForm() {
                     background: "#ef4444",
                     color: "white",
                 },
-                duration: 5000,
             });
         }
 
     };
 
-    const handleRequestMagicLink = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const email = magicEmail.trim();
+    const handleRequestMagicLink = async () => {
+        const email = String(getValues("email") ?? "").trim();
 
         if (!email) {
-            toast.error("Please enter your email to receive a login link.");
+            toast.error("Please enter your email first.");
             return;
         }
 
@@ -229,38 +222,41 @@ export default function LoginForm() {
             return;
         }
 
-        const res = await dispatch(requestLoginCode(email));
+        setMagicLinkSending(true);
+        try {
+            const res = await dispatch(requestLoginCode(email));
 
-        if (res?.type.includes("fulfilled")) {
-            // Clear the form after successful request
-            setMagicEmail("");
-            toast.success(
-                "If an account with that email exists, we've sent you a one-time login link. Please check your email."
-            );
-        } else {
-            // Check if it's a rate limit error
-            const errorPayload = (res as any)?.payload;
-            if (errorPayload?.retry_after) {
-                const minutes = Math.ceil(errorPayload.retry_after / 60);
-                toast.error(
-                    `Too many requests. Please wait ${minutes} minute(s) before requesting another login link.`,
-                    {
+            if (res?.type.includes("fulfilled")) {
+                toast.success(
+                    "If an account with that email exists, we've sent you a one-time login link. Please check your email."
+                );
+            } else {
+                const errorPayload = (res as any)?.payload;
+                if (errorPayload?.retry_after) {
+                    const minutes = Math.ceil(errorPayload.retry_after / 60);
+                    toast.error(
+                        `Too many requests. Please wait ${minutes} minute(s) before requesting another login link.`,
+                        {
+                            style: {
+                                background: "#ef4444",
+                                color: "white",
+                            },
+                        }
+                    );
+                } else {
+                    const errorMessage = normalizeErrors(
+                        errorPayload?.detail || errorPayload?.message || errorPayload
+                    );
+                    toast.error(errorMessage || "Could not send login link.", {
                         style: {
                             background: "#ef4444",
                             color: "white",
                         },
-                        duration: 5000,
-                    }
-                );
-            } else {
-                const errorMessage = normalizeErrors(message);
-                toast.error(errorMessage, {
-                    style: {
-                        background: "#ef4444",
-                        color: "white",
-                    },
-                });
+                    });
+                }
             }
+        } finally {
+            setMagicLinkSending(false);
         }
     };
 
@@ -320,59 +316,38 @@ export default function LoginForm() {
                     </div>
                 )}
 
-                {!showPasswordLogin && (
-                    <div className="flex flex-col gap-4 mt-8">
-                        <div className="space-y-2">
-                            <label className="text-xs text-[#435a8c]">
-                                Sign in with a one-time login link
-                            </label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="email"
-                                    value={magicEmail}
-                                    onChange={(e) => setMagicEmail(e.target.value)}
-                                    placeholder="you@example.com"
-                                    className="flex-1 text-xs p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
-                                />
+                <form onSubmit={handleSubmit(onSubmit)} className={'flex flex-col gap-4 mt-4'}>
+                        <div>
+                            <ControlledInput<LoginFormType>
+                                control={control}
+                                errors={errors}
+                                name="email"
+                                label=" Email*"
+                                type="text"
+                                placeholder="stevenjob@gmail.com"
+                                defaultValue={''}
+                                rules={{
+                                    required: 'Email is required',
+                                    pattern: {
+                                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                        message: 'Invalid email address',
+                                    },
+                                }}
+                                className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
+                            />
+                            <div className="mt-2 flex justify-end">
                                 <button
                                     type="button"
-                                    disabled={isLoading}
+                                    disabled={magicLinkSending || isLoading}
                                     onClick={handleRequestMagicLink}
-                                    className={`px-4 py-2 rounded-md text-xs font-semibold ${
-                                        isLoading
-                                            ? "bg-blue-300 cursor-not-allowed text-white"
-                                            : "bg-[#435a8c] text-white"
-                                    }`}
+                                    className="text-xs font-semibold text-[#435a8c] hover:underline disabled:opacity-60"
                                 >
-                                    Send link
+                                    {magicLinkSending
+                                        ? "Sending login link…"
+                                        : "Use one-time login link instead"}
                                 </button>
                             </div>
-                            <p className="text-[10px] text-gray-500">
-                                We&apos;ll email you a secure, one-time link so you can sign in without a password.
-                            </p>
                         </div>
-                    </div>
-                )}
-
-                {showPasswordLogin && (
-                    <form onSubmit={handleSubmit(onSubmit)} className={'flex flex-col gap-4 mt-4'}>
-                        <ControlledInput<LoginFormType>
-                            control={control}
-                            errors={errors}
-                            name="email"
-                            label=" Email*"
-                            type="text"
-                            placeholder="stevenjob@gmail.com"
-                            defaultValue={''}
-                            rules={{
-                                required: 'Email is required',
-                                pattern: {
-                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: 'Invalid email address',
-                                },
-                            }}
-                            className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
-                        />
                         <ControlledInput<LoginFormType>
                             control={control}
                             errors={errors}
@@ -422,23 +397,9 @@ export default function LoginForm() {
                             </div> : "Sign In"}
                         </button>
                     </form>
-                )}
-
-                {/* Toggle between methods */}
-                <div className="flex items-center my-4">
-                    <div className="flex-1 h-px bg-gray-200" />
-                    <button
-                        type="button"
-                        onClick={() => setShowPasswordLogin((prev) => !prev)}
-                        className="px-3 text-xs text-[#435a8c] font-semibold hover:underline"
-                    >
-                        {showPasswordLogin ? "Use one-time login link instead" : "Or, sign in with password"}
-                    </button>
-                    <div className="flex-1 h-px bg-gray-200" />
-                </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#435a8c]">
-                    <Link href="/auth/register">
+                    <Link href="/auth/register" prefetch={false}>
                         <span>
                             Have not an account?{" "}
                             <span className="font-semibold text-blue-900">Sign Up</span>
@@ -452,7 +413,7 @@ export default function LoginForm() {
             </div>
 
             {/* Global loading overlay for clearer feedback */}
-            {isLoading && (
+            {isLoading && !magicLinkSending && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className="bg-white rounded-lg shadow-lg px-6 py-4 flex items-center gap-3">
                         <svg

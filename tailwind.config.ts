@@ -76,6 +76,10 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        "product-rail-marquee": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
         "modern-float": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
@@ -123,6 +127,7 @@ export default {
         "launch-fly-diagonal-soft": "launch-fly-diagonal-soft 42s ease-in-out infinite",
         "launch-drift-bob": "launch-drift-bob 7s ease-in-out infinite",
         "modern-marquee": "modern-marquee 38s linear infinite",
+        "product-rail-marquee": "product-rail-marquee linear infinite",
         "modern-float": "modern-float 5s ease-in-out infinite",
         "compare-nav-pulse": "compare-nav-pulse 1.6s ease-in-out infinite",
         "compare-nav-bump": "compare-nav-bump 0.85s ease-out 1",

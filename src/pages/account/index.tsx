@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState, type ComponentType, type SVGProps} from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from "next/router";
 import AuthLayout from "@/components/layout/AuthLayout";
 import {getAddress, getOrderHistory, getWishList} from "@/redux/product/productSlice";
@@ -20,6 +21,7 @@ import {
     EyeIcon,
     HeartIcon,
     ShoppingBagIcon,
+    TicketIcon,
     UserIcon,
     BellAlertIcon,
 } from "@heroicons/react/24/outline";
@@ -52,13 +54,19 @@ export default function AccountPage() {
 
     const [tab, setTab] = useState<string>("orders");
 
-    const tabs: { id: string; name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
+    const tabs: {
+        id: string;
+        name: string;
+        Icon: ComponentType<SVGProps<SVGSVGElement>>;
+        externalHref?: string;
+    }[] = [
         { id: 'orders', name: 'Orders', Icon: ShoppingBagIcon },
         { id: 'wish', name: 'Wishlist', Icon: HeartIcon },
         { id: 'buying_requests', name: 'My Buying Requests', Icon: ClipboardDocumentListIcon },
         { id: 'chats', name: 'Chats', Icon: ChatBubbleLeftRightIcon },
         { id: 'profile', name: 'Profile', Icon: UserIcon },
         { id: 'notifications', name: 'Notifications', Icon: BellAlertIcon },
+        { id: 'coupons', name: 'Coupons', Icon: TicketIcon, externalHref: '/coupons' },
         { id: 'recently_viewed', name: 'Recently Viewed', Icon: EyeIcon },
     ]
 
@@ -176,6 +184,20 @@ export default function AccountPage() {
                         >
                             {tabs.map((ta) => {
                                 const TabIcon = ta.Icon;
+                                if (ta.externalHref) {
+                                    return (
+                                        <Link
+                                            key={ta.id}
+                                            href={ta.externalHref}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 sm:gap-2 pb-2 font-semibold shrink-0 text-white/90 hover:text-white"
+                                        >
+                                            <TabIcon className={HI_SM} aria-hidden />
+                                            {ta.name}
+                                        </Link>
+                                    );
+                                }
                                 return (
                                     <span
                                         key={ta.id}

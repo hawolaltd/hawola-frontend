@@ -8,6 +8,7 @@ import {
   HeartIcon,
   MagnifyingGlassIcon,
   ShoppingCartIcon,
+  TicketIcon,
   TruckIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
@@ -25,6 +26,9 @@ import CartModal from "@/components/shared/CartModal";
 import { useRouter } from "next/router";
 import { CartResponse } from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
+import SignupBonusHeaderCta from "@/components/header/SignupBonusHeaderCta";
+import { useSignupBonusPromo } from "@/hook/useSignupBonusPromo";
+import { useCouponCenterNavVisible } from "@/hook/useCouponCenterNavVisible";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import productService from "@/redux/product/productService";
 // import Navigation from "./Navigation";
@@ -92,6 +96,14 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [userCart, setUserCart] = useState<CartResponse>(carts);
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const router = useRouter();
+  const signupBonusPromo = useSignupBonusPromo(!isAuthenticated);
+  const showCouponCenterNav = useCouponCenterNavVisible();
+  const hideSignupBonusCta =
+    router.pathname === "/auth/register" ||
+    router.pathname === "/auth/login" ||
+    router.pathname.startsWith("/auth/register") ||
+    router.pathname.startsWith("/auth/login");
 
   // const toggleDropdown = (menu: string) => {
   //   setDropdownOpen(dropdownOpen === menu ? null : menu);
@@ -100,8 +112,6 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const toggleDropdownOpenCat = () => {
     setDropdownOpenCat(!dropdownOpenCat);
   };
-
-  const router = useRouter();
 
   const dispatch = useAppDispatch();
 
@@ -864,7 +874,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             /> */}
           </div>
 
-          {/* Icons: mobile search, User, Wishlist, Cart, Compare, menu */}
+          {/* Icons: mobile search, User, Wishlist, Cart, Compare, signup bonus, menu */}
           <div className="relative flex shrink-0 items-center space-x-1 sm:space-x-2">
             <button
               type="button"
@@ -950,6 +960,17 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               <ShoppingCartIcon className={HI_MD} aria-hidden />
             </div>
 
+            {showCouponCenterNav ? (
+              <Link
+                href="/coupons"
+                className={`relative inline-flex cursor-pointer items-center gap-1.5 ${HI_FRAME_HEADER}`}
+                aria-label="Coupon center"
+              >
+                <TicketIcon className={HI_MD} aria-hidden />
+                <span className="hidden text-sm font-medium lg:inline">Coupons</span>
+              </Link>
+            ) : null}
+
             <Link
               href="/compare"
               className={`relative inline-flex cursor-pointer items-center gap-1.5 ${HI_FRAME_HEADER} ${
@@ -973,6 +994,10 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               <ArrowsRightLeftIcon className={HI_MD} aria-hidden />
               <span className="hidden text-sm font-medium lg:inline">Compare</span>
             </Link>
+
+            {!isAuthenticated && signupBonusPromo && !hideSignupBonusCta ? (
+              <SignupBonusHeaderCta promo={signupBonusPromo} />
+            ) : null}
 
             <button
               type="button"

@@ -42,6 +42,7 @@ type Props = {
   onWishList: () => void;
   addToWishlistPendingProductId: number | null;
   onAddToCart: () => void;
+  onInstantOrder?: () => void;
   addToCartPendingProductId: number | null;
   onShare: (platform: string) => void;
   onCopyLink: () => void;
@@ -68,6 +69,7 @@ export default function ProductDetailDesktopBuyBox({
   onWishList,
   addToWishlistPendingProductId,
   onAddToCart,
+  onInstantOrder,
   addToCartPendingProductId,
   onShare,
   onCopyLink,
@@ -348,17 +350,14 @@ export default function ProductDetailDesktopBuyBox({
           <button
             type="button"
             disabled={inventoryUnavailable || cartBusy}
-            onClick={onAddToCart}
+            onClick={onInstantOrder}
             className={`inline-flex min-h-[46px] min-w-[160px] flex-1 items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition sm:flex-none ${
               inventoryUnavailable || cartBusy
-                ? "cursor-not-allowed bg-primary/35 text-white"
-                : "bg-primary text-white shadow-sm hover:bg-primary/90"
+                ? "cursor-not-allowed bg-[#FD9636]/35 text-white"
+                : "bg-[#FD9636] text-white shadow-sm hover:bg-[#e8872f]"
             }`}
           >
-            {cartBusy ? (
-              <InlineButtonSpinner className="h-4 w-4 text-white" />
-            ) : null}
-            {cartBusy ? "Adding…" : "Buy now"}
+            Instant Order
           </button>
         </div>
       </div>

@@ -12,7 +12,51 @@ import {normalizeErrors} from "@/util";
 import { mergeGuestCartAfterLogin } from "@/lib/guestCartClient";
 import { CheckCircleIcon, EnvelopeIcon, ArrowRightIcon, ClockIcon } from '@heroicons/react/24/outline';
 import MerchantAuthPrompt from "@/components/auth/MerchantAuthPrompt";
+import SignupBonusPromoCard from "@/components/auth/SignupBonusPromoCard";
+import SignupBonusPromoHeroSkeleton from "@/components/auth/SignupBonusPromoHeroSkeleton";
+import RegisterHeroFallbackImage from "@/components/auth/RegisterHeroFallbackImage";
 import { trackTikTokCompleteRegistration } from "@/lib/tiktokPixel";
+import {
+  fetchSignupBonusPromo,
+  type SignupBonusPromo,
+} from "@/services/signupBonusService";
+
+function useRegisterSignupBonus(initial?: SignupBonusPromo | null) {
+  const router = useRouter();
+  const [promo, setPromo] = useState<SignupBonusPromo | null>(
+    initial?.active ? initial : null
+  );
+  const [ready, setReady] = useState(Boolean(initial?.active));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (initial?.active) {
+      setPromo(initial);
+      setReady(true);
+      return;
+    }
+
+    setReady(false);
+    setPromo(null);
+
+    void fetchSignupBonusPromo()
+      .then((data) => {
+        if (cancelled) return;
+        setPromo(data?.active ? data : null);
+        setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router.asPath, initial]);
+
+  return { promo, ready };
+}
 
 // Rate limiting constants
 const MAX_RESEND_ATTEMPTS = 2;
@@ -23,7 +67,7 @@ const getStorageKey = (email: string) => `resend_email_${email}`;
 const getAttemptsKey = (email: string) => `resend_attempts_${email}`;
 const getCooldownKey = (email: string) => `resend_cooldown_${email}`;
 
-function RegisterForm() {
+function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo | null }) {
     
     const {control, handleSubmit, formState: {errors}, reset, getValues} = useForm<RegisterFormType>();
 
@@ -45,6 +89,8 @@ function RegisterForm() {
     })
 
     const router = useRouter()
+    const { promo: signupBonusPromo, ready: signupBonusReady } =
+        useRegisterSignupBonus(signupBonus);
 
     // Load saved attempts and cooldown from localStorage
     useEffect(() => {
@@ -186,7 +232,14 @@ function RegisterForm() {
 
         if (res?.type.includes('fulfilled')) {
             trackTikTokCompleteRegistration({ email: data.email });
-            toast.success("Welcome to HAWOLA")
+            const signupCoupon = (res.payload as { signup_coupon?: { code?: string } })?.signup_coupon;
+            if (signupCoupon?.code) {
+                toast.success(
+                    `Welcome to HAWOLA — your signup coupon ${signupCoupon.code} is in your wallet.`
+                );
+            } else {
+                toast.success("Welcome to HAWOLA");
+            }
             reset()
             router.push(
                 `/auth/verify-pending?email=${encodeURIComponent(data.email)}`
@@ -381,6 +434,9 @@ function RegisterForm() {
             {!regSuccess && (
                 <div className="grid w-full grid-cols-1 gap-6 px-4 md:px-8 lg:grid-cols-2 lg:gap-10">
                     <div className="w-full rounded-2xl border border-[#e2e8f2] bg-white p-5 shadow-sm md:p-6">
+                        {signupBonusReady && signupBonusPromo?.active ? (
+                            <SignupBonusPromoCard promo={signupBonusPromo} variant="banner" />
+                        ) : null}
                         <h2 className="text-2xl font-bold text-[#435a8c] lg:text-4xl">Create an Account</h2>
                         <p className="mt-2 text-sm text-[#435a8c] lg:text-base">
                             Your data is secure, protected, and handled with care.
@@ -582,12 +638,14 @@ function RegisterForm() {
                         </div>
                     </div>
 
-                    <div className="relative min-h-[340px] overflow-hidden rounded-2xl border border-[#e2e8f2] bg-[#f3f6fc] shadow-sm">
-                        <img
-                            src="/reg_page-2.jpg"
-                            alt="Registration visual"
-                            className="h-full w-full object-cover [filter:contrast(1.16)_saturate(1.12)_brightness(1.03)]"
-                        />
+                    <div className="relative min-h-[400px] overflow-hidden rounded-2xl border border-[#e2e8f2] bg-[#f3f6fc] shadow-sm sm:min-h-[560px] md:min-h-[640px]">
+                        {!signupBonusReady ? (
+                            <SignupBonusPromoHeroSkeleton />
+                        ) : signupBonusPromo?.active ? (
+                            <SignupBonusPromoCard promo={signupBonusPromo} variant="hero" />
+                        ) : (
+                            <RegisterHeroFallbackImage />
+                        )}
                     </div>
                 </div>
             )}

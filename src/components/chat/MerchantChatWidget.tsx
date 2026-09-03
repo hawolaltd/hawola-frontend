@@ -15,6 +15,11 @@ import {
   type BuyerChatMessage,
 } from "@/lib/buyerChatApi";
 import {
+  PROOF_FILE_ACCEPT,
+  PROOF_FILE_HINT,
+  validateProofFile,
+} from "@/lib/proofOfPaymentUpload";
+import {
   subscribeBuyerChat,
   CHAT_FALLBACK_POLL_MS,
 } from "@/lib/buyerChatSocket";
@@ -266,19 +271,24 @@ export default function MerchantChatWidget({
               })
             )}
           </div>
-          <div className="shrink-0 border-t border-gray-200 bg-white p-2 flex gap-2">
+          <div className="shrink-0 border-t border-gray-200 bg-white p-2">
             {(orderitemNumber || conversation?.orderitem_number) ? (
-              <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-300 text-[10px] font-bold text-primary">
-                PoP
+              <div className="mb-2 px-1">
                 <input
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept={PROOF_FILE_ACCEPT}
                   className="hidden"
+                  id="merchant-chat-pop-upload"
                   disabled={!conversation || sending}
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     e.target.value = "";
                     if (!file || !conversation?.slug) return;
+                    const validationError = validateProofFile(file);
+                    if (validationError) {
+                      toast.error(validationError);
+                      return;
+                    }
                     setSending(true);
                     try {
                       const msg = await sendBuyerChatProofOfPayment(
@@ -289,15 +299,32 @@ export default function MerchantChatWidget({
                       setMessages((prev) => [...prev, msg]);
                       setInput("");
                       toast.success("Proof of payment sent");
-                    } catch (err: any) {
-                      toast.error(err?.response?.data?.detail || "Upload failed");
+                    } catch (err: unknown) {
+                      const detail =
+                        typeof err === "object" &&
+                        err !== null &&
+                        "response" in err
+                          ? (err as { response?: { data?: { detail?: string } } }).response
+                              ?.data?.detail
+                          : undefined;
+                      toast.error(detail || "Upload failed");
                     } finally {
                       setSending(false);
                     }
                   }}
                 />
-              </label>
+                <label
+                  htmlFor="merchant-chat-pop-upload"
+                  className={`block text-xs font-semibold text-primary underline-offset-2 hover:underline ${
+                    !conversation || sending ? "pointer-events-none opacity-50" : "cursor-pointer"
+                  }`}
+                >
+                  Attach proof of payment
+                </label>
+                <p className="mt-0.5 text-[10px] text-gray-500">{PROOF_FILE_HINT}</p>
+              </div>
             ) : null}
+            <div className="flex gap-2">
             <input
               className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
               placeholder="Type a message…"

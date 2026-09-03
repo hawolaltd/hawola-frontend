@@ -10,7 +10,7 @@ import type { ProductFull } from "@/types/home";
 import { DarkProductBand } from "./DarkProductBand";
 import { HomeBodyAdvertBanners } from "./HomeBodyAdvertBanners";
 import { HomeSectionHeader } from "./HomeSectionHeader";
-import { PaginatedProductGrid, ProductGrid, ProductSnapRail } from "./ProductSnapRail";
+import { ProductAutoScrollGrid, ProductGrid, ProductSnapRail } from "./ProductSnapRail";
 import { RailNavButtons, useHorizontalRailScroll } from "./useHorizontalRailScroll";
 import { getHomeProductPools } from "./homePools";
 
@@ -165,7 +165,7 @@ export default function DealRunwayBody() {
         <section className="py-10">
           <div className="mx-auto max-w-screen-xl px-6 xl:px-0">
             <HomeSectionHeader eyebrow="For you" title="Recommended" />
-            <PaginatedProductGrid products={pools.recommended} pageSize={10} />
+            <ProductAutoScrollGrid products={pools.recommended} pageSize={8} />
           </div>
         </section>
       ) : null}

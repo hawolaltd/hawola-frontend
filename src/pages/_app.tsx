@@ -14,7 +14,8 @@ import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/store/store";
 import { Provider, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
-import { Toaster } from "sonner";
+import "react-toastify/dist/ReactToastify.css";
+import HawolaToaster, { TOAST_DURATION_MS } from "@/components/HawolaToaster";
 import { useEffect, useState } from "react";
 import { checkTokenValidity, clearAllStorage } from "@/util";
 import { clearAuthState } from "@/redux/auth/authSlice";
@@ -271,8 +272,15 @@ function AppContent({ Component, pageProps }: AppProps) {
       <TikTokOpenInBrowserPrompt />
       <Component {...pageProps} />
       <PresenceFlashHost />
-      <ToastContainer closeButton />
-      <Toaster position="top-right" closeButton />
+      <ToastContainer
+        closeButton
+        autoClose={TOAST_DURATION_MS}
+        hideProgressBar={false}
+        pauseOnHover
+        position="top-right"
+        newestOnTop
+      />
+      <HawolaToaster />
       {showLaunchConfetti ? (
         <>
           <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden>

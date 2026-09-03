@@ -207,3 +207,57 @@ html {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+/* Sonner toasts: visible countdown bar (matches live engagement flash cards). */
+[data-sonner-toaster] {
+  --hawola-toast-duration: 15s;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"]:not([data-type="loading"]) {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-sonner-toaster]
+  [data-sonner-toast][data-styled="true"]:not([data-type="loading"])::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transform-origin: left center;
+  background: #fd9636;
+  animation: hawola-toast-progress var(--hawola-toast-duration, 15s) linear forwards;
+  pointer-events: none;
+}
+
+[data-sonner-toaster]
+  [data-sonner-toast][data-styled="true"][data-expanded="true"]:not([data-type="loading"])::after {
+  animation-play-state: paused;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="success"]::after {
+  background: #5bc694;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="error"]::after {
+  background: #ef4444;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"]::after {
+  background: #f59e0b;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="info"]::after {
+  background: #425a8b;
+}
+
+@keyframes hawola-toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

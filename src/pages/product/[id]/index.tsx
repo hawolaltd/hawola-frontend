@@ -12,6 +12,7 @@ import {
     DEFAULT_PRODUCT_DETAIL_LOAD,
     getCarts,
     getWishList,
+    setOrdersFromInstant,
 } from "@/redux/product/productSlice";
 import {
   recordProductDetailView,
@@ -22,12 +23,13 @@ import { ensureProductDetailLoaded } from "@/lib/productDetailPrefetch";
 import { useRouter } from "next/router";
 import {formatCurrency, isContactMerchantOnlyProduct} from "@/util";
 import Link from "next/link";
-import {ProductByIdResponse} from "@/types/product";
+import type { OrderDetailsResponse, ProductByIdResponse } from "@/types/product";
 import {toast} from "sonner";
 import ProductDetailNotFound from "@/components/product/ProductDetailNotFound";
 import ProductDetailMobileBuyBox from "@/components/product/detail/ProductDetailMobileBuyBox";
 import ProductDetailDesktopBuyBox from "@/components/product/detail/ProductDetailDesktopBuyBox";
 import BackInStockModal from "@/components/product/BackInStockModal";
+import InstantOrderModal from "@/components/product/InstantOrderModal";
 import { getBackInStockStatus } from "@/services/backInStockService";
 import {
     clearPresenceContext,
@@ -89,6 +91,7 @@ const ProductPage = ({
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [backInStockOpen, setBackInStockOpen] = useState(false);
+    const [instantOrderOpen, setInstantOrderOpen] = useState(false);
     const [backInStockSubscribed, setBackInStockSubscribed] = useState(false);
     const [backInStockRegisteredLabel, setBackInStockRegisteredLabel] = useState<
         string | null
@@ -459,11 +462,10 @@ const ProductPage = ({
 
                 toast.success("Added to cart");
                 if (guestResult.warning) {
-                    toast.warning(guestResult.warning, { duration: 6000 });
+                    toast.warning(guestResult.warning);
                 } else if (guestResult.source === "local") {
                     toast.warning(
-                        "Saved on this device only — open in Safari or Chrome to keep your cart.",
-                        { duration: 5000 }
+                        "Saved on this device only — open in Safari or Chrome to keep your cart."
                     );
                 }
             }
@@ -472,6 +474,45 @@ const ProductPage = ({
             toast.error(addToCartErrorMessage(e, "Failed to add to cart."));
         }
     }
+
+    const instantOrderVariants = useMemo(() => {
+        if (!product?.product_variant?.length) return undefined;
+        return Object.entries(selectedVariants).map(([variantId, variantValueId]) => ({
+            variant: Number(variantId),
+            variant_value: variantValueId,
+        }));
+    }, [product?.product_variant, selectedVariants]);
+
+    const variantsCompleteForInstantOrder = useMemo(() => {
+        const groups = product?.product_variant || [];
+        if (!groups.length) return true;
+        return groups.every(
+            (group) => selectedVariants[group.variant.id] != null
+        );
+    }, [product?.product_variant, selectedVariants]);
+
+    const handleOpenInstantOrder = () => {
+        if (inventoryUnavailable) {
+            toast.error("This product is currently out of stock.");
+            return;
+        }
+        if (!variantsCompleteForInstantOrder) {
+            toast.error("Please select all product options first.");
+            return;
+        }
+        if (!product?.product?.id) {
+            toast.error("Product is still loading. Try again in a moment.");
+            return;
+        }
+        setInstantOrderOpen(true);
+    };
+
+    const handleInstantOrderPlaced = (order: OrderDetailsResponse) => {
+        dispatch(setOrdersFromInstant(order));
+        setInstantOrderOpen(false);
+        toast.success("Order placed — complete payment to finish.");
+        void router.push("/carts/checkout");
+    };
 
     const init = useCallback(async () => {
         const slug = productSlug;
@@ -691,6 +732,7 @@ const ProductPage = ({
             0,
             Math.min(index, effectiveGalleryCandidates.length - 1)
         );
+        setIsHovered(false);
         setLightboxIndex(safeIndex);
         setLightboxOpen(true);
     };
@@ -731,7 +773,7 @@ const ProductPage = ({
                             <div className="border-b border-slate-800 lg:col-span-8 lg:border-b-0 lg:border-r lg:border-slate-800 p-5 lg:p-7">
                                 <div className="aspect-[16/10] w-full rounded-2xl border border-slate-700 bg-slate-900 flex items-center justify-center overflow-hidden shadow-[0_1px_6px_rgba(2,6,23,0.6)]">
                                     <FallbackProductImage
-                                        key={`cm-hero-${selectedGalleryIndex}-${heroImageCandidates[0] || "empty"}`}
+                                        key={`cm-hero-${selectedGalleryIndex}`}
                                         candidates={heroImageCandidates}
                                         alt={displayName}
                                         className="w-full h-full object-contain cursor-zoom-in"
@@ -930,11 +972,13 @@ const ProductPage = ({
                                 onMouseMove={handleMouseMove}
                             >
                                 <FallbackProductImage
-                                    key={`hero-${selectedGalleryIndex}-${heroImageCandidates[0] || "empty"}`}
+                                    key={`hero-${selectedGalleryIndex}`}
                                     candidates={heroImageCandidates}
                                     alt={displayName}
-                                    className={`h-full w-full object-contain transition-transform duration-300 max-lg:scale-100 ${
-                                        isHovered ? "lg:scale-150" : "lg:scale-100"
+                                    className={`h-full w-full object-contain max-lg:scale-100 ${
+                                        isHovered && !lightboxOpen
+                                            ? "lg:scale-150 lg:transition-transform lg:duration-300"
+                                            : "lg:scale-100"
                                     }`}
                                     style={{
                                         transformOrigin: `${position.x} ${position.y}`,
@@ -1046,6 +1090,7 @@ const ProductPage = ({
                         onWishList={handleWishList}
                         addToWishlistPendingProductId={addToWishlistPendingProductId}
                         onAddToCart={() => handleAddToCart(product as ProductByIdResponse)}
+                        onInstantOrder={handleOpenInstantOrder}
                         addToCartPendingProductId={addToCartPendingProductId}
                         onShare={handleShare}
                         onCopyLink={handleCopyLink}
@@ -1151,6 +1196,27 @@ const ProductPage = ({
                         setBackInStockRegisteredLabel(meta.registeredDateLabel);
                     }
                 }}
+            />
+        ) : null}
+        {product?.product?.id ? (
+            <InstantOrderModal
+                isOpen={instantOrderOpen}
+                onClose={() => setInstantOrderOpen(false)}
+                productId={product.product.id}
+                productName={displayName}
+                unitPrice={Number(product.product.discount_price ?? product.product.price ?? 0)}
+                merchantId={product.product.merchant?.id}
+                merchantStateName={product.product.merchant?.state?.name}
+                merchantLocationName={product.product.merchant?.location?.name}
+                shippingWithin={product.product.shipping_cost_within}
+                shippingOutside={product.product.shipping_cost_outside}
+                shippingOutsideState={product.product.shipping_cost_outside_state}
+                qty={quantity}
+                variants={instantOrderVariants}
+                isAuthenticated={Boolean(isAuthenticated)}
+                userEmail={authProfile?.email}
+                userPhone={(authProfile as { phone_number?: string })?.phone_number}
+                onOrderPlaced={handleInstantOrderPlaced}
             />
         ) : null}
         {product?.product?.slug ? (

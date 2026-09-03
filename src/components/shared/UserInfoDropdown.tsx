@@ -42,6 +42,15 @@ function UserInfoDropdown() {
 
           <li>
             <Link
+              href="/coupons"
+              className="block text-primary px-4 py-2 hover:text-deepOrange"
+            >
+              Coupon Center
+            </Link>
+          </li>
+
+          <li>
+            <Link
               href="/wishlist"
               className="block text-primary px-4 py-2 hover:text-deepOrange"
             >
@@ -74,6 +83,14 @@ function UserInfoDropdown() {
         </ul>
       ) : (
         <ul className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-md border bg-white shadow-lg">
+          <li>
+            <Link
+              href="/coupons"
+              className="block text-primary px-4 py-2 hover:text-deepOrange"
+            >
+              Coupon Center
+            </Link>
+          </li>
           <li
             onClick={() => {
               router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);

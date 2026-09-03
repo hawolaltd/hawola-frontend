@@ -3,6 +3,7 @@
 import React from "react";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import FeaturesSection from "@/components/home/FeaturesSection";
+import HomeRandomCouponsSection from "@/components/home/HomeRandomCouponsSection";
 import type { AdvertBanner } from "@/types/home";
 
 /** Match classic home advert image field fallbacks. */
@@ -71,15 +72,20 @@ export function HomeAdvertGrid({
 export function HomeBodyAdvertBanners({
   middle,
   bottom,
+  showCoupons = true,
 }: {
   middle: (AdvertBanner | null)[];
   bottom: (AdvertBanner | null)[];
+  showCoupons?: boolean;
 }) {
   const hasMiddle = (middle || []).some(Boolean);
   const hasBottom = (bottom || []).some(Boolean);
-  if (!hasMiddle && !hasBottom) return null;
+  if (!hasMiddle && !hasBottom && !showCoupons) return null;
 
   return (
+    <>
+      {showCoupons ? <HomeRandomCouponsSection className="bg-[#E8EDF3]" /> : null}
+      {hasMiddle || hasBottom ? (
     <section className="mx-auto flex w-full max-w-screen-xl flex-col gap-4 px-6 py-4 xl:px-0">
       {hasMiddle ? (
         <div className="flex w-full justify-center py-4">
@@ -97,5 +103,7 @@ export function HomeBodyAdvertBanners({
       ) : null}
       <FeaturesSection />
     </section>
+      ) : null}
+    </>
   );
 }

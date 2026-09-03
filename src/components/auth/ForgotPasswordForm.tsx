@@ -43,7 +43,6 @@ export default function ForgotPasswordForm() {
                             background: "#ef4444",
                             color: "white",
                         },
-                        duration: 5000,
                     }
                 );
             } else {
