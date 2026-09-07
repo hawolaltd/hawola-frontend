@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import { formatCouponOfferLabel } from "@/lib/storeCouponDiscount";
@@ -21,6 +22,8 @@ export type CouponTicketCardData = {
   busy?: boolean;
   onAction?: () => void;
   href?: string;
+  /** When false, hide the copy chip affordance (default true). */
+  copyable?: boolean;
 };
 
 function formatEndsAt(endsAt?: string | null): string | null {
@@ -54,15 +57,31 @@ export default function CouponTicketCard({
   busy = false,
   onAction,
   href,
+  copyable = true,
 }: CouponTicketCardData) {
+  const [copied, setCopied] = useState(false);
   const offer = formatCouponOfferLabel({ discount_type, value });
   const brand = merchant?.store_name?.trim() || title?.trim() || "Hawola";
   const accent = merchant?.primary_color?.trim() || "#0E224D";
   const endsLabel = formatEndsAt(endsAt);
   const disabled = busy || (!usable && !claimed);
+  const normalized = (code || "").trim().toUpperCase();
 
   const actionLabel =
-    ctaLabel || (claimed ? "Use at checkout" : "Claim coupon");
+    ctaLabel || (claimed ? "Apply to cart" : "Claim & apply");
+
+  const copyCode = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!normalized || !copyable) return;
+    try {
+      await navigator.clipboard.writeText(normalized);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const cardBody = (
     <div className="relative overflow-hidden rounded-2xl border border-dashed border-orange-400/45 bg-gradient-to-br from-[#0E224D] to-[#1a3a6e] text-white shadow-md transition hover:shadow-lg">
@@ -101,9 +120,23 @@ export default function CouponTicketCard({
           <p className="mt-1 text-xs font-medium text-[#FD9636]">{statusLabel}</p>
         ) : null}
 
-        <div className="mt-3 inline-flex items-center rounded-xl bg-white/10 px-3 py-1.5 font-mono text-sm font-bold tracking-widest text-[#FD9636]">
-          {code.toUpperCase()}
-        </div>
+        {copyable ? (
+          <button
+            type="button"
+            onClick={(e) => void copyCode(e)}
+            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5 font-mono text-sm font-bold tracking-widest text-[#FD9636] transition hover:bg-white/15"
+            title="Copy coupon code"
+          >
+            <span>{normalized}</span>
+            <span className="font-sans text-[10px] font-semibold uppercase tracking-wide text-white/70">
+              {copied ? "Copied" : "Copy"}
+            </span>
+          </button>
+        ) : (
+          <div className="mt-3 inline-flex items-center rounded-xl bg-white/10 px-3 py-1.5 font-mono text-sm font-bold tracking-widest text-[#FD9636]">
+            {normalized}
+          </div>
+        )}
 
         {endsLabel ? (
           <p className="mt-2 text-[11px] text-white/55">Valid until {endsLabel}</p>
@@ -112,7 +145,11 @@ export default function CouponTicketCard({
         {onAction ? (
           <button
             type="button"
-            onClick={onAction}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onAction();
+            }}
             disabled={disabled}
             className="mt-4 flex w-full items-center justify-center rounded-xl bg-[#FD9636] px-4 py-2.5 text-sm font-bold text-[#0E224D] transition hover:bg-[#ffaa55] disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.99]"
           >

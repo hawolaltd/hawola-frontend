@@ -35,10 +35,6 @@ type Props = {
   backInStockSubscribed?: boolean;
   merchantCollectsNoticeSafe: string;
   siteSettings: Record<string, unknown> | null;
-  hasOutsideVicinityShippingCost: boolean;
-  outsideVicinityShippingCost: string | number | null | undefined;
-  hasOutsideStateShippingCost: boolean;
-  outsideStateShippingCost: string | number | null | undefined;
   onWishList: () => void;
   addToWishlistPendingProductId: number | null;
   onAddToCart: () => void;
@@ -62,10 +58,6 @@ export default function ProductDetailDesktopBuyBox({
   backInStockSubscribed,
   merchantCollectsNoticeSafe,
   siteSettings,
-  hasOutsideVicinityShippingCost,
-  outsideVicinityShippingCost,
-  hasOutsideStateShippingCost,
-  outsideStateShippingCost,
   onWishList,
   addToWishlistPendingProductId,
   onAddToCart,
@@ -243,13 +235,7 @@ export default function ProductDetailDesktopBuyBox({
         <p className="mb-3 text-sm font-semibold text-slate-800">
           Shipping information
         </p>
-        <ProductDetailShippingLines
-          product={product}
-          hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
-          outsideVicinityShippingCost={outsideVicinityShippingCost}
-          hasOutsideStateShippingCost={hasOutsideStateShippingCost}
-          outsideStateShippingCost={outsideStateShippingCost}
-        />
+        <ProductDetailShippingLines product={product} />
       </div>
 
       {product?.product_variant?.length > 0 ? (

@@ -183,6 +183,15 @@ export default function DealRunwayBody() {
 
       <HomeBodyAdvertBanners middle={pools.advertMiddle} bottom={pools.advertBottom} />
 
+      {pools.productOfTheWeek.length > 0 ? (
+        <section className="border-t border-teal-100 bg-teal-50/40 py-10">
+          <div className="mx-auto max-w-screen-xl px-6 xl:px-0">
+            <HomeSectionHeader eyebrow="This week" title="Product of the week" />
+            <ProductGrid products={pools.productOfTheWeek.slice(0, 12)} />
+          </div>
+        </section>
+      ) : null}
+
       {specialsAfterFeatured.length > 0 ? (
         <section className="border-t border-slate-200 py-10">
           <div className="mx-auto max-w-screen-xl px-6 xl:px-0">

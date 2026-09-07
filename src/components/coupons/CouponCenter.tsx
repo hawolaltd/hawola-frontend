@@ -265,7 +265,7 @@ export default function CouponCenter() {
                 subtitle={coupon.label}
                 scopeLabel={
                   Number(coupon.min_order_amount) > 0
-                    ? `Min order ${formatCurrency(coupon.min_order_amount)}`
+                    ? `Min order ${formatCurrency(coupon.min_order_amount || 0)}`
                     : "Platform checkout"
                 }
                 endsAt={coupon.ends_at}

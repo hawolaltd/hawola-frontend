@@ -108,6 +108,8 @@ interface HomeData {
     hawola_specials: ProductFull[];
     /** Products flagged `is_deals_today` for home + Deals Today surfaces. */
     deals_today_products?: ProductFull[];
+    /** Products flagged `is_product_of_the_week` for home Product of the Week. */
+    product_of_the_week?: ProductFull[];
     top_rated_products: ProductFull[];
     top_selling_products: ProductFull[];
     best_selling_products: ProductFull[];

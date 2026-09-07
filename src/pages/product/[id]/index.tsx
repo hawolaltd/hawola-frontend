@@ -697,18 +697,6 @@ const ProductPage = ({
     const keywordsCombined = [productSeo?.keywords, tagNames.join(", ")]
         .filter(Boolean)
         .join(", ");
-    const outsideVicinityShippingCost =
-        product?.product?.shipping_cost_outside?.shipping_cost;
-    const hasOutsideVicinityShippingCost =
-        outsideVicinityShippingCost !== null &&
-        outsideVicinityShippingCost !== undefined &&
-        String(outsideVicinityShippingCost).trim() !== "";
-    const outsideStateShippingCost =
-        product?.product?.shipping_cost_outside_state?.shipping_cost;
-    const hasOutsideStateShippingCost =
-        outsideStateShippingCost !== null &&
-        outsideStateShippingCost !== undefined &&
-        String(outsideStateShippingCost).trim() !== "";
 
     const ogLocale = (siteSettingsForSeo?.seo_og_locale as string) || "en_US";
     const twitterSite = (siteSettingsForSeo?.seo_twitter_site as string)?.trim();
@@ -1059,10 +1047,6 @@ const ProductPage = ({
                         backInStockSubscribed={backInStockSubscribed}
                         merchantCollectsNoticeSafe={merchantCollectsNoticeSafe}
                         siteSettings={siteSettings as Record<string, unknown> | null}
-                        hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
-                        outsideVicinityShippingCost={outsideVicinityShippingCost}
-                        hasOutsideStateShippingCost={hasOutsideStateShippingCost}
-                        outsideStateShippingCost={outsideStateShippingCost}
                         onWishList={handleWishList}
                         addToWishlistPendingProductId={addToWishlistPendingProductId}
                         onShare={handleShare}
@@ -1083,10 +1067,6 @@ const ProductPage = ({
                         backInStockSubscribed={backInStockSubscribed}
                         merchantCollectsNoticeSafe={merchantCollectsNoticeSafe}
                         siteSettings={siteSettings as Record<string, unknown> | null}
-                        hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
-                        outsideVicinityShippingCost={outsideVicinityShippingCost}
-                        hasOutsideStateShippingCost={hasOutsideStateShippingCost}
-                        outsideStateShippingCost={outsideStateShippingCost}
                         onWishList={handleWishList}
                         addToWishlistPendingProductId={addToWishlistPendingProductId}
                         onAddToCart={() => handleAddToCart(product as ProductByIdResponse)}

@@ -20,6 +20,7 @@ import {
   fetchSignupBonusPromo,
   type SignupBonusPromo,
 } from "@/services/signupBonusService";
+import { TERMS_OF_USE_URL, PRIVACY_POLICY_URL } from "@/lib/storefrontUrls";
 
 function useRegisterSignupBonus(initial?: SignupBonusPromo | null) {
   const router = useRouter();
@@ -235,7 +236,7 @@ function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo |
             const signupCoupon = (res.payload as { signup_coupon?: { code?: string } })?.signup_coupon;
             if (signupCoupon?.code) {
                 toast.success(
-                    `Welcome to HAWOLA — your signup coupon ${signupCoupon.code} is in your wallet.`
+                    `Welcome to HAWOLA. Your signup coupon ${signupCoupon.code} is in your wallet.`
                 );
             } else {
                 toast.success("Welcome to HAWOLA");
@@ -576,7 +577,7 @@ function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo |
                                                     <label htmlFor="register-terms" className="text-xs text-[#435a8c] leading-relaxed">
                                                         By clicking Register button, you agree to our{" "}
                                                         <Link
-                                                            href="/terms"
+                                                            href={TERMS_OF_USE_URL}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium underline underline-offset-2 hover:text-deepOrange"
@@ -586,7 +587,7 @@ function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo |
                                                         </Link>
                                                         {" "}and{" "}
                                                         <Link
-                                                            href="/privacy"
+                                                            href={PRIVACY_POLICY_URL}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium underline underline-offset-2 hover:text-deepOrange"

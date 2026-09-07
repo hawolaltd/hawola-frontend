@@ -31,9 +31,10 @@ import { validateCoupon } from "@/services/couponService";
 import { getOrCreatePresenceSessionKey } from "@/lib/presenceContext";
 import {
   clearPendingCouponCode,
-  readPendingCouponCode,
-  resolvePendingCouponCode,
+  readPendingCouponCodes,
+  resolvePendingCouponCodes,
   savePendingCouponCode,
+  savePendingCouponCodesFromValidate,
 } from "@/lib/pendingCoupon";
 import {
   clearNegotiationCartNudge,
@@ -122,6 +123,7 @@ const CartPage = () => {
   const [checkoutStep, setCheckoutStep] = useState<string>("");
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
+  const [appliedCouponCodes, setAppliedCouponCodes] = useState<string[]>([]);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponMeta, setCouponMeta] = useState<AppliedCouponMeta | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
@@ -311,10 +313,12 @@ const CartPage = () => {
         silent = false,
         goodsTotal,
         shippingTotal,
+        stackWithExisting = true,
       }: {
         silent?: boolean;
         goodsTotal?: number;
         shippingTotal?: number;
+        stackWithExisting?: boolean;
       } = {}
     ) => {
       const code = (rawCode || "").trim().toUpperCase();
@@ -323,7 +327,15 @@ const CartPage = () => {
       const shipping = shippingTotal ?? shippingCost ?? 0;
 
       setCouponCode(code);
-      savePendingCouponCode(code);
+
+      const existing = stackWithExisting
+        ? appliedCouponCodes.length
+          ? appliedCouponCodes
+          : readPendingCouponCodes()
+        : [];
+      const codes = Array.from(
+        new Set([...existing, code].map((c) => c.trim().toUpperCase()).filter(Boolean))
+      ).slice(0, 2);
 
       const gen = ++couponApplyGenRef.current;
       if (!silent) {
@@ -345,49 +357,86 @@ const CartPage = () => {
           );
           return {
             product_id: Number(item?.product?.id || item?.product || 0),
-            merchant_id: Number(item?.product?.merchant?.id || item?.merchant || 0) || undefined,
+            merchant_id:
+              Number(item?.product?.merchant?.id || item?.merchant || 0) ||
+              undefined,
             qty: effectiveQty,
             unit_price: unit,
             name: item?.product?.name || "",
           };
         });
         const data = await validateCoupon({
-          code,
+          code: codes[0],
+          codes,
+          coupon_code_secondary: codes[1],
           goods_total: goods,
           shipping_total: shipping,
           cart_items,
         });
         if (gen !== couponApplyGenRef.current) return;
-        const applied = (data.code || code).trim().toUpperCase();
+        const appliedList = (
+          Array.isArray(data.coupons) && data.coupons.length
+            ? data.coupons.map((c) => String(c.code || "").toUpperCase())
+            : [
+                data.code,
+                data.coupon_code_secondary || data.secondary?.code || "",
+              ]
+        )
+          .map((c) => String(c || "").trim().toUpperCase())
+          .filter(Boolean);
+        const applied = appliedList[0] || code;
         const saved = Number(data.amount_saved) || 0;
+        const productCoupon = (data.coupons || []).find(
+          (c) => c.role === "product"
+        );
+        const productIds = Array.isArray(productCoupon?.product_ids)
+          ? productCoupon!.product_ids.map(Number).filter((id) => id > 0)
+          : Array.isArray(data.product_ids)
+            ? data.product_ids.map(Number).filter((id: number) => id > 0)
+            : [];
+        const productGoods = productCoupon
+          ? Number(productCoupon.discount_goods) || 0
+          : productIds.length
+            ? Number(data.discount_goods) || 0
+            : 0;
         setCouponDiscount(saved);
         setCouponMeta({
           amountSaved: saved,
-          discountGoods: Number(data.discount_goods) || 0,
+          discountGoods: productGoods,
           discountShipping: Number(data.discount_shipping) || 0,
-          productIds: Array.isArray(data.product_ids)
-            ? data.product_ids.map(Number).filter((id: number) => id > 0)
-            : [],
+          productIds,
         });
-        setCouponCode(applied);
+        setAppliedCouponCodes(appliedList);
+        setCouponCode("");
         setCouponError(null);
-        savePendingCouponCode(applied);
+        savePendingCouponCodesFromValidate({
+          codes: appliedList,
+          roles: data.roles,
+          coupons: data.coupons,
+        });
         // Only lock auto-apply once we had a real cart total (or empty cart)
         if (!silent || goods > 0) {
-          couponAutoAppliedRef.current = applied;
+          couponAutoAppliedRef.current = appliedList.join("|");
         }
-        if (!silent) toast.success("Coupon applied");
+        if (!silent) {
+          toast.success(
+            appliedList.length > 1 ? "Coupons applied" : "Coupon applied"
+          );
+        }
       } catch (e: any) {
         if (gen !== couponApplyGenRef.current) return;
-        setCouponDiscount(0);
-        setCouponMeta(null);
+        // Keep existing stack on failed add; only clear if nothing was applied yet
+        if (!appliedCouponCodes.length) {
+          setCouponDiscount(0);
+          setCouponMeta(null);
+        }
         setCouponCode(code);
         // Silent auto-apply: don't flash errors while cart is still settling
         if (!silent) {
           setCouponError(e?.response?.data?.detail || "Invalid coupon code");
         } else if (goods > 0) {
           // Stop retry loops once cart has a real total
-          couponAutoAppliedRef.current = code;
+          couponAutoAppliedRef.current = codes.join("|");
         }
       } finally {
         if (gen === couponApplyGenRef.current && !silent) {
@@ -395,7 +444,14 @@ const CartPage = () => {
         }
       }
     },
-    [couponGoodsTotal, shippingCost, cartItems, selectedItems, pendingUpdates]
+    [
+      couponGoodsTotal,
+      shippingCost,
+      cartItems,
+      selectedItems,
+      pendingUpdates,
+      appliedCouponCodes,
+    ]
   );
 
   useEffect(() => {
@@ -409,6 +465,7 @@ const CartPage = () => {
       (item) => Number(item?.product?.id) === Number(nudge.product_id)
     );
     const alreadyUsing =
+      appliedCouponCodes.includes(nudge.code) ||
       (couponCode || "").trim().toUpperCase() === nudge.code ||
       couponDiscount > 0;
     if (!productInCart || alreadyUsing) {
@@ -416,7 +473,7 @@ const CartPage = () => {
       return;
     }
     setCartNudge(nudge);
-  }, [cartItems, couponCode, couponDiscount]);
+  }, [cartItems, couponCode, couponDiscount, appliedCouponCodes]);
 
   useEffect(() => {
     if (!cartNudge || cartNudgeShownRef.current) return;
@@ -432,9 +489,9 @@ const CartPage = () => {
   // Seed code into the field once (no validate yet — avoids error flicker)
   useEffect(() => {
     if (!router.isReady) return;
-    const pending = resolvePendingCouponCode(router.query.coupon);
-    if (!pending) return;
-    setCouponCode((prev) => prev || pending);
+    const pendingCodes = resolvePendingCouponCodes(router.query.coupon);
+    if (!pendingCodes.length) return;
+    setCouponCode((prev) => prev || pendingCodes[pendingCodes.length - 1] || "");
     if (router.query.coupon) {
       const { coupon: _drop, ...rest } = router.query;
       void router.replace(
@@ -457,16 +514,18 @@ const CartPage = () => {
     // Wait for a real goods total when the cart has lines
     if (cartItems.length > 0 && couponGoodsTotal <= 0) return;
 
-    const pending = (resolvePendingCouponCode() || "").trim().toUpperCase();
-    if (!pending) return;
-    if (couponAutoAppliedRef.current === pending) return;
+    const pendingCodes = readPendingCouponCodes();
+    if (!pendingCodes.length) return;
+    const signature = pendingCodes.join("|");
+    if (couponAutoAppliedRef.current === signature) return;
 
     const timer = window.setTimeout(() => {
-      if (couponAutoAppliedRef.current === pending) return;
-      void applyCouponCode(pending, {
+      if (couponAutoAppliedRef.current === signature) return;
+      void applyCouponCode(pendingCodes[pendingCodes.length - 1], {
         silent: true,
         goodsTotal: couponGoodsTotal,
         shippingTotal: shippingCost,
+        stackWithExisting: true,
       });
     }, 300);
 
@@ -483,15 +542,23 @@ const CartPage = () => {
   // External Keep/Copy while already on cart
   useEffect(() => {
     const onPending = (ev: Event) => {
-      const detail = (ev as CustomEvent<{ code?: string }>).detail;
-      const code = (detail?.code || "").trim().toUpperCase();
-      if (!code) return;
+      const detail = (ev as CustomEvent<{ code?: string; codes?: string[] }>)
+        .detail;
+      const codes = (
+        Array.isArray(detail?.codes) && detail.codes.length
+          ? detail.codes
+          : [detail?.code || ""]
+      )
+        .map((c) => String(c || "").trim().toUpperCase())
+        .filter(Boolean);
+      if (!codes.length) return;
       couponAutoAppliedRef.current = "";
-      setCouponCode(code);
-      void applyCouponCode(code, {
+      setCouponCode(codes[codes.length - 1]);
+      void applyCouponCode(codes[codes.length - 1], {
         silent: true,
         goodsTotal: couponGoodsTotal,
         shippingTotal: shippingCost,
+        stackWithExisting: true,
       });
     };
     window.addEventListener("hawola:pending-coupon", onPending);
@@ -849,11 +916,23 @@ const CartPage = () => {
         })),
         session_key: getOrCreatePresenceSessionKey(),
       };
-      const codeToSend = (
-        couponCode.trim() || readPendingCouponCode() || ""
-      ).toUpperCase();
-      if (codeToSend) {
-        orderPayload.coupon_code = codeToSend;
+      const pendingCodes = readPendingCouponCodes();
+      const codesToSend = Array.from(
+        new Set(
+          [
+            ...appliedCouponCodes,
+            ...pendingCodes,
+            couponCode.trim(),
+          ]
+            .map((c) => String(c || "").trim().toUpperCase())
+            .filter(Boolean)
+        )
+      ).slice(0, 2);
+      if (codesToSend.length) {
+        orderPayload.coupon_code = codesToSend[0];
+        if (codesToSend[1]) {
+          orderPayload.coupon_code_secondary = codesToSend[1];
+        }
       }
       
       console.log("Creating order with payload:", orderPayload);
@@ -866,6 +945,7 @@ const CartPage = () => {
         clearPendingCouponCode();
         couponAutoAppliedRef.current = "";
         setCouponCode("");
+        setAppliedCouponCodes([]);
         setCouponDiscount(0);
         console.log("Order created successfully, redirecting to checkout");
         setTimeout(() => {
@@ -1231,6 +1311,7 @@ const CartPage = () => {
               selfPurchaseWarning={selfPurchaseWarning}
               checkoutBlockedBySelfPurchase={hasSelectedSelfPurchase}
               couponCode={couponCode}
+              appliedCouponCodes={appliedCouponCodes}
               couponDiscount={couponDiscount}
               couponGoodsDiscount={
                 couponMeta?.discountGoods ||
@@ -1241,7 +1322,7 @@ const CartPage = () => {
               onCouponChange={(code) => {
                 setCouponCode(code);
                 setCouponError(null);
-                if (!code.trim()) {
+                if (!code.trim() && !appliedCouponCodes.length) {
                   couponApplyGenRef.current += 1;
                   setCouponDiscount(0);
                   setCouponMeta(null);
@@ -1257,6 +1338,7 @@ const CartPage = () => {
               onRemoveCoupon={() => {
                 couponApplyGenRef.current += 1;
                 setCouponCode("");
+                setAppliedCouponCodes([]);
                 setCouponDiscount(0);
                 setCouponMeta(null);
                 setCouponError(null);

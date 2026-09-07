@@ -35,13 +35,13 @@ const FOOTER_DEFAULT_CONFIG: FooterConfig = {
     company: [
       { label: "About Hawola", href: "#", enabled: true },
       { label: "Careers", href: "#", enabled: true },
-      { label: "Privacy", href: "#", enabled: true },
-      { label: "Terms of use", href: "#", enabled: true },
+      { label: "Privacy", href: "https://hawola.com/privacy", enabled: true },
+      { label: "Terms of use", href: "https://www.hawola.com/terms", enabled: true },
     ],
   },
   legal_links: [
-    { label: "Conditions of use", href: "#", enabled: true },
-    { label: "Privacy notice", href: "#", enabled: true },
+    { label: "Conditions of use", href: "https://www.hawola.com/terms", enabled: true },
+    { label: "Privacy notice", href: "https://hawola.com/privacy", enabled: true },
     { label: "Cookies", href: "#", enabled: true },
   ],
 };
@@ -62,8 +62,8 @@ const FOOTER_NAV = {
   company: [
     { label: "About Hawola", href: "#" },
     { label: "Careers", href: "#" },
-    { label: "Privacy", href: "#" },
-    { label: "Terms of use", href: "#" },
+    { label: "Privacy", href: "https://hawola.com/privacy" },
+    { label: "Terms of use", href: "https://www.hawola.com/terms" },
   ],
 } as const;
 

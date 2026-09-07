@@ -35,10 +35,6 @@ type Props = {
   backInStockSubscribed?: boolean;
   merchantCollectsNoticeSafe: string;
   siteSettings: Record<string, unknown> | null;
-  hasOutsideVicinityShippingCost: boolean;
-  outsideVicinityShippingCost: string | number | null | undefined;
-  hasOutsideStateShippingCost: boolean;
-  outsideStateShippingCost: string | number | null | undefined;
   onWishList: () => void;
   addToWishlistPendingProductId: number | null;
   onShare: (platform: string) => void;
@@ -57,10 +53,6 @@ export default function ProductDetailMobileBuyBox({
   backInStockSubscribed,
   merchantCollectsNoticeSafe,
   siteSettings,
-  hasOutsideVicinityShippingCost,
-  outsideVicinityShippingCost,
-  hasOutsideStateShippingCost,
-  outsideStateShippingCost,
   onWishList,
   addToWishlistPendingProductId,
   onShare,
@@ -248,14 +240,7 @@ export default function ProductDetailMobileBuyBox({
         </button>
         {shippingOpen ? (
           <div className="border-t border-slate-100 px-3.5 pb-3.5 pt-2">
-            <ProductDetailShippingLines
-              product={product}
-              hasOutsideVicinityShippingCost={hasOutsideVicinityShippingCost}
-              outsideVicinityShippingCost={outsideVicinityShippingCost}
-              hasOutsideStateShippingCost={hasOutsideStateShippingCost}
-              outsideStateShippingCost={outsideStateShippingCost}
-              compact
-            />
+            <ProductDetailShippingLines product={product} compact />
           </div>
         ) : null}
       </div>

@@ -69,8 +69,8 @@ export default function SignupBonusHeaderCta({
           </span>
           <span className="block text-sm font-bold text-primary">
             {hideAmount
-              ? `${signupBonusHiddenHeadline(promo)} — sign up free`
-              : `Get ${amountLabel} off — sign up free`}
+              ? `${signupBonusHiddenHeadline(promo)}. Sign up free`
+              : `Get ${amountLabel} off. Sign up free`}
           </span>
           <span className="mt-0.5 block text-xs text-gray-500">
             New members receive a coupon after registration

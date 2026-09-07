@@ -11,6 +11,7 @@ import axiosInstance from "@/libs/api/axiosInstance";
 import { API } from "@/constant";
 import { toast } from "sonner";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { TERMS_OF_USE_URL } from "@/lib/storefrontUrls";
 
 const HOW_IT_WORKS_DISMISS_KEY = "hawola-buying-how-it-works-dismissed";
 
@@ -505,7 +506,7 @@ const LookingForProductPage = () => {
                 <p className="text-xs text-gray-600">
                   Hawola is not liable for any issues between buyers and merchants. By using
                   this feature you agree to our{" "}
-                  <a href="/terms" className="underline">
+                  <a href={TERMS_OF_USE_URL} className="underline" target="_blank" rel="noopener noreferrer">
                     usage terms
                   </a>{" "}
                   and{" "}

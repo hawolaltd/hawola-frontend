@@ -79,7 +79,7 @@ function couponCardProps(coupon: HomeDiscoverableCoupon) {
     subtitle: coupon.label || "Marketplace coupon",
     scopeLabel:
       minOrder > 0
-        ? `Min order ${formatCurrency(coupon.min_order_amount)}`
+        ? `Min order ${formatCurrency(coupon.min_order_amount || 0)}`
         : "All eligible checkout",
     endsAt: coupon.ends_at,
     merchant: null,

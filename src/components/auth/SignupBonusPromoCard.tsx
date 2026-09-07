@@ -46,7 +46,7 @@ export default function SignupBonusPromoCard({ promo, variant = "banner" }: Prop
   const badge = promo.promo_badge_text || "New member gift";
   const body =
     promo.promo_body ||
-    "Create your free account and verify your email — we'll send a personal coupon code you can use at checkout.";
+    "Create your free account and verify your email. We'll send a personal coupon code you can use at checkout.";
 
   if (variant === "hero") {
     return (
@@ -130,7 +130,7 @@ export default function SignupBonusPromoCard({ promo, variant = "banner" }: Prop
               className="rounded-xl border bg-white/80 px-3 py-2 text-xs font-medium"
               style={{ borderColor: `${palette.primary}40`, color: palette.primary }}
             >
-              Limited time — offer ends {endsLabel}
+              Limited time. Offer ends {endsLabel}
             </p>
           ) : null}
         </div>

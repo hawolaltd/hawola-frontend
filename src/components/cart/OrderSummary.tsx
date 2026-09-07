@@ -55,6 +55,7 @@ const OrderSummary = ({
   selfPurchaseWarning = null,
   checkoutBlockedBySelfPurchase = false,
   couponCode = "",
+  appliedCouponCodes = [],
   couponDiscount = 0,
   couponGoodsDiscount = 0,
   onCouponChange,
@@ -88,6 +89,8 @@ const OrderSummary = ({
   /** Warning when selected items include the merchant's own products. */
   selfPurchaseWarning?: string | null;
   couponCode?: string;
+  /** Successfully applied codes (product + general stack). */
+  appliedCouponCodes?: string[];
   couponDiscount?: number;
   /** Goods-only portion of the coupon (excludes free-shipping savings). */
   couponGoodsDiscount?: number;
@@ -355,12 +358,32 @@ const OrderSummary = ({
       {/* Coupon Code */}
       <div className="mt-6">
         <h3 className="font-medium mb-3">Coupon code</h3>
+        <p className="mb-2 text-[11px] leading-snug text-slate-500">
+          You can combine one product coupon with one general coupon. Two
+          general coupons cannot be used on the same order.
+        </p>
+        {appliedCouponCodes?.length ? (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {appliedCouponCodes.map((code) => (
+              <span
+                key={code}
+                className="rounded-md bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-emerald-800"
+              >
+                {code}
+              </span>
+            ))}
+          </div>
+        ) : null}
         <div className="flex">
           <input
             type="text"
             value={couponCode}
             onChange={(e) => onCouponChange?.(e.target.value)}
-            placeholder="Enter coupon code"
+            placeholder={
+              appliedCouponCodes?.length
+                ? "Add another coupon"
+                : "Enter coupon code"
+            }
             className="flex-1 p-2 border rounded-l-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
@@ -376,7 +399,8 @@ const OrderSummary = ({
           {couponError ? (
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-rose-600">{couponError}</p>
-              {onRemoveCoupon && couponCode?.trim() ? (
+              {onRemoveCoupon &&
+              (couponCode?.trim() || appliedCouponCodes?.length) ? (
                 <button
                   type="button"
                   onClick={() => onRemoveCoupon()}
@@ -389,7 +413,9 @@ const OrderSummary = ({
           ) : couponDiscount > 0 ? (
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-emerald-700">
-                Coupon Applied
+                {appliedCouponCodes?.length > 1
+                  ? "Coupons applied"
+                  : "Coupon applied"}
               </p>
               {onRemoveCoupon ? (
                 <button

@@ -12,7 +12,7 @@ import { validateCoupon } from "@/services/couponService";
 import { getUserProfile } from "@/redux/auth/authSlice";
 import { getAllStates, getStateLocations } from "@/redux/general/generalSlice";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import { readPendingCouponCode, readPendingCouponMeta } from "@/lib/pendingCoupon";
+import { readPendingCouponCode, readPendingCouponCodes, readPendingCouponMeta } from "@/lib/pendingCoupon";
 import { couponAppliesToProduct } from "@/lib/storeCouponDiscount";
 import { formatCurrency } from "@/util";
 import type { OrderDetailsResponse } from "@/types/product";
@@ -44,6 +44,7 @@ type FormWizardPage = 1 | 2;
 
 type AppliedCoupon = {
   code: string;
+  codes: string[];
   amountSaved: number;
   totalDue: number;
   discountGoods: number;
@@ -195,15 +196,19 @@ export default function InstantOrderModal({
   );
 
   const resolveCoupon = useCallback(async () => {
-    const couponCode = readPendingCouponCode();
+    const couponCodes = readPendingCouponCodes();
+    const couponCode = couponCodes[0] || "";
     const couponMeta = readPendingCouponMeta();
-    setPendingCouponCode(couponCode);
-    if (!couponCode || !isOpen || goodsSubtotal <= 0) {
+    setPendingCouponCode(couponCodes.join(" + "));
+    if (!couponCodes.length || !isOpen || goodsSubtotal <= 0) {
       setAppliedCoupon(null);
       setCouponError(null);
       return;
     }
-    if (couponMeta && !couponAppliesToProduct(couponMeta, productId)) {
+    if (
+      couponMeta?.scope === "products" &&
+      !couponAppliesToProduct(couponMeta, productId)
+    ) {
       setAppliedCoupon(null);
       setCouponError(`Coupon ${couponCode} is for a different product.`);
       return;
@@ -212,7 +217,9 @@ export default function InstantOrderModal({
     setCouponError(null);
     try {
       const data = await validateCoupon({
-        code: couponCode,
+        code: couponCodes[0],
+        codes: couponCodes,
+        coupon_code_secondary: couponCodes[1],
         goods_total: goodsSubtotal,
         shipping_total: shippingCost,
         product_id: productId,
@@ -220,8 +227,19 @@ export default function InstantOrderModal({
         qty,
       });
       const amountSaved = Number(data.amount_saved) || 0;
+      const appliedList = (
+        Array.isArray(data.coupons) && data.coupons.length
+          ? data.coupons.map((c) => String(c.code || "").toUpperCase())
+          : [
+              data.code,
+              data.coupon_code_secondary || data.secondary?.code || "",
+            ]
+      )
+        .map((c) => String(c || "").trim().toUpperCase())
+        .filter(Boolean);
       setAppliedCoupon({
-        code: (data.code || couponCode).toUpperCase(),
+        code: appliedList[0] || couponCode,
+        codes: appliedList,
         amountSaved,
         totalDue: Math.max(0, goodsSubtotal + shippingCost - amountSaved),
         discountGoods: Number(data.discount_goods) || 0,
@@ -264,6 +282,7 @@ export default function InstantOrderModal({
   };
 
   const couponCodeForOrder = appliedCoupon?.code || "";
+  const couponSecondaryForOrder = appliedCoupon?.codes?.[1] || "";
 
   const buildPayload = () => ({
     product_id: productId,
@@ -272,6 +291,9 @@ export default function InstantOrderModal({
     phone_number: phone.trim(),
     ...deliveryFields(),
     ...(couponCodeForOrder ? { coupon_code: couponCodeForOrder } : {}),
+    ...(couponSecondaryForOrder
+      ? { coupon_code_secondary: couponSecondaryForOrder }
+      : {}),
     qty,
     ...(variants?.length ? { variant: variants } : {}),
   });
@@ -332,6 +354,9 @@ export default function InstantOrderModal({
           phone_number: phone.trim(),
           ...deliveryFields(),
           ...(couponCodeForOrder ? { coupon_code: couponCodeForOrder } : {}),
+          ...(couponSecondaryForOrder
+            ? { coupon_code_secondary: couponSecondaryForOrder }
+            : {}),
           qty,
           ...(variants?.length ? { variant: variants } : {}),
         });
@@ -435,7 +460,13 @@ export default function InstantOrderModal({
         ) : null}
         {appliedCoupon && appliedCoupon.amountSaved > 0 ? (
           <div className="flex justify-between gap-2 font-medium text-emerald-700">
-            <dt>Coupon {appliedCoupon.code}</dt>
+            <dt>
+              Coupon{" "}
+              {(appliedCoupon.codes?.length
+                ? appliedCoupon.codes
+                : [appliedCoupon.code]
+              ).join(" + ")}
+            </dt>
             <dd>-{formatCurrency(appliedCoupon.amountSaved.toFixed(2))}</dd>
           </div>
         ) : couponError ? (
@@ -690,7 +721,12 @@ export default function InstantOrderModal({
             <div className="mt-5 space-y-3">
               {appliedCoupon && appliedCoupon.amountSaved > 0 ? (
                 <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
-                  Coupon {appliedCoupon.code} will be applied (
+                  Coupon{" "}
+                  {(appliedCoupon.codes?.length
+                    ? appliedCoupon.codes
+                    : [appliedCoupon.code]
+                  ).join(" + ")}{" "}
+                  will be applied (
                   {formatCurrency(orderTotalAfterCoupon.toFixed(2))} total).
                 </p>
               ) : null}

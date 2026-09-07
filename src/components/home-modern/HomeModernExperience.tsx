@@ -514,6 +514,31 @@ function HawolaSpecialsBand({ products }: { products: ProductFull[] }) {
   );
 }
 
+function ProductOfTheWeekBand({ products }: { products: ProductFull[] }) {
+  if (!products.length) return null;
+  return (
+    <section className="border-t border-teal-200/70 bg-gradient-to-b from-teal-50/80 via-white to-white py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-6 sm:px-10">
+        <p className="text-xs font-bold uppercase tracking-[0.35em] text-teal-700">This week</p>
+        <h2 className="mt-2 font-[family-name:Kanit] text-3xl font-bold text-headerBg sm:text-4xl">
+          Product of the week
+        </h2>
+        <p className="mt-2 max-w-xl text-sm text-slate-600">Fresh picks rotating across the catalog</p>
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {products.slice(0, 8).map((product, key) => (
+            <div
+              key={product.id ?? key}
+              className="rounded-2xl border border-teal-100/80 bg-white p-1 shadow-md transition hover:border-teal-200 hover:shadow-lg"
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function TopSellingStrip({ products }: { products: ProductFull[] }) {
   if (!products.length) return null;
   return (
@@ -618,6 +643,7 @@ export default function HomeModernExperience() {
   const topRated = (homePage?.data?.top_rated_products ?? []) as ProductFull[];
   const topSelling = (homePage?.data?.top_selling_products ?? []) as ProductFull[];
   const bestSelling = (homePage?.data?.best_selling_products ?? []) as ProductFull[];
+  const productOfTheWeek = (homePage?.data?.product_of_the_week ?? []) as ProductFull[];
   const hawolaSpecials = useMemo(() => {
     const h = homePage?.data?.hawola_specials as ProductFull[] | undefined;
     const legacy = (homePage?.data as { odinwo_specials?: ProductFull[] } | undefined)?.odinwo_specials;
@@ -649,6 +675,7 @@ export default function HomeModernExperience() {
       <TopRatedBento products={topRated} bestSelling={bestSelling} />
       <AdShowcase banners={advertMid} label="In the spotlight" variant="b" />
       <HomeRandomCouponsSection className="bg-slate-50" />
+      <ProductOfTheWeekBand products={productOfTheWeek} />
       <HawolaSpecialsBand products={hawolaSpecials} />
       <TopSellingStrip products={topSelling} />
       <TrustPulse />

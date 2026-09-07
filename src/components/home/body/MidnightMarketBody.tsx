@@ -97,6 +97,15 @@ export default function MidnightMarketBody() {
 
       <HomeBodyAdvertBanners middle={pools.advertMiddle} bottom={pools.advertBottom} />
 
+      {pools.productOfTheWeek.length > 0 ? (
+        <section className="border-t border-teal-100 bg-teal-50/40 py-10">
+          <div className="mx-auto max-w-screen-xl px-6 xl:px-0">
+            <HomeSectionHeader eyebrow="This week" title="Product of the week" />
+            <ProductGrid products={pools.productOfTheWeek.slice(0, 12)} />
+          </div>
+        </section>
+      ) : null}
+
       {pools.topRated.length > 0 ? (
         <section className="bg-[#E8EDF3] pt-10">
           <div className="mx-auto max-w-screen-xl px-6 pb-10 xl:px-0 sm:pb-12">

@@ -5,6 +5,10 @@ export function getStorefrontOrigin(): string {
   return (fromEnv || "https://hawola.com").replace(/\/+$/, "");
 }
 
+/** Canonical public legal pages (always hawola.com — not staging/API hosts). */
+export const TERMS_OF_USE_URL = "https://www.hawola.com/terms";
+export const PRIVACY_POLICY_URL = "https://hawola.com/privacy";
+
 export function storefrontProductPath(productSlug?: string | null): string | null {
   const slug = typeof productSlug === "string" ? productSlug.trim() : "";
   if (!slug) return null;

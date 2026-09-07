@@ -45,6 +45,7 @@ export async function initiateInstantOrder(payload: {
   state?: string;
   location?: string;
   coupon_code?: string;
+  coupon_code_secondary?: string;
   qty: number;
   variant?: Array<{ variant: number; variant_value: number }>;
 }): Promise<InstantOrderInitiateResponse> {
@@ -61,6 +62,7 @@ export async function placeInstantOrder(payload: {
   state?: string;
   location?: string;
   coupon_code?: string;
+  coupon_code_secondary?: string;
   qty: number;
   variant?: Array<{ variant: number; variant_value: number }>;
 }): Promise<{ detail?: string; order?: OrderDetailsResponse }> {

@@ -11,6 +11,7 @@ import {
 } from "@/services/backInStockService";
 import { getUserProfile } from "@/redux/auth/authSlice";
 import { useAppDispatch } from "@/hook/useReduxTypes";
+import { TERMS_OF_USE_URL } from "@/lib/storefrontUrls";
 
 type Props = {
   isOpen: boolean;
@@ -266,7 +267,7 @@ export default function BackInStockModal({
             <p className="text-xs leading-relaxed text-gray-500">
               By requesting this service, you agree to our{" "}
               <Link
-                href="/terms"
+                href={TERMS_OF_USE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-primary underline underline-offset-2 hover:text-[#354a73]"

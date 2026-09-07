@@ -341,6 +341,7 @@ export default function MerchantChatWidget({
             >
               Send
             </button>
+            </div>
           </div>
         </div>
       )}

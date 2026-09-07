@@ -1,26 +1,13 @@
-import {
-  MapPinIcon,
-  TruckIcon,
-  BanknotesIcon,
-} from "@heroicons/react/24/outline";
-import { amountFormatter } from "@/util";
+import { MapPinIcon, TruckIcon, GlobeAmericasIcon } from "@heroicons/react/24/outline";
 import type { ProductByIdResponse } from "@/types/product";
 
 type Props = {
   product: ProductByIdResponse;
-  hasOutsideVicinityShippingCost: boolean;
-  outsideVicinityShippingCost: string | number | null | undefined;
-  hasOutsideStateShippingCost: boolean;
-  outsideStateShippingCost: string | number | null | undefined;
   compact?: boolean;
 };
 
 export default function ProductDetailShippingLines({
   product,
-  hasOutsideVicinityShippingCost,
-  outsideVicinityShippingCost,
-  hasOutsideStateShippingCost,
-  outsideStateShippingCost,
   compact = false,
 }: Props) {
   const p = product?.product;
@@ -28,49 +15,66 @@ export default function ProductDetailShippingLines({
   const stateName = p?.merchant?.state?.name;
   const hasLocation = Boolean(locationName && locationName !== "unknown");
 
+  const internationalDestinations = Array.isArray(
+    (p as { shipping_cost_outside_country?: Array<{ country?: { name?: string }; state?: { name?: string } }> })
+      ?.shipping_cost_outside_country
+  )
+    ? (
+        p as {
+          shipping_cost_outside_country: Array<{
+            country?: { name?: string };
+            state?: { name?: string };
+          }>;
+          ship_outside_country?: boolean;
+        }
+      ).shipping_cost_outside_country
+        .filter((shp) => shp?.country?.name && (p as { ship_outside_country?: boolean })?.ship_outside_country)
+        .map((shp) => {
+          const country = shp.country!.name!;
+          const region = shp?.state?.name;
+          return region ? `${country} (${region})` : country;
+        })
+    : [];
+
   const lines: { icon: typeof MapPinIcon; text: string }[] = [];
 
   if (hasLocation) {
     lines.push({
       icon: MapPinIcon,
-      text: `Seller location: ${locationName}${stateName ? `, ${stateName}` : ""}`,
+      text: `Item will be shipped from ${locationName}${stateName ? `, ${stateName}` : ""}`,
     });
-    lines.push({
-      icon: TruckIcon,
-      text: p?.ship_outside_vicinity
-        ? `Ships outside ${locationName}`
-        : `Does not ship outside ${locationName}`,
-    });
+
+    if (p?.ship_outside_vicinity) {
+      lines.push({
+        icon: TruckIcon,
+        text: `Delivers beyond ${locationName}`,
+      });
+    } else {
+      lines.push({
+        icon: TruckIcon,
+        text: `Local delivery in ${locationName} only`,
+      });
+    }
+
+    if (stateName) {
+      if (p?.ship_outside_state) {
+        lines.push({
+          icon: TruckIcon,
+          text: `Also delivers outside ${stateName}`,
+        });
+      } else {
+        lines.push({
+          icon: TruckIcon,
+          text: `Delivery stays within ${stateName}`,
+        });
+      }
+    }
   }
 
-  if (
-    p?.ship_outside_vicinity &&
-    hasOutsideVicinityShippingCost &&
-    hasLocation
-  ) {
+  if (internationalDestinations.length > 0) {
     lines.push({
-      icon: BanknotesIcon,
-      text: `Shipping outside ${locationName}: ${amountFormatter(String(outsideVicinityShippingCost ?? ""))}`,
-    });
-  }
-
-  if (hasLocation && stateName) {
-    lines.push({
-      icon: TruckIcon,
-      text: p?.ship_outside_state
-        ? `Ships outside ${stateName}`
-        : `Does not ship outside ${stateName}`,
-    });
-  }
-
-  if (
-    p?.ship_outside_state &&
-    hasOutsideStateShippingCost &&
-    stateName
-  ) {
-    lines.push({
-      icon: BanknotesIcon,
-      text: `Shipping outside ${stateName}: ${amountFormatter(String(outsideStateShippingCost ?? ""))}`,
+      icon: GlobeAmericasIcon,
+      text: `International delivery available to ${internationalDestinations.join(", ")}`,
     });
   }
 

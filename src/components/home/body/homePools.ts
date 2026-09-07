@@ -6,6 +6,7 @@ export type HomeProductPools = {
   topRated: ProductFull[];
   bestSelling: ProductFull[];
   topSelling: ProductFull[];
+  productOfTheWeek: ProductFull[];
   advertMiddle: (AdvertBanner | null)[];
   advertBottom: (AdvertBanner | null)[];
 };
@@ -29,6 +30,7 @@ export function getHomeProductPools(homeData: Record<string, unknown> | null | u
     topRated: asProducts(d.top_rated_products).slice(0, 15),
     bestSelling: asProducts(d.best_selling_products).slice(0, 20),
     topSelling: asProducts(d.top_selling_products).slice(0, 20),
+    productOfTheWeek: asProducts(d.product_of_the_week).slice(0, 12),
     advertMiddle: asAdverts(d.advert_banner_middle),
     advertBottom: asAdverts(d.advert_banner_bottom),
   };

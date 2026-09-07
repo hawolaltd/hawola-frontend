@@ -5,6 +5,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import AccountDeletionRequestCard from "@/components/account/AccountDeletionRequestCard";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { getUserProfile } from "@/redux/auth/authSlice";
+import { PRIVACY_POLICY_URL } from "@/lib/storefrontUrls";
 
 export default function AccountDeletionPage() {
   const dispatch = useAppDispatch();
@@ -60,7 +61,7 @@ export default function AccountDeletionPage() {
                   We may retain certain records (for example completed order history, invoices, or
                   fraud-prevention logs) where required by law or legitimate business needs, as
                   described in our{" "}
-                  <Link href="/privacy">Privacy Policy</Link>.
+                  <Link href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer">Privacy Policy</Link>.
                 </li>
                 <li>
                   Support will email you when your request has been processed or if additional
