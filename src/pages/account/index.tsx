@@ -31,7 +31,7 @@ import AccountTelegramConnectPrompt from "@/components/account/AccountTelegramCo
 import AccountMerchantPromoSidebar, {
     readMerchantPromoDismissed,
 } from "@/components/account/AccountMerchantPromoSidebar";
-import AccountMerchantDashboardButton from "@/components/account/AccountMerchantDashboardButton";
+import AccountPlatformSwitchers from "@/components/account/AccountPlatformSwitchers";
 
 /** Matches MainHeader / Footer content width */
 const PAGE_WIDTH = "mx-auto w-full max-w-screen-xl px-6 xl:px-0";
@@ -168,7 +168,7 @@ export default function AccountPage() {
                                 <AccountTelegramConnectPrompt connected={!!user?.telegram_connected} />
                             </div>
                             <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
-                                {user?.is_merchant && <AccountMerchantDashboardButton />}
+                                <AccountPlatformSwitchers compact />
                                 <button
                                     type="button"
                                     onClick={handleSignOut}

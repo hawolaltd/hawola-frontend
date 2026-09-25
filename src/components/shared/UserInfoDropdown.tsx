@@ -1,18 +1,61 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Cookies from "js-cookie";
+import axios from "axios";
 import { addToCartsLocal } from "@/redux/product/productSlice";
 import { logout } from "@/redux/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { useRouter } from "next/router";
+import { API, authTokenStorageKeyName } from "@/constant";
+import type { PlatformItem } from "@/lib/platformHandoff";
 
 function UserInfoDropdown() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const [platforms, setPlatforms] = useState<PlatformItem[]>([]);
+
+  const loadPlatforms = useCallback(async () => {
+    if (!isAuthenticated) {
+      setPlatforms([]);
+      return;
+    }
+    try {
+      const token = Cookies.get(authTokenStorageKeyName as string);
+      const { data } = await axios.get(`${API}authy/platforms/`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const list: PlatformItem[] = Array.isArray(data?.platforms)
+        ? data.platforms
+        : [];
+      setPlatforms(list.filter((p) => p.id !== "customer"));
+    } catch {
+      setPlatforms([]);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    void loadPlatforms();
+  }, [loadPlatforms]);
+
+  const openPlatform = async (platform: string) => {
+    try {
+      const token = Cookies.get(authTokenStorageKeyName as string);
+      const { data } = await axios.post(
+        `${API}authy/handoff/create/`,
+        { platform },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      if (data?.redirect_url) window.location.href = data.redirect_url;
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
     <>
       {isAuthenticated ? (
-        <ul className="absolute right-0 top-full z-[100] mt-2 w-48 rounded-md border bg-white shadow-lg">
+        <ul className="absolute right-0 top-full z-[100] mt-2 w-52 rounded-md border bg-white shadow-lg">
           <li>
             <Link
               href="/account"
@@ -21,6 +64,18 @@ function UserInfoDropdown() {
               My Account
             </Link>
           </li>
+
+          {platforms.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => void openPlatform(p.id)}
+                className="block w-full px-4 py-2 text-left text-primary hover:text-deepOrange"
+              >
+                {p.label}
+              </button>
+            </li>
+          ))}
 
           <li>
             <Link
@@ -93,7 +148,9 @@ function UserInfoDropdown() {
           </li>
           <li
             onClick={() => {
-              router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
+              router.push(
+                `/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`
+              );
             }}
             className={"px-4 py-2 w-full"}
           >
