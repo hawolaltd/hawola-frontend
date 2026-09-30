@@ -368,7 +368,7 @@ const CheckoutPage = () => {
         : `Pay ${formatCurrency(dueTotal.toFixed(2))} with card`;
 
   const paymentHint = escrowDisabled
-    ? "Pay the seller directly"
+    ? "Merchant will coordinate payment with you"
     : paymentMethod === "pod"
       ? "Pay on delivery"
       : "Card via Paystack";
@@ -473,8 +473,7 @@ const CheckoutPage = () => {
           )}
         </button>
         <p className="mt-3 text-center text-xs leading-relaxed text-textPadded">
-          By placing this order you agree to Hawola’s terms and the seller’s
-          delivery arrangements.
+          By placing this order you agree to Hawola’s terms.
         </p>
       </div>
     </div>
@@ -699,9 +698,14 @@ const CheckoutPage = () => {
                   */}
 
                   {escrowDisabled ? (
-                    <p className="text-sm text-slate-600">
-                      Complete your purchase with the button in the order total.
-                    </p>
+                    <div className="rounded-2xl border border-slate-200 bg-filterBg px-4 py-3.5">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-textPadded">
+                        Offline payment
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-headerBg">
+                        Merchant will coordinate payment with you
+                      </p>
+                    </div>
                   ) : (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <button

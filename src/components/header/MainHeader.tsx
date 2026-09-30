@@ -27,6 +27,8 @@ import { useRouter } from "next/router";
 import { CartResponse } from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import SignupBonusHeaderCta from "@/components/header/SignupBonusHeaderCta";
+import CustomerNotificationBell from "@/components/header/CustomerNotificationBell";
+import CustomerSpotlight from "@/components/header/CustomerSpotlight";
 import { useSignupBonusPromo } from "@/hook/useSignupBonusPromo";
 import { useCouponCenterNavVisible } from "@/hook/useCouponCenterNavVisible";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
@@ -61,6 +63,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
   const [dropdownOpenCat, setDropdownOpenCat] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [spotlightOpen, setSpotlightOpen] = useState(false);
   const searchModalInputRef = useRef<HTMLInputElement>(null);
   const { carts, localCart, wishLists, categories, compareProducts } =
     useAppSelector((state) => state.products);
@@ -884,6 +887,16 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             >
               <MagnifyingGlassIcon className={HI_MD} aria-hidden />
             </button>
+            <button
+              type="button"
+              onClick={() => setSpotlightOpen(true)}
+              className={`hidden items-center justify-center lg:flex ${HI_FRAME_HEADER}`}
+              aria-label="Find a page"
+            >
+              <MagnifyingGlassIcon className={HI_MD} aria-hidden />
+            </button>
+            <CustomerNotificationBell />
+            {spotlightOpen ? <CustomerSpotlight onClose={() => setSpotlightOpen(false)} /> : null}
 
             <div className="relative">
               <div

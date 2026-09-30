@@ -14,13 +14,15 @@ export default function AuthHandoffPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
-    const code = typeof router.query.code === "string" ? router.query.code : "";
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const code = hashParams.get("code") || (typeof router.query.code === "string" ? router.query.code : "");
     const platform = (
       typeof router.query.platform === "string" ? router.query.platform : "customer"
     ) as PlatformId;
+    const nextRaw = typeof router.query.next === "string" ? router.query.next : "";
     const next =
-      typeof router.query.next === "string" && router.query.next.startsWith("/")
-        ? router.query.next
+      nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.includes("\\")
+        ? nextRaw
         : "/account";
 
     if (!code) {

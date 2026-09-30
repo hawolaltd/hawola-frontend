@@ -27,6 +27,11 @@ const ALERT_COPY: Record<string, { emoji: string; line1: string; line2: string }
     line1: "Be notified when your order or item is marked delivered.",
     line2: "Confirm receipt quickly if anything needs follow-up.",
   },
+  payment_reminders: {
+    emoji: "⏰",
+    line1: "A daily reminder to pay after a seller sends account details.",
+    line2: "Turn every channel off to stop these reminders.",
+  },
   chat: {
     emoji: "💬",
     line1: "Never miss a merchant reply while you are still ready to buy.",

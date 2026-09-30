@@ -9,6 +9,7 @@ import {
   TruckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { startPlatformHandoff } from "@/lib/platformHandoff";
 
 const MERCHANT_URL = "https://merchant.hawola.com";
 const MERCHANT_APP_PLAY_STORE_URL =
@@ -37,6 +38,17 @@ export default function AccountMerchantPromoSidebar({
 
   useEffect(() => {
     setDismissed(readMerchantPromoDismissed());
+  }, []);
+
+  const [busy, setBusy] = useState(false);
+
+  const openMerchant = useCallback(async () => {
+    setBusy(true);
+    try {
+      await startPlatformHandoff("merchant", "/onboarding");
+    } catch {
+      window.location.href = MERCHANT_URL;
+    }
   }, []);
 
   const handleDismiss = useCallback(() => {
@@ -119,15 +131,15 @@ export default function AccountMerchantPromoSidebar({
           ))}
         </ul>
 
-        <a
-          href={MERCHANT_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => void openMerchant()}
+          disabled={busy}
           className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-deepOrange to-orange px-3 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-deepOrange focus-visible:ring-offset-2"
         >
-          Start selling — it&apos;s free
+          {busy ? "Opening your store…" : "Start selling — it's free"}
           <ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0" aria-hidden />
-        </a>
+        </button>
 
         <p className="mt-2 text-center text-[10px] text-gray-500">
           Opens <span className="font-medium text-primary">merchant.hawola.com</span>

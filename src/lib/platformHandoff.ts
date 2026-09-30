@@ -18,7 +18,9 @@ export async function startPlatformHandoff(
   nextPath?: string
 ): Promise<void> {
   const body: Record<string, string> = { platform };
-  if (nextPath && nextPath.startsWith("/")) body.next = nextPath;
+  if (nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") && !nextPath.includes("\\")) {
+    body.next = nextPath;
+  }
   const { data } = await axios.post(
     `${API}authy/handoff/create/`,
     body,
