@@ -399,14 +399,8 @@ const BasicTemplate = () => {
               {/* Featured Products */}
               {recent_products && recent_products.length > 0 && (
                 <section>
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="mb-8">
                     <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
-                    <button
-                      onClick={() => setActiveSection("products")}
-                      className="text-sm font-semibold merchant-primary-text hover:underline"
-                    >
-                      View All Products →
-                    </button>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     {recent_products.slice(0, 8).map((product) => (
@@ -463,6 +457,19 @@ const BasicTemplate = () => {
                       </Link>
                     </div>
                   ))}
+                </div>
+                <div className="mt-8 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("products")}
+                    className="rounded-lg px-6 py-3 font-semibold transition-all hover:scale-105"
+                    style={{
+                      backgroundColor: primaryColor,
+                      color: textColor,
+                    }}
+                  >
+                    View all products
+                  </button>
                 </div>
               </section>
               )}
