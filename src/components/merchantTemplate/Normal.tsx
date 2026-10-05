@@ -16,6 +16,8 @@ import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGaller
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import MerchantStoreReviews from "@/components/merchant/MerchantStoreReviews";
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
+import StoreProductPagination from "@/components/merchant/StoreProductPagination";
+import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
@@ -28,6 +30,7 @@ export default function NormalMerchantPage() {
   // Use merchantProfile first, fallback to merchants
   // Data is fetched by the parent page component
   const merchantData = merchantProfile || merchants;
+  const storeProducts = useMerchantStoreProducts();
 
   if (isLoading) {
     return (
@@ -524,14 +527,13 @@ export default function NormalMerchantPage() {
                   className="min-h-0 border-t border-slate-100 px-4 py-6 sm:px-6 sm:py-8"
                 >
                   {activeTab === "products" && (
-                    <div>
+                    <div id="store-products">
                       <div className="merchant-heading-text mb-5 max-w-none text-xl font-bold leading-tight prose prose-neutral prose-p:inline prose-p:m-0 sm:mb-6 sm:text-2xl">
                         <MerchantRichHtml html={merchantData?.merchant_details?.store_page_title} />
                       </div>
-                      {merchantData?.recent_products &&
-                      merchantData.recent_products.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
-                          {merchantData.recent_products.map((item) => (
+                      {storeProducts.products.length > 0 ? (
+                        <div className={`grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5 ${storeProducts.loading ? "opacity-60" : ""}`}>
+                          {storeProducts.products.map((item) => (
                             <MerchantStoreProductCard
                               key={item.id}
                               product={item as Product}
@@ -543,6 +545,14 @@ export default function NormalMerchantPage() {
                           No products listed yet. Check back soon.
                         </div>
                       )}
+                      <StoreProductPagination
+                        page={storeProducts.page}
+                        totalPages={storeProducts.totalPages}
+                        count={storeProducts.count}
+                        pageSize={storeProducts.pageSize}
+                        loading={storeProducts.loading}
+                        onPageChange={(page) => void storeProducts.goToPage(page)}
+                      />
                     </div>
                   )}
 

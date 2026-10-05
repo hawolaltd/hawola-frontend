@@ -140,7 +140,14 @@ function ProductInfo({
                 <ProductReelsSection reels={product?.product?.product_reels} />
             ) : null}
 
-            {tab === "description" && <Description product={product} />}
+            {tab === "description" && (
+                <div>
+                    {product?.product?.description_ai_generated ? (
+                        <p className="mt-4 text-xs text-slate-500">Written with AI</p>
+                    ) : null}
+                    <Description product={product} />
+                </div>
+            )}
 
 
             {tab === "specification" && (

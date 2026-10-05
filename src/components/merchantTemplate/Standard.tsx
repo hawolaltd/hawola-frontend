@@ -14,6 +14,8 @@ import { buildMerchantHeroSlides } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
+import StoreProductPagination from "@/components/merchant/StoreProductPagination";
+import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -40,6 +42,7 @@ const StandardTemplate = () => {
   // Use data (merchantProfile) first, fallback to merchants
   // Data is fetched by the parent page component
   const merchantData = data || merchants;
+  const storeProducts = useMerchantStoreProducts();
   
   // Early return if no data to prevent unnecessary renders
   if (!merchantData) {
@@ -605,18 +608,26 @@ const StandardTemplate = () => {
                 */}
 
                 {/* Recent Products */}
-                <section>
+                <section id="store-products">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Recent Products
                   </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
-                    {recent_products?.map((product) => (
+                  <div className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 ${storeProducts.loading ? "opacity-60" : ""}`}>
+                    {storeProducts.products.map((product) => (
                       <ProductCard
                         key={product.id}
                         product={product as Product}
                       />
                     ))}
                   </div>
+                  <StoreProductPagination
+                    page={storeProducts.page}
+                    totalPages={storeProducts.totalPages}
+                    count={storeProducts.count}
+                    pageSize={storeProducts.pageSize}
+                    loading={storeProducts.loading}
+                    onPageChange={(page) => void storeProducts.goToPage(page)}
+                  />
                 </section>
               </>
             )}

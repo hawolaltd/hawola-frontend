@@ -136,6 +136,12 @@ interface MerchantProfile {
   home_page: Record<string, unknown>; // or more specific type if home_page structure is known
   banners: any;
   recent_products: Product[];
+  products_pagination?: {
+    count: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  };
   merchant_categories: MerchantCategory[];
   is_streaming_now: boolean;
   storefront_coupons?: StorefrontCoupon[];

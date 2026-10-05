@@ -16,6 +16,8 @@ import type { MerchantBannerImageSizes } from "@/util/merchantBanner";
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
+import StoreProductPagination from "@/components/merchant/StoreProductPagination";
+import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
 
 const DashboardTemplate = () => {
   const {
@@ -27,6 +29,7 @@ const DashboardTemplate = () => {
   // Use data (merchantProfile) first, fallback to merchants
   // Data is fetched by the parent page component
   const merchantData = data || merchants;
+  const storeProducts = useMerchantStoreProducts();
 
   const brandPalette = useMemo(
     () =>
@@ -162,11 +165,19 @@ const DashboardTemplate = () => {
               </div>
 
               {/* Products */}
-              <div className="animate-fade-in delay-200">
+              <div id="store-products" className={`animate-fade-in delay-200 ${storeProducts.loading ? "opacity-60" : ""}`}>
                 <ProductShowcase
-                  products={merchantData?.recent_products}
+                  products={storeProducts.products}
                   title={merchantData?.merchant_details?.store_page_title}
                   subtitle={merchantData?.merchant_details?.store_page_subtitle}
+                />
+                <StoreProductPagination
+                  page={storeProducts.page}
+                  totalPages={storeProducts.totalPages}
+                  count={storeProducts.count}
+                  pageSize={storeProducts.pageSize}
+                  loading={storeProducts.loading}
+                  onPageChange={(page) => void storeProducts.goToPage(page)}
                 />
               </div>
 

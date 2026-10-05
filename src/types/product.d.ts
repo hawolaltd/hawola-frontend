@@ -81,6 +81,7 @@ export interface Product {
     product_video: string | null;
     brand: string;
     description: string;
+    description_ai_generated?: boolean;
     rating: string;
     numReviews: number;
     price: string;

@@ -454,8 +454,10 @@ const getMerchants = async (slug: string) => {
 
 // get Merchant Profile
 
-const getMerchantProfile = async (slug: string) => {
-    const response = await axiosInstance.get(API + `merchant/profile/${slug}/`);
+const getMerchantProfile = async (slug: string, page = 1) => {
+    const response = await axiosInstance.get(API + `merchant/profile/${slug}/`, {
+        params: { page },
+    });
     return response.data;
 };
 

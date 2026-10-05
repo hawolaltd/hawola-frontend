@@ -18,6 +18,8 @@ import {
 import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGallery";
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
+import StoreProductPagination from "@/components/merchant/StoreProductPagination";
+import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
@@ -35,6 +37,7 @@ const BasicTemplate = () => {
   } = useAppSelector((state) => state.products);
 
   const merchantData = data || merchants;
+  const storeProducts = useMerchantStoreProducts();
   
   // Color utilities
   const getLuminance = (color: string): number => {
@@ -322,7 +325,7 @@ const BasicTemplate = () => {
               {/* Stats Bar */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: "Products", value: recent_products?.length || 0, icon: "📦" },
+                  { label: "Products", value: storeProducts.count || 0, icon: "📦" },
                   { label: "Categories", value: merchant_categories?.filter((c) => c?.name).length || 0, icon: "🏷️" },
                   { label: "Reviews", value: recent_products?.reduce((acc, p) => acc + (p?.numReviews || 0), 0) || 0, icon: "⭐" },
                   { label: "Delivery", value: `${merchant_details?.shipping_number_of_days || 0} days`, icon: "🚚" },
@@ -488,16 +491,16 @@ const BasicTemplate = () => {
 
           {/* Products Section */}
           {activeSection === "products" && (
-            <section>
+            <section id="store-products">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-gray-900">All Products</h2>
                 <div className="text-gray-600">
-                  {recent_products?.length || 0} products available
+                  {storeProducts.count || 0} products available
                 </div>
               </div>
-              {recent_products && recent_products.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                  {recent_products.map((product) => (
+              {storeProducts.products.length > 0 ? (
+                <div className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${storeProducts.loading ? "opacity-60" : ""}`}>
+                  {storeProducts.products.map((product) => (
                   <div
                     key={product.id}
                     className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
@@ -557,6 +560,14 @@ const BasicTemplate = () => {
                   <p className="text-gray-500 text-lg">No products available at the moment.</p>
                 </div>
               )}
+              <StoreProductPagination
+                page={storeProducts.page}
+                totalPages={storeProducts.totalPages}
+                count={storeProducts.count}
+                pageSize={storeProducts.pageSize}
+                loading={storeProducts.loading}
+                onPageChange={(page) => void storeProducts.goToPage(page)}
+              />
             </section>
           )}
 
