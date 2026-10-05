@@ -26,6 +26,7 @@ const BasicTemplate = () => {
     "overview" | "products" | "reels" | "categories" | "about"
   >("overview");
   const [isSticky, setIsSticky] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -245,13 +246,51 @@ const BasicTemplate = () => {
                 })}
               </nav>
 
-              {/* Mobile Menu Button */}
-              <button className="md:hidden p-2 text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+              <button
+                type="button"
+                className="md:hidden rounded-lg p-2 text-gray-700"
+                aria-expanded={mobileNavOpen}
+                aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+                onClick={() => setMobileNavOpen((open) => !open)}
+              >
+                {mobileNavOpen ? (
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
               </button>
             </div>
+            {mobileNavOpen ? (
+              <nav className="md:hidden border-t border-gray-200 py-2" aria-label="Store sections">
+                {navSections.map((section) => {
+                  const label =
+                    section === "reels"
+                      ? "Reels"
+                      : section.charAt(0).toUpperCase() + section.slice(1);
+                  return (
+                    <button
+                      key={section}
+                      type="button"
+                      onClick={() => {
+                        setActiveSection(section);
+                        setMobileNavOpen(false);
+                      }}
+                      className={`block w-full rounded-lg px-3 py-3 text-left text-sm font-medium ${
+                        activeSection === section
+                          ? "merchant-primary text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </nav>
+            ) : null}
           </div>
         </header>
 
