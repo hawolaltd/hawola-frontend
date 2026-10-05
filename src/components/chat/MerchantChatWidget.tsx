@@ -314,7 +314,7 @@ export default function MerchantChatWidget({
                       );
                       setMessages((prev) => [...prev, msg]);
                       setInput("");
-                      toast.success("Proof of payment sent");
+                      toast.success("Proof of payment sent.");
                     } catch (err: unknown) {
                       const detail =
                         typeof err === "object" &&

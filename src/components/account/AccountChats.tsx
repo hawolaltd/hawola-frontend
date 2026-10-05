@@ -377,7 +377,7 @@ export default function AccountChats() {
       setMessages((prev) => [...prev, msg]);
       setInput("");
       void refreshList(true);
-      toast.success("Proof of payment sent. This order can no longer be cancelled.");
+      toast.success("Proof of payment sent.");
     } catch (e: unknown) {
       const detail =
         typeof e === "object" && e !== null && "response" in e
