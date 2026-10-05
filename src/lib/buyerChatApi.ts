@@ -26,6 +26,11 @@ export type BuyerChatMessage = {
   receipt_html_url?: string | null;
   order_item?: number | null;
   created_at: string;
+  delivered_at?: string | null;
+  read_at?: string | null;
+  edited_at?: string | null;
+  receipt_status?: "sent" | "delivered" | "read" | string | null;
+  editable_until?: string | null;
 };
 
 export type PaginatedBuyerChats = {
@@ -62,6 +67,14 @@ export async function sendBuyerChatMessage(slug: string, message: string) {
   const { data } = await axiosInstance.post(`/messaging/buyer-chats/${slug}/messages/`, {
     message,
   });
+  return data as BuyerChatMessage;
+}
+
+export async function editBuyerChatMessage(slug: string, messageId: number, message: string) {
+  const { data } = await axiosInstance.post(
+    `/messaging/buyer-chats/${slug}/messages/${messageId}/edit/`,
+    { message }
+  );
   return data as BuyerChatMessage;
 }
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
+  editBuyerChatMessage,
   getBuyerChatMessages,
   sendBuyerChatMessage,
   sendBuyerChatProofOfPayment,
@@ -22,6 +23,7 @@ import {
 import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
+import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 
 type OrderBuyerChatPanelProps = {
   orderitemNumber: string;
@@ -191,6 +193,21 @@ export default function OrderBuyerChatPanel({
     }
   };
 
+  const saveEdit = async (id: number, body: string) => {
+    if (!conversation?.slug) return;
+    try {
+      const updated = await editBuyerChatMessage(conversation.slug, id, body);
+      setMessages((prev) => prev.map((row) => (row.id === id ? updated : row)));
+    } catch (e: unknown) {
+      const detail =
+        typeof e === "object" && e !== null && "response" in e
+          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : undefined;
+      toast.error(detail || "Could not edit that message");
+      throw e;
+    }
+  };
+
   const uploadProof = async (file: File | null | undefined) => {
     if (!file || !conversation?.slug || disabled || !allowProofOfPayment) return;
     const validationError = validateProofFile(file);
@@ -353,9 +370,12 @@ export default function OrderBuyerChatPanel({
                             <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
                           )}
                         </div>
-                        <span className="px-1 text-[10px] text-slate-400">
-                          {mine ? "You" : sellerLabel} · {formatMessageTime(m.created_at)}
-                        </span>
+                        <ChatMessageStatus
+                          message={m}
+                          mine={mine}
+                          timeLabel={`${mine ? "You" : sellerLabel} · ${formatMessageTime(m.created_at)}`}
+                          onEdit={saveEdit}
+                        />
                       </div>
                     </div>
                   );

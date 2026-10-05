@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import {
+  editBuyerChatMessage,
   getBuyerChatMessages,
   listBuyerChats,
   sendBuyerChatMessage,
@@ -38,6 +39,7 @@ import {
 } from "@/components/account/accountChatUtils";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageBody from "@/components/account/ChatMessageBody";
+import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 
 const CHAT_LIST_PAGE_SIZE = 20;
@@ -346,6 +348,21 @@ export default function AccountChats() {
     }
   };
 
+  const saveEdit = async (id: number, body: string) => {
+    if (!selected?.slug) return;
+    try {
+      const updated = await editBuyerChatMessage(selected.slug, id, body);
+      setMessages((prev) => prev.map((row) => (row.id === id ? updated : row)));
+    } catch (e: unknown) {
+      const detail =
+        typeof e === "object" && e !== null && "response" in e
+          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : undefined;
+      toast.error(detail || "Could not edit that message");
+      throw e;
+    }
+  };
+
   const uploadProof = async (file: File | null | undefined) => {
     if (!file || !selected?.slug || !selected.orderitem_number) return;
     const validationError = validateProofFile(file);
@@ -646,13 +663,12 @@ export default function AccountChats() {
                                   <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
                                 )}
                               </div>
-                              <span
-                                className={`px-1 text-[10px] text-gray-400 ${
-                                  mine ? "text-right" : "text-left"
-                                }`}
-                              >
-                                {mine ? "You" : selectedName} · {formatMessageTime(m.created_at)}
-                              </span>
+                                <ChatMessageStatus
+                                  message={m}
+                                  mine={mine}
+                                  timeLabel={`${mine ? "You" : selectedName} · ${formatMessageTime(m.created_at)}`}
+                                  onEdit={saveEdit}
+                                />
                             </div>
                           </div>
                         </div>

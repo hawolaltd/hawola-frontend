@@ -7,6 +7,7 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 import { toast } from "sonner";
 import { authTokenStorageKeyName } from "@/constant";
 import {
+  editBuyerChatMessage,
   getBuyerChatMessages,
   sendBuyerChatMessage,
   sendBuyerChatProofOfPayment,
@@ -26,6 +27,7 @@ import {
 import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
+import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
@@ -195,6 +197,17 @@ export default function MerchantChatWidget({
     }
   };
 
+  const saveEdit = async (id: number, body: string) => {
+    if (!conversation?.slug) return;
+    try {
+      const updated = await editBuyerChatMessage(conversation.slug, id, body);
+      setMessages((prev) => prev.map((row) => (row.id === id ? updated : row)));
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || "Could not edit that message");
+      throw e;
+    }
+  };
+
   const fabBottomClass = stackAboveStickyFooter
     ? "bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-5"
     : "bottom-5";
@@ -245,8 +258,9 @@ export default function MerchantChatWidget({
                 const mine = m.sender_type === "customer";
                 return (
                   <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                    <div className={`flex max-w-[85%] flex-col ${mine ? "items-end" : "items-start"}`}>
                     <div
-                      className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                      className={`rounded-2xl px-3 py-2 text-sm ${
                         mine
                           ? "bg-primary text-white rounded-br-md"
                           : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
@@ -265,6 +279,8 @@ export default function MerchantChatWidget({
                       ) : (
                         <ChatMessageBody text={m.body} variant={mine ? "customer" : "merchant"} />
                       )}
+                    </div>
+                    <ChatMessageStatus message={m} mine={mine} timeLabel="" onEdit={saveEdit} />
                     </div>
                   </div>
                 );
