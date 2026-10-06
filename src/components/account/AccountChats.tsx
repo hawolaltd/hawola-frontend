@@ -40,6 +40,7 @@ import {
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
+import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 
 const CHAT_LIST_PAGE_SIZE = 20;
@@ -457,7 +458,7 @@ export default function AccountChats() {
                   <p className="mt-1 text-sm text-gray-500">
                     {searchQuery
                       ? "Try another store name or order number."
-                      : 'Open a product or store page and tap "Chat with this seller" to start.'}
+                      : 'Open a product page and tap "Chat or negotiate with Seller", or a store page and tap "Chat with this seller", to start.'}
                   </p>
                 </div>
               ) : (
@@ -649,7 +650,7 @@ export default function AccountChats() {
                                     : "rounded-bl-md border border-detailsBorder bg-white text-gray-800"
                                 }`}
                               >
-                                {m.message_kind && m.message_kind !== "text" ? (
+                                {(m.message_kind && m.message_kind !== "text") || m.attachment_url ? (
                                   <ChatRichMessage
                                     body={m.body}
                                     messageKind={m.message_kind}
@@ -669,6 +670,9 @@ export default function AccountChats() {
                                   timeLabel={`${mine ? "You" : selectedName} · ${formatMessageTime(m.created_at)}`}
                                   onEdit={saveEdit}
                                 />
+                                {m.negotiation_checkout ? (
+                                  <NegotiationCheckoutActions checkout={m.negotiation_checkout} />
+                                ) : null}
                             </div>
                           </div>
                         </div>

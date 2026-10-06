@@ -22,6 +22,7 @@ import {
 } from "@/lib/buyerChatSocket";
 import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
+import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 
@@ -356,7 +357,7 @@ export default function OrderBuyerChatPanel({
                               : "rounded-bl-md border border-[#d7e0ef] bg-white text-slate-800"
                           }`}
                         >
-                          {m.message_kind && m.message_kind !== "text" ? (
+                          {(m.message_kind && m.message_kind !== "text") || m.attachment_url ? (
                             <ChatRichMessage
                               body={m.body}
                               messageKind={m.message_kind}
@@ -376,6 +377,9 @@ export default function OrderBuyerChatPanel({
                           timeLabel={`${mine ? "You" : sellerLabel} · ${formatMessageTime(m.created_at)}`}
                           onEdit={saveEdit}
                         />
+                        {m.negotiation_checkout ? (
+                          <NegotiationCheckoutActions checkout={m.negotiation_checkout} />
+                        ) : null}
                       </div>
                     </div>
                   );

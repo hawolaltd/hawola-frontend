@@ -57,12 +57,17 @@ export function mergeChatMessages(
       next.body = existing.body;
       next.edited_at = existing.edited_at;
     }
+    const existingOffer = existing.negotiation_checkout?.offer_price || "";
+    const nextOffer = next.negotiation_checkout?.offer_price || "";
     const same =
       existing.body === next.body &&
       existing.receipt_status === next.receipt_status &&
       (existing.edited_at || null) === (next.edited_at || null) &&
       (existing.read_at || null) === (next.read_at || null) &&
-      (existing.delivered_at || null) === (next.delivered_at || null);
+      (existing.delivered_at || null) === (next.delivered_at || null) &&
+      existingOffer === nextOffer &&
+      (existing.negotiation_checkout?.coupon_code || "") ===
+        (next.negotiation_checkout?.coupon_code || "");
     if (!same) {
       byId.set(msg.id, next);
       changed = true;

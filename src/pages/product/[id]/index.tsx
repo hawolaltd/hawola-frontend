@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useLayoutEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import Head from 'next/head';
 import type { GetServerSideProps } from "next";
 import AuthLayout from "@/components/layout/AuthLayout";
@@ -559,6 +559,30 @@ const ProductPage = ({
         void init();
     }, [serverNotFound, routerIsReady, productSlug, init]);
 
+    const instantOpened = useRef(false);
+    useEffect(() => {
+        if (!routerIsReady || query.instant !== "1" || !product?.product?.id || instantOpened.current) {
+            return;
+        }
+        instantOpened.current = true;
+        const nextQuery = { ...router.query };
+        delete nextQuery.instant;
+        void router.replace({ pathname: router.pathname, query: nextQuery }, undefined, {
+            shallow: true,
+        });
+        if (!variantsCompleteForInstantOrder) {
+            toast.error("Choose the product options, then use Buy now.");
+            return;
+        }
+        setInstantOrderOpen(true);
+    }, [
+        routerIsReady,
+        query.instant,
+        product?.product?.id,
+        variantsCompleteForInstantOrder,
+        router,
+    ]);
+
     useEffect(() => {
         setSelectedGalleryIndex(0);
     }, [productSlug]);
@@ -882,6 +906,7 @@ const ProductPage = ({
                         productSlug={product.product.slug}
                         productName={product.product.name}
                         merchantStoreName={product.product.merchant?.store_name}
+                        launcherLabel="Chat or negotiate with Seller"
                     />
                 ) : null}
             </AuthLayout>
@@ -1205,6 +1230,7 @@ const ProductPage = ({
                 productName={product.product.name}
                 merchantStoreName={product.product.merchant?.store_name}
                 stackAboveStickyFooter={!contactMerchantOnly && Boolean(product?.product?.id)}
+                launcherLabel="Chat or negotiate with Seller"
             />
         ) : null}
         {productMatchesRoute &&

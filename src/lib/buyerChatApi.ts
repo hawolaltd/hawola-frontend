@@ -31,6 +31,18 @@ export type BuyerChatMessage = {
   edited_at?: string | null;
   receipt_status?: "sent" | "delivered" | "read" | string | null;
   editable_until?: string | null;
+  negotiation_checkout?: NegotiationCheckout | null;
+};
+
+export type NegotiationCheckout = {
+  product_id: number;
+  product_slug: string;
+  product_name: string;
+  offer_price: string;
+  list_price: string;
+  coupon_code: string;
+  discount_type: string;
+  discount_value: string;
 };
 
 export type PaginatedBuyerChats = {

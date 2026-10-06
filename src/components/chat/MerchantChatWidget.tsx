@@ -28,6 +28,7 @@ import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
+import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
 
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
@@ -38,6 +39,8 @@ type Props = {
   merchantStoreName?: string;
   /** Lift FAB above a fixed mobile footer (e.g. PDP sticky add-to-cart). */
   stackAboveStickyFooter?: boolean;
+  /** Label beside the chat button. */
+  launcherLabel?: string;
 };
 
 function hasAuthSession(
@@ -62,6 +65,7 @@ export default function MerchantChatWidget({
   orderitemNumber,
   merchantStoreName,
   stackAboveStickyFooter = false,
+  launcherLabel = "Chat with this seller",
 }: Props) {
   const router = useRouter();
   const { isAuthenticated, profile, user } = useAppSelector((state) => state.auth);
@@ -220,14 +224,14 @@ export default function MerchantChatWidget({
       <div
         className={`fixed right-5 z-[60] flex flex-row items-center justify-end gap-2 sm:gap-3 ${fabBottomClass}`}
       >
-        <span className="max-w-[10rem] rounded-2xl border border-primary/25 bg-white px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug text-primary shadow-md sm:max-w-[14rem] sm:px-3 sm:py-2 sm:text-sm">
-          Chat with this seller
+        <span className="max-w-[11.5rem] rounded-2xl border border-primary/25 bg-white px-2.5 py-1.5 text-right text-[11px] font-semibold leading-snug text-primary shadow-md sm:max-w-none sm:px-3 sm:py-2 sm:text-sm">
+          {launcherLabel}
         </span>
         <button
           type="button"
           onClick={() => (open ? setOpen(false) : void openChat())}
           className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-opacity hover:opacity-90"
-          aria-label="Chat with this seller"
+          aria-label={launcherLabel}
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -266,7 +270,7 @@ export default function MerchantChatWidget({
                           : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
                       }`}
                     >
-                      {m.message_kind && m.message_kind !== "text" ? (
+                      {(m.message_kind && m.message_kind !== "text") || m.attachment_url ? (
                         <ChatRichMessage
                           body={m.body}
                           messageKind={m.message_kind}
@@ -281,6 +285,9 @@ export default function MerchantChatWidget({
                       )}
                     </div>
                     <ChatMessageStatus message={m} mine={mine} timeLabel="" onEdit={saveEdit} />
+                    {m.negotiation_checkout ? (
+                      <NegotiationCheckoutActions checkout={m.negotiation_checkout} />
+                    ) : null}
                     </div>
                   </div>
                 );
