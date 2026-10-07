@@ -35,6 +35,7 @@ const LookingForProductPage = () => {
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<number | "">("");
   const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [similarTitles, setSimilarTitles] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(true);
 
@@ -94,8 +95,9 @@ const LookingForProductPage = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault: () => void }, confirmSimilar = false) => {
     e.preventDefault();
+    if (!confirmSimilar) setSimilarTitles([]);
     if (!title.trim()) {
       toast.error("Please add a short title for what you are looking for.");
       return;
@@ -122,6 +124,9 @@ const LookingForProductPage = () => {
       if (phoneNumber.trim()) {
         formData.append("phone_number", phoneNumber.trim());
       }
+      if (confirmSimilar) {
+        formData.append("confirm_similar", "true");
+      }
       images.forEach((file) => {
         formData.append("images", file);
       });
@@ -139,6 +144,7 @@ const LookingForProductPage = () => {
       toast.success(
         "Your request has been submitted. Merchants will be able to show interest shortly."
       );
+      setSimilarTitles([]);
       setTitle("");
       setDescription("");
       setVideoLink("");
@@ -149,12 +155,20 @@ const LookingForProductPage = () => {
       // Redirect to customer dashboard "My Buying Requests" tab
       router.push("/account?tab=buying_requests");
     } catch (err: any) {
+      const data = err?.response?.data;
+      if (err?.response?.status === 409 && data?.code === "similar_buying_request") {
+        const titles = Array.isArray(data?.similar)
+          ? data.similar.map((row: { title?: string }) => row?.title).filter(Boolean)
+          : [];
+        setSimilarTitles(titles.length ? titles : ["a previous request"]);
+        return;
+      }
       const detail =
-        err?.response?.data?.detail ||
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
+        data?.detail ||
+        data?.error ||
+        data?.message ||
         "Failed to submit buying request. Please try again.";
-      toast.error(detail);
+      toast.error(typeof detail === "string" ? detail : "Failed to submit buying request. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -446,6 +460,32 @@ const LookingForProductPage = () => {
                         issues that may arise between you and merchants. Please trade safely.
                       </p>
                     </div>
+                    {similarTitles.length > 0 && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                        <p className="font-medium">You already posted something similar.</p>
+                        <p className="mt-1">
+                          “{similarTitles[0]}”
+                          {similarTitles.length > 1 ? ` and ${similarTitles.length - 1} more` : ""}. Continue only if you still want this one.
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={submitting}
+                            onClick={(event) => handleSubmit(event, true)}
+                            className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                          >
+                            {submitting ? "Posting..." : "Continue posting"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSimilarTitles([])}
+                            className="rounded-lg border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-950"
+                          >
+                            Go back
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={submitting}
