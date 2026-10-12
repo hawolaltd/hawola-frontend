@@ -8,16 +8,18 @@ type ReviewStatus = {
   is_reviewed: boolean;
   is_merchant_reviewed: boolean;
   customer_review?: {
-    rating_product: number;
     rating_shipping: number;
-    rating_merchant: number;
+    rating_communication: number;
+    rating_experience: number;
+    rating_overall: number;
     comment?: string;
-    merchant_comment?: string;
+    user_review_images?: { id?: number; image?: string }[];
     created_at?: string;
   } | null;
   merchant_review_of_you?: {
     rating_overall: number;
     rate_communication: number;
+    rate_payment_speed: number;
     rate_response_time: number;
     comment?: string;
     created_at?: string;
@@ -69,11 +71,11 @@ export default function OrderReviewPanel({
   const [status, setStatus] = useState<ReviewStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [ratingProduct, setRatingProduct] = useState(5);
   const [ratingShipping, setRatingShipping] = useState(5);
-  const [ratingMerchant, setRatingMerchant] = useState(5);
+  const [ratingCommunication, setRatingCommunication] = useState(5);
+  const [ratingExperience, setRatingExperience] = useState(5);
   const [comment, setComment] = useState("");
-  const [merchantComment, setMerchantComment] = useState("");
+  const [images, setImages] = useState<File[]>([]);
 
   useEffect(() => {
     if (!orderitemNumber) return;
@@ -102,11 +104,11 @@ export default function OrderReviewPanel({
       await productService.submitProductReview({
         orderitem_number: orderitemNumber,
         title: productName ? `Review for ${productName}` : "Order review",
-        rating_product: ratingProduct,
         rating_shipping: ratingShipping,
-        rating_merchant: ratingMerchant,
+        rating_communication: ratingCommunication,
+        rating_experience: ratingExperience,
         comment,
-        merchant_comment: merchantComment,
+        images,
       });
       toast.success("Thank you! Your review has been submitted.");
       const refreshed = await productService.getOrderReviewStatus(orderitemNumber);
@@ -132,69 +134,83 @@ export default function OrderReviewPanel({
     return null;
   }
 
+  const review = status.customer_review;
+
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">
-        Reviews
+        Review this order
       </h3>
       <p className="text-sm text-gray-600 mb-4">
-        Help other shoppers and merchants by sharing your experience after this completed sale.
+        You confirmed this delivery. Share how shipping, communication, and the overall
+        experience went. Your name stays hidden on the product page.
       </p>
 
-      {status.customer_review ? (
+      {review ? (
         <div className="mb-4 rounded-lg border border-white bg-white p-4">
           <p className="text-sm font-semibold text-gray-800">Your review</p>
           <p className="mt-2 text-sm text-gray-600">
-            Product: {status.customer_review.rating_product}/5 · Shipping:{" "}
-            {status.customer_review.rating_shipping}/5 · Merchant:{" "}
-            {status.customer_review.rating_merchant}/5
+            Shipping: {review.rating_shipping}/5 · Communication: {review.rating_communication}/5 ·
+            Overall experience: {review.rating_experience}/5 · Average: {review.rating_overall}/5
           </p>
-          {status.customer_review.comment ? (
-            <p className="mt-2 text-sm text-gray-700">{status.customer_review.comment}</p>
+          {review.comment ? (
+            <p className="mt-2 text-sm text-gray-700">{review.comment}</p>
           ) : null}
-          {status.customer_review.merchant_comment ? (
-            <p className="mt-2 text-sm text-gray-700">
-              <span className="font-medium">About {merchantStoreName || "the merchant"}:</span>{" "}
-              {status.customer_review.merchant_comment}
-            </p>
+          {review.user_review_images && review.user_review_images.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {review.user_review_images.map((photo) =>
+                photo.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={photo.id || photo.image}
+                    src={photo.image}
+                    alt="Your review photo"
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                ) : null
+              )}
+            </div>
           ) : null}
         </div>
       ) : status.can_review ? (
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-white bg-white p-4">
           <p className="text-sm font-medium text-gray-800">
-            Rate {productName || "this product"} and {merchantStoreName || "the merchant"}
+            Rate {productName || "this product"}
+            {merchantStoreName ? ` from ${merchantStoreName}` : ""}
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
-            <StarPicker value={ratingProduct} onChange={setRatingProduct} label="Product" />
             <StarPicker value={ratingShipping} onChange={setRatingShipping} label="Shipping" />
             <StarPicker
-              value={ratingMerchant}
-              onChange={setRatingMerchant}
-              label={merchantStoreName ? `${merchantStoreName}` : "Merchant"}
+              value={ratingCommunication}
+              onChange={setRatingCommunication}
+              label="Communication"
+            />
+            <StarPicker
+              value={ratingExperience}
+              onChange={setRatingExperience}
+              label="Overall experience"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Product review
-            </label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Your review</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              placeholder="What did you think of the product?"
+              placeholder="What should other shoppers know?"
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Merchant review
+              Photos (up to 4)
             </label>
-            <textarea
-              value={merchantComment}
-              onChange={(e) => setMerchantComment(e.target.value)}
-              rows={3}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              placeholder="How was the store's service and communication?"
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setImages(Array.from(e.target.files || []).slice(0, 4))}
+              className="block w-full text-sm text-gray-600"
             />
           </div>
           <button
@@ -210,11 +226,12 @@ export default function OrderReviewPanel({
       {status.merchant_review_of_you ? (
         <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-4">
           <p className="text-sm font-semibold text-gray-800">
-            {merchantStoreName || "Merchant"} reviewed you
+            {merchantStoreName || "The store"} rated this order
           </p>
           <p className="mt-1 text-sm text-gray-600">
-            Overall: {status.merchant_review_of_you.rating_overall}/5 · Communication:{" "}
-            {status.merchant_review_of_you.rate_communication}/5 · Response time:{" "}
+            Average: {status.merchant_review_of_you.rating_overall}/5 · Communication:{" "}
+            {status.merchant_review_of_you.rate_communication}/5 · Payment speed:{" "}
+            {status.merchant_review_of_you.rate_payment_speed}/5 · Response:{" "}
             {status.merchant_review_of_you.rate_response_time}/5
           </p>
           {status.merchant_review_of_you.comment ? (
@@ -223,11 +240,7 @@ export default function OrderReviewPanel({
             </p>
           ) : null}
         </div>
-      ) : status.is_merchant_reviewed ? null : (
-        <p className="mt-4 text-xs text-gray-500">
-          The merchant may also leave a review about this purchase once the sale is concluded.
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

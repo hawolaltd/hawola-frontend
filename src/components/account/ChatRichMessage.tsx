@@ -187,7 +187,30 @@ function ReceiptViewerModal({
 
   if (!open) return null;
 
-  const downloadHref = url || htmlUrl || "#";
+  const pdfHref = htmlUrl
+    ? `${htmlUrl}${htmlUrl.includes("?") ? "&" : "?"}format=pdf`
+    : "";
+
+  const downloadPdf = async () => {
+    if (!pdfHref) return;
+    try {
+      const { data } = await axiosInstance.get(apiPathFromAbsolute(pdfHref), {
+        responseType: "blob",
+        headers: { Accept: "application/pdf" },
+      });
+      const blob = new Blob([data], { type: "application/pdf" });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `${(title || "hawola-receipt").replace(/[^\w.-]+/g, "-")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(pdfHref, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div
@@ -206,15 +229,13 @@ function ReceiptViewerModal({
             {title}
           </h2>
           <div className="flex items-center gap-2">
-            <a
-              href={downloadHref}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => void downloadPdf()}
               className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
             >
-              Download
-            </a>
+              Download PDF
+            </button>
             <button
               type="button"
               onClick={onClose}

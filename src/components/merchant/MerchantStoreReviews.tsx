@@ -8,6 +8,7 @@ type StoreReview = {
   merchant_comment?: string | null;
   comment?: string | null;
   created_at?: string;
+  reviewer_label?: string;
   user?: {
     first_name?: string | null;
     last_name?: string | null;
@@ -21,10 +22,7 @@ function reviewRating(review: StoreReview): number {
 }
 
 function reviewerName(review: StoreReview): string {
-  const user = review.user;
-  if (!user) return "Customer";
-  const full = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-  return full || user.username || "Customer";
+  return review.reviewer_label || "Verified buyer";
 }
 
 export default function MerchantStoreReviews({ merchantSlug }: { merchantSlug: string }) {

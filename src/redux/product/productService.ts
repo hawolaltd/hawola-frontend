@@ -401,15 +401,33 @@ const getOrderReviewStatus = async (orderitemNumber: string) => {
 const submitProductReview = async (payload: {
     orderitem_number: string;
     title?: string;
-    rating_product: number;
     rating_shipping: number;
-    rating_merchant: number;
+    rating_communication: number;
+    rating_experience: number;
     comment?: string;
-    merchant_comment?: string;
+    images?: File[];
 }) => {
+    const form = new FormData();
+    form.append("orderitem_number", payload.orderitem_number);
+    if (payload.title) form.append("title", payload.title);
+    form.append("rating_shipping", String(payload.rating_shipping));
+    form.append("rating_communication", String(payload.rating_communication));
+    form.append("rating_experience", String(payload.rating_experience));
+    if (payload.comment) form.append("comment", payload.comment);
+    (payload.images || []).slice(0, 4).forEach((file) => form.append("images", file));
     const response = await axiosInstance.post(
         API + `reviews/user-reviews-product/`,
-        payload
+        form,
+        {
+            transformRequest: [
+                (data, headers) => {
+                    if (headers) {
+                        delete headers["Content-Type"];
+                    }
+                    return data;
+                },
+            ],
+        }
     );
     return response.data;
 };

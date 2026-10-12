@@ -5,26 +5,27 @@ import { useAppSelector } from "@/hook/useReduxTypes";
 type ApiReview = {
   id?: number;
   rating_overall?: number | string;
+  rating_shipping?: number | string;
+  rating_communication?: number | string;
+  rating_experience?: number | string;
   rating_product?: number | string;
+  rating_merchant?: number | string;
   comment?: string | null;
   created_at?: string;
-  user?: {
-    first_name?: string | null;
-    last_name?: string | null;
-    username?: string;
-  } | null;
+  reviewer_label?: string;
+  user_review_images?: { id?: number; image?: string }[];
 };
 
 function reviewStars(review: ApiReview): number {
-  const raw = review.rating_overall ?? review.rating_product ?? 0;
+  const raw = review.rating_overall ?? review.rating_experience ?? review.rating_product ?? 0;
   return Math.max(0, Math.min(5, Math.round(Number(raw) || 0)));
 }
 
-function reviewerName(review: ApiReview): string {
-  const user = review.user;
-  if (!user) return "Customer";
-  const full = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-  return full || user.username || "Customer";
+function score(value: number | string | undefined, fallback?: number | string) {
+  const primary = Number(value);
+  const number = primary > 0 ? primary : Number(fallback);
+  if (!number) return null;
+  return number.toFixed(1).replace(/\.0$/, "");
 }
 
 const CustomerReviews = () => {
@@ -69,11 +70,13 @@ const CustomerReviews = () => {
                   className="flex items-start space-x-4 rounded-lg border border-[#dde4f0] p-4"
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-                    {reviewerName(review).charAt(0).toUpperCase()}
+                    V
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-primary">{reviewerName(review)}</p>
+                      <p className="text-sm font-bold text-primary">
+                        {review.reviewer_label || "Verified buyer"}
+                      </p>
                       <div className="text-orange">
                         {"★".repeat(stars)}
                         {"☆".repeat(5 - stars)}
@@ -82,10 +85,31 @@ const CustomerReviews = () => {
                     {review.created_at ? (
                       <p className="text-xs text-slate-500">
                         {new Date(review.created_at).toLocaleDateString()}
+                        {score(review.rating_overall) ? ` · Average ${score(review.rating_overall)}/5` : ""}
                       </p>
                     ) : null}
+                    <p className="mt-1 text-xs text-slate-600">
+                      Shipping {score(review.rating_shipping) || "—"}/5 · Communication{" "}
+                      {score(review.rating_communication, review.rating_merchant) || "—"}/5 · Overall
+                      experience {score(review.rating_experience, review.rating_product) || "—"}/5
+                    </p>
                     {review.comment ? (
                       <p className="mt-2 text-sm text-primary">{review.comment}</p>
+                    ) : null}
+                    {review.user_review_images && review.user_review_images.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {review.user_review_images.map((photo) =>
+                          photo.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={photo.id || photo.image}
+                              src={photo.image}
+                              alt="Review photo"
+                              className="h-20 w-20 rounded-lg object-cover"
+                            />
+                          ) : null
+                        )}
+                      </div>
                     ) : null}
                   </div>
                 </div>
