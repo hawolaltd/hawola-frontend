@@ -12,6 +12,7 @@ import {formatCurrency, getLatestStatus, orderItemImageUrl} from "@/util";
 import productService from "@/redux/product/productService";
 import disputeService from "@/redux/disputes/disputeService";
 import { toast } from "sonner";
+import Swal from "sweetalert2";
 import { API } from "@/constant";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
@@ -236,15 +237,7 @@ const OrderDetails: NextPage = () => {
         singleOrder?.isDelivered === true &&
         singleOrder?.user_confirm_order === true;
     const canConfirmReceipt =
-        !lineCancelled &&
-        singleOrder?.user_confirm_order !== true &&
-        Boolean(
-            singleOrder?.isDelivered ||
-                singleOrder?.isShipped ||
-                singleOrder?.isPaid ||
-                singleOrder?.payment_confirmed ||
-                singleOrder?.is_offline_payment
-        );
+        Boolean(singleOrder) && !lineCancelled && singleOrder?.user_confirm_order !== true;
     const messagingClosed = lineCancelled || singleOrder?.is_reviewed === true;
 
     useEffect(() => {
@@ -375,15 +368,19 @@ const OrderDetails: NextPage = () => {
         }
     };
     const handleConfirmDelivery = async () => {
-        if (!orderitemNumber) return;
-        // eslint-disable-next-line no-alert
-        if (
-            !confirm(
-                'Confirm only when the item is in your hands. This marks the order delivered. You can review the product, and the seller is asked to review you.'
-            )
-        ) {
-            return;
-        }
+        if (!orderitemNumber || confirmingOrder) return;
+        const result = await Swal.fire({
+            title: "Mark this order as received?",
+            text: "You are about to mark this order received. Paid, shipped, and delivered are set automatically if the seller has not done that yet. The seller is told in the chat. Only continue if the item is in your hands.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "I have received this order",
+            cancelButtonText: "Not yet",
+            confirmButtonColor: "#047857",
+            cancelButtonColor: "#64748b",
+            reverseButtons: true,
+        });
+        if (!result.isConfirmed) return;
         setConfirmingOrder(true);
         try {
             await productService.confirmOrderItem(orderitemNumber);
