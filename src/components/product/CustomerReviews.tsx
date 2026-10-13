@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useAppSelector } from "@/hook/useReduxTypes";
@@ -39,33 +39,29 @@ function ReviewPhotoPopup({
   onClose: () => void;
 }) {
   const photos = (review.user_review_images || []).filter((photo) => photo.image);
-  const scroller = useRef<HTMLDivElement>(null);
   const reviewerName = review.reviewer_label || "Anonymous";
   const stars = review.is_follow_up ? 0 : reviewStars(review);
+  const [index, setIndex] = useState(startIndex);
+  const safeIndex = Math.min(Math.max(index, 0), Math.max(photos.length - 1, 0));
+  const photo = photos[safeIndex];
 
   useEffect(() => {
-    const node = scroller.current;
-    if (!node) return;
-    const width = node.clientWidth || 1;
-    node.scrollTo({ left: startIndex * width, behavior: "auto" });
-  }, [startIndex]);
+    setIndex(startIndex);
+  }, [startIndex, review]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
-      const node = scroller.current;
-      if (!node) return;
-      const width = node.clientWidth || 1;
       if (event.key === "ArrowRight") {
-        node.scrollBy({ left: width, behavior: "smooth" });
+        setIndex((current) => Math.min(current + 1, photos.length - 1));
       }
       if (event.key === "ArrowLeft") {
-        node.scrollBy({ left: -width, behavior: "smooth" });
+        setIndex((current) => Math.max(current - 1, 0));
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, photos.length]);
 
   if (typeof document === "undefined") return null;
 
@@ -82,19 +78,38 @@ function ReviewPhotoPopup({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="relative bg-slate-100">
-          <div
-            ref={scroller}
-            className="flex snap-x snap-mandatory overflow-x-auto"
-          >
-            {photos.map((photo) => (
-              <img
-                key={photo.id || photo.image}
-                src={photo.image}
-                alt="Review photo"
-                className="h-[58vh] w-full shrink-0 snap-center object-contain"
-              />
-            ))}
-          </div>
+          {photo?.image ? (
+            <img
+              src={photo.image}
+              alt={`Review photo ${safeIndex + 1} of ${photos.length}`}
+              className="h-[58vh] w-full object-contain"
+            />
+          ) : null}
+          {photos.length > 1 ? (
+            <>
+              <button
+                type="button"
+                aria-label="Previous photo"
+                disabled={safeIndex === 0}
+                onClick={() => setIndex((current) => Math.max(current - 1, 0))}
+                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl font-semibold text-slate-800 shadow disabled:opacity-40"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                aria-label="Next photo"
+                disabled={safeIndex >= photos.length - 1}
+                onClick={() => setIndex((current) => Math.min(current + 1, photos.length - 1))}
+                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl font-semibold text-slate-800 shadow disabled:opacity-40"
+              >
+                ›
+              </button>
+              <p className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                {safeIndex + 1} of {photos.length}
+              </p>
+            </>
+          ) : null}
           <button
             type="button"
             onClick={onClose}
@@ -102,11 +117,6 @@ function ReviewPhotoPopup({
           >
             Close
           </button>
-          {photos.length > 1 ? (
-            <p className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
-              Scroll for {photos.length} photos
-            </p>
-          ) : null}
         </div>
         <div className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
