@@ -22,7 +22,7 @@ function reviewRating(review: StoreReview): number {
 }
 
 function reviewerName(review: StoreReview): string {
-  return review.reviewer_label || "Verified buyer";
+  return review.reviewer_label || "Anonymous";
 }
 
 export default function MerchantStoreReviews({ merchantSlug }: { merchantSlug: string }) {

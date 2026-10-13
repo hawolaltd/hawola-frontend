@@ -5,6 +5,7 @@ import { toast } from "sonner";
 type ReviewStatus = {
   sale_concluded: boolean;
   can_review: boolean;
+  can_edit?: boolean;
   is_reviewed: boolean;
   is_merchant_reviewed: boolean;
   customer_review?: {
@@ -13,6 +14,7 @@ type ReviewStatus = {
     rating_experience: number;
     rating_overall: number;
     comment?: string;
+    show_first_name?: boolean;
     user_review_images?: { id?: number; image?: string }[];
     created_at?: string;
   } | null;
@@ -75,7 +77,10 @@ export default function OrderReviewPanel({
   const [ratingCommunication, setRatingCommunication] = useState(5);
   const [ratingExperience, setRatingExperience] = useState(5);
   const [comment, setComment] = useState("");
+  const [showFirstName, setShowFirstName] = useState(false);
   const [images, setImages] = useState<File[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!orderitemNumber) return;
@@ -96,9 +101,33 @@ export default function OrderReviewPanel({
     };
   }, [orderitemNumber]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const review = status?.customer_review;
+  const postedAt = review?.created_at ? new Date(review.created_at).getTime() : 0;
+  const canEdit = Boolean(review) && (postedAt ? now < postedAt + 60_000 : Boolean(status?.can_edit));
+
+  useEffect(() => {
+    if (editing && !canEdit && !submitting) setEditing(false);
+  }, [canEdit, editing, submitting]);
+
+  const startEdit = () => {
+    if (!review) return;
+    setRatingShipping(Number(review.rating_shipping) || 5);
+    setRatingCommunication(Number(review.rating_communication) || 5);
+    setRatingExperience(Number(review.rating_experience) || 5);
+    setComment(review.comment || "");
+    setShowFirstName(Boolean(review.show_first_name));
+    setImages([]);
+    setEditing(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!status?.can_review) return;
+    if (!editing && !status?.can_review) return;
     setSubmitting(true);
     try {
       await productService.submitProductReview({
@@ -108,14 +137,25 @@ export default function OrderReviewPanel({
         rating_communication: ratingCommunication,
         rating_experience: ratingExperience,
         comment,
+        show_first_name: showFirstName,
         images,
       });
-      toast.success("Thank you! Your review has been submitted.");
+      toast.success(editing ? "Your review has been updated." : "Thank you! Your review has been submitted.");
+      setEditing(false);
+      setImages([]);
       const refreshed = await productService.getOrderReviewStatus(orderitemNumber);
       setStatus(refreshed);
       onSubmitted?.();
     } catch (err: any) {
-      const detail = err?.response?.data?.detail || err?.response?.data?.error;
+      const data = err?.response?.data;
+      let detail = data?.detail || data?.error;
+      if (detail && typeof detail !== "string") {
+        const first = Object.values(detail).flat().find((item) => typeof item === "string");
+        detail = first;
+      }
+      if (err?.code === "ECONNABORTED") {
+        detail = "The review took too long to upload. Please try again.";
+      }
       toast.error(typeof detail === "string" ? detail : "Could not submit review.");
     } finally {
       setSubmitting(false);
@@ -134,7 +174,13 @@ export default function OrderReviewPanel({
     return null;
   }
 
-  const review = status.customer_review;
+  const photoCount =
+    images.length > 0
+      ? images.length
+      : editing
+        ? review?.user_review_images?.length || 0
+        : 0;
+  const showForm = Boolean(editing || (status.can_review && !review));
 
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-4 sm:p-6">
@@ -143,10 +189,10 @@ export default function OrderReviewPanel({
       </h3>
       <p className="text-sm text-gray-600 mb-4">
         You confirmed this delivery. Share how shipping, communication, and the overall
-        experience went. Your name stays hidden on the product page.
+        experience went. You can show your first name, or stay anonymous.
       </p>
 
-      {review ? (
+      {review && !editing ? (
         <div className="mb-4 rounded-lg border border-white bg-white p-4">
           <p className="text-sm font-semibold text-gray-800">Your review</p>
           <p className="mt-2 text-sm text-gray-600">
@@ -171,8 +217,24 @@ export default function OrderReviewPanel({
               )}
             </div>
           ) : null}
+          {canEdit ? (
+            <div className="mt-3">
+              <p className="text-xs text-gray-500">
+                You can edit this review for 1 minute after posting.
+              </p>
+              <button
+                type="button"
+                onClick={startEdit}
+                className="mt-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Edit review
+              </button>
+            </div>
+          ) : null}
         </div>
-      ) : status.can_review ? (
+      ) : null}
+
+      {showForm ? (
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-white bg-white p-4">
           <p className="text-sm font-medium text-gray-800">
             Rate {productName || "this product"}
@@ -221,18 +283,40 @@ export default function OrderReviewPanel({
               }}
               className="block w-full text-sm text-gray-600"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              iPhone photos are fine up to 20 MB each. They are reduced before they are saved.
-              {images.length ? ` ${images.length} of 5 selected.` : ""}
-            </p>
+            <p className="mt-1 text-xs text-gray-500">{photoCount} out of 5 images</p>
           </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
-          >
-            {submitting ? "Submitting…" : "Submit review"}
-          </button>
+          <label className="flex items-start gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={showFirstName}
+              onChange={(e) => setShowFirstName(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Show my first name on this review
+              <span className="mt-0.5 block text-xs text-gray-500">
+                Leave this off to stay anonymous.
+              </span>
+            </span>
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+            >
+              {submitting ? "Submitting…" : editing ? "Save review" : "Submit review"}
+            </button>
+            {editing ? (
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="rounded-md px-3 py-2 text-sm text-gray-600"
+              >
+                Cancel
+              </button>
+            ) : null}
+          </div>
         </form>
       ) : null}
 

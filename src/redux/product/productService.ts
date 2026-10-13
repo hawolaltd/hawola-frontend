@@ -405,6 +405,7 @@ const submitProductReview = async (payload: {
     rating_communication: number;
     rating_experience: number;
     comment?: string;
+    show_first_name?: boolean;
     images?: File[];
 }) => {
     const form = new FormData();
@@ -413,12 +414,14 @@ const submitProductReview = async (payload: {
     form.append("rating_shipping", String(payload.rating_shipping));
     form.append("rating_communication", String(payload.rating_communication));
     form.append("rating_experience", String(payload.rating_experience));
+    form.append("show_first_name", payload.show_first_name ? "true" : "false");
     if (payload.comment) form.append("comment", payload.comment);
     (payload.images || []).slice(0, 5).forEach((file) => form.append("images", file));
     const response = await axiosInstance.post(
         API + `reviews/user-reviews-product/`,
         form,
         {
+            timeout: 120000,
             transformRequest: [
                 (data, headers) => {
                     if (headers) {

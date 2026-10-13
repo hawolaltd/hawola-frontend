@@ -64,18 +64,19 @@ const CustomerReviews = () => {
           <div className="space-y-4">
             {reviews.map((review, index) => {
               const stars = reviewStars(review);
+              const reviewerName = review.reviewer_label || "Anonymous";
               return (
                 <div
                   key={review.id ?? index}
                   className="flex items-start space-x-4 rounded-lg border border-[#dde4f0] p-4"
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-                    V
+                    {reviewerName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-bold text-primary">
-                        {review.reviewer_label || "Verified buyer"}
+                        {reviewerName}
                       </p>
                       <div className="text-orange">
                         {"★".repeat(stars)}
