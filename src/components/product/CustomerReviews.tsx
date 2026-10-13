@@ -16,6 +16,12 @@ type ApiReview = {
   reviewer_label?: string;
   is_follow_up?: boolean;
   user_review_images?: { id?: number; image?: string }[];
+  additional_review?: {
+    id?: number;
+    comment?: string | null;
+    created_at?: string;
+    user_review_images?: { id?: number; image?: string }[];
+  } | null;
 };
 
 function reviewStars(review: ApiReview): number {
@@ -212,6 +218,46 @@ const CustomerReviews = () => {
                     )}
                     {review.comment ? (
                       <p className="mt-2 text-sm text-primary">{review.comment}</p>
+                    ) : null}
+                    {review.additional_review ? (
+                      <div className="mt-3 rounded-lg border border-[#e8edf6] bg-slate-50 p-3">
+                        <p className="text-xs font-semibold text-slate-600">Additional review</p>
+                        {review.additional_review.comment ? (
+                          <p className="mt-2 text-sm text-primary">{review.additional_review.comment}</p>
+                        ) : null}
+                        {review.additional_review.user_review_images &&
+                        review.additional_review.user_review_images.length > 0 ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {review.additional_review.user_review_images.map((photo, photoIndex) =>
+                              photo.image ? (
+                                <button
+                                  key={photo.id || photo.image}
+                                  type="button"
+                                  onClick={() =>
+                                    setViewer({
+                                      review: {
+                                        comment: review.additional_review?.comment,
+                                        reviewer_label: reviewerName,
+                                        is_follow_up: true,
+                                        user_review_images: review.additional_review?.user_review_images,
+                                      },
+                                      index: photoIndex,
+                                    })
+                                  }
+                                  className="overflow-hidden rounded-lg"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={photo.image}
+                                    alt="Additional review photo"
+                                    className="h-16 w-16 object-cover"
+                                  />
+                                </button>
+                              ) : null
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
                     ) : null}
                     {review.user_review_images && review.user_review_images.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">

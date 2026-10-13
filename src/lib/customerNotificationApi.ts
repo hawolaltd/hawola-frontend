@@ -20,6 +20,7 @@ export type CustomerNotificationSettings = {
   };
   push: { registered: boolean };
   platform_labels: Record<string, string>;
+  sales_nudges?: boolean;
 };
 
 const base = "authy";
@@ -37,6 +38,17 @@ export const customerNotificationApi = {
       `${base}/notification-settings/`,
       { preferences }
     );
+    return response.data;
+  },
+
+  updateSalesNudges: async (enabled: boolean) => {
+    const response = await axiosInstance.patch<CustomerNotificationSettings>(
+      `${base}/notification-settings/`,
+      { sales_nudges: enabled }
+    );
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("hawola-sales-nudges", enabled ? "on" : "off");
+    }
     return response.data;
   },
 

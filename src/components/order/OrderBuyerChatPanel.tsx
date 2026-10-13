@@ -105,7 +105,7 @@ export default function OrderBuyerChatPanel({
   }, []);
 
   useEffect(() => {
-    if (!orderitemNumber || disabled) {
+    if (!orderitemNumber) {
       setLoading(false);
       return undefined;
     }
@@ -137,7 +137,7 @@ export default function OrderBuyerChatPanel({
     return () => {
       cancelled = true;
     };
-  }, [orderitemNumber, disabled]);
+  }, [orderitemNumber]);
 
   useEffect(() => {
     if (!conversation?.slug || disabled) return undefined;
@@ -413,9 +413,13 @@ export default function OrderBuyerChatPanel({
               </div>
             ) : null}
             {disabled ? (
-              <p className="rounded-xl bg-slate-100 px-3 py-3 text-sm text-slate-600">
-                {closedMessage || "Messaging is closed for this order."}
-              </p>
+              <textarea
+                rows={2}
+                readOnly
+                disabled
+                className="max-h-32 min-h-[48px] w-full resize-none rounded-2xl border border-[#d7e0ef] bg-slate-100 px-3 py-2 text-sm text-slate-400"
+                placeholder="Chat is closed"
+              />
             ) : (
               <>
                 {allowProofOfPayment ? (

@@ -231,6 +231,7 @@ export default function MerchantPage({
         <MerchantChatWidget
           merchantId={profileSource.merchant_details.id}
           merchantStoreName={profileSource.merchant_details.store_name}
+          salesNudge={profileSource.merchant_details.sales_nudge}
         />
       ) : null}
     </div>

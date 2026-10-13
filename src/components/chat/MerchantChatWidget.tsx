@@ -41,6 +41,8 @@ type Props = {
   stackAboveStickyFooter?: boolean;
   /** Label beside the chat button. */
   launcherLabel?: string;
+  /** Store hello shown as the first chat bubble. */
+  salesNudge?: string;
 };
 
 function hasAuthSession(
@@ -66,6 +68,7 @@ export default function MerchantChatWidget({
   merchantStoreName,
   stackAboveStickyFooter = false,
   launcherLabel = "Chat with this seller",
+  salesNudge = "",
 }: Props) {
   const router = useRouter();
   const { isAuthenticated, profile, user } = useAppSelector((state) => state.auth);
@@ -212,6 +215,28 @@ export default function MerchantChatWidget({
     }
   };
 
+  const nudgeText = (salesNudge || "").trim();
+
+  useEffect(() => {
+    if (!nudgeText || orderitemNumber) return;
+    if (typeof window === "undefined") return;
+    try {
+      if (window.localStorage.getItem("hawola-sales-nudges") === "off") return;
+    } catch {
+      return;
+    }
+    const viewer = (user || profile) as { show_sales_nudges?: boolean } | null;
+    if (viewer?.show_sales_nudges === false) return;
+    const seenKey = `hawola-nudge-seen:${merchantId || productSlug || "store"}`;
+    if (window.sessionStorage.getItem(seenKey)) return;
+    const wait = 1400 + Math.floor(Math.random() * 2800);
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.setItem(seenKey, "1");
+      setOpen(true);
+    }, wait);
+    return () => window.clearTimeout(timer);
+  }, [nudgeText, orderitemNumber, merchantId, productSlug, user, profile]);
+
   const fabBottomClass = stackAboveStickyFooter
     ? "bottom-[calc(5.25rem+env(safe-area-inset-bottom))] lg:bottom-5"
     : "bottom-5";
@@ -253,9 +278,16 @@ export default function MerchantChatWidget({
             <p className="text-xs mt-0.5 text-white/90">{contextLabel}</p>
           </div>
           <div ref={scrollRef} className="chat-scroll-pane min-h-0 flex-1 bg-white p-3 space-y-2">
+            {nudgeText ? (
+              <div className="flex justify-start">
+                <div className="max-w-[85%] rounded-2xl rounded-bl-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800">
+                  <ChatMessageBody text={nudgeText} variant="merchant" />
+                </div>
+              </div>
+            ) : null}
             {loading ? (
               <p className="text-sm text-gray-500 text-center py-6">Loading…</p>
-            ) : messages.length === 0 ? (
+            ) : messages.length === 0 && !nudgeText ? (
               <p className="text-sm text-gray-500 text-center py-6">Say hello to the merchant.</p>
             ) : (
               messages.map((m) => {
@@ -350,19 +382,19 @@ export default function MerchantChatWidget({
             <div className="flex gap-2">
             <input
               className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
-              placeholder="Type a message…"
+              placeholder={conversation ? "Type a message…" : "Reply to the store…"}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), void send())}
-              disabled={!conversation || sending}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), conversation ? void send() : void openChat())}
+              disabled={sending}
             />
             <button
               type="button"
               className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
-              disabled={!conversation || sending}
-              onClick={() => void send()}
+              disabled={sending || (conversation ? !input.trim() : false)}
+              onClick={() => (conversation ? void send() : void openChat())}
             >
-              Send
+              {conversation ? "Send" : "Reply"}
             </button>
             </div>
           </div>

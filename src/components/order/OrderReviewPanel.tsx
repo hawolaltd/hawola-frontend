@@ -297,23 +297,23 @@ export default function OrderReviewPanel({
         </div>
       ))}
 
-      {review && !editing && !addingMore ? (
+      {review && !editing && !addingMore && followUps.length === 0 && status?.can_add_follow_up ? (
         <button
           type="button"
           onClick={() => {
             setShowFirstName(Boolean(review.show_first_name));
             setAddingMore(true);
           }}
-          className="mb-4 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+          className="mb-4 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
         >
-          Add to your review
+          Add additional review
         </button>
       ) : null}
 
       {addingMore ? (
         <form onSubmit={handleFollowUp} className="mb-4 space-y-3 rounded-lg border border-white bg-white p-4">
-          <p className="text-sm font-medium text-gray-800">Add to your review</p>
-          <p className="text-xs text-gray-500">Text and photos only. This does not change your stars.</p>
+          <p className="text-sm font-medium text-gray-800">Add additional review</p>
+          <p className="text-xs text-gray-500">Text and photos only. No stars. You can add this once.</p>
           <textarea
             value={followComment}
             onChange={(e) => setFollowComment(e.target.value)}
@@ -344,7 +344,7 @@ export default function OrderReviewPanel({
               disabled={submitting}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
-              {submitting ? "Saving…" : "Add review"}
+              {submitting ? "Saving…" : "Add additional review"}
             </button>
             <button type="button" onClick={() => setAddingMore(false)} className="px-3 py-2 text-sm text-gray-600">
               Cancel

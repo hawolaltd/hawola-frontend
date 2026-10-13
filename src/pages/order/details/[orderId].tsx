@@ -756,11 +756,6 @@ const OrderDetails: NextPage = () => {
                                             canConfirmReceipt={canConfirmReceipt}
                                             confirmingReceipt={confirmingOrder}
                                             onConfirmReceipt={() => void handleConfirmDelivery()}
-                                            closedMessage={
-                                                singleOrder?.is_reviewed
-                                                    ? "This chat is closed now that you have reviewed the order."
-                                                    : undefined
-                                            }
                                             hasOpenDispute={hasDispute}
                                             defaultTab="chat"
                                             disputeContent={

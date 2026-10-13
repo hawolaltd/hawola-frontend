@@ -906,6 +906,7 @@ const ProductPage = ({
                         productSlug={product.product.slug}
                         productName={product.product.name}
                         merchantStoreName={product.product.merchant?.store_name}
+                        salesNudge={product.product.merchant?.sales_nudge || product.merchant?.sales_nudge}
                         launcherLabel="Chat or negotiate with Seller"
                     />
                 ) : null}
@@ -1229,6 +1230,7 @@ const ProductPage = ({
                 productSlug={product.product.slug}
                 productName={product.product.name}
                 merchantStoreName={product.product.merchant?.store_name}
+                salesNudge={product.product.merchant?.sales_nudge || product.merchant?.sales_nudge}
                 stackAboveStickyFooter={!contactMerchantOnly && Boolean(product?.product?.id)}
                 launcherLabel="Chat or negotiate with Seller"
             />

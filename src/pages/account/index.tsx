@@ -164,6 +164,8 @@ export default function AccountPage() {
                                     <span className="hidden sm:inline"><br/></span>
                                     <span className="sm:hidden"> </span>
                                     manage your shipping and billing addresses and edit your password and account details.
+                                    Stores may say hello in chat when you open a product. Turn that off in{" "}
+                                    <Link href="/account?tab=notifications" className="underline">notification settings</Link>.
                                 </p>
                                 <AccountTelegramConnectPrompt connected={!!user?.telegram_connected} />
                             </div>
