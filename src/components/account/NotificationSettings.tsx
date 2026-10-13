@@ -127,9 +127,6 @@ export default function NotificationSettings() {
       const data = await customerNotificationApi.getNotificationSettings();
       setSettings(data);
       setPrefs(prefsFromSettings(data));
-      if (typeof window !== "undefined" && typeof data.sales_nudges === "boolean") {
-        window.localStorage.setItem("hawola-sales-nudges", data.sales_nudges ? "on" : "off");
-      }
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || "Could not load notification settings.");
     } finally {
@@ -277,27 +274,6 @@ export default function NotificationSettings() {
             )}
           </div>
         </div>
-      </section>
-
-      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-gray-900">Store hellos in chat</h2>
-        <p className="mt-1 text-sm leading-relaxed text-gray-600">
-          Some stores leave a short note. When you open their product, chat can pop up and show it first, so you know someone is there. It is not a message you have to answer. Turn it off if you would rather open chat yourself.
-        </p>
-        <label className="mt-3 flex items-center gap-2 text-sm font-medium text-gray-800">
-          <input
-            type="checkbox"
-            checked={settings?.sales_nudges !== false}
-            onChange={(e) => {
-              const next = e.target.checked;
-              setSettings((prev) => (prev ? { ...prev, sales_nudges: next } : prev));
-              void customerNotificationApi.updateSalesNudges(next).catch(() => {
-                toast.error("Could not update that setting.");
-              });
-            }}
-          />
-          Show store hellos
-        </label>
       </section>
 
       <section>

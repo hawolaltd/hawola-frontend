@@ -41,17 +41,6 @@ export const customerNotificationApi = {
     return response.data;
   },
 
-  updateSalesNudges: async (enabled: boolean) => {
-    const response = await axiosInstance.patch<CustomerNotificationSettings>(
-      `${base}/notification-settings/`,
-      { sales_nudges: enabled }
-    );
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("hawola-sales-nudges", enabled ? "on" : "off");
-    }
-    return response.data;
-  },
-
   createTelegramConnectLink: async () => {
     const response = await axiosInstance.post<{
       connect_url: string;
