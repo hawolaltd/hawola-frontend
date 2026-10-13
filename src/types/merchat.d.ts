@@ -180,6 +180,7 @@ interface MerchantDetails {
   is_active: boolean;
   is_verified_store?: boolean;
   slug: string;
+  sales_nudge?: string;
   merchant_user: number;
   merchant_reels?: Array<{
     id: number;

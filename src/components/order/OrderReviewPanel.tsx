@@ -221,7 +221,8 @@ export default function OrderReviewPanel({
       : editing
         ? review?.user_review_images?.length || 0
         : 0;
-  const showForm = Boolean(editing || (status.can_review && !review));
+  const showForm = Boolean(editing || (status?.can_review && !review));
+  const merchantReview = status?.merchant_review_of_you;
 
   return (
     <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-4 sm:p-6">
@@ -439,20 +440,20 @@ export default function OrderReviewPanel({
         </form>
       ) : null}
 
-      {status.merchant_review_of_you ? (
+      {merchantReview ? (
         <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-4">
           <p className="text-sm font-semibold text-gray-800">
             {merchantStoreName || "The store"} rated this order
           </p>
           <p className="mt-1 text-sm text-gray-600">
-            Average: {status.merchant_review_of_you.rating_overall}/5 · Communication:{" "}
-            {status.merchant_review_of_you.rate_communication}/5 · Payment speed:{" "}
-            {status.merchant_review_of_you.rate_payment_speed}/5 · Response:{" "}
-            {status.merchant_review_of_you.rate_response_time}/5
+            Average: {merchantReview.rating_overall}/5 · Communication:{" "}
+            {merchantReview.rate_communication}/5 · Payment speed:{" "}
+            {merchantReview.rate_payment_speed}/5 · Response:{" "}
+            {merchantReview.rate_response_time}/5
           </p>
-          {status.merchant_review_of_you.comment ? (
+          {merchantReview.comment ? (
             <p className="mt-2 text-sm text-gray-700">
-              {status.merchant_review_of_you.comment}
+              {merchantReview.comment}
             </p>
           ) : null}
         </div>

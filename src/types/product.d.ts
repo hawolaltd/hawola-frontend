@@ -44,6 +44,7 @@ export interface Merchant {
     is_active: boolean;
     slug: string;
     merchant_user: number;
+    sales_nudge?: string;
 }
 
 export interface FeaturedImage {
