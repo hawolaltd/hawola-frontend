@@ -1,13 +1,26 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaTelegram, FaTwitter, FaWhatsapp, FaYoutube } from "react-icons/fa";
+import { FaTiktok } from "react-icons/fa6";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
 
 type FooterLink = { label: string; href: string; enabled?: boolean };
+type FooterTitles = {
+  shop?: string;
+  support?: string;
+  company?: string;
+  contact?: string;
+  payment?: string;
+};
+
 type FooterConfig = {
   intro_text?: string;
+  column_titles?: FooterTitles;
+  copyright_text?: string;
+  show_payment?: boolean;
+  payment_image_url?: string;
   columns?: {
     shop?: FooterLink[];
     support?: FooterLink[];
@@ -16,9 +29,21 @@ type FooterConfig = {
   legal_links?: FooterLink[];
 };
 
+const FOOTER_DEFAULT_TITLES: Required<FooterTitles> = {
+  shop: "Shop",
+  support: "Support",
+  company: "Company",
+  contact: "Contact",
+  payment: "Payment",
+};
+
 const FOOTER_DEFAULT_CONFIG: FooterConfig = {
   intro_text:
     "Everything you need in one marketplace—discover stores, compare products, and shop with confidence.",
+  column_titles: FOOTER_DEFAULT_TITLES,
+  copyright_text: "© {{year}} Hawola. All rights reserved.",
+  show_payment: true,
+  payment_image_url: "",
   columns: {
     shop: [
       { label: "Search", href: "/search", enabled: true },
@@ -46,27 +71,6 @@ const FOOTER_DEFAULT_CONFIG: FooterConfig = {
   ],
 };
 
-const FOOTER_NAV = {
-  shop: [
-    { label: "Search", href: "/search" },
-    { label: "Compare", href: "/compare" },
-    { label: "Wishlist", href: "/wishlist" },
-    { label: "Cart", href: "/carts" },
-  ],
-  support: [
-    { label: "Help center", href: "#" },
-    { label: "FAQs", href: "#" },
-    { label: "Contact us", href: "#" },
-    { label: "Shipping", href: "#" },
-  ],
-  company: [
-    { label: "About Hawola", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Privacy", href: "https://hawola.com/privacy" },
-    { label: "Terms of use", href: "https://www.hawola.com/terms" },
-  ],
-} as const;
-
 function trimUrl(s: string | null | undefined): string {
   if (s == null || typeof s !== "string") return "";
   return s.trim();
@@ -74,7 +78,7 @@ function trimUrl(s: string | null | undefined): string {
 
 function normalizeLinks(raw: unknown, fallback: FooterLink[]): FooterLink[] {
   if (!Array.isArray(raw)) return fallback;
-  const parsed = raw
+  return raw
     .map((item) => {
       if (!item || typeof item !== "object") return null;
       const label = typeof (item as { label?: unknown }).label === "string" ? (item as { label: string }).label.trim() : "";
@@ -85,7 +89,18 @@ function normalizeLinks(raw: unknown, fallback: FooterLink[]): FooterLink[] {
       return { label, href, enabled };
     })
     .filter(Boolean) as FooterLink[];
-  return parsed.length > 0 ? parsed : fallback;
+}
+
+function logoFileUrl(logo: unknown): string {
+  if (!logo || typeof logo !== "object") return "";
+  const record = logo as Record<string, unknown>;
+  const full = record.full_size;
+  if (full && typeof full === "object" && typeof (full as { url?: unknown }).url === "string") {
+    return (full as { url: string }).url;
+  }
+  if (typeof full === "string") return full;
+  if (typeof record.url === "string") return record.url;
+  return "";
 }
 
 const Footer = () => {
@@ -101,11 +116,22 @@ const Footer = () => {
     const raw = siteSettings?.footer_config;
     if (!raw || typeof raw !== "object") return FOOTER_DEFAULT_CONFIG;
     const cfg = raw as FooterConfig;
+    const titles = cfg.column_titles || {};
+    const titleOr = (key: keyof FooterTitles) =>
+      typeof titles[key] === "string" ? titles[key] : FOOTER_DEFAULT_TITLES[key];
     return {
-      intro_text:
-        typeof cfg.intro_text === "string" && cfg.intro_text.trim()
-          ? cfg.intro_text.trim()
-          : FOOTER_DEFAULT_CONFIG.intro_text,
+      intro_text: typeof cfg.intro_text === "string" ? cfg.intro_text.trim() : FOOTER_DEFAULT_CONFIG.intro_text,
+      column_titles: {
+        shop: titleOr("shop"),
+        support: titleOr("support"),
+        company: titleOr("company"),
+        contact: titleOr("contact"),
+        payment: titleOr("payment"),
+      },
+      copyright_text:
+        typeof cfg.copyright_text === "string" ? cfg.copyright_text : FOOTER_DEFAULT_CONFIG.copyright_text,
+      show_payment: cfg.show_payment !== false,
+      payment_image_url: typeof cfg.payment_image_url === "string" ? cfg.payment_image_url.trim() : "",
       columns: {
         shop: normalizeLinks(cfg.columns?.shop, FOOTER_DEFAULT_CONFIG.columns?.shop || []),
         support: normalizeLinks(cfg.columns?.support, FOOTER_DEFAULT_CONFIG.columns?.support || []),
@@ -121,21 +147,55 @@ const Footer = () => {
       key: string;
       href: string;
       label: string;
-      Icon: typeof FaFacebookF;
+      Icon: React.ComponentType<{ className?: string }>;
     }> = [];
+    const wa = trimUrl(siteSettings.whatsapp_support_link as string | null);
+    const tg = trimUrl(siteSettings.telegram_support_link as string | null);
     const fb = trimUrl(siteSettings.facebook_support_link);
     const ig = trimUrl(siteSettings.instagram_support_link);
     const tw = trimUrl(siteSettings.twitter_support_link);
     const yt = trimUrl(siteSettings.youtube_support_link);
+    const tk = trimUrl(siteSettings.tiktok_support_link as string | null);
+    if (wa) items.push({ key: "whatsapp", href: wa, label: "WhatsApp", Icon: FaWhatsapp });
+    if (tg) items.push({ key: "telegram", href: tg, label: "Telegram", Icon: FaTelegram });
     if (fb) items.push({ key: "facebook", href: fb, label: "Facebook", Icon: FaFacebookF });
     if (ig) items.push({ key: "instagram", href: ig, label: "Instagram", Icon: FaInstagram });
     if (tw) items.push({ key: "twitter", href: tw, label: "Twitter / X", Icon: FaTwitter });
     if (yt) items.push({ key: "youtube", href: yt, label: "YouTube", Icon: FaYoutube });
+    if (tk) items.push({ key: "tiktok", href: tk, label: "TikTok", Icon: FaTiktok });
     return items;
   }, [siteSettings]);
 
   const supportPhone = trimUrl(siteSettings?.support_phone_number);
   const supportEmail = trimUrl(siteSettings?.email_support_link);
+  const titles = footerConfig.column_titles || FOOTER_DEFAULT_TITLES;
+  const apiOrigin = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api\/?$/, "");
+  const uploadedLogo =
+    logoFileUrl(siteSettings?.logo_white) ||
+    logoFileUrl(siteSettings?.logo_svg_white) ||
+    logoFileUrl(siteSettings?.logo_white_plain) ||
+    logoFileUrl(siteSettings?.logo);
+  const footerLogo =
+    uploadedLogo && uploadedLogo.startsWith("/") && apiOrigin ? `${apiOrigin}${uploadedLogo}` : uploadedLogo;
+  const paymentSrc = footerConfig.payment_image_url
+    ? footerConfig.payment_image_url.startsWith("/") && apiOrigin
+      ? `${apiOrigin}${footerConfig.payment_image_url}`
+      : footerConfig.payment_image_url
+    : "/assets/paymentMethod.png";
+  const copyright = (footerConfig.copyright_text || "").replaceAll("{{year}}", String(new Date().getFullYear()));
+  const linkColumns = (
+    [
+      ["shop", titles.shop || ""],
+      ["support", titles.support || ""],
+      ["company", titles.company || ""],
+    ] as const
+  )
+    .map(([key, title]) => ({
+      key,
+      title,
+      links: footerConfig.columns?.[key] || [],
+    }))
+    .filter((column) => column.links.length > 0);
 
   const scrollTop = () => {
     if (typeof window !== "undefined") {
@@ -152,9 +212,9 @@ const Footer = () => {
           <div className="lg:col-span-4 flex flex-col gap-5">
             <Link href="/" className="inline-flex items-center gap-2">
               <img
-                src="/hawola_Logo.png"
+                src={footerLogo || "/hawola_Logo.png"}
                 alt="Hawola"
-                className="h-8 brightness-0 invert opacity-95"
+                className={`h-8 opacity-95 ${footerLogo ? "" : "brightness-0 invert"}`}
               />
             </Link>
             <p className="text-sm text-white/85 leading-relaxed max-w-sm">
@@ -178,12 +238,15 @@ const Footer = () => {
             )}
           </div>
 
-          <div className="lg:col-span-2">
+          {linkColumns.map((column) => (
+          <div key={column.key} className="lg:col-span-2">
+            {column.title ? (
             <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-4">
-              Shop
+              {column.title}
             </h4>
+            ) : null}
             <ul className="space-y-3 text-sm">
-              {(footerConfig.columns?.shop || FOOTER_NAV.shop).map((item) => (
+              {column.links.map((item) => (
                 <li key={item.href + item.label}>
                   <a href={item.href} className="text-white hover:text-deepOrange transition-colors">
                     {item.label}
@@ -192,41 +255,15 @@ const Footer = () => {
               ))}
             </ul>
           </div>
+          ))}
 
+          {(supportPhone || supportEmail) && (
           <div className="lg:col-span-2">
+            {titles.contact ? (
             <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-4">
-              Support
+              {titles.contact}
             </h4>
-            <ul className="space-y-3 text-sm">
-              {(footerConfig.columns?.support || FOOTER_NAV.support).map((item) => (
-                <li key={item.label}>
-                  <a href={item.href} className="text-white hover:text-deepOrange transition-colors">
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="lg:col-span-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-4">
-              Company
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {(footerConfig.columns?.company || FOOTER_NAV.company).map((item) => (
-                <li key={item.label}>
-                  <a href={item.href} className="text-white hover:text-deepOrange transition-colors">
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="lg:col-span-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-4">
-              Contact
-            </h4>
+            ) : null}
             <ul className="space-y-3 text-sm text-white/90">
               {supportPhone ? (
                 <li>
@@ -249,17 +286,21 @@ const Footer = () => {
               ) : null}
             </ul>
           </div>
+          )}
         </div>
 
+        {footerConfig.show_payment !== false && (
         <div className="mt-12 pt-10 border-t border-white/10">
           <div className="flex flex-col lg:flex-row lg:items-end gap-8 justify-between">
             <div>
+              {titles.payment ? (
               <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-3">
-                Payment
+                {titles.payment}
               </h4>
+              ) : null}
               <div className="rounded-lg bg-white/95 p-3 inline-block">
                 <img
-                  src="/assets/paymentMethod.png"
+                  src={paymentSrc}
                   alt="Accepted payment methods"
                   className="h-8 w-auto max-w-[200px] object-contain"
                   width={180}
@@ -269,9 +310,10 @@ const Footer = () => {
             </div>
           </div>
         </div>
+        )}
 
         <div className="mt-10 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/70">
-          <p className="text-white/90">© {new Date().getFullYear()} Hawola. All rights reserved.</p>
+          {copyright ? <p className="text-white/90">{copyright}</p> : <span />}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             {(footerConfig.legal_links || FOOTER_DEFAULT_CONFIG.legal_links || []).map((item) => (
               <a key={item.label} href={item.href} className="text-white hover:text-deepOrange transition-colors">

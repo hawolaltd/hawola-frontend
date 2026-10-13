@@ -22,6 +22,7 @@ import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import ProductDetailShippingLines from "@/components/product/detail/ProductDetailShippingLines";
 import ProductCouponApply from "@/components/product/detail/ProductCouponApply";
 import ProductTitleReelLink from "@/components/product/detail/ProductTitleReelLink";
+import { openProductReviews } from "@/components/product/openProductReviews";
 
 type Props = {
   displayName: string;
@@ -111,9 +112,13 @@ export default function ProductDetailMobileBuyBox({
             <span className="truncate">Sold by {storeName}</span>
           </MerchantStoreLink>
         ) : null}
-        <span className="text-xs text-slate-500">
+        <button
+          type="button"
+          onClick={openProductReviews}
+          className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+        >
           {p?.numReviews ?? 0} review{(p?.numReviews ?? 0) === 1 ? "" : "s"}
-        </span>
+        </button>
       </div>
 
       <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b1f4d] via-[#152d5c] to-[#1e3a7a] p-4 shadow-[0_8px_30px_rgba(11,31,77,0.25)]">

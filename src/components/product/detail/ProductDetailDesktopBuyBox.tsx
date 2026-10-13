@@ -20,6 +20,7 @@ import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
 import ProductDetailShippingLines from "@/components/product/detail/ProductDetailShippingLines";
 import ProductCouponApply from "@/components/product/detail/ProductCouponApply";
 import ProductTitleReelLink from "@/components/product/detail/ProductTitleReelLink";
+import { openProductReviews } from "@/components/product/openProductReviews";
 
 type Props = {
   displayName: string;
@@ -116,9 +117,13 @@ export default function ProductDetailDesktopBuyBox({
               <span className="truncate">Sold by {storeName}</span>
             </MerchantStoreLink>
           ) : null}
-          <span className="text-sm text-slate-500">
+          <button
+            type="button"
+            onClick={openProductReviews}
+            className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
+          >
             {p?.numReviews ?? 0} review{(p?.numReviews ?? 0) === 1 ? "" : "s"}
-          </span>
+          </button>
         </div>
       </div>
 

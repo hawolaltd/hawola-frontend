@@ -6,6 +6,7 @@ type ReviewStatus = {
   sale_concluded: boolean;
   can_review: boolean;
   can_edit?: boolean;
+  can_add_follow_up?: boolean;
   is_reviewed: boolean;
   is_merchant_reviewed: boolean;
   customer_review?: {
@@ -18,6 +19,7 @@ type ReviewStatus = {
     user_review_images?: { id?: number; image?: string }[];
     created_at?: string;
   } | null;
+  follow_up_reviews?: ReviewStatus["customer_review"][];
   merchant_review_of_you?: {
     rating_overall: number;
     rate_communication: number;
@@ -80,6 +82,9 @@ export default function OrderReviewPanel({
   const [showFirstName, setShowFirstName] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [editing, setEditing] = useState(false);
+  const [addingMore, setAddingMore] = useState(false);
+  const [followComment, setFollowComment] = useState("");
+  const [followImages, setFollowImages] = useState<File[]>([]);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -162,6 +167,40 @@ export default function OrderReviewPanel({
     }
   };
 
+  const handleFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!followComment.trim() && followImages.length === 0) {
+      toast.error("Add some text or a photo.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await productService.submitProductReview({
+        orderitem_number: orderitemNumber,
+        title: "Additional review",
+        rating_shipping: ratingShipping,
+        rating_communication: ratingCommunication,
+        rating_experience: ratingExperience,
+        comment: followComment,
+        show_first_name: showFirstName,
+        follow_up: true,
+        images: followImages,
+      });
+      toast.success("Your additional review has been added.");
+      setAddingMore(false);
+      setFollowComment("");
+      setFollowImages([]);
+      const refreshed = await productService.getOrderReviewStatus(orderitemNumber);
+      setStatus(refreshed);
+      onSubmitted?.();
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Could not add that review.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-4 text-sm text-gray-500">
@@ -170,7 +209,9 @@ export default function OrderReviewPanel({
     );
   }
 
-  if (!status?.sale_concluded) {
+  const followUps = status?.follow_up_reviews || [];
+  const hasReview = Boolean(review) || followUps.length > 0;
+  if (!status?.sale_concluded && !hasReview) {
     return null;
   }
 
@@ -232,6 +273,84 @@ export default function OrderReviewPanel({
             </div>
           ) : null}
         </div>
+      ) : null}
+
+      {followUps.map((extra) => (
+        <div key={extra?.created_at || extra?.comment} className="mb-4 rounded-lg border border-white bg-white p-4">
+          <p className="text-sm font-semibold text-gray-800">Additional review</p>
+          {extra?.comment ? <p className="mt-2 text-sm text-gray-700">{extra.comment}</p> : null}
+          {extra?.user_review_images && extra.user_review_images.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {extra.user_review_images.map((photo) =>
+                photo.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={photo.id || photo.image}
+                    src={photo.image}
+                    alt="Additional review photo"
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                ) : null
+              )}
+            </div>
+          ) : null}
+        </div>
+      ))}
+
+      {review && !editing && !addingMore ? (
+        <button
+          type="button"
+          onClick={() => {
+            setShowFirstName(Boolean(review.show_first_name));
+            setAddingMore(true);
+          }}
+          className="mb-4 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+        >
+          Add to your review
+        </button>
+      ) : null}
+
+      {addingMore ? (
+        <form onSubmit={handleFollowUp} className="mb-4 space-y-3 rounded-lg border border-white bg-white p-4">
+          <p className="text-sm font-medium text-gray-800">Add to your review</p>
+          <p className="text-xs text-gray-500">Text and photos only. This does not change your stars.</p>
+          <textarea
+            value={followComment}
+            onChange={(e) => setFollowComment(e.target.value)}
+            rows={4}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            placeholder="Add more about this order."
+          />
+          <input
+            type="file"
+            accept="image/*,.heic,.heif"
+            multiple
+            onChange={(e) => {
+              const picked = Array.from(e.target.files || []).slice(0, 5);
+              const tooLarge = picked.find((file) => file.size > 20 * 1024 * 1024);
+              if (tooLarge) {
+                toast.error("Each photo must be 20 MB or smaller.");
+                e.target.value = "";
+                return;
+              }
+              setFollowImages(picked);
+            }}
+            className="block w-full text-sm text-gray-600"
+          />
+          <p className="text-xs text-gray-500">{followImages.length} out of 5 images</p>
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {submitting ? "Saving…" : "Add review"}
+            </button>
+            <button type="button" onClick={() => setAddingMore(false)} className="px-3 py-2 text-sm text-gray-600">
+              Cancel
+            </button>
+          </div>
+        </form>
       ) : null}
 
       {showForm ? (
@@ -305,7 +424,7 @@ export default function OrderReviewPanel({
               disabled={submitting}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
             >
-              {submitting ? "Submitting…" : editing ? "Save review" : "Submit review"}
+              {submitting ? "Submitting…" : editing ? "Save review" : "Leave a review"}
             </button>
             {editing ? (
               <button

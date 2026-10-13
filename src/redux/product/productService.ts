@@ -406,6 +406,7 @@ const submitProductReview = async (payload: {
     rating_experience: number;
     comment?: string;
     show_first_name?: boolean;
+    follow_up?: boolean;
     images?: File[];
 }) => {
     const form = new FormData();
@@ -415,6 +416,7 @@ const submitProductReview = async (payload: {
     form.append("rating_communication", String(payload.rating_communication));
     form.append("rating_experience", String(payload.rating_experience));
     form.append("show_first_name", payload.show_first_name ? "true" : "false");
+    if (payload.follow_up) form.append("follow_up", "true");
     if (payload.comment) form.append("comment", payload.comment);
     (payload.images || []).slice(0, 5).forEach((file) => form.append("images", file));
     const response = await axiosInstance.post(

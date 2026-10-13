@@ -32,6 +32,26 @@ const OrderHistoryPage = () => {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const {ordersHistory, isLoading, error, products} = useAppSelector(state => state.products);
+    const siteSettings = useAppSelector((state) => state.general.siteSettings);
+    const supportNote = String(siteSettings?.support_information || "").trim();
+    const supportEmail = String(siteSettings?.email_support_link || "").trim();
+    const supportPhone = String(siteSettings?.support_phone_number || "").trim();
+    const supportTelegram = String(siteSettings?.telegram_support_link || "").trim();
+    const supportWhatsapp = String(siteSettings?.whatsapp_support_link || "").trim();
+    const supportActions = [
+        supportEmail
+            ? { href: `mailto:${supportEmail}`, label: "Email Support", icon: "mail" as const }
+            : null,
+        supportPhone
+            ? { href: `tel:${supportPhone.replace(/\s/g, "")}`, label: "Call Support", icon: "phone" as const }
+            : null,
+        supportTelegram
+            ? { href: supportTelegram, label: "Telegram", icon: "chat" as const }
+            : null,
+        supportWhatsapp
+            ? { href: supportWhatsapp, label: "WhatsApp", icon: "chat" as const }
+            : null,
+    ].filter((item): item is { href: string; label: string; icon: "mail" | "phone" | "chat" } => Boolean(item));
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedOrderForDispute, setSelectedOrderForDispute] = useState<OrderDetail | null>(null);
@@ -393,6 +413,14 @@ const OrderHistoryPage = () => {
                                                     >
                                                         View Details
                                                     </Link>
+                                                    {!cancelled && order.user_confirm_order && !order.is_reviewed ? (
+                                                        <Link
+                                                            href={`/order/details/${order.orderitem_number}#order-review`}
+                                                            className="flex-1 md:flex-none px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm text-center"
+                                                        >
+                                                            Leave a review
+                                                        </Link>
+                                                    ) : null}
                                                     
                                                     {order.can_cancel && !cancelled && (
                                                         <button
@@ -467,31 +495,39 @@ const OrderHistoryPage = () => {
                         )}
                     </div>
 
-                    {/* Support Section */}
+                    {(supportNote || supportActions.length > 0) && (
                     <div className="mt-12 bg-gradient-to-r from-primary to-primary-dark rounded-xl shadow-lg p-8 text-white">
                         <div className="max-w-3xl mx-auto text-center">
                             <h3 className="text-2xl font-bold mb-3">Need Help With Your Order?</h3>
-                            <p className="text-white/90 mb-6">
-                                Our support team is available 24/7 to assist you with any questions or concerns
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <a
-                                    href="mailto:support@hawola.com"
-                                    className="px-6 py-3 bg-white text-primary rounded-lg hover:bg-gray-100 transition-all font-medium flex items-center justify-center gap-2 shadow-md"
-                                >
-                                    <EnvelopeIcon className="w-5 h-5" />
-                                    Email Support
-                                </a>
-                                <a
-                                    href="tel:+2348012345678"
-                                    className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-lg hover:bg-white/20 transition-all font-medium flex items-center justify-center gap-2"
-                                >
-                                    <PhoneIcon className="w-5 h-5" />
-                                    Call Support
-                                </a>
+                            {supportNote ? (
+                                <p className="text-white/90 mb-6 whitespace-pre-line">{supportNote}</p>
+                            ) : null}
+                            {supportActions.length > 0 && (
+                            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
+                                {supportActions.map((action) => (
+                                    <a
+                                        key={action.label}
+                                        href={action.href}
+                                        {...(action.href.startsWith("http")
+                                            ? { target: "_blank", rel: "noopener noreferrer" }
+                                            : {})}
+                                        className="px-6 py-3 bg-white text-primary rounded-lg hover:bg-gray-100 transition-all font-medium flex items-center justify-center gap-2 shadow-md"
+                                    >
+                                        {action.icon === "phone" ? (
+                                            <PhoneIcon className="w-5 h-5" />
+                                        ) : action.icon === "chat" ? (
+                                            <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                                        ) : (
+                                            <EnvelopeIcon className="w-5 h-5" />
+                                        )}
+                                        {action.label}
+                                    </a>
+                                ))}
                             </div>
+                            )}
                         </div>
                     </div>
+                    )}
 
                     {/* Recommended Products */}
                     {products?.results?.length > 0 && (

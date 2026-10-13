@@ -32,6 +32,11 @@ const ALERT_COPY: Record<string, { emoji: string; line1: string; line2: string }
     line1: "A daily reminder to pay after a seller sends account details.",
     line2: "Turn every channel off to stop these reminders.",
   },
+  review_reminders: {
+    emoji: "⭐",
+    line1: "Twice a week for two weeks after you confirm an order, asking you to leave a review.",
+    line2: "That order stops after four reminders. Turn every channel off to stop them.",
+  },
   chat: {
     emoji: "💬",
     line1: "Never miss a merchant reply while you are still ready to buy.",

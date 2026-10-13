@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useAppSelector } from "@/hook/useReduxTypes";
 
@@ -13,12 +14,116 @@ type ApiReview = {
   comment?: string | null;
   created_at?: string;
   reviewer_label?: string;
+  is_follow_up?: boolean;
   user_review_images?: { id?: number; image?: string }[];
 };
 
 function reviewStars(review: ApiReview): number {
   const raw = review.rating_overall ?? review.rating_experience ?? review.rating_product ?? 0;
   return Math.max(0, Math.min(5, Math.round(Number(raw) || 0)));
+}
+
+function ReviewPhotoPopup({
+  review,
+  startIndex,
+  onClose,
+}: {
+  review: ApiReview;
+  startIndex: number;
+  onClose: () => void;
+}) {
+  const photos = (review.user_review_images || []).filter((photo) => photo.image);
+  const scroller = useRef<HTMLDivElement>(null);
+  const reviewerName = review.reviewer_label || "Anonymous";
+  const stars = review.is_follow_up ? 0 : reviewStars(review);
+
+  useEffect(() => {
+    const node = scroller.current;
+    if (!node) return;
+    const width = node.clientWidth || 1;
+    node.scrollTo({ left: startIndex * width, behavior: "auto" });
+  }, [startIndex]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      const node = scroller.current;
+      if (!node) return;
+      const width = node.clientWidth || 1;
+      if (event.key === "ArrowRight") {
+        node.scrollBy({ left: width, behavior: "smooth" });
+      }
+      if (event.key === "ArrowLeft") {
+        node.scrollBy({ left: -width, behavior: "smooth" });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[200000] flex items-center justify-center bg-black/70 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Review photos"
+    >
+      <div
+        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="relative bg-slate-100">
+          <div
+            ref={scroller}
+            className="flex snap-x snap-mandatory overflow-x-auto"
+          >
+            {photos.map((photo) => (
+              <img
+                key={photo.id || photo.image}
+                src={photo.image}
+                alt="Review photo"
+                className="h-[58vh] w-full shrink-0 snap-center object-contain"
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-slate-800"
+          >
+            Close
+          </button>
+          {photos.length > 1 ? (
+            <p className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+              Scroll for {photos.length} photos
+            </p>
+          ) : null}
+        </div>
+        <div className="p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-bold text-primary">{reviewerName}</p>
+            {review.is_follow_up ? (
+              <p className="text-xs font-medium text-slate-500">Additional review</p>
+            ) : (
+              <p className="text-orange">
+                {"★".repeat(stars)}
+                {"☆".repeat(5 - stars)}
+              </p>
+            )}
+          </div>
+          {review.comment ? (
+            <p className="mt-3 text-sm leading-6 text-slate-800">{review.comment}</p>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">No written review.</p>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 function score(value: number | string | undefined, fallback?: number | string) {
@@ -30,16 +135,18 @@ function score(value: number | string | undefined, fallback?: number | string) {
 
 const CustomerReviews = () => {
   const { merchantReviews } = useAppSelector((state) => state.products);
+  const [viewer, setViewer] = useState<{ review: ApiReview; index: number } | null>(null);
   const reviews: ApiReview[] = merchantReviews?.results || [];
+  const ratedReviews = reviews.filter((review) => !review.is_follow_up);
 
   const ratings = useMemo(() => {
-    if (!reviews.length) return [];
+    if (!ratedReviews.length) return [];
     const ratingCounts = [0, 0, 0, 0, 0];
-    reviews.forEach((review) => {
+    ratedReviews.forEach((review) => {
       const stars = reviewStars(review);
       if (stars >= 1 && stars <= 5) ratingCounts[stars - 1]++;
     });
-    const totalReviews = reviews.length;
+    const totalReviews = ratedReviews.length;
     return ratingCounts
       .map((count, index) => ({
         stars: index + 1,
@@ -47,15 +154,16 @@ const CustomerReviews = () => {
         percentage: Math.round((count / totalReviews) * 100),
       }))
       .reverse();
-  }, [reviews]);
+  }, [ratedReviews]);
 
-  const averageRating = reviews.length
+  const averageRating = ratedReviews.length
     ? (
-        reviews.reduce((sum, review) => sum + reviewStars(review), 0) / reviews.length
+        ratedReviews.reduce((sum, review) => sum + reviewStars(review), 0) / ratedReviews.length
       ).toFixed(1)
     : "0";
 
   return (
+    <>
     <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
       <div className="md:col-span-2">
         <h2 className="mb-4 text-xl font-semibold text-primary">Customer reviews</h2>
@@ -63,7 +171,7 @@ const CustomerReviews = () => {
         {reviews.length > 0 ? (
           <div className="space-y-4">
             {reviews.map((review, index) => {
-              const stars = reviewStars(review);
+              const stars = review.is_follow_up ? 0 : reviewStars(review);
               const reviewerName = review.reviewer_label || "Anonymous";
               return (
                 <div
@@ -78,36 +186,50 @@ const CustomerReviews = () => {
                       <p className="text-sm font-bold text-primary">
                         {reviewerName}
                       </p>
-                      <div className="text-orange">
-                        {"★".repeat(stars)}
-                        {"☆".repeat(5 - stars)}
-                      </div>
+                      {review.is_follow_up ? (
+                        <p className="text-xs font-medium text-slate-500">Additional review</p>
+                      ) : (
+                        <div className="text-orange">
+                          {"★".repeat(stars)}
+                          {"☆".repeat(5 - stars)}
+                        </div>
+                      )}
                     </div>
                     {review.created_at ? (
                       <p className="text-xs text-slate-500">
                         {new Date(review.created_at).toLocaleDateString()}
-                        {score(review.rating_overall) ? ` · Average ${score(review.rating_overall)}/5` : ""}
+                        {!review.is_follow_up && score(review.rating_overall)
+                          ? ` · Average ${score(review.rating_overall)}/5`
+                          : ""}
                       </p>
                     ) : null}
-                    <p className="mt-1 text-xs text-slate-600">
-                      Shipping {score(review.rating_shipping) || "—"}/5 · Communication{" "}
-                      {score(review.rating_communication, review.rating_merchant) || "—"}/5 · Overall
-                      experience {score(review.rating_experience, review.rating_product) || "—"}/5
-                    </p>
+                    {review.is_follow_up ? null : (
+                      <p className="mt-1 text-xs text-slate-600">
+                        Shipping {score(review.rating_shipping) || "—"}/5 · Communication{" "}
+                        {score(review.rating_communication, review.rating_merchant) || "—"}/5 · Overall
+                        experience {score(review.rating_experience, review.rating_product) || "—"}/5
+                      </p>
+                    )}
                     {review.comment ? (
                       <p className="mt-2 text-sm text-primary">{review.comment}</p>
                     ) : null}
                     {review.user_review_images && review.user_review_images.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {review.user_review_images.map((photo) =>
+                        {review.user_review_images.map((photo, photoIndex) =>
                           photo.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <button
                               key={photo.id || photo.image}
-                              src={photo.image}
-                              alt="Review photo"
-                              className="h-20 w-20 rounded-lg object-cover"
-                            />
+                              type="button"
+                              onClick={() => setViewer({ review, index: photoIndex })}
+                              className="overflow-hidden rounded-lg"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={photo.image}
+                                alt="Review photo"
+                                className="h-20 w-20 object-cover"
+                              />
+                            </button>
                           ) : null
                         )}
                       </div>
@@ -136,14 +258,14 @@ const CustomerReviews = () => {
 
       <div>
         <h2 className="mb-4 text-xl font-semibold text-primary">Rating summary</h2>
-        {reviews.length > 0 ? (
+        {ratedReviews.length > 0 ? (
           <>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-orange">★★★★★</span>
               <span className="text-sm font-semibold text-primary">
                 {averageRating} out of 5
               </span>
-              <span className="text-sm text-gray-500">({reviews.length} reviews)</span>
+              <span className="text-sm text-gray-500">({ratedReviews.length} reviews)</span>
             </div>
 
             <div className="mt-4 space-y-2">
@@ -171,6 +293,14 @@ const CustomerReviews = () => {
         )}
       </div>
     </div>
+    {viewer ? (
+      <ReviewPhotoPopup
+        review={viewer.review}
+        startIndex={viewer.index}
+        onClose={() => setViewer(null)}
+      />
+    ) : null}
+    </>
   );
 };
 

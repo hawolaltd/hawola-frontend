@@ -66,6 +66,20 @@ function ProductInfo({
         if (tab === "reels" && !hasProductReels) setTab("description");
     }, [tab, hasProductReels]);
 
+    useEffect(() => {
+        const open = () => {
+            setTab("reviews");
+            window.setTimeout(() => {
+                document.getElementById("product-reviews")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                });
+            }, 50);
+        };
+        window.addEventListener("hawola-open-reviews", open);
+        return () => window.removeEventListener("hawola-open-reviews", open);
+    }, []);
+
     const brand = useMemo(
         () => normalizeHex(product?.product?.merchant?.primary_color),
         [product?.product?.merchant?.primary_color]
@@ -84,6 +98,7 @@ function ProductInfo({
 
     return (
         <div
+            id="product-reviews"
             className={
                 embedded
                     ? "mt-2 rounded-2xl bg-[#fbfcff] p-3 sm:p-4"

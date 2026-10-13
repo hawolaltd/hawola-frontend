@@ -266,6 +266,12 @@ const OrderDetails: NextPage = () => {
         reviewAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, [saleConcluded]);
 
+    useEffect(() => {
+        if (typeof window === "undefined" || window.location.hash !== "#order-review") return;
+        if (!singleOrder) return;
+        reviewAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, [singleOrder]);
+
     const orderitemNumber = singleOrder?.orderitem_number || (router?.query?.orderId as string);
     const productSlug = singleOrder?.product?.slug;
     const merchantSlug =
@@ -982,7 +988,8 @@ const OrderDetails: NextPage = () => {
                                         />
                                     ) : null}
 
-                                    {saleConcluded && orderitemNumber ? (
+                                    {(saleConcluded || singleOrder?.is_reviewed || singleOrder?.user_confirm_order) &&
+                                    orderitemNumber ? (
                                         <div id="order-review" ref={reviewAnchorRef}>
                                         <OrderReviewPanel
                                             orderitemNumber={orderitemNumber}
