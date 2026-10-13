@@ -24,6 +24,7 @@ export type BuyerChatMessage = {
   attachment_url?: string | null;
   attachment_name?: string | null;
   receipt_html_url?: string | null;
+  orderitem_number?: string | null;
   order_item?: number | null;
   created_at: string;
   delivered_at?: string | null;

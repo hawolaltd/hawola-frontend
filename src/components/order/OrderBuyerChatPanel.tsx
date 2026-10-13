@@ -372,6 +372,7 @@ export default function OrderBuyerChatPanel({
                               attachmentUrl={m.attachment_url}
                               attachmentName={m.attachment_name}
                               receiptHtmlUrl={m.receipt_html_url}
+                              orderitemNumber={m.orderitem_number || orderitemNumber}
                               variant={mine ? "customer" : "merchant"}
                               viewer="customer"
                             />

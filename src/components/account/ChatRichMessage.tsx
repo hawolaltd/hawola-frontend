@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import axiosInstance from "@/libs/api/axiosInstance";
 
 type ChatRichMessageProps = {
@@ -10,6 +11,7 @@ type ChatRichMessageProps = {
   attachmentUrl?: string | null;
   attachmentName?: string | null;
   receiptHtmlUrl?: string | null;
+  orderitemNumber?: string | null;
   variant?: "customer" | "merchant";
   viewer?: "customer" | "merchant";
 };
@@ -117,12 +119,14 @@ function ReceiptViewerModal({
   onClose,
   url,
   htmlUrl,
+  orderitemNumber,
   title,
 }: {
   open: boolean;
   onClose: () => void;
   url: string;
   htmlUrl?: string | null;
+  orderitemNumber?: string | null;
   title: string;
 }) {
   const titleId = useId();
@@ -192,24 +196,40 @@ function ReceiptViewerModal({
     : "";
 
   const downloadPdf = async () => {
-    if (!pdfHref) return;
-    try {
-      const { data } = await axiosInstance.get(apiPathFromAbsolute(pdfHref), {
-        responseType: "blob",
-        headers: { Accept: "application/pdf" },
-      });
-      const blob = new Blob([data], { type: "application/pdf" });
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = `${(title || "hawola-receipt").replace(/[^\w.-]+/g, "-")}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
-    } catch {
-      window.open(pdfHref, "_blank", "noopener,noreferrer");
+    const paths: string[] = [];
+    const number = (orderitemNumber || "").trim();
+    if (number) {
+      paths.push(`/orders/order-item/${encodeURIComponent(number)}/receipt-file/?format=pdf`);
     }
+    if (pdfHref) paths.push(apiPathFromAbsolute(pdfHref));
+    if (!paths.length) {
+      toast.error("Could not download this receipt.");
+      return;
+    }
+    for (const path of paths) {
+      try {
+        const { data, headers } = await axiosInstance.get(path, {
+          responseType: "blob",
+          timeout: 60000,
+          headers: { Accept: "application/pdf" },
+        });
+        const type = String(headers?.["content-type"] || "");
+        if (type.includes("json") || type.includes("text/html")) continue;
+        const blob = new Blob([data], { type: "application/pdf" });
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = objectUrl;
+        link.download = `${(title || "hawola-receipt").replace(/[^\w.-]+/g, "-")}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(objectUrl);
+        return;
+      } catch {
+        /* try the next receipt address */
+      }
+    }
+    toast.error("Could not download this receipt.");
   };
 
   return (
@@ -265,6 +285,7 @@ export default function ChatRichMessage({
   attachmentUrl,
   attachmentName,
   receiptHtmlUrl,
+  orderitemNumber,
   variant = "merchant",
   viewer = "customer",
 }: ChatRichMessageProps) {
@@ -314,6 +335,7 @@ export default function ChatRichMessage({
           onClose={() => setReceiptOpen(false)}
           url={url}
           htmlUrl={receiptHtmlUrl}
+          orderitemNumber={orderitemNumber}
           title={attachmentName || "Order receipt"}
         />
       </>

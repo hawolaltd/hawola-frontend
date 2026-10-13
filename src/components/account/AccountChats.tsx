@@ -329,9 +329,11 @@ export default function AccountChats() {
     return () => observer.disconnect();
   }, [filteredConversations.length, listHasMore, listLoading, listLoadingMore, loadMoreConversations]);
 
+  const chatClosed = selected?.status === "closed" || selected?.status === "blocked";
+
   const send = async () => {
     const text = input.trim();
-    if (!text || !selected?.slug) return;
+    if (!text || !selected?.slug || chatClosed) return;
     setSending(true);
     try {
       const msg = await sendBuyerChatMessage(selected.slug, text);
@@ -657,6 +659,7 @@ export default function AccountChats() {
                                     attachmentUrl={m.attachment_url}
                                     attachmentName={m.attachment_name}
                                     receiptHtmlUrl={m.receipt_html_url}
+                                    orderitemNumber={m.orderitem_number || selected.orderitem_number}
                                     variant={mine ? "customer" : "merchant"}
                                     viewer="customer"
                                   />
@@ -683,56 +686,68 @@ export default function AccountChats() {
               </div>
 
               <div className="shrink-0 border-t border-detailsBorder bg-white p-3 sm:p-4">
-                {selected.orderitem_number ? (
-                  <div className="mb-2">
-                    <input
-                      ref={proofInputRef}
-                      type="file"
-                      accept={PROOF_FILE_ACCEPT}
-                      className="hidden"
-                      onChange={(e) => void uploadProof(e.target.files?.[0])}
-                    />
-                    <button
-                      type="button"
-                      className="text-left text-xs font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
-                      disabled={sending}
-                      onClick={() => proofInputRef.current?.click()}
-                    >
-                      Attach proof of payment
-                    </button>
-                    <p className="mt-0.5 text-[11px] text-gray-500">
-                      {PROOF_FILE_HINT}. Orders with proof cannot be cancelled.
-                    </p>
-                  </div>
-                ) : null}
-                <div className="flex items-end gap-2 rounded-2xl border border-detailsBorder bg-gray-50 p-2">
+                {chatClosed ? (
                   <textarea
-                    rows={1}
-                    className="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
-                    placeholder="Write a message…"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        void send();
-                      }
-                    }}
-                    disabled={sending}
+                    rows={2}
+                    readOnly
+                    disabled
+                    className="max-h-32 min-h-[48px] w-full resize-none rounded-2xl border border-detailsBorder bg-slate-100 px-3 py-2 text-sm text-slate-400"
+                    placeholder="Chat is closed"
                   />
-                  <button
-                    type="button"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-colors hover:bg-[#354a73] disabled:opacity-50"
-                    disabled={sending || !input.trim()}
-                    onClick={() => void send()}
-                    aria-label="Send message"
-                  >
-                    <SendIcon />
-                  </button>
-                </div>
-                <p className="mt-2 text-[11px] text-gray-400">
-                  Press Enter to send · Shift+Enter for a new line
-                </p>
+                ) : (
+                  <>
+                    {selected.orderitem_number ? (
+                      <div className="mb-2">
+                        <input
+                          ref={proofInputRef}
+                          type="file"
+                          accept={PROOF_FILE_ACCEPT}
+                          className="hidden"
+                          onChange={(e) => void uploadProof(e.target.files?.[0])}
+                        />
+                        <button
+                          type="button"
+                          className="text-left text-xs font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                          disabled={sending}
+                          onClick={() => proofInputRef.current?.click()}
+                        >
+                          Attach proof of payment
+                        </button>
+                        <p className="mt-0.5 text-[11px] text-gray-500">
+                          {PROOF_FILE_HINT}. Orders with proof cannot be cancelled.
+                        </p>
+                      </div>
+                    ) : null}
+                    <div className="flex items-end gap-2 rounded-2xl border border-detailsBorder bg-gray-50 p-2">
+                      <textarea
+                        rows={1}
+                        className="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                        placeholder="Write a message…"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            void send();
+                          }
+                        }}
+                        disabled={sending}
+                      />
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-colors hover:bg-[#354a73] disabled:opacity-50"
+                        disabled={sending || !input.trim()}
+                        onClick={() => void send()}
+                        aria-label="Send message"
+                      >
+                        <SendIcon />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-[11px] text-gray-400">
+                      Press Enter to send · Shift+Enter for a new line
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           )}
