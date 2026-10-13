@@ -227,7 +227,7 @@ export default function MerchantChatWidget({
     }
     const viewer = (user || profile) as { show_sales_nudges?: boolean } | null;
     if (viewer?.show_sales_nudges === false) return;
-    const seenKey = `hawola-nudge-seen:${merchantId || productSlug || "store"}`;
+    const seenKey = `hawola-nudge-seen:${merchantId || "store"}:${productSlug || "store"}`;
     if (window.sessionStorage.getItem(seenKey)) return;
     const wait = 1400 + Math.floor(Math.random() * 2800);
     const timer = window.setTimeout(() => {
