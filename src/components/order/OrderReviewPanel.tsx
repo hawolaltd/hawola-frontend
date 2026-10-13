@@ -192,26 +192,39 @@ export default function OrderReviewPanel({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Your review</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Written review</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              rows={3}
+              rows={4}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              placeholder="What should other shoppers know?"
+              placeholder="Tell other shoppers how this order went."
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Photos (up to 4)
+              Photos (up to 5)
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               multiple
-              onChange={(e) => setImages(Array.from(e.target.files || []).slice(0, 4))}
+              onChange={(e) => {
+                const picked = Array.from(e.target.files || []).slice(0, 5);
+                const tooLarge = picked.find((file) => file.size > 20 * 1024 * 1024);
+                if (tooLarge) {
+                  toast.error("Each photo must be 20 MB or smaller.");
+                  e.target.value = "";
+                  return;
+                }
+                setImages(picked);
+              }}
               className="block w-full text-sm text-gray-600"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              iPhone photos are fine up to 20 MB each. They are reduced before they are saved.
+              {images.length ? ` ${images.length} of 5 selected.` : ""}
+            </p>
           </div>
           <button
             type="submit"

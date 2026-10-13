@@ -1,5 +1,5 @@
 import type { NextPage } from 'next';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Head from "next/head";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { useForm } from 'react-hook-form';
@@ -235,10 +235,17 @@ const OrderDetails: NextPage = () => {
         !lineCancelled &&
         singleOrder?.isDelivered === true &&
         singleOrder?.user_confirm_order === true;
-    const messagingClosed =
-        lineCancelled ||
-        singleOrder?.isDelivered === true ||
-        singleOrder?.user_confirm_order === true;
+    const canConfirmReceipt =
+        !lineCancelled &&
+        singleOrder?.user_confirm_order !== true &&
+        Boolean(
+            singleOrder?.isDelivered ||
+                singleOrder?.isShipped ||
+                singleOrder?.isPaid ||
+                singleOrder?.payment_confirmed ||
+                singleOrder?.is_offline_payment
+        );
+    const messagingClosed = lineCancelled || singleOrder?.is_reviewed === true;
 
     useEffect(() => {
         if (!singleOrder?.is_offline_payment) {
@@ -259,6 +266,12 @@ const OrderDetails: NextPage = () => {
             dispatch(getSingleOrder(orderId));
         }
     }, [dispatch, router?.query?.orderId]);
+
+    useEffect(() => {
+        if (!saleConcluded || !focusReviewRef.current) return;
+        focusReviewRef.current = false;
+        reviewAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, [saleConcluded]);
 
     const orderitemNumber = singleOrder?.orderitem_number || (router?.query?.orderId as string);
     const productSlug = singleOrder?.product?.slug;
@@ -336,6 +349,8 @@ const OrderDetails: NextPage = () => {
     };
 
     const [confirmingOrder, setConfirmingOrder] = useState(false);
+    const reviewAnchorRef = useRef<HTMLDivElement>(null);
+    const focusReviewRef = useRef(false);
     const [cancellingOrder, setCancellingOrder] = useState(false);
     const handleCancelOrderCustomer = async () => {
         if (!orderitemNumber || orderitemNumber === 'undefined' || lineCancelled) return;
@@ -364,7 +379,7 @@ const OrderDetails: NextPage = () => {
         // eslint-disable-next-line no-alert
         if (
             !confirm(
-                'Confirm only when the item is in your hands. The seller will be notified.'
+                'Confirm only when the item is in your hands. This marks the order delivered. You can review the product, and the seller is asked to review you.'
             )
         ) {
             return;
@@ -372,8 +387,9 @@ const OrderDetails: NextPage = () => {
         setConfirmingOrder(true);
         try {
             await productService.confirmOrderItem(orderitemNumber);
+            focusReviewRef.current = true;
             dispatch(getSingleOrder(orderitemNumber));
-            toast.success('Thank you! We notified the seller that you received your order.');
+            toast.success('Order marked delivered. You can review it below. The seller has been asked to review you.');
         } catch (err: any) {
             toast.error(err?.response?.data?.detail || err?.response?.data?.error || 'Failed to confirm delivery');
         } finally {
@@ -491,7 +507,7 @@ const OrderDetails: NextPage = () => {
                                         disabled={confirmingOrder}
                                         className="mt-4 rounded-xl bg-[#0B1B33] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
                                     >
-                                        {confirmingOrder ? "Saving…" : "I received my order"}
+                                        {confirmingOrder ? "Saving…" : "I have received this order"}
                                     </button>
                                 </div>
                             ) : null}
@@ -541,6 +557,16 @@ const OrderDetails: NextPage = () => {
                                             )}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
+                                            {canConfirmReceipt ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => void handleConfirmDelivery()}
+                                                    disabled={confirmingOrder}
+                                                    className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                                                >
+                                                    {confirmingOrder ? "Saving…" : "I have received this order"}
+                                                </button>
+                                            ) : null}
                                             {productHref ? (
                                                 <Link
                                                     href={productHref}
@@ -724,6 +750,14 @@ const OrderDetails: NextPage = () => {
                                                     : ""
                                             }
                                             allowProofOfPayment={!messagingClosed}
+                                            canConfirmReceipt={canConfirmReceipt}
+                                            confirmingReceipt={confirmingOrder}
+                                            onConfirmReceipt={() => void handleConfirmDelivery()}
+                                            closedMessage={
+                                                singleOrder?.is_reviewed
+                                                    ? "This chat is closed now that you have reviewed the order."
+                                                    : undefined
+                                            }
                                             hasOpenDispute={hasDispute}
                                             defaultTab="chat"
                                             disputeContent={
@@ -952,6 +986,7 @@ const OrderDetails: NextPage = () => {
                                     ) : null}
 
                                     {saleConcluded && orderitemNumber ? (
+                                        <div id="order-review" ref={reviewAnchorRef}>
                                         <OrderReviewPanel
                                             orderitemNumber={orderitemNumber}
                                             productName={singleOrder?.product?.name}
@@ -962,6 +997,7 @@ const OrderDetails: NextPage = () => {
                                                 }
                                             }}
                                         />
+                                        </div>
                                     ) : null}
                                 </div>
                             </div>

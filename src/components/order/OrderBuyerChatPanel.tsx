@@ -36,6 +36,10 @@ type OrderBuyerChatPanelProps = {
   disputeContent?: ReactNode;
   hasOpenDispute?: boolean;
   defaultTab?: "chat" | "dispute";
+  canConfirmReceipt?: boolean;
+  confirmingReceipt?: boolean;
+  onConfirmReceipt?: () => void;
+  closedMessage?: string;
 };
 
 function formatMessageTime(iso: string) {
@@ -60,6 +64,10 @@ export default function OrderBuyerChatPanel({
   disputeContent,
   hasOpenDispute = false,
   defaultTab = "chat",
+  canConfirmReceipt = false,
+  confirmingReceipt = false,
+  onConfirmReceipt,
+  closedMessage,
 }: OrderBuyerChatPanelProps) {
   const [activeTab, setActiveTab] = useState<"chat" | "dispute">(defaultTab);
   const [conversation, setConversation] = useState<BuyerChatConversation | null>(null);
@@ -389,9 +397,24 @@ export default function OrderBuyerChatPanel({
           </div>
 
           <div className="shrink-0 border-t border-[#e8eef7] bg-white p-3 sm:p-4">
+            {canConfirmReceipt ? (
+              <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3">
+                <p className="text-sm text-emerald-950">
+                  Got the item? This marks the order delivered. You can then review the product, and the seller is asked to review you.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onConfirmReceipt?.()}
+                  disabled={confirmingReceipt}
+                  className="mt-3 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {confirmingReceipt ? "Saving…" : "I have received this order"}
+                </button>
+              </div>
+            ) : null}
             {disabled ? (
               <p className="rounded-xl bg-slate-100 px-3 py-3 text-sm text-slate-600">
-                Messaging is closed for this order.
+                {closedMessage || "Messaging is closed for this order."}
               </p>
             ) : (
               <>

@@ -414,7 +414,7 @@ const submitProductReview = async (payload: {
     form.append("rating_communication", String(payload.rating_communication));
     form.append("rating_experience", String(payload.rating_experience));
     if (payload.comment) form.append("comment", payload.comment);
-    (payload.images || []).slice(0, 4).forEach((file) => form.append("images", file));
+    (payload.images || []).slice(0, 5).forEach((file) => form.append("images", file));
     const response = await axiosInstance.post(
         API + `reviews/user-reviews-product/`,
         form,
