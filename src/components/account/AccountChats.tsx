@@ -40,7 +40,9 @@ import {
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
+import ChatTypingHint from "@/components/chat/ChatTypingHint";
 import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
+import { useSellerReplyWait } from "@/components/chat/useSellerReplyWait";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 
 const CHAT_LIST_PAGE_SIZE = 20;
@@ -128,6 +130,8 @@ export default function AccountChats() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const sendLock = useRef(false);
+  const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileThread, setMobileThread] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
@@ -333,20 +337,36 @@ export default function AccountChats() {
 
   const send = async () => {
     const text = input.trim();
-    if (!text || !selected?.slug || chatClosed) return;
+    if (!text || !selected?.slug || chatClosed || sendLock.current) return;
+    sendLock.current = true;
     setSending(true);
+    setInput("");
     try {
       const msg = await sendBuyerChatMessage(selected.slug, text);
-      setMessages((prev) => [...prev, msg]);
-      setInput("");
+      let next = mergeChatMessages(messagesRef.current, [msg]);
+      try {
+        const rows = await getBuyerChatMessages(selected.slug, msg.id);
+        if (rows.length) next = mergeChatMessages(next, rows);
+      } catch {
+        /* the sent line is already kept */
+      }
+      messagesRef.current = next;
+      setMessages(next);
+      const replied = next.some(
+        (row) => row.id > msg.id && row.sender_type && row.sender_type !== "customer"
+      );
+      setWaitingAfterId(replied ? null : msg.id);
       void refreshList(true);
     } catch (e: unknown) {
+      setInput(text);
+      setWaitingAfterId(null);
       const detail =
         typeof e === "object" && e !== null && "response" in e
           ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
           : undefined;
       toast.error(detail || "Failed to send");
     } finally {
+      sendLock.current = false;
       setSending(false);
     }
   };
@@ -681,6 +701,7 @@ export default function AccountChats() {
                         </div>
                       );
                     })}
+                    {sending || sellerTyping ? <ChatTypingHint /> : null}
                   </div>
                 )}
               </div>
@@ -735,12 +756,12 @@ export default function AccountChats() {
                       />
                       <button
                         type="button"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-colors hover:bg-[#354a73] disabled:opacity-50"
+                        className={`flex h-11 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#354a73] disabled:opacity-50 ${sending ? "px-3" : "w-11"}`}
                         disabled={sending || !input.trim()}
                         onClick={() => void send()}
                         aria-label="Send message"
                       >
-                        <SendIcon />
+                        {sending ? "Sending" : <SendIcon />}
                       </button>
                     </div>
                     <p className="mt-2 text-[11px] text-gray-400">

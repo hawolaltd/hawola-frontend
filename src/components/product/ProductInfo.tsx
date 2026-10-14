@@ -158,7 +158,7 @@ function ProductInfo({
             {tab === "description" && (
                 <div>
                     {product?.product?.description_ai_generated ? (
-                        <p className="mt-4 text-xs text-slate-500">Written with AI</p>
+                        <p className="mt-4 text-xs text-slate-500">Hawola wrote this description</p>
                     ) : null}
                     <Description product={product} />
                 </div>

@@ -25,6 +25,8 @@ import ChatRichMessage from "@/components/account/ChatRichMessage";
 import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
+import ChatTypingHint from "@/components/chat/ChatTypingHint";
+import { useSellerReplyWait } from "@/components/chat/useSellerReplyWait";
 
 type OrderBuyerChatPanelProps = {
   orderitemNumber: string;
@@ -75,6 +77,8 @@ export default function OrderBuyerChatPanel({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const sendLock = useRef(false);
+  const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<BuyerChatMessage[]>([]);
@@ -185,19 +189,35 @@ export default function OrderBuyerChatPanel({
 
   const send = async () => {
     const text = input.trim();
-    if (!text || !conversation?.slug || disabled) return;
+    if (!text || !conversation?.slug || disabled || sendLock.current) return;
+    sendLock.current = true;
     setSending(true);
+    setInput("");
     try {
       const msg = await sendBuyerChatMessage(conversation.slug, text);
-      setMessages((prev) => mergeChatMessages(prev, [msg]));
-      setInput("");
+      let next = mergeChatMessages(messagesRef.current, [msg]);
+      try {
+        const rows = await getBuyerChatMessages(conversation.slug, msg.id);
+        if (rows.length) next = mergeChatMessages(next, rows);
+      } catch {
+        /* the sent line is already kept */
+      }
+      messagesRef.current = next;
+      setMessages(next);
+      const replied = next.some(
+        (row) => row.id > msg.id && row.sender_type && row.sender_type !== "customer"
+      );
+      setWaitingAfterId(replied ? null : msg.id);
     } catch (e: unknown) {
+      setInput(text);
+      setWaitingAfterId(null);
       const detail =
         typeof e === "object" && e !== null && "response" in e
           ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
           : undefined;
       toast.error(detail || "Failed to send message");
     } finally {
+      sendLock.current = false;
       setSending(false);
     }
   };
@@ -393,6 +413,7 @@ export default function OrderBuyerChatPanel({
                     </div>
                   );
                 })}
+                {sending || sellerTyping ? <ChatTypingHint /> : null}
               </div>
             )}
           </div>
@@ -466,7 +487,7 @@ export default function OrderBuyerChatPanel({
                     disabled={sending || !input.trim() || !conversation?.slug}
                     onClick={() => void send()}
                   >
-                    {sending ? "…" : "Send"}
+                    {sending ? "Sending" : "Send"}
                   </button>
                 </div>
               </>

@@ -28,7 +28,9 @@ import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
+import ChatTypingHint from "@/components/chat/ChatTypingHint";
 import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
+import { useSellerReplyWait } from "@/components/chat/useSellerReplyWait";
 
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
@@ -79,6 +81,8 @@ export default function MerchantChatWidget({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const sendLock = useRef(false);
+  const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const messagesRef = useRef<BuyerChatMessage[]>([]);
@@ -191,15 +195,31 @@ export default function MerchantChatWidget({
 
   const send = async () => {
     const text = input.trim();
-    if (!text || !conversation?.slug) return;
+    if (!text || !conversation?.slug || sendLock.current) return;
+    sendLock.current = true;
     setSending(true);
+    setInput("");
     try {
       const msg = await sendBuyerChatMessage(conversation.slug, text);
-      setMessages((prev) => [...prev, msg]);
-      setInput("");
+      let next = mergeChatMessages(messagesRef.current, [msg]);
+      try {
+        const rows = await getBuyerChatMessages(conversation.slug, msg.id);
+        if (rows.length) next = mergeChatMessages(next, rows);
+      } catch {
+        /* the sent line is already kept */
+      }
+      messagesRef.current = next;
+      setMessages(next);
+      const replied = next.some(
+        (row) => row.id > msg.id && row.sender_type && row.sender_type !== "customer"
+      );
+      setWaitingAfterId(replied ? null : msg.id);
     } catch (e: any) {
+      setInput(text);
+      setWaitingAfterId(null);
       toast.error(e?.response?.data?.detail || "Failed to send");
     } finally {
+      sendLock.current = false;
       setSending(false);
     }
   };
@@ -318,6 +338,7 @@ export default function MerchantChatWidget({
                 );
               })
             )}
+            {sending || sellerTyping ? <ChatTypingHint /> : null}
           </div>
           <div className="shrink-0 border-t border-gray-200 bg-white p-2">
             {(orderitemNumber || conversation?.orderitem_number) ? (
@@ -387,7 +408,7 @@ export default function MerchantChatWidget({
               disabled={sending || (conversation ? !input.trim() : false)}
               onClick={() => (conversation ? void send() : void openChat())}
             >
-              {conversation ? "Send" : "Reply"}
+              {sending ? "Sending" : conversation ? "Send" : "Reply"}
             </button>
             </div>
           </div>
