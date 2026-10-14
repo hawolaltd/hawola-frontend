@@ -132,6 +132,7 @@ export default function AccountChats() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const sendLock = useRef(false);
+  const draftGuard = useRef("");
   const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileThread, setMobileThread] = useState(false);
@@ -341,6 +342,7 @@ export default function AccountChats() {
     if (!text || !selected?.slug || chatClosed || sendLock.current) return;
     sendLock.current = true;
     setSending(true);
+    draftGuard.current = text;
     setInput("");
     try {
       const msg = await sendBuyerChatMessage(selected.slug, text);
@@ -369,13 +371,22 @@ export default function AccountChats() {
         setWaitingAfterId(replied ? null : landed.message.id);
         void refreshList(true);
       } else {
-        setInput(text);
-        setWaitingAfterId(null);
-        const detail =
+        const status =
           typeof e === "object" && e !== null && "response" in e
-            ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+            ? (e as { response?: { status?: number; data?: { detail?: string } } }).response?.status
             : undefined;
-        toast.error(detail || "Failed to send");
+        if (typeof status === "number" && status >= 400 && status < 500) {
+          draftGuard.current = "";
+          setInput(text);
+          setWaitingAfterId(null);
+          const detail =
+            typeof e === "object" && e !== null && "response" in e
+              ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+              : undefined;
+          toast.error(detail || "Failed to send");
+        } else {
+          setWaitingAfterId(null);
+        }
       }
     } finally {
       sendLock.current = false;
@@ -757,14 +768,23 @@ export default function AccountChats() {
                         className="max-h-32 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
                         placeholder="Write a message…"
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (draftGuard.current) {
+                            if (!value || value === draftGuard.current) {
+                              setInput("");
+                              return;
+                            }
+                            draftGuard.current = "";
+                          }
+                          setInput(value);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             void send();
                           }
                         }}
-                        disabled={sending}
                       />
                       <button
                         type="button"

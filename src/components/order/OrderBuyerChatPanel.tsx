@@ -79,6 +79,7 @@ export default function OrderBuyerChatPanel({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const sendLock = useRef(false);
+  const draftGuard = useRef("");
   const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
@@ -193,6 +194,7 @@ export default function OrderBuyerChatPanel({
     if (!text || !conversation?.slug || disabled || sendLock.current) return;
     sendLock.current = true;
     setSending(true);
+    draftGuard.current = text;
     setInput("");
     try {
       const msg = await sendBuyerChatMessage(conversation.slug, text);
@@ -219,13 +221,22 @@ export default function OrderBuyerChatPanel({
         );
         setWaitingAfterId(replied ? null : landed.message.id);
       } else {
-        setInput(text);
-        setWaitingAfterId(null);
-        const detail =
+        const status =
           typeof e === "object" && e !== null && "response" in e
-            ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+            ? (e as { response?: { status?: number; data?: { detail?: string } } }).response?.status
             : undefined;
-        toast.error(detail || "Failed to send message");
+        if (typeof status === "number" && status >= 400 && status < 500) {
+          draftGuard.current = "";
+          setInput(text);
+          setWaitingAfterId(null);
+          const detail =
+            typeof e === "object" && e !== null && "response" in e
+              ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+              : undefined;
+          toast.error(detail || "Failed to send message");
+        } else {
+          setWaitingAfterId(null);
+        }
       }
     } finally {
       sendLock.current = false;
@@ -483,14 +494,24 @@ export default function OrderBuyerChatPanel({
                     className="max-h-32 min-h-[48px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
                     placeholder="Write a message to the seller…"
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (draftGuard.current) {
+                        if (!value || value === draftGuard.current) {
+                          setInput("");
+                          return;
+                        }
+                        draftGuard.current = "";
+                      }
+                      setInput(value);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         void send();
                       }
                     }}
-                    disabled={sending || !conversation?.slug}
+                    disabled={!conversation?.slug}
                   />
                   <button
                     type="button"

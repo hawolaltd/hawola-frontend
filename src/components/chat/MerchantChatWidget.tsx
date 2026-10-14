@@ -83,6 +83,7 @@ export default function MerchantChatWidget({
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const sendLock = useRef(false);
+  const draftGuard = useRef("");
   const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -199,6 +200,7 @@ export default function MerchantChatWidget({
     if (!text || !conversation?.slug || sendLock.current) return;
     sendLock.current = true;
     setSending(true);
+    draftGuard.current = text;
     setInput("");
     try {
       const msg = await sendBuyerChatMessage(conversation.slug, text);
@@ -225,9 +227,17 @@ export default function MerchantChatWidget({
         );
         setWaitingAfterId(replied ? null : landed.message.id);
       } else {
-        setInput(text);
-        setWaitingAfterId(null);
-        toast.error(e?.response?.data?.detail || "Failed to send");
+        const status = e?.response?.status;
+        const refused = typeof status === "number" && status >= 400 && status < 500;
+        if (refused) {
+          draftGuard.current = "";
+          setInput(text);
+          setWaitingAfterId(null);
+          toast.error(e?.response?.data?.detail || "Failed to send");
+        } else {
+          setWaitingAfterId(null);
+          void loadMessages(conversation.slug, { merge: true });
+        }
       }
     } finally {
       sendLock.current = false;
@@ -409,9 +419,18 @@ export default function MerchantChatWidget({
               className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
               placeholder={conversation ? "Type a message…" : "Reply to the store…"}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (draftGuard.current) {
+                  if (!value || value === draftGuard.current) {
+                    setInput("");
+                    return;
+                  }
+                  draftGuard.current = "";
+                }
+                setInput(value);
+              }}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), conversation ? void send() : void openChat())}
-              disabled={sending}
             />
             <button
               type="button"
