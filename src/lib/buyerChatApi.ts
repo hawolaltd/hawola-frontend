@@ -76,11 +76,25 @@ export async function getBuyerChatMessages(slug: string, afterId?: number) {
   return (data?.results || []) as BuyerChatMessage[];
 }
 
+/** Hawola Negotiator answers inside this request, so it needs longer than a normal save. */
+const CHAT_SEND_TIMEOUT_MS = 90000;
+
 export async function sendBuyerChatMessage(slug: string, message: string) {
-  const { data } = await axiosInstance.post(`/messaging/buyer-chats/${slug}/messages/`, {
-    message,
-  });
+  const { data } = await axiosInstance.post(
+    `/messaging/buyer-chats/${slug}/messages/`,
+    { message },
+    { timeout: CHAT_SEND_TIMEOUT_MS }
+  );
   return data as BuyerChatMessage;
+}
+
+export async function landedCustomerMessage(slug: string, text: string) {
+  const rows = await getBuyerChatMessages(slug);
+  const wanted = text.trim();
+  const message = [...rows]
+    .reverse()
+    .find((row) => row.sender_type === "customer" && (row.body || "").trim() === wanted);
+  return message ? { rows, message } : null;
 }
 
 export async function editBuyerChatMessage(slug: string, messageId: number, message: string) {

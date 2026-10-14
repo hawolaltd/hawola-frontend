@@ -9,6 +9,7 @@ import { authTokenStorageKeyName } from "@/constant";
 import {
   editBuyerChatMessage,
   getBuyerChatMessages,
+  landedCustomerMessage,
   sendBuyerChatMessage,
   sendBuyerChatProofOfPayment,
   startBuyerChat,
@@ -215,9 +216,19 @@ export default function MerchantChatWidget({
       );
       setWaitingAfterId(replied ? null : msg.id);
     } catch (e: any) {
-      setInput(text);
-      setWaitingAfterId(null);
-      toast.error(e?.response?.data?.detail || "Failed to send");
+      const landed = await landedCustomerMessage(conversation.slug, text).catch(() => null);
+      if (landed) {
+        messagesRef.current = landed.rows;
+        setMessages(landed.rows);
+        const replied = landed.rows.some(
+          (row) => row.id > landed.message.id && row.sender_type && row.sender_type !== "customer"
+        );
+        setWaitingAfterId(replied ? null : landed.message.id);
+      } else {
+        setInput(text);
+        setWaitingAfterId(null);
+        toast.error(e?.response?.data?.detail || "Failed to send");
+      }
     } finally {
       sendLock.current = false;
       setSending(false);

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   editBuyerChatMessage,
   getBuyerChatMessages,
+  landedCustomerMessage,
   listBuyerChats,
   sendBuyerChatMessage,
   sendBuyerChatProofOfPayment,
@@ -358,13 +359,24 @@ export default function AccountChats() {
       setWaitingAfterId(replied ? null : msg.id);
       void refreshList(true);
     } catch (e: unknown) {
-      setInput(text);
-      setWaitingAfterId(null);
-      const detail =
-        typeof e === "object" && e !== null && "response" in e
-          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Failed to send");
+      const landed = await landedCustomerMessage(selected.slug, text).catch(() => null);
+      if (landed) {
+        messagesRef.current = landed.rows;
+        setMessages(landed.rows);
+        const replied = landed.rows.some(
+          (row) => row.id > landed.message.id && row.sender_type && row.sender_type !== "customer"
+        );
+        setWaitingAfterId(replied ? null : landed.message.id);
+        void refreshList(true);
+      } else {
+        setInput(text);
+        setWaitingAfterId(null);
+        const detail =
+          typeof e === "object" && e !== null && "response" in e
+            ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+            : undefined;
+        toast.error(detail || "Failed to send");
+      }
     } finally {
       sendLock.current = false;
       setSending(false);

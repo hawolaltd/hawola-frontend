@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   editBuyerChatMessage,
   getBuyerChatMessages,
+  landedCustomerMessage,
   sendBuyerChatMessage,
   sendBuyerChatProofOfPayment,
   startBuyerChat,
@@ -209,13 +210,23 @@ export default function OrderBuyerChatPanel({
       );
       setWaitingAfterId(replied ? null : msg.id);
     } catch (e: unknown) {
-      setInput(text);
-      setWaitingAfterId(null);
-      const detail =
-        typeof e === "object" && e !== null && "response" in e
-          ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      toast.error(detail || "Failed to send message");
+      const landed = await landedCustomerMessage(conversation.slug, text).catch(() => null);
+      if (landed) {
+        messagesRef.current = landed.rows;
+        setMessages(landed.rows);
+        const replied = landed.rows.some(
+          (row) => row.id > landed.message.id && row.sender_type && row.sender_type !== "customer"
+        );
+        setWaitingAfterId(replied ? null : landed.message.id);
+      } else {
+        setInput(text);
+        setWaitingAfterId(null);
+        const detail =
+          typeof e === "object" && e !== null && "response" in e
+            ? (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+            : undefined;
+        toast.error(detail || "Failed to send message");
+      }
     } finally {
       sendLock.current = false;
       setSending(false);
