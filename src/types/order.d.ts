@@ -17,6 +17,8 @@ interface OrderDetail {
     order_price: string;
     shipping_price: string;
     order_price_subtotal: string;
+    line_discount?: string | number | null;
+    line_total?: string | number | null;
     coupon_code?: string | null;
     coupon_discount?: string | number | null;
     order_total_due?: string | number | null;
@@ -164,6 +166,8 @@ interface NewOrderDetailsResponse {
     order_price: string;
     shipping_price: string;
     order_price_subtotal: string;
+    line_discount?: string | number | null;
+    line_total?: string | number | null;
     coupon_code?: string | null;
     coupon_discount?: string | number | null;
     order_total_due?: string | number | null;
