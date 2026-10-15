@@ -58,6 +58,15 @@ axiosInstance.interceptors.request.use(
         // TikTok attribution headers trigger CORS preflight — only on conversion POSTs.
         const method = (config.method || 'get').toLowerCase();
         const requestUrl = config.url || '';
+        if (
+            method === 'post' &&
+            /\/buyer-chats\/[^/]+\/messages\/?$/i.test(requestUrl)
+        ) {
+            const current = Number(config.timeout || 0);
+            if (!current || current < 120000) {
+                config.timeout = 120000;
+            }
+        }
         const isTikTokAttributionRequest =
             method !== 'get' &&
             method !== 'head' &&
