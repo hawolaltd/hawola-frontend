@@ -123,11 +123,13 @@ export async function sendBuyerChatProofOfPayment(
 export async function uploadOrderItemProofOfPayment(
   orderitemNumber: string,
   file: File,
-  note?: string
+  note?: string,
+  amount?: string
 ) {
   const form = new FormData();
   form.append("file", file);
   if (note?.trim()) form.append("note", note.trim());
+  if (amount?.trim()) form.append("amount", amount.trim());
   const { data } = await axiosInstance.post(
     `/orders/order-item/${encodeURIComponent(orderitemNumber)}/proofs/`,
     form,

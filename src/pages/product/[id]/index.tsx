@@ -1077,6 +1077,11 @@ const ProductPage = ({
                         addToWishlistPendingProductId={addToWishlistPendingProductId}
                         onShare={handleShare}
                         onCopyLink={handleCopyLink}
+                        quantity={quantity}
+                        onQuantityChange={handleQuantityChange}
+                        onAddToCart={() => handleAddToCart(product as ProductByIdResponse)}
+                        onInstantOrder={handleOpenInstantOrder}
+                        addToCartPendingProductId={addToCartPendingProductId}
                     />
 
                     <ProductDetailDesktopBuyBox
@@ -1161,7 +1166,7 @@ const ProductPage = ({
                                 type="button"
                                 disabled={inventoryUnavailable || stickyCartBusy}
                                 onClick={() => handleAddToCart(product as ProductByIdResponse)}
-                                className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors ${
+                                className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm transition-colors ${
                                     inventoryUnavailable || stickyCartBusy
                                         ? "cursor-not-allowed bg-primary/35 text-white"
                                         : "bg-primary text-white hover:bg-primary/90"
@@ -1171,6 +1176,18 @@ const ProductPage = ({
                                     <InlineButtonSpinner className="h-4 w-4 text-white" />
                                 ) : null}
                                 {stickyCartBusy ? "Adding…" : "Add to cart"}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={inventoryUnavailable || stickyCartBusy}
+                                onClick={handleOpenInstantOrder}
+                                className={`inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm ${
+                                    inventoryUnavailable || stickyCartBusy
+                                        ? "cursor-not-allowed bg-[#FD9636]/35 text-white"
+                                        : "bg-[#FD9636] text-white"
+                                }`}
+                            >
+                                Instant Order
                             </button>
                         </div>
                     </div>

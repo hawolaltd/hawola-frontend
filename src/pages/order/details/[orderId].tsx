@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 import { API } from "@/constant";
 import { sanitizeRichNotice } from "@/util/sanitizeRichNotice";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
+import CustomerPayLaterBox from "@/components/order/CustomerPayLaterBox";
 import Link from "next/link";
 import {
     storefrontProductPath,
@@ -237,7 +238,10 @@ const OrderDetails: NextPage = () => {
         singleOrder?.isDelivered === true &&
         singleOrder?.user_confirm_order === true;
     const canConfirmReceipt =
-        Boolean(singleOrder) && !lineCancelled && singleOrder?.user_confirm_order !== true;
+        Boolean(singleOrder) &&
+        !lineCancelled &&
+        singleOrder?.user_confirm_order !== true &&
+        singleOrder?.pay_later?.status !== "offered";
     const messagingClosed = lineCancelled || singleOrder?.is_reviewed === true;
 
     useEffect(() => {
@@ -526,6 +530,15 @@ const OrderDetails: NextPage = () => {
                                     This item is disputed. Reply in the dispute thread below.
                                 </div>
                             ) : null}
+
+                            <CustomerPayLaterBox
+                                plan={singleOrder?.pay_later}
+                                orderitemNumber={String(singleOrder?.orderitem_number || "")}
+                                onChanged={() => {
+                                    const orderId = singleOrder?.orderitem_number;
+                                    if (orderId) dispatch(getSingleOrder(orderId));
+                                }}
+                            />
 
                             {/* Hero summary */}
                             <section className="mb-6 overflow-hidden rounded-2xl border border-[#d7e0ef] bg-white shadow-[0_12px_40px_rgba(11,27,51,0.06)]">

@@ -82,6 +82,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
         { href: '/account?tab=chats', label: 'Chats' },
         { href: '/wishlist', label: 'My Wishlist' },
         { href: '/order/order-history', label: 'Order Tracking' },
+        { href: '/order/pay-later', label: 'Pay later' },
         { href: '/account?tab=profile', label: 'Settings' },
         { href: '/account/delete', label: 'Request account deletion' },
     ];

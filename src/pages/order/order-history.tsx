@@ -188,6 +188,9 @@ const OrderHistoryPage = () => {
                         <div className="flex items-center gap-3 mb-2">
                             <ShoppingBagIcon className="w-8 h-8 text-primary" />
                             <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Order History</h1>
+                            <Link href="/order/pay-later" className="mt-2 inline-block text-sm font-semibold text-primary underline">
+                                Pay later
+                            </Link>
                         </div>
                         <p className="text-gray-600 ml-11">Track and manage all your orders in one place</p>
                     </div>

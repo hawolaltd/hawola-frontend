@@ -94,6 +94,14 @@ function UserInfoDropdown() {
               Order Tracking
             </Link>
           </li>
+          <li>
+            <Link
+              href="/order/pay-later"
+              className="block text-primary px-4 py-2 hover:text-deepOrange"
+            >
+              Pay later
+            </Link>
+          </li>
 
           <li>
             <Link

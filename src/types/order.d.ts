@@ -36,6 +36,17 @@ interface OrderDetail {
     paidAt: string | null;
     isDelivered: boolean;
     user_confirm_order: boolean;
+    pay_later?: {
+        status?: string;
+        total_due?: string;
+        amount_left?: string;
+        amount_confirmed?: string;
+        payout_details?: string;
+        rhythm?: string;
+        can_accept?: boolean;
+        can_add_proof?: boolean;
+        orderitem_number?: string;
+    } | null;
     user_open_dispute: boolean;
     dispute_id?: number | null;
     image: string;
@@ -185,6 +196,17 @@ interface NewOrderDetailsResponse {
     paidAt: null;
     isDelivered: boolean;
     user_confirm_order: boolean;
+    pay_later?: {
+        status?: string;
+        total_due?: string;
+        amount_left?: string;
+        amount_confirmed?: string;
+        payout_details?: string;
+        rhythm?: string;
+        can_accept?: boolean;
+        can_add_proof?: boolean;
+        orderitem_number?: string;
+    } | null;
     user_open_dispute: boolean;
     /** Backend-computed lifecycle status (e.g. pending, cancelled). */
     orderitem_status?: string;

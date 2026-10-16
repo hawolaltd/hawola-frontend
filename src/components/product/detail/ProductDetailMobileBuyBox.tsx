@@ -40,6 +40,11 @@ type Props = {
   addToWishlistPendingProductId: number | null;
   onShare: (platform: string) => void;
   onCopyLink: () => void;
+  quantity: number;
+  onQuantityChange: (delta: number) => void;
+  onAddToCart: () => void;
+  onInstantOrder: () => void;
+  addToCartPendingProductId: number | null;
 };
 
 export default function ProductDetailMobileBuyBox({
@@ -58,12 +63,18 @@ export default function ProductDetailMobileBuyBox({
   addToWishlistPendingProductId,
   onShare,
   onCopyLink,
+  quantity,
+  onQuantityChange,
+  onAddToCart,
+  onInstantOrder,
+  addToCartPendingProductId,
 }: Props) {
   const [shippingOpen, setShippingOpen] = useState(true);
   const p = product?.product;
   const merchantSlug = p?.merchant?.slug ?? "";
   const storeName = p?.merchant?.store_name ?? "Merchant";
   const wishlistBusy = addToWishlistPendingProductId === p?.id;
+  const cartBusy = addToCartPendingProductId === p?.id;
 
   const price = p?.price;
   const discountPrice = p?.discount_price;
@@ -140,6 +151,62 @@ export default function ProductDetailMobileBuyBox({
             </>
           ) : null}
         </div>
+      </div>
+
+      <div
+        className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm ${inventoryUnavailable ? "opacity-60" : ""}`}
+      >
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Purchase
+        </p>
+        <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center rounded-xl border border-slate-200 bg-slate-50">
+            <button
+              type="button"
+              onClick={() => onQuantityChange(-1)}
+              className="flex h-11 w-10 items-center justify-center text-xl font-medium text-primary"
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+            <span className="min-w-[2rem] text-center text-base font-bold text-primary">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => onQuantityChange(1)}
+              className="flex h-11 w-10 items-center justify-center text-xl font-medium text-primary"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+          <button
+            type="button"
+            disabled={inventoryUnavailable || cartBusy}
+            onClick={onAddToCart}
+            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold ${
+              inventoryUnavailable || cartBusy
+                ? "cursor-not-allowed border-2 border-primary/15 text-primary/50"
+                : "border-2 border-primary/30 bg-white text-primary"
+            }`}
+          >
+            {cartBusy ? <InlineButtonSpinner className="h-4 w-4 text-primary" /> : null}
+            {cartBusy ? "Adding…" : "Add to cart"}
+          </button>
+        </div>
+        <button
+          type="button"
+          disabled={inventoryUnavailable || cartBusy}
+          onClick={onInstantOrder}
+          className={`mt-2 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl px-3 py-2.5 text-sm font-semibold ${
+            inventoryUnavailable || cartBusy
+              ? "cursor-not-allowed bg-[#FD9636]/35 text-white"
+              : "bg-[#FD9636] text-white"
+          }`}
+        >
+          Instant Order
+        </button>
       </div>
 
       {typeof p?.id === "number" ? (
