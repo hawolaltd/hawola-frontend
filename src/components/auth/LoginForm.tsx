@@ -26,8 +26,14 @@ export default function LoginForm() {
 
     const dispatch = useAppDispatch()
 
-    const {isLoading, error, message } = useAppSelector(state => state.auth)
+    const {isLoading, error, message, isAuthenticated } = useAppSelector(state => state.auth)
     const {localCart} = useAppSelector(state => state.products)
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            router.replace(redirectTarget);
+        }
+    }, [isAuthenticated, redirectTarget, router]);
 
     // Handle errors from Redux state (in case error is set but not caught in onSubmit)
     useEffect(() => {
@@ -78,6 +84,10 @@ export default function LoginForm() {
 
 
     const onSubmit = async (data: LoginFormType) => {
+        if (isAuthenticated) {
+            router.replace(redirectTarget);
+            return;
+        }
         // Log what the form is submitting
         console.log('[FRONTEND] LoginForm.onSubmit - Form data:', {
             email: data.email,
@@ -127,6 +137,23 @@ export default function LoginForm() {
                 const twoFactorEmail = res?.payload?.email || loginPayload.email;
                 router.push(
                     `/auth/two-factor?pending=${encodeURIComponent(pending)}&email=${encodeURIComponent(twoFactorEmail)}&redirect=${encodeURIComponent(redirectTarget)}`
+                );
+                return;
+            }
+
+            const loginCodeNeeded =
+                isFulfilled &&
+                (res?.payload?.auth_method === "login_code" ||
+                    res?.payload?.code === "login_code_sent" ||
+                    res?.payload?.code === "login_code_required" ||
+                    res?.payload?.login_code_sent);
+
+            if (loginCodeNeeded) {
+                if (!res?.payload?.login_code_sent) {
+                    await dispatch(requestLoginCode(loginPayload.email));
+                }
+                toast.info(
+                    "This account uses one-time sign-in. Check your email for a Hawola sign-in code."
                 );
                 return;
             }
@@ -209,6 +236,10 @@ export default function LoginForm() {
     };
 
     const handleRequestMagicLink = async () => {
+        if (isAuthenticated) {
+            router.replace(redirectTarget);
+            return;
+        }
         const email = String(getValues("email") ?? "").trim();
 
         if (!email) {
@@ -354,7 +385,7 @@ export default function LoginForm() {
                             name="password"
                             label="Password *"
                             type="password"
-                            defaultValue={'****************'}
+                            defaultValue={''}
                             placeholder="****************"
                             rules={{
                                 required: 'Password is required',
