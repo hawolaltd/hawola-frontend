@@ -71,6 +71,8 @@ export interface Product {
     product_subseccategory: SubCategory;
     merchant: Merchant;
     featured_image: FeaturedImage[];
+    /** Gallery rows from product-detail main API (`product_images`). */
+    product_images?: ProductImage[];
     shipping_cost_outside: ShippingCost;
     shipping_cost_within: ShippingCost;
     shipping_cost_outside_state: ShippingCost;

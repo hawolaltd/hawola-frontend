@@ -86,7 +86,7 @@ const ProductPage = ({
     const [position, setPosition] = useState({x: "50%", y: "50%"});
     const [isHovered, setIsHovered] = useState(false);
     const [clientNotFound, setClientNotFound] = useState(false);
-    const [preview, setPreview] = useState<ProductDetailPreview | null>(null);
+    const [preview, setPreview] = useState<ProductDetailPreview | null>(serverShell);
     const [loadingReview, setLoadingReview] = useState(!serverNotFound);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -279,12 +279,20 @@ const ProductPage = ({
 
     const productForSeo = useMemo(() => {
         const live = product?.product;
-        if (live?.id && live.slug === productSlug) return live;
+        const gallery = product?.product_images;
+        const withGallery = (p: Product): Product => {
+            if (p.featured_image?.length) return p;
+            if (gallery?.length) {
+                return { ...p, featured_image: gallery as Product["featured_image"] };
+            }
+            return p;
+        };
+        if (live?.id && live.slug === productSlug) return withGallery(live);
         if (initialProductForSeo?.id && initialProductForSeo.slug === productSlug) {
-            return initialProductForSeo;
+            return withGallery(initialProductForSeo);
         }
         return null;
-    }, [product?.product, initialProductForSeo, productSlug]);
+    }, [product?.product, product?.product_images, initialProductForSeo, productSlug]);
 
     const productSeo = useMemo(() => {
         if (!productForSeo?.id || !productSlug) return null;
@@ -1320,13 +1328,24 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
             const data = await mainRes.json();
             const p = data?.product;
             if (p?.id) {
-                initialProductForSeo = p as Product;
+                const gallery =
+                    (Array.isArray(p.featured_image) && p.featured_image.length
+                        ? p.featured_image
+                        : null) ||
+                    data.product_images ||
+                    p.product_images ||
+                    [];
+                initialProductForSeo = {
+                    ...(p as Product),
+                    featured_image: gallery,
+                    product_images: data.product_images || p.product_images,
+                } as Product;
                 serverShell = {
                     slug: String(p.slug || slug),
                     name: String(p.name || "Product"),
                     price: p.price,
                     discount_price: p.discount_price,
-                    featured_image: p.featured_image || p.product_images || [],
+                    featured_image: gallery,
                     merchant: p.merchant
                         ? {
                               store_name: p.merchant.store_name,

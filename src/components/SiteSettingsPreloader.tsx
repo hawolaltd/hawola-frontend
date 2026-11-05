@@ -1,4 +1,9 @@
 import Head from "next/head";
+import {
+  DEFAULT_SHARE_IMAGE,
+  DEFAULT_SHARE_IMAGE_HEIGHT,
+  DEFAULT_SHARE_IMAGE_WIDTH,
+} from "@/util/storefrontSeo";
 
 /**
  * Full-screen splash while site settings are fetched (under-construction gate).
@@ -8,6 +13,16 @@ export default function SiteSettingsPreloader() {
     <>
       <Head>
         <title>Hawola</title>
+        <meta property="og:title" content="Hawola | Find it, Own it!" />
+        <meta
+          property="og:description"
+          content="Hawola — Find it, Own it!"
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content={DEFAULT_SHARE_IMAGE} />
+        <meta property="og:image:width" content={String(DEFAULT_SHARE_IMAGE_WIDTH)} />
+        <meta property="og:image:height" content={String(DEFAULT_SHARE_IMAGE_HEIGHT)} />
+        <meta name="twitter:card" content="summary_large_image" />
       </Head>
       <div
         className="fixed inset-0 z-[9999] overflow-hidden bg-white"

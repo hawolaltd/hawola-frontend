@@ -42,13 +42,21 @@ import { identifyTikTokUser, tikTokIdentityFromProfile } from "@/lib/tiktokPixel
 import TikTokPixelLoader from "@/components/TikTokPixelLoader";
 import TikTokOpenInBrowserPrompt from "@/components/storefront/TikTokOpenInBrowserPrompt";
 import PresenceFlashHost from "@/components/engagement/PresenceFlashHost";
+import {
+  DEFAULT_SHARE_IMAGE_HEIGHT,
+  DEFAULT_SHARE_IMAGE_WIDTH,
+  pickShareableImageUrl,
+  siteLogoShareCandidates,
+} from "@/util/storefrontSeo";
 
 const LAUNCH_CONFETTI_FLAG = "hawola_launch_confetti";
 
 function AppContent({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const skipGlobalSeo =
-    router.pathname === "/[merchantSlug]" || router.pathname === "/product/[id]";
+    router.pathname === "/" ||
+    router.pathname === "/[merchantSlug]" ||
+    router.pathname === "/product/[id]";
   const dispatch = useAppDispatch();
   const siteSettings = useSelector((state: RootState) => state.general.siteSettings);
   const siteSettingsLoaded = useSelector((state: RootState) => state.general.siteSettingsLoaded);
@@ -196,9 +204,14 @@ function AppContent({ Component, pageProps }: AppProps) {
     return () => window.clearTimeout(timer);
   }, [showLaunchPage, dateTimeTill]);
 
-  // Show loader only on first visit when no cached settings exist (SSR pages may pass initialSiteSettings).
+  // Show loader only in the browser on first visit. Crawlers (WhatsApp, etc.)
+  // must receive real HTML + Open Graph tags, not the splash screen.
   const hasCachedSiteSettings = effectiveSiteSettings != null;
-  if (!siteSettingsLoaded && !hasCachedSiteSettings) {
+  if (
+    typeof window !== "undefined" &&
+    !siteSettingsLoaded &&
+    !hasCachedSiteSettings
+  ) {
     return <SiteSettingsPreloader />;
   }
 
@@ -259,12 +272,27 @@ function AppContent({ Component, pageProps }: AppProps) {
               <meta property="og:locale" content="en_US" />
             )}
             {canonicalBase ? <meta property="og:url" content={canonicalBase} /> : null}
-            {(effectiveSiteSettings?.logo as { full_size?: string })?.full_size ? (
-              <meta
-                property="og:image"
-                content={String((effectiveSiteSettings?.logo as { full_size?: string }).full_size)}
-              />
-            ) : null}
+            <meta
+              property="og:image"
+              content={pickShareableImageUrl(
+                siteLogoShareCandidates(effectiveSiteSettings)
+              )}
+            />
+            <meta
+              property="og:image:width"
+              content={String(DEFAULT_SHARE_IMAGE_WIDTH)}
+            />
+            <meta
+              property="og:image:height"
+              content={String(DEFAULT_SHARE_IMAGE_HEIGHT)}
+            />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta
+              name="twitter:image"
+              content={pickShareableImageUrl(
+                siteLogoShareCandidates(effectiveSiteSettings)
+              )}
+            />
           </>
         ) : null}
       </Head>
@@ -322,10 +350,9 @@ function AppContent({ Component, pageProps }: AppProps) {
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 export default function App({ Component, pageProps, router }: AppProps) {
-  return (
-    <PersistGate persistor={persistor}>
-      <GoogleOAuthProvider clientId={googleClientId}>
-        <Provider store={store}>
+  const inner = (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <Provider store={store}>
         <TikTokPixelLoader />
         <AppContent
           Component={Component}
@@ -333,7 +360,12 @@ export default function App({ Component, pageProps, router }: AppProps) {
           router={router}
         />
       </Provider>
-      </GoogleOAuthProvider>
+    </GoogleOAuthProvider>
+  );
+  // Render children while rehydrating so SSR HTML (including OG tags) is not blank.
+  return (
+    <PersistGate persistor={persistor} loading={inner}>
+      {inner}
     </PersistGate>
   );
 }

@@ -1,8 +1,18 @@
 import { normalizeMediaSrc } from "@/components/common/OptimizedImage";
 import type { SiteSettingsData } from "@/redux/general/generalSlice";
-import type { Product } from "@/types/product";
+import type { FeaturedImage, Product, ProductImage } from "@/types/product";
+import { featuredImageCardSrc } from "./featuredImage";
 import { formatCurrency } from "./index";
 import { applySeoTemplate, stripHtmlToText, truncateSeo, type SeoVars } from "./seoTemplate";
+
+/**
+ * Public JPEG large enough for WhatsApp (≥200×200). Original Cloudinary `f_auto`
+ * can serve WebP/AVIF that some chat unfurlers never finish fetching.
+ */
+export const DEFAULT_SHARE_IMAGE =
+  "https://res.cloudinary.com/dcqqstymo/image/upload/f_jpg,q_auto,w_1200,h_630,c_pad,b_rgb:1E3A8A/new_hawola_Logo_ba18cz";
+export const DEFAULT_SHARE_IMAGE_WIDTH = 1200;
+export const DEFAULT_SHARE_IMAGE_HEIGHT = 630;
 
 /** Absolute URL for og:image — WhatsApp and other crawlers require a fetchable HTTPS link. */
 export function resolveOgImageUrl(raw: string | null | undefined): string | null {
@@ -11,6 +21,78 @@ export function resolveOgImageUrl(raw: string | null | undefined): string | null
   if (abs.startsWith("https://")) return abs;
   if (abs.startsWith("http://")) return abs.replace(/^http:\/\//, "https://");
   return null;
+}
+
+function isLikelyPublicShareImage(url: string): boolean {
+  return /__sized__|thumbnail|res\.cloudinary\.com|cloudinary\.com/i.test(url);
+}
+
+function isLikelyPrivateOriginal(url: string): boolean {
+  return /\/media\//i.test(url) && !isLikelyPublicShareImage(url);
+}
+
+/** Prefer sized/public renditions; never return empty (chat previews need an image). */
+export function pickShareableImageUrl(
+  candidates: Array<string | null | undefined>,
+  fallback: string = DEFAULT_SHARE_IMAGE
+): string {
+  const resolved = candidates
+    .map((c) => resolveOgImageUrl(c))
+    .filter((u): u is string => Boolean(u));
+  const ranked = [
+    ...resolved.filter(isLikelyPublicShareImage),
+    ...resolved.filter((u) => !isLikelyPrivateOriginal(u)),
+    ...resolved,
+  ];
+  const seen = new Set<string>();
+  for (const url of ranked) {
+    if (seen.has(url)) continue;
+    seen.add(url);
+    return url;
+  }
+  return fallback;
+}
+
+export function siteLogoShareCandidates(site: SiteSettingsData | null): string[] {
+  const logo = site?.logo as unknown;
+  if (!logo) return [];
+  if (typeof logo === "string") return [logo];
+  if (typeof logo === "object") {
+    const o = logo as Record<string, unknown>;
+    return [o.thumbnail, o.thumbnail_100, o.full_size].filter(
+      (x): x is string => typeof x === "string" && x.trim().length > 0
+    );
+  }
+  return [];
+}
+
+function productImageShareCandidates(
+  product: Product | null | undefined
+): string[] {
+  const extras = product as
+    | (Product & { product_images?: Array<FeaturedImage | ProductImage> })
+    | null
+    | undefined;
+  const rows: Array<FeaturedImage | ProductImage | undefined> = [
+    ...(product?.featured_image || []),
+    ...(extras?.product_images || []),
+  ];
+  const urls: string[] = [];
+  for (const row of rows) {
+    if (!row) continue;
+    const card = featuredImageCardSrc(row);
+    if (card) urls.push(card);
+    if ("image_url" in row && typeof row.image_url === "string") {
+      urls.push(row.image_url);
+    }
+    const img = (row as FeaturedImage).image;
+    if (img && typeof img === "object") {
+      if (img.thumbnail) urls.push(img.thumbnail);
+      if (img.thumbnail_100) urls.push(img.thumbnail_100);
+      if (img.full_size) urls.push(img.full_size);
+    }
+  }
+  return urls;
 }
 
 function sstr(v: unknown): string {
@@ -33,7 +115,9 @@ export interface BuiltSeo {
   canonicalUrl: string;
   ogTitle: string;
   ogDescription: string;
-  ogImage: string | null;
+  ogImage: string;
+  ogImageWidth: number;
+  ogImageHeight: number;
   ogType: string;
   robots: string;
   keywords: string;
@@ -93,14 +177,13 @@ export function buildProductSeo(params: {
     ? `${base}/product/${encodeURIComponent(pathSlug)}`
     : "";
 
-  const img0 = product?.featured_image?.[0];
-  const ogImage = resolveOgImageUrl(
-    img0?.image_url ||
-      (img0?.image as { full_size?: string } | undefined)?.full_size ||
-      merchant?.logo_thumbnail ||
-      merchant?.logo ||
-      null
-  );
+  const ogImage = pickShareableImageUrl([
+    ...productImageShareCandidates(product),
+    merchant?.logo_thumbnail || null,
+    merchant?.logo || null,
+    ...siteLogoShareCandidates(siteSettings),
+  ]);
+  const usingDefaultShare = ogImage === DEFAULT_SHARE_IMAGE;
 
   const robots = sstr(siteSettings?.seo_default_robots).trim() || "index,follow";
   const keywords = truncateSeo(
@@ -140,6 +223,8 @@ export function buildProductSeo(params: {
     ogTitle: truncateSeo(title, 70),
     ogDescription: description,
     ogImage,
+    ogImageWidth: usingDefaultShare ? DEFAULT_SHARE_IMAGE_WIDTH : 800,
+    ogImageHeight: usingDefaultShare ? DEFAULT_SHARE_IMAGE_HEIGHT : 800,
     ogType: "product",
     robots,
     keywords,
@@ -229,10 +314,41 @@ export function buildMerchantSeo(params: {
     canonicalUrl,
     ogTitle: truncateSeo(title, 70),
     ogDescription: description,
-    ogImage: resolveOgImageUrl(logoThumbnail || logoUrl || bannerUrl || null),
+    ogImage: pickShareableImageUrl([
+      logoThumbnail,
+      logoUrl,
+      bannerUrl,
+      ...siteLogoShareCandidates(siteSettings),
+    ]),
+    ogImageWidth: DEFAULT_SHARE_IMAGE_WIDTH,
+    ogImageHeight: DEFAULT_SHARE_IMAGE_HEIGHT,
     ogType: "website",
     robots,
     keywords,
     jsonLd,
+  };
+}
+
+export function buildHomeSeo(siteSettings: SiteSettingsData | null): BuiltSeo {
+  const siteName = sstr(siteSettings?.app_name).trim() || "Hawola";
+  const slogan = sstr(siteSettings?.app_slogan).trim() || "Find it, Own it!";
+  const fallbackDesc = sstr(siteSettings?.seo_site_default_description).trim();
+  const title = `${siteName} | ${slogan}`;
+  const description = truncateSeo(fallbackDesc || `${siteName} — ${slogan}`, 160);
+  const base = resolveCanonicalBase(siteSettings);
+  const ogImage = pickShareableImageUrl(siteLogoShareCandidates(siteSettings));
+
+  return {
+    title: truncateSeo(title, 70),
+    description,
+    canonicalUrl: base,
+    ogTitle: truncateSeo(title, 70),
+    ogDescription: description,
+    ogImage,
+    ogImageWidth: DEFAULT_SHARE_IMAGE_WIDTH,
+    ogImageHeight: DEFAULT_SHARE_IMAGE_HEIGHT,
+    ogType: "website",
+    robots: sstr(siteSettings?.seo_default_robots).trim() || "index,follow",
+    keywords: truncateSeo(sstr(siteSettings?.seo_site_default_keywords), 256),
   };
 }

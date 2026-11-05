@@ -1,5 +1,10 @@
 import Head from "next/head";
-import type { BuiltSeo } from "@/util/storefrontSeo";
+import {
+  DEFAULT_SHARE_IMAGE,
+  DEFAULT_SHARE_IMAGE_HEIGHT,
+  DEFAULT_SHARE_IMAGE_WIDTH,
+  type BuiltSeo,
+} from "@/util/storefrontSeo";
 
 type StorefrontSeoHeadProps = {
   seo: BuiltSeo | null;
@@ -21,9 +26,10 @@ export default function StorefrontSeoHead({
   faviconUrl,
 }: StorefrontSeoHeadProps) {
   const title = seo?.title || fallbackTitle;
-  const ogImage = seo?.ogImage;
-  const ogImageHttps =
-    ogImage && ogImage.startsWith("https://") ? ogImage : ogImage;
+  const ogImage = seo?.ogImage || DEFAULT_SHARE_IMAGE;
+  const ogImageHttps = ogImage.startsWith("https://") ? ogImage : ogImage;
+  const ogWidth = seo?.ogImageWidth || DEFAULT_SHARE_IMAGE_WIDTH;
+  const ogHeight = seo?.ogImageHeight || DEFAULT_SHARE_IMAGE_HEIGHT;
 
   return (
     <Head>
@@ -43,17 +49,19 @@ export default function StorefrontSeoHead({
       <meta property="og:locale" content={ogLocale} />
       {siteName ? <meta property="og:site_name" content={String(siteName)} /> : null}
       {seo?.canonicalUrl ? <meta property="og:url" content={seo.canonicalUrl} /> : null}
-      {ogImage ? <meta property="og:image" content={ogImage} /> : null}
-      {ogImageHttps ? (
-        <meta property="og:image:secure_url" content={ogImageHttps} />
-      ) : null}
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:secure_url" content={ogImageHttps} />
+      <meta property="og:image:width" content={String(ogWidth)} />
+      <meta property="og:image:height" content={String(ogHeight)} />
+      <meta property="og:image:alt" content={title} />
       <meta name="twitter:card" content="summary_large_image" />
       {twitterSite ? <meta name="twitter:site" content={twitterSite} /> : null}
-      {seo?.ogTitle ? <meta name="twitter:title" content={seo.ogTitle} /> : null}
-      {seo?.ogDescription ? (
-        <meta name="twitter:description" content={seo.ogDescription} />
-      ) : null}
-      {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
+      <meta name="twitter:title" content={seo?.ogTitle || title} />
+      <meta
+        name="twitter:description"
+        content={seo?.ogDescription || seo?.description || ""}
+      />
+      <meta name="twitter:image" content={ogImage} />
       {faviconUrl ? <link rel="icon" href={faviconUrl} /> : null}
       {seo?.jsonLd ? (
         <script
