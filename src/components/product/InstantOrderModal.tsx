@@ -111,6 +111,7 @@ export default function InstantOrderModal({
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
   const [code, setCode] = useState("");
+  const [codePrefix, setCodePrefix] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
@@ -124,6 +125,7 @@ export default function InstantOrderModal({
     setStep("form");
     setFormWizardPage(1);
     setCode("");
+    setCodePrefix("");
     setMessage("");
     setAccountCreated(false);
     setAppliedCoupon(null);
@@ -348,48 +350,72 @@ export default function InstantOrderModal({
     setBusy(true);
     try {
       if (isAuthenticated) {
-        const data = await placeInstantOrder({
-          product_id: productId,
-          full_name: fullName.trim(),
-          phone_number: phone.trim(),
-          ...deliveryFields(),
-          ...(couponCodeForOrder ? { coupon_code: couponCodeForOrder } : {}),
-          ...(couponSecondaryForOrder
-            ? { coupon_code_secondary: couponSecondaryForOrder }
-            : {}),
-          qty,
-          ...(variants?.length ? { variant: variants } : {}),
-        });
-        if (data.order) {
-          setMessage(data.detail || "Order placed successfully.");
-          setStep("done");
-          onOrderPlaced(data.order);
-        } else {
-          toast.error("Could not place order.");
+        try {
+          const data = await placeInstantOrder({
+            product_id: productId,
+            full_name: fullName.trim(),
+            phone_number: phone.trim(),
+            ...deliveryFields(),
+            ...(couponCodeForOrder ? { coupon_code: couponCodeForOrder } : {}),
+            ...(couponSecondaryForOrder
+              ? { coupon_code_secondary: couponSecondaryForOrder }
+              : {}),
+            qty,
+            ...(variants?.length ? { variant: variants } : {}),
+          });
+          if (data.order) {
+            setMessage(data.detail || "Order placed successfully.");
+            setStep("done");
+            onOrderPlaced(data.order);
+          } else {
+            toast.error("Could not place order.");
+          }
+          return;
+        } catch (placeErr: any) {
+          if (placeErr?.response?.status !== 401) {
+            throw placeErr;
+          }
+          if (!email.trim()) {
+            toast.error("Your session expired. Enter your email to confirm this order.");
+            return;
+          }
         }
-        return;
       }
 
       const data = await initiateInstantOrder(buildPayload());
       setMessage(data.detail || "");
       setAccountCreated(Boolean(data.account_created));
+      if (data.code_prefix) setCodePrefix(data.code_prefix);
       if (data.needs_verification) {
         setStep("verify");
-        toast.message("Check your email for a confirmation code");
+        toast.message(
+          data.code_prefix
+            ? `Check your email for the code that starts with ${data.code_prefix}-`
+            : "Check your email for a confirmation code"
+        );
       } else if (data.order) {
         setStep("done");
         onOrderPlaced(data.order);
       }
     } catch (e: any) {
-      toast.error(e?.response?.data?.detail || "Could not start instant order");
+      const detail = e?.response?.data?.detail;
+      toast.error(
+        typeof detail === "string" ? detail : "Could not start instant order"
+      );
     } finally {
       setBusy(false);
     }
   };
 
   const handleVerify = async () => {
-    if (!code.trim()) {
-      toast.error("Enter the confirmation code");
+    const typed = code.replace(/\D/g, "");
+    const prefix = codePrefix.replace(/\D/g, "").slice(0, 3);
+    let codeDigits = typed;
+    if (typed.length === 6 && prefix.length === 3) {
+      codeDigits = `${prefix}${typed}`;
+    }
+    if (codeDigits.length !== 9 && codeDigits.length !== 6) {
+      toast.error("Type the last 6 digits from the email that starts with this prefix");
       return;
     }
     setBusy(true);
@@ -397,7 +423,7 @@ export default function InstantOrderModal({
       const data = await verifyInstantOrder({
         product_id: productId,
         email: email.trim(),
-        code: code.trim(),
+        code: codeDigits,
       });
       if (data.access) {
         try {
@@ -428,6 +454,7 @@ export default function InstantOrderModal({
         product_id: productId,
         email: email.trim(),
       });
+      if (data.code_prefix) setCodePrefix(data.code_prefix);
       toast.success(data.detail || "Code resent");
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || "Could not resend code");
@@ -732,23 +759,41 @@ export default function InstantOrderModal({
               ) : null}
               <p className="text-sm text-gray-600">
                 {message ||
-                  (accountCreated
-                    ? "Enter the code we emailed you to confirm your order and activate your account."
-                    : "Enter the code we emailed you to confirm your order.")}
+                  (codePrefix
+                    ? `Your email code starts with ${codePrefix}-. Type the last 6 digits from that email.`
+                    : accountCreated
+                      ? "Enter the code we emailed you to confirm your order and activate your account."
+                      : "Enter the code we emailed you to confirm your order.")}
               </p>
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-500">
                   Confirmation code
                 </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-gray-200 px-3 text-center text-lg tracking-[0.3em] outline-none focus:border-[#FD9636]"
-                  placeholder="••••••"
-                  maxLength={6}
-                />
+                <div className="flex items-center gap-2">
+                  {codePrefix ? (
+                    <div className="flex h-11 shrink-0 items-center rounded-xl bg-gray-100 px-3 text-lg font-semibold tracking-[0.2em] text-gray-900">
+                      {codePrefix}-
+                    </div>
+                  ) : null}
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={code}
+                    onChange={(e) =>
+                      setCode(e.target.value.replace(/\D/g, "").slice(0, 9))
+                    }
+                    className="h-11 w-full rounded-xl border border-gray-200 px-3 text-center text-lg tracking-[0.3em] outline-none focus:border-[#FD9636]"
+                    placeholder="••••••"
+                    maxLength={9}
+                  />
+                </div>
+                {codePrefix ? (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Open the Hawola email that starts with {codePrefix}- so you
+                    know it is the right one.
+                  </p>
+                ) : null}
               </div>
               <button
                 type="button"
