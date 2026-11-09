@@ -31,6 +31,15 @@ function isLikelyPrivateOriginal(url: string): boolean {
   return /\/media\//i.test(url) && !isLikelyPublicShareImage(url);
 }
 
+/** WhatsApp drops images under ~200×200 — skip 100px renditions. */
+function isTooSmallForChatPreview(url: string): boolean {
+  return /thumbnail__100x100|crop__100x100|[_-]100x100/i.test(url);
+}
+
+function isSquareProductThumb(url: string): boolean {
+  return /thumbnail__320x320|crop__400x400|crop__300x300|[_-]320x320/i.test(url);
+}
+
 /** Prefer sized/public renditions; never return empty (chat previews need an image). */
 export function pickShareableImageUrl(
   candidates: Array<string | null | undefined>,
@@ -38,8 +47,10 @@ export function pickShareableImageUrl(
 ): string {
   const resolved = candidates
     .map((c) => resolveOgImageUrl(c))
-    .filter((u): u is string => Boolean(u));
+    .filter((u): u is string => Boolean(u))
+    .filter((u) => !isTooSmallForChatPreview(u));
   const ranked = [
+    ...resolved.filter(isSquareProductThumb),
     ...resolved.filter(isLikelyPublicShareImage),
     ...resolved.filter((u) => !isLikelyPrivateOriginal(u)),
     ...resolved,
@@ -51,6 +62,17 @@ export function pickShareableImageUrl(
     return url;
   }
   return fallback;
+}
+
+/** Listing price shown to shoppers (`discount_price`), not the struck-through `price`. */
+export function productSellingPrice(
+  product: { price?: string | number | null; discount_price?: string | number | null } | null | undefined
+): string {
+  const sale = Number(product?.discount_price);
+  if (Number.isFinite(sale) && sale > 0) return String(product?.discount_price);
+  const list = Number(product?.price);
+  if (Number.isFinite(list) && list > 0) return String(product?.price);
+  return "";
 }
 
 export function siteLogoShareCandidates(site: SiteSettingsData | null): string[] {
@@ -78,18 +100,22 @@ function productImageShareCandidates(
     ...(extras?.product_images || []),
   ];
   const urls: string[] = [];
+  if (typeof product?.image === "string" && product.image.trim()) {
+    urls.push(product.image);
+  }
   for (const row of rows) {
     if (!row) continue;
-    const card = featuredImageCardSrc(row);
-    if (card) urls.push(card);
-    if ("image_url" in row && typeof row.image_url === "string") {
-      urls.push(row.image_url);
-    }
     const img = (row as FeaturedImage).image;
     if (img && typeof img === "object") {
       if (img.thumbnail) urls.push(img.thumbnail);
-      if (img.thumbnail_100) urls.push(img.thumbnail_100);
-      if (img.full_size) urls.push(img.full_size);
+    }
+    const card = featuredImageCardSrc(row);
+    if (card) urls.push(card);
+    if (img && typeof img === "object" && img.full_size) {
+      urls.push(img.full_size);
+    }
+    if ("image_url" in row && typeof row.image_url === "string") {
+      urls.push(row.image_url);
     }
   }
   return urls;
@@ -121,6 +147,9 @@ export interface BuiltSeo {
   ogType: string;
   robots: string;
   keywords: string;
+  twitterCard?: string;
+  priceAmount?: string | null;
+  priceCurrency?: string;
   jsonLd?: Record<string, unknown>;
 }
 
@@ -135,21 +164,14 @@ export function buildProductSeo(params: {
   const merchantStore = sstr(merchant?.store_name).trim();
   const productName = sstr(product?.name).trim();
   const category = sstr(product?.category?.name).trim();
-  const priceLine =
-    product?.discount_price && product.discount_price !== product.price
-      ? `${formatCurrency(product.discount_price)} · was ${formatCurrency(product.price)}`
-      : product
-        ? formatCurrency(product.discount_price || product.price)
-        : "";
-  const snippet = truncateSeo(stripHtmlToText(product?.description), 320);
+  const sellingRaw = productSellingPrice(product);
+  const priceLine = sellingRaw ? formatCurrency(sellingRaw) : "";
+  const snippet = truncateSeo(stripHtmlToText(product?.description), 220);
   const fallbackDesc = sstr(siteSettings?.seo_site_default_description);
 
   const titleT =
     sstr(siteSettings?.seo_product_meta_title_template).trim() ||
-    "{{product_name}} | {{merchant_store}} | {{site_name}}";
-  const descT =
-    sstr(siteSettings?.seo_product_meta_description_template).trim() ||
-    "{{snippet}} {{merchant_store}}. {{price_line}}";
+    "{{product_name}} · {{price_line}} | {{merchant_store}} | {{site_name}}";
 
   const vars: SeoVars = {
     product_name: productName,
@@ -161,12 +183,14 @@ export function buildProductSeo(params: {
   };
 
   let title = applySeoTemplate(titleT, vars);
-  if (!title) title = [productName, merchantStore, siteName].filter(Boolean).join(" | ");
-
-  let description = applySeoTemplate(descT, vars);
-  if (!description.trim()) {
-    description = [snippet, merchantStore, priceLine].filter(Boolean).join(". ") || fallbackDesc;
+  if (!title) title = [productName, priceLine, merchantStore, siteName].filter(Boolean).join(" | ");
+  if (priceLine && productName && !title.includes(priceLine)) {
+    title = `${productName} · ${priceLine}`;
   }
+
+  let description = [priceLine, merchantStore, snippet || fallbackDesc]
+    .filter(Boolean)
+    .join(" · ");
   if (!description.trim()) {
     description = `${productName}. ${merchantStore}. ${siteName}.`;
   }
@@ -207,7 +231,7 @@ export function buildProductSeo(params: {
             "@type": "Offer",
             ...(canonicalUrl ? { url: canonicalUrl } : {}),
             priceCurrency: "NGN",
-            price: product.discount_price || product.price,
+            price: sellingRaw || product.discount_price || product.price,
             availability:
               (product.countInStock ?? 0) > 0
                 ? "https://schema.org/InStock"
@@ -223,11 +247,14 @@ export function buildProductSeo(params: {
     ogTitle: truncateSeo(title, 70),
     ogDescription: description,
     ogImage,
-    ogImageWidth: usingDefaultShare ? DEFAULT_SHARE_IMAGE_WIDTH : 800,
-    ogImageHeight: usingDefaultShare ? DEFAULT_SHARE_IMAGE_HEIGHT : 800,
+    ogImageWidth: usingDefaultShare ? DEFAULT_SHARE_IMAGE_WIDTH : 320,
+    ogImageHeight: usingDefaultShare ? DEFAULT_SHARE_IMAGE_HEIGHT : 320,
     ogType: "product",
     robots,
     keywords,
+    twitterCard: "summary",
+    priceAmount: sellingRaw || null,
+    priceCurrency: "NGN",
     jsonLd,
   };
 }

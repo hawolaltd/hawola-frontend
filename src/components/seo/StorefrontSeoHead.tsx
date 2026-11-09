@@ -54,7 +54,18 @@ export default function StorefrontSeoHead({
       <meta property="og:image:width" content={String(ogWidth)} />
       <meta property="og:image:height" content={String(ogHeight)} />
       <meta property="og:image:alt" content={title} />
-      <meta name="twitter:card" content="summary_large_image" />
+      {seo?.priceAmount ? (
+        <>
+          <meta property="product:price:amount" content={seo.priceAmount} />
+          <meta property="product:price:currency" content={seo.priceCurrency || "NGN"} />
+          <meta property="og:price:amount" content={seo.priceAmount} />
+          <meta property="og:price:currency" content={seo.priceCurrency || "NGN"} />
+        </>
+      ) : null}
+      <meta
+        name="twitter:card"
+        content={seo?.twitterCard || "summary_large_image"}
+      />
       {twitterSite ? <meta name="twitter:site" content={twitterSite} /> : null}
       <meta name="twitter:title" content={seo?.ogTitle || title} />
       <meta
