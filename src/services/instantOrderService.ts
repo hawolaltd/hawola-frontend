@@ -15,6 +15,7 @@ export type InstantOrderInitiateResponse = {
   email?: string;
   intent_id?: number;
   code_prefix?: string;
+  expire_minutes?: number;
   detail?: string;
   order?: OrderDetailsResponse;
 };
@@ -84,7 +85,7 @@ export async function verifyInstantOrder(payload: {
 export async function resendInstantOrderCode(payload: {
   product_id: number;
   email: string;
-}): Promise<{ detail?: string; code_prefix?: string }> {
+}): Promise<{ detail?: string; code_prefix?: string; expire_minutes?: number; email?: string }> {
   const { data } = await axiosInstance.post(`${base}/resend/`, payload);
   return data;
 }

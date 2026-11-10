@@ -112,6 +112,7 @@ export default function InstantOrderModal({
   const [streetAddress, setStreetAddress] = useState("");
   const [code, setCode] = useState("");
   const [codePrefix, setCodePrefix] = useState("");
+  const [expireMinutes, setExpireMinutes] = useState(30);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
@@ -126,6 +127,7 @@ export default function InstantOrderModal({
     setFormWizardPage(1);
     setCode("");
     setCodePrefix("");
+    setExpireMinutes(30);
     setMessage("");
     setAccountCreated(false);
     setAppliedCoupon(null);
@@ -386,6 +388,8 @@ export default function InstantOrderModal({
       setMessage(data.detail || "");
       setAccountCreated(Boolean(data.account_created));
       if (data.code_prefix) setCodePrefix(data.code_prefix);
+      if (data.expire_minutes) setExpireMinutes(Number(data.expire_minutes) || 30);
+      if (data.email) setEmail(data.email);
       if (data.needs_verification) {
         setStep("verify");
         toast.message(
@@ -441,10 +445,27 @@ export default function InstantOrderModal({
         setStep("done");
       }
     } catch (e: any) {
-      toast.error(e?.response?.data?.detail || "Invalid or expired code");
+      const status = e?.response?.status;
+      const detail = e?.response?.data?.detail;
+      if (status >= 500) {
+        toast.error("Could not confirm this order. Request a new code and try again.");
+      } else {
+        toast.error(
+          typeof detail === "string"
+            ? detail
+            : "That code is incorrect or has expired. Request a new one."
+        );
+      }
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleChangeEmail = () => {
+    setStep("form");
+    setFormWizardPage(1);
+    setCode("");
+    setCodePrefix("");
   };
 
   const handleResend = async () => {
@@ -455,7 +476,9 @@ export default function InstantOrderModal({
         email: email.trim(),
       });
       if (data.code_prefix) setCodePrefix(data.code_prefix);
-      toast.success(data.detail || "Code resent");
+      if (data.expire_minutes) setExpireMinutes(Number(data.expire_minutes) || 30);
+      setCode("");
+      toast.success(data.detail || "New code sent");
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || "Could not resend code");
     } finally {
@@ -765,6 +788,22 @@ export default function InstantOrderModal({
                       ? "Enter the code we emailed you to confirm your order and activate your account."
                       : "Enter the code we emailed you to confirm your order.")}
               </p>
+              <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                <p>
+                  Sent to{" "}
+                  <span className="font-semibold text-gray-900">{email.trim()}</span>
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  This code expires after {expireMinutes} minutes.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleChangeEmail}
+                  className="mt-1 text-xs font-semibold text-[#FD9636] hover:underline"
+                >
+                  Wrong email? Change it
+                </button>
+              </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-500">
                   Confirmation code
