@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
@@ -23,6 +23,7 @@ import { logout } from '@/redux/auth/authSlice';
 interface DrawerLinkProps {
     href?: string;
     label: string;
+    keywords?: string;
     children?: DrawerLinkProps[];
 }
 
@@ -41,6 +42,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     const realEstateNavLabel = getRealEstateCopy(siteSettings).navLabel;
 
     const displayEmail = profile?.email || user?.email || '';
+    const [menuQuery, setMenuQuery] = useState('');
+    const menuSearchRef = useRef<HTMLInputElement>(null);
     const signupBonusPromo = useSignupBonusPromo(!isAuthenticated);
     const hideSignupBonusCta =
         router.pathname === '/auth/register' ||
@@ -77,15 +80,62 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     // ];
 
     const accountLinks: DrawerLinkProps[] = [
-        { href: '/coupons', label: 'Coupon Center' },
-        { href: '/account', label: 'My Account' },
-        { href: '/account?tab=chats', label: 'Chats' },
-        { href: '/wishlist', label: 'My Wishlist' },
-        { href: '/order/order-history', label: 'Order Tracking' },
-        { href: '/order/pay-later', label: 'Pay later' },
-        { href: '/account?tab=profile', label: 'Settings' },
-        { href: '/account/delete', label: 'Request account deletion' },
+        { href: '/coupons', label: 'Coupon Center', keywords: 'discount promo' },
+        { href: '/account', label: 'My Account', keywords: 'dashboard profile' },
+        { href: '/account?tab=chats', label: 'Chats', keywords: 'messages inbox' },
+        { href: '/wishlist', label: 'My Wishlist', keywords: 'saved favourites' },
+        { href: '/order/order-history', label: 'Order Tracking', keywords: 'orders receipts history' },
+        { href: '/order/pay-later', label: 'Pay later', keywords: 'installment balance credit' },
+        { href: '/account?tab=profile', label: 'Settings', keywords: 'password 2fa addresses' },
+        { href: '/account/delete', label: 'Request account deletion', keywords: 'remove close' },
     ];
+    const extraAccountLinks: DrawerLinkProps[] = [
+        { href: '/account?tab=orders', label: 'Orders', keywords: 'purchases receipts' },
+        { href: '/account?tab=buying_requests', label: 'Buying requests', keywords: 'looking for product' },
+        { href: '/account?tab=notifications', label: 'Notifications', keywords: 'telegram alerts' },
+        { href: '/account?tab=recently_viewed', label: 'Recently viewed', keywords: 'history browse' },
+        { href: '/compare', label: 'Compare', keywords: 'products' },
+        { href: '/account?tab=profile', label: 'Addresses', keywords: 'shipping billing' },
+        { href: '/account?tab=profile', label: 'Two-factor authentication', keywords: '2fa totp security' },
+    ];
+
+    useEffect(() => {
+        if (!isOpen) {
+            setMenuQuery('');
+            return;
+        }
+        const t = window.setTimeout(() => menuSearchRef.current?.focus(), 50);
+        return () => window.clearTimeout(t);
+    }, [isOpen]);
+
+    const menuQueryNormalized = menuQuery.trim().toLowerCase();
+    const menuHit = (...parts: string[]) =>
+        !menuQueryNormalized ||
+        parts.join(' ').toLowerCase().includes(menuQueryNormalized);
+
+    const visibleAccountLinks = useMemo(() => {
+        const pool = menuQueryNormalized
+            ? [...accountLinks, ...extraAccountLinks]
+            : accountLinks;
+        return pool.filter((item) => menuHit(item.label, item.keywords || ''));
+    }, [menuQueryNormalized]);
+
+    const showCars = menuHit(carsNavLabel);
+    const showRealEstate = menuHit(realEstateNavLabel);
+    const showCreateStore = menuHit('Create Store') || menuHit('Merchant');
+    const showMerchantAccount = menuHit('Merchant Account') || menuHit('Merchant');
+    const showProductRequest = menuHit('Request for a product');
+    const showAppDownload = menuHit('Hawola app') || menuHit('Download');
+    const showSignOut = isAuthenticated && menuHit('Sign Out');
+    const searching = Boolean(menuQueryNormalized);
+    const hasVisibleMenu =
+        (isAuthenticated && visibleAccountLinks.length > 0) ||
+        showCars ||
+        showRealEstate ||
+        showCreateStore ||
+        showMerchantAccount ||
+        showProductRequest ||
+        showAppDownload;
 
     return (
         <>
@@ -159,7 +209,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                             </Link>
                         )}
                     </div>
-                    {!isAuthenticated && signupBonusPromo && !hideSignupBonusCta ? (
+                    {!isAuthenticated && signupBonusPromo && !hideSignupBonusCta && !searching ? (
                         <div className="shrink-0 border-b border-gray-200 px-4 pb-4">
                             <SignupBonusHeaderCta
                                 promo={signupBonusPromo}
@@ -169,12 +219,35 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                         </div>
                     ) : null}
 
-                    {isAuthenticated && (
+                    <div className="relative shrink-0 border-b border-gray-200 px-4 py-3">
+                        <label className="sr-only" htmlFor="customer-menu-search">
+                            Search menu
+                        </label>
+                        <span className="pointer-events-none absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="7" />
+                                <path d="M20 20l-3.5-3.5" />
+                            </svg>
+                        </span>
+                        <input
+                            id="customer-menu-search"
+                            type="search"
+                            value={menuQuery}
+                            onChange={(e) => setMenuQuery(e.target.value)}
+                            placeholder="Jump to…"
+                            autoComplete="off"
+                            ref={menuSearchRef}
+                            className="w-full rounded-md border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-primary outline-none placeholder:text-gray-400 focus:border-primary focus:bg-white"
+                        />
+                    </div>
+
+                    {isAuthenticated && (visibleAccountLinks.length > 0 || showSignOut) && (
                         <div className="shrink-0 space-y-3 border-b border-gray-200 p-4">
+                            {visibleAccountLinks.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2">
-                                {accountLinks.map((item) => (
+                                {visibleAccountLinks.map((item) => (
                                     <Link
-                                        key={item.label}
+                                        key={`${item.label}-${item.href}`}
                                         href={item.href || '#'}
                                         onClick={onClose}
                                         className="block px-3 py-2 text-sm font-semibold text-primary rounded-md bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-center"
@@ -183,6 +256,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     </Link>
                                 ))}
                             </div>
+                            ) : null}
+                            {showSignOut ? (
                             <button
                                 onClick={() => {
                                     dispatch(addToCartsLocal({ items: [] }));
@@ -193,13 +268,19 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                             >
                                 Sign Out
                             </button>
+                            ) : null}
                         </div>
                     )}
 
                     <div className="min-h-0 flex-1 overflow-y-auto">
                         <div className="space-y-3 p-4">
+                            {searching && !hasVisibleMenu ? (
+                                <p className="text-sm text-gray-500">No menu items match “{menuQuery.trim()}”.</p>
+                            ) : null}
                             {/* Cars & Real Estate — light tiles, navy / emerald text */}
+                            {(showCars || showRealEstate) ? (
                             <div className="grid grid-cols-2 gap-2">
+                                {showCars ? (
                                 <Link
                                     href="/cars"
                                     onClick={onClose}
@@ -208,6 +289,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     <TruckIcon className={`${HI_MD} text-primary`} aria-hidden />
                                     {carsNavLabel}
                                 </Link>
+                                ) : null}
+                                {showRealEstate ? (
                                 <Link
                                     href="/real-estate"
                                     onClick={onClose}
@@ -216,9 +299,13 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     <BuildingOffice2Icon className={`${HI_MD} text-emerald-700`} aria-hidden />
                                     {realEstateNavLabel}
                                 </Link>
+                                ) : null}
                             </div>
+                            ) : null}
 
+                            {(showCreateStore || showMerchantAccount) ? (
                             <div className="grid grid-cols-2 gap-2">
+                                {showCreateStore ? (
                                 <a
                                     href="https://merchant.hawola.com/register"
                                     target="_blank"
@@ -230,6 +317,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     Create Store
                                     <ArrowTopRightOnSquareIcon className={`${HI_SM} shrink-0 text-slate-400`} aria-hidden />
                                 </a>
+                                ) : null}
+                                {showMerchantAccount ? (
                                 <a
                                     href="https://merchant.hawola.com"
                                     target="_blank"
@@ -241,8 +330,11 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     Merchant Account
                                     <ArrowTopRightOnSquareIcon className={`${HI_SM} shrink-0 text-slate-400`} aria-hidden />
                                 </a>
+                                ) : null}
                             </div>
+                            ) : null}
 
+                            {showProductRequest ? (
                             <Link
                                 href="/looking-for-product"
                                 onClick={onClose}
@@ -255,8 +347,11 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                                     Request for a product
                                 </span>
                             </Link>
+                            ) : null}
 
+                            {showAppDownload ? (
                             <HawolaAppDownloadLink variant="drawer" onNavigate={onClose} />
+                            ) : null}
 
                             {/* Browse by aisle / curated categories — temporarily hidden
                             <CuratedPopularCategoriesDrawer onNavigate={onClose} />

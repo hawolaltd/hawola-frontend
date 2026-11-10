@@ -43,7 +43,7 @@ import ChatMessageBody from "@/components/account/ChatMessageBody";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 import ChatTypingHint from "@/components/chat/ChatTypingHint";
 import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
-import { useSellerReplyWait } from "@/components/chat/useSellerReplyWait";
+import { useSellerReplyWait, useWaitingPoll } from "@/components/chat/useSellerReplyWait";
 import ChatRichMessage from "@/components/account/ChatRichMessage";
 
 const CHAT_LIST_PAGE_SIZE = 20;
@@ -133,7 +133,7 @@ export default function AccountChats() {
   const [sending, setSending] = useState(false);
   const sendLock = useRef(false);
   const draftGuard = useRef("");
-  const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
+  const { waitingAfterId, setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileThread, setMobileThread] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
@@ -226,6 +226,11 @@ export default function AccountChats() {
       /* ignore poll errors */
     }
   }, []);
+
+  const pollWhileWaiting = useCallback(() => {
+    if (selected?.slug) void loadMessages(selected.slug, { merge: true });
+  }, [selected?.slug, loadMessages]);
+  useWaitingPoll(waitingAfterId, pollWhileWaiting);
 
   const openConversation = useCallback((conversation: BuyerChatConversation) => {
     setMobileThread(true);

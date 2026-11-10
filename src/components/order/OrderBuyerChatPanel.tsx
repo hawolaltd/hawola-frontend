@@ -27,7 +27,7 @@ import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutAct
 import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 import ChatTypingHint from "@/components/chat/ChatTypingHint";
-import { useSellerReplyWait } from "@/components/chat/useSellerReplyWait";
+import { useSellerReplyWait, useWaitingPoll } from "@/components/chat/useSellerReplyWait";
 
 type OrderBuyerChatPanelProps = {
   orderitemNumber: string;
@@ -80,7 +80,7 @@ export default function OrderBuyerChatPanel({
   const [sending, setSending] = useState(false);
   const sendLock = useRef(false);
   const draftGuard = useRef("");
-  const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
+  const { waitingAfterId, setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<BuyerChatMessage[]>([]);
@@ -109,6 +109,11 @@ export default function OrderBuyerChatPanel({
       /* poll errors ignored */
     }
   }, []);
+
+  const pollWhileWaiting = useCallback(() => {
+    if (conversation?.slug) void loadMessages(conversation.slug, true);
+  }, [conversation?.slug, loadMessages]);
+  useWaitingPoll(waitingAfterId, pollWhileWaiting);
 
   useEffect(() => {
     if (!orderitemNumber) {

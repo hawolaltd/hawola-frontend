@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -14,6 +14,7 @@ function UserInfoDropdown() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [platforms, setPlatforms] = useState<PlatformItem[]>([]);
+  const [menuQuery, setMenuQuery] = useState("");
 
   const loadPlatforms = useCallback(async () => {
     if (!isAuthenticated) {
@@ -52,20 +53,60 @@ function UserInfoDropdown() {
     }
   };
 
+  const q = menuQuery.trim().toLowerCase();
+  const hit = (...parts: string[]) =>
+    !q || parts.join(" ").toLowerCase().includes(q);
+
+  const accountItems = useMemo(
+    () => [
+      { href: "/account", label: "My Account", keywords: "dashboard profile" },
+      { href: "/account?tab=chats", label: "Chats", keywords: "messages inbox" },
+      { href: "/order/order-history", label: "Order Tracking", keywords: "orders receipts" },
+      { href: "/order/pay-later", label: "Pay later", keywords: "installment balance" },
+      { href: "/coupons", label: "Coupon Center", keywords: "discount promo" },
+      { href: "/wishlist", label: "My Wishlist", keywords: "saved favourites" },
+      { href: "/compare", label: "Compare", keywords: "products" },
+      { href: "/account?tab=profile", label: "Settings", keywords: "password 2fa addresses" },
+    ],
+    []
+  );
+
+  const visibleAccountItems = accountItems.filter((item) =>
+    hit(item.label, item.keywords)
+  );
+  const visiblePlatforms = platforms.filter((p) => hit(p.label, p.id));
+
   return (
     <>
       {isAuthenticated ? (
-        <ul className="absolute right-0 top-full z-[100] mt-2 w-52 rounded-md border bg-white shadow-lg">
-          <li>
-            <Link
-              href="/account"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              My Account
-            </Link>
+        <ul className="absolute right-0 top-full z-[100] mt-2 w-56 rounded-md border bg-white shadow-lg">
+          <li className="border-b px-3 py-2">
+            <label className="sr-only" htmlFor="customer-account-menu-search">
+              Search menu
+            </label>
+            <input
+              id="customer-account-menu-search"
+              type="search"
+              value={menuQuery}
+              onChange={(e) => setMenuQuery(e.target.value)}
+              placeholder="Jump to…"
+              autoComplete="off"
+              className="w-full rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-sm text-primary outline-none placeholder:text-gray-400"
+            />
           </li>
 
-          {platforms.map((p) => (
+          {visibleAccountItems.map((item) => (
+            <li key={`${item.label}-${item.href}`}>
+              <Link
+                href={item.href}
+                className="block text-primary px-4 py-2 hover:text-deepOrange"
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
+
+          {visiblePlatforms.map((p) => (
             <li key={p.id}>
               <button
                 type="button"
@@ -77,58 +118,9 @@ function UserInfoDropdown() {
             </li>
           ))}
 
-          <li>
-            <Link
-              href={{ pathname: "/account", query: { tab: "chats" } }}
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              Chats
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              href="/order/order-history"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              Order Tracking
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/order/pay-later"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              Pay later
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              href="/coupons"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              Coupon Center
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              href="/wishlist"
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              My Wishlist
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              href={{ pathname: "/account", query: { tab: "profile" } }}
-              className="block text-primary px-4 py-2 hover:text-deepOrange"
-            >
-              Settings
-            </Link>
-          </li>
+          {q && visibleAccountItems.length === 0 && visiblePlatforms.length === 0 ? (
+            <li className="px-4 py-2 text-sm text-gray-500">No matches.</li>
+          ) : null}
 
           <li
             onClick={(e) => {

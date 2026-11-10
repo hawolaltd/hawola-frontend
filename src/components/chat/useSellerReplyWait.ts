@@ -2,13 +2,22 @@ import { useEffect, useState } from "react";
 
 type Row = { id: number; sender_type?: string | null };
 
-/** Show a typing hint after the customer sends, until the seller replies or 25s pass. */
+export function useWaitingPoll(waitingAfterId: number | null, load?: () => void) {
+  useEffect(() => {
+    if (waitingAfterId == null || !load) return undefined;
+    void load();
+    const id = window.setInterval(() => void load(), 1500);
+    return () => window.clearInterval(id);
+  }, [waitingAfterId, load]);
+}
+
+/** Show a typing hint after the customer sends, until the seller replies or 40s pass. */
 export function useSellerReplyWait(messages: Row[]) {
   const [waitingAfterId, setWaitingAfterId] = useState<number | null>(null);
 
   useEffect(() => {
     if (waitingAfterId == null) return undefined;
-    const timer = window.setTimeout(() => setWaitingAfterId(null), 25000);
+    const timer = window.setTimeout(() => setWaitingAfterId(null), 40000);
     return () => window.clearTimeout(timer);
   }, [waitingAfterId]);
 
@@ -20,5 +29,5 @@ export function useSellerReplyWait(messages: Row[]) {
     if (replied) setWaitingAfterId(null);
   }, [messages, waitingAfterId]);
 
-  return { setWaitingAfterId, sellerTyping: waitingAfterId != null };
+  return { waitingAfterId, setWaitingAfterId, sellerTyping: waitingAfterId != null };
 }

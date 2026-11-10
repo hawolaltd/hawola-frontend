@@ -24,6 +24,11 @@ import {
     TicketIcon,
     UserIcon,
     BellAlertIcon,
+    CreditCardIcon,
+    MapPinIcon,
+    ScaleIcon,
+    ShieldCheckIcon,
+    TrashIcon,
 } from "@heroicons/react/24/outline";
 import {HI_SM} from "@/lib/hawolaIconTheme";
 import { addToCartsLocal } from "@/redux/product/productSlice";
@@ -53,22 +58,46 @@ export default function AccountPage() {
     const [promoDismissed, setPromoDismissed] = useState(true);
 
     const [tab, setTab] = useState<string>("orders");
+    const [menuQuery, setMenuQuery] = useState("");
 
     const tabs: {
         id: string;
         name: string;
         Icon: ComponentType<SVGProps<SVGSVGElement>>;
         externalHref?: string;
+        keywords?: string;
+        tabId?: string;
     }[] = [
-        { id: 'orders', name: 'Orders', Icon: ShoppingBagIcon },
-        { id: 'wish', name: 'Wishlist', Icon: HeartIcon },
-        { id: 'buying_requests', name: 'My Buying Requests', Icon: ClipboardDocumentListIcon },
-        { id: 'chats', name: 'Chats', Icon: ChatBubbleLeftRightIcon },
-        { id: 'profile', name: 'Profile', Icon: UserIcon },
-        { id: 'notifications', name: 'Notifications', Icon: BellAlertIcon },
-        { id: 'coupons', name: 'Coupons', Icon: TicketIcon, externalHref: '/coupons' },
-        { id: 'recently_viewed', name: 'Recently Viewed', Icon: EyeIcon },
-    ]
+        { id: 'orders', name: 'Orders', Icon: ShoppingBagIcon, keywords: 'receipts history purchases' },
+        { id: 'wish', name: 'Wishlist', Icon: HeartIcon, keywords: 'saved favourites' },
+        { id: 'buying_requests', name: 'My Buying Requests', Icon: ClipboardDocumentListIcon, keywords: 'looking for product' },
+        { id: 'chats', name: 'Chats', Icon: ChatBubbleLeftRightIcon, keywords: 'messages inbox' },
+        { id: 'profile', name: 'Profile', Icon: UserIcon, keywords: 'settings account password' },
+        { id: 'notifications', name: 'Notifications', Icon: BellAlertIcon, keywords: 'telegram alerts email' },
+        { id: 'coupons', name: 'Coupons', Icon: TicketIcon, externalHref: '/coupons', keywords: 'discount promo code' },
+        { id: 'recently_viewed', name: 'Recently Viewed', Icon: EyeIcon, keywords: 'history browse' },
+    ];
+
+    const extraDestinations = [
+        { id: 'pay_later', name: 'Pay later', Icon: CreditCardIcon, externalHref: '/order/pay-later', keywords: 'installment balance credit' },
+        { id: 'order_history', name: 'Order history', Icon: ShoppingBagIcon, externalHref: '/order/order-history', keywords: 'tracking receipts' },
+        { id: 'compare', name: 'Compare', Icon: ScaleIcon, externalHref: '/compare', keywords: 'products side by side' },
+        { id: 'addresses', name: 'Addresses', Icon: MapPinIcon, tabId: 'profile', keywords: 'shipping billing' },
+        { id: 'two_factor', name: 'Two-factor authentication', Icon: ShieldCheckIcon, tabId: 'profile', keywords: '2fa totp security authenticator' },
+        { id: 'delete', name: 'Delete account', Icon: TrashIcon, externalHref: '/account/delete', keywords: 'remove close' },
+    ];
+
+    const destinationMatches = (item: { name: string; keywords?: string }, q: string) =>
+        `${item.name} ${item.keywords || ""}`.toLowerCase().includes(q);
+
+    const visibleTabs = (() => {
+        const q = menuQuery.trim().toLowerCase();
+        if (!q) return tabs;
+        return [
+            ...tabs.filter((ta) => destinationMatches(ta, q)),
+            ...extraDestinations.filter((ta) => destinationMatches(ta, q)),
+        ];
+    })();
 
     useEffect(() => {
         if (!router.isReady) return;
@@ -181,19 +210,43 @@ export default function AccountPage() {
                                 </button>
                             </div>
                         </div>
+                        <div className="mt-4 sm:mt-6">
+                            <label className="sr-only" htmlFor="account-menu-search">
+                                Search menu
+                            </label>
+                            <div className="relative mb-3 w-full max-w-md">
+                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/70" aria-hidden>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="11" cy="11" r="7" />
+                                        <path d="M20 20l-3.5-3.5" />
+                                    </svg>
+                                </span>
+                                <input
+                                    id="account-menu-search"
+                                    type="search"
+                                    value={menuQuery}
+                                    onChange={(e) => setMenuQuery(e.target.value)}
+                                    placeholder="Jump to orders, chats, 2FA…"
+                                    autoComplete="off"
+                                    className="w-full rounded-md border border-white/20 bg-white/10 py-2 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/60 focus:border-white/50 focus:bg-white/15"
+                                />
+                            </div>
                         <nav
-                            className={`mb-0 sm:mb-8 mt-4 sm:mt-6 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
+                            className={`mb-0 sm:mb-8 flex gap-4 sm:gap-6 text-xs sm:text-sm text-textPadded border-b border-b-detailsBorder cursor-pointer overflow-x-auto whitespace-nowrap scrollbar-hide`}
                         >
-                            {tabs.map((ta) => {
+                            {visibleTabs.length === 0 ? (
+                                <span className="pb-2 text-white/80">No menu items match “{menuQuery.trim()}”.</span>
+                            ) : null}
+                            {visibleTabs.map((ta) => {
                                 const TabIcon = ta.Icon;
+                                const tabTarget = ta.tabId || ta.id;
                                 if (ta.externalHref) {
                                     return (
                                         <Link
                                             key={ta.id}
                                             href={ta.externalHref}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
                                             className="inline-flex items-center gap-1.5 sm:gap-2 pb-2 font-semibold shrink-0 text-white/90 hover:text-white"
+                                            onClick={() => setMenuQuery("")}
                                         >
                                             <TabIcon className={HI_SM} aria-hidden />
                                             {ta.name}
@@ -204,18 +257,19 @@ export default function AccountPage() {
                                     <span
                                         key={ta.id}
                                         onClick={() => {
-                                            setTab(ta.id);
+                                            setTab(tabTarget);
+                                            setMenuQuery("");
                                             router.push(
                                                 {
                                                     pathname: "/account",
-                                                    query: { tab: ta.id },
+                                                    query: { tab: tabTarget },
                                                 },
                                                 undefined,
                                                 { shallow: true }
                                             );
                                         }}
                                         className={`inline-flex items-center gap-1.5 sm:gap-2 pb-2 font-semibold shrink-0 ${
-                                            tab === ta.id ? "border-b-2 border-white text-white" : ""
+                                            tab === tabTarget ? "border-b-2 border-white text-white" : ""
                                         }`}
                                     >
                                         <TabIcon className={HI_SM} aria-hidden />
@@ -224,6 +278,7 @@ export default function AccountPage() {
                                 );
                             })}
                         </nav>
+                        </div>
                         </div>
                     </header>
 

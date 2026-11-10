@@ -31,7 +31,7 @@ import { mergeChatMessages } from "@/lib/buyerChatUtils";
 import ChatMessageStatus from "@/components/chat/ChatMessageStatus";
 import ChatTypingHint from "@/components/chat/ChatTypingHint";
 import NegotiationCheckoutActions from "@/components/chat/NegotiationCheckoutActions";
-import { useSellerReplyWait } from "@/components/chat/useSellerReplyWait";
+import { useSellerReplyWait, useWaitingPoll } from "@/components/chat/useSellerReplyWait";
 
 type Props = {
   /** Public merchant profile id — use on storefront when there is no product/order context. */
@@ -84,7 +84,7 @@ export default function MerchantChatWidget({
   const [sending, setSending] = useState(false);
   const sendLock = useRef(false);
   const draftGuard = useRef("");
-  const { setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
+  const { waitingAfterId, setWaitingAfterId, sellerTyping } = useSellerReplyWait(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const messagesRef = useRef<BuyerChatMessage[]>([]);
@@ -116,6 +116,11 @@ export default function MerchantChatWidget({
       /* ignore poll errors */
     }
   }, []);
+
+  const pollWhileWaiting = useCallback(() => {
+    if (conversation?.slug) void loadMessages(conversation.slug, { merge: true });
+  }, [conversation?.slug, loadMessages]);
+  useWaitingPoll(waitingAfterId, pollWhileWaiting);
 
   const openChat = async () => {
     if (!hasAuthSession(isAuthenticated, profile, user)) {
