@@ -67,6 +67,7 @@ interface MerchantDetailsResponse {
     date_added: string;
     is_active: boolean;
     is_verified_store?: boolean;
+    is_hawola_verified?: boolean;
     slug: string;
     merchant_user: number;
     /** Curated store reels (MerchantStreamsVideo), public merchant profile API. */
@@ -179,6 +180,7 @@ interface MerchantDetails {
   date_added: string;
   is_active: boolean;
   is_verified_store?: boolean;
+  is_hawola_verified?: boolean;
   slug: string;
   sales_nudge?: string;
   merchant_user: number;

@@ -7,6 +7,7 @@ import AuthLayout from "../layout/AuthLayout";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
+import HawolaVerifiedTick from "@/components/merchant/HawolaVerifiedTick";
 import { formatCurrency, featuredImageCardUrl } from "@/util";
 import type { Product } from "@/types/product";
 import { stripHtmlForMeta } from "@/util/merchantRichText";
@@ -210,8 +211,9 @@ const BasicTemplate = () => {
                   fallbackTextClassName="text-sm font-bold"
                 />
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">
+                  <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900">
                     {merchant_details?.store_name}
+                    <HawolaVerifiedTick show={merchant_details?.is_hawola_verified === true} />
                   </h1>
                   {/* Verified Store badge — shown only after merchant KYC (is_verified_store) */}
                   {merchant_details?.is_verified_store === true && (

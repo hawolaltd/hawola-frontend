@@ -14,6 +14,7 @@ import {
 import { formatCurrency } from "@/util";
 import type { ProductByIdResponse, StockStatusPayload } from "@/types/product";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
+import HawolaVerifiedTick from "@/components/merchant/HawolaVerifiedTick";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import AddToCompareButton from "@/components/compare/AddToCompareButton";
 import InlineButtonSpinner from "@/components/ui/InlineButtonSpinner";
@@ -115,6 +116,7 @@ export default function ProductDetailDesktopBuyBox({
                 fallbackTextClassName="text-[9px] font-bold leading-none"
               />
               <span className="truncate">Sold by {storeName}</span>
+              <HawolaVerifiedTick show={p?.merchant?.is_hawola_verified === true} size={14} />
             </MerchantStoreLink>
           ) : null}
           <button

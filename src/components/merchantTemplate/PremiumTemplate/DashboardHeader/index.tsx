@@ -1,5 +1,6 @@
 import React from "react";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
+import HawolaVerifiedTick from "@/components/merchant/HawolaVerifiedTick";
 
 interface Merchant {
   store_name: string;
@@ -7,6 +8,7 @@ interface Merchant {
   primary_color: string;
   is_active: boolean;
   is_verified_store?: boolean;
+  is_hawola_verified?: boolean;
   merchant_level: {
     name: string;
   };
@@ -62,8 +64,9 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
 
             {/* Store Details */}
             <div>
-              <h1 className="text-2xl font-bold merchant-heading-text">
+              <h1 className="flex items-center gap-2 text-2xl font-bold merchant-heading-text">
                 {merchant?.store_name}
+                <HawolaVerifiedTick show={merchant?.is_hawola_verified === true} />
               </h1>
             </div>
           </div>

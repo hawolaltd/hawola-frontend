@@ -4,6 +4,7 @@ import { useState } from "react";
 import AuthLayout from "@/components/layout/AuthLayout";
 import MerchantRichHtml from "@/components/merchant/MerchantRichHtml";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
+import HawolaVerifiedTick from "@/components/merchant/HawolaVerifiedTick";
 import MerchantStoreProductCard from "@/components/merchant/MerchantStoreProductCard";
 import { useAppSelector } from "@/hook/useReduxTypes";
 import type { Product } from "@/types/product";
@@ -339,8 +340,9 @@ export default function NormalMerchantPage() {
 
                 {/* Merchant Details */}
                 <div className="p-6 border-t border-gray-100">
-                  <h2 className="text-xl font-bold merchant-heading-text mb-2">
+                  <h2 className="mb-2 flex items-center gap-2 text-xl font-bold merchant-heading-text">
                     {merchantData?.merchant_details?.store_name}
+                    <HawolaVerifiedTick show={merchantData?.merchant_details?.is_hawola_verified === true} />
                   </h2>
                   <p className="text-gray-600 text-sm mb-4">
                     {merchantData?.merchant_details?.market?.help_text}{" "}
