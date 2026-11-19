@@ -55,7 +55,7 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
                   fallbackTextClassName="text-xl font-bold"
                 />
               </div>
-              {merchant?.is_verified_store === true && (
+              {(merchant?.is_verified_store === true || merchant?.is_hawola_verified === true) && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
@@ -67,6 +67,11 @@ const DashboardHeader = ({ merchant }: DashboardHeaderProps) => {
               <h1 className="flex items-center gap-2 text-2xl font-bold merchant-heading-text">
                 {merchant?.store_name}
                 <HawolaVerifiedTick show={merchant?.is_hawola_verified === true} />
+                {(merchant?.is_verified_store === true || merchant?.is_hawola_verified === true) && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                    Verified store
+                  </span>
+                )}
               </h1>
             </div>
           </div>

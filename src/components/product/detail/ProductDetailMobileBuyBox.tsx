@@ -46,6 +46,7 @@ type Props = {
   onAddToCart: () => void;
   onInstantOrder: () => void;
   addToCartPendingProductId: number | null;
+  purchaseCtaRef?: React.Ref<HTMLDivElement>;
 };
 
 export default function ProductDetailMobileBuyBox({
@@ -69,6 +70,7 @@ export default function ProductDetailMobileBuyBox({
   onAddToCart,
   onInstantOrder,
   addToCartPendingProductId,
+  purchaseCtaRef,
 }: Props) {
   const [shippingOpen, setShippingOpen] = useState(true);
   const p = product?.product;
@@ -123,6 +125,11 @@ export default function ProductDetailMobileBuyBox({
             />
             <span className="truncate">Sold by {storeName}</span>
             <HawolaVerifiedTick show={p?.merchant?.is_hawola_verified === true} size={12} />
+            {p?.merchant?.is_verified_store || p?.merchant?.is_hawola_verified ? (
+              <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800">
+                Verified store
+              </span>
+            ) : null}
           </MerchantStoreLink>
         ) : null}
         <button
@@ -153,9 +160,16 @@ export default function ProductDetailMobileBuyBox({
             </>
           ) : null}
         </div>
+        {p?.pay_later_available ? (
+          <p className="mt-2 text-xs font-semibold text-emerald-100">
+            Pay Later available
+            {p.pay_later_price ? ` · ${formatCurrency(p.pay_later_price)} if you choose Pay later` : ""}
+          </p>
+        ) : null}
       </div>
 
       <div
+        ref={purchaseCtaRef}
         className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm ${inventoryUnavailable ? "opacity-60" : ""}`}
       >
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">

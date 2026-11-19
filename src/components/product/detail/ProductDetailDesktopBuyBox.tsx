@@ -117,6 +117,11 @@ export default function ProductDetailDesktopBuyBox({
               />
               <span className="truncate">Sold by {storeName}</span>
               <HawolaVerifiedTick show={p?.merchant?.is_hawola_verified === true} size={14} />
+              {p?.merchant?.is_verified_store || p?.merchant?.is_hawola_verified ? (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                  Verified store
+                </span>
+              ) : null}
             </MerchantStoreLink>
           ) : null}
           <button
@@ -148,6 +153,12 @@ export default function ProductDetailDesktopBuyBox({
             </>
           ) : null}
         </div>
+        {p?.pay_later_available ? (
+          <p className="mt-3 text-sm font-semibold text-emerald-100">
+            Pay Later available
+            {p.pay_later_price ? ` · ${formatCurrency(p.pay_later_price)} if you choose Pay later` : ""}
+          </p>
+        ) : null}
       </div>
 
       {typeof p?.id === "number" ? (

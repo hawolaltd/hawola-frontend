@@ -332,7 +332,8 @@ export default function NormalMerchantPage() {
                       imgClassName="h-full w-full object-cover"
                       fallbackTextClassName="text-3xl font-bold"
                     />
-                    {merchantData?.merchant_details?.is_verified_store === true && (
+                    {(merchantData?.merchant_details?.is_verified_store === true ||
+                      merchantData?.merchant_details?.is_hawola_verified === true) && (
                       <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
                     )}
                   </div>
@@ -343,6 +344,12 @@ export default function NormalMerchantPage() {
                   <h2 className="mb-2 flex items-center gap-2 text-xl font-bold merchant-heading-text">
                     {merchantData?.merchant_details?.store_name}
                     <HawolaVerifiedTick show={merchantData?.merchant_details?.is_hawola_verified === true} />
+                    {(merchantData?.merchant_details?.is_verified_store === true ||
+                      merchantData?.merchant_details?.is_hawola_verified === true) && (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                        Verified store
+                      </span>
+                    )}
                   </h2>
                   <p className="text-gray-600 text-sm mb-4">
                     {merchantData?.merchant_details?.market?.help_text}{" "}

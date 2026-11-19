@@ -333,6 +333,13 @@ const OrderHistoryPage = () => {
                                                                 <span className="font-mono text-sm font-semibold text-primary">
                                                                     {order.orderitem_number}
                                                                 </span>
+                                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                                                    order.sale_channel === 'pos'
+                                                                        ? 'bg-orange-100 text-orange-800'
+                                                                        : 'bg-sky-100 text-sky-800'
+                                                                }`}>
+                                                                    {order.sale_channel_label || (order.sale_channel === 'pos' ? 'POS Sales' : 'Online Sales')}
+                                                                </span>
                                                                 {cancelled && (
                                                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
                                                                         Cancelled

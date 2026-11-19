@@ -306,7 +306,7 @@ const LookingForProductPage = () => {
                         before any merchant can see your phone or email.
                       </li>
                       <li>
-                        Each request stays active for <strong>21 days</strong>. After that it
+                        Each request stays active for <strong>90 days</strong>. After that it
                         automatically expires and will no longer be visible to merchants.
                       </li>
                     </ul>

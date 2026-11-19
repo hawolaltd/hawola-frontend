@@ -40,11 +40,17 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     const siteSettings = useAppSelector((state) => state.general.siteSettings);
     const carsNavLabel = getCarsCopy(siteSettings).navLabel;
     const realEstateNavLabel = getRealEstateCopy(siteSettings).navLabel;
+    const [authReady, setAuthReady] = useState(false);
+    useEffect(() => {
+        setAuthReady(true);
+    }, []);
+    // PersistGate rehydrates after SSR; keep the first paint as guest so HTML matches.
+    const signedIn = authReady && isAuthenticated;
 
     const displayEmail = profile?.email || user?.email || '';
     const [menuQuery, setMenuQuery] = useState('');
     const menuSearchRef = useRef<HTMLInputElement>(null);
-    const signupBonusPromo = useSignupBonusPromo(!isAuthenticated);
+    const signupBonusPromo = useSignupBonusPromo(!signedIn);
     const hideSignupBonusCta =
         router.pathname === '/auth/register' ||
         router.pathname === '/auth/login';
@@ -126,10 +132,10 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
     const showMerchantAccount = menuHit('Merchant Account') || menuHit('Merchant');
     const showProductRequest = menuHit('Request for a product');
     const showAppDownload = menuHit('Hawola app') || menuHit('Download');
-    const showSignOut = isAuthenticated && menuHit('Sign Out');
+    const showSignOut = signedIn && menuHit('Sign Out');
     const searching = Boolean(menuQueryNormalized);
     const hasVisibleMenu =
-        (isAuthenticated && visibleAccountLinks.length > 0) ||
+        (signedIn && visibleAccountLinks.length > 0) ||
         showCars ||
         showRealEstate ||
         showCreateStore ||
@@ -176,30 +182,30 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                         <div className="flex items-center gap-2">
                             <div
                                 className={
-                                    isAuthenticated
+                                    signedIn
                                         ? HI_FRAME_WELL_EMERALD
                                         : `${HI_FRAME_WELL} border-primary/25 bg-white`
                                 }
                             >
                                 <UserIcon
-                                    className={`${HI_MD} ${isAuthenticated ? "text-emerald-900" : "text-primary"}`}
+                                    className={`${HI_MD} ${signedIn ? "text-emerald-900" : "text-primary"}`}
                                     aria-hidden
                                 />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-primary">
-                                    {isAuthenticated && displayEmail
+                                    {signedIn && displayEmail
                                         ? displayEmail
                                         : 'Welcome to Hawola'}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    {isAuthenticated
+                                    {signedIn
                                         ? 'Manage your account and orders'
                                         : 'Sign in to access your account'}
                                 </p>
                             </div>
                         </div>
-                        {!isAuthenticated && (
+                        {!signedIn && (
                             <Link
                                 href={`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`}
                                 onClick={onClose}
@@ -209,7 +215,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                             </Link>
                         )}
                     </div>
-                    {!isAuthenticated && signupBonusPromo && !hideSignupBonusCta && !searching ? (
+                    {!signedIn && signupBonusPromo && !hideSignupBonusCta && !searching ? (
                         <div className="shrink-0 border-b border-gray-200 px-4 pb-4">
                             <SignupBonusHeaderCta
                                 promo={signupBonusPromo}
@@ -241,7 +247,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                         />
                     </div>
 
-                    {isAuthenticated && (visibleAccountLinks.length > 0 || showSignOut) && (
+                    {signedIn && (visibleAccountLinks.length > 0 || showSignOut) && (
                         <div className="shrink-0 space-y-3 border-b border-gray-200 p-4">
                             {visibleAccountLinks.length > 0 ? (
                             <div className="grid grid-cols-2 gap-2">

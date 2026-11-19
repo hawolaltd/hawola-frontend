@@ -27,6 +27,7 @@ const RESERVED_MERCHANT_STORE_SLUGS = new Set([
   "cars",
   "promo",
   "pages",
+  "receipt",
   "404",
 ]);
 

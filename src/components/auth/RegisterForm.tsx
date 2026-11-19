@@ -70,7 +70,7 @@ const getCooldownKey = (email: string) => `resend_cooldown_${email}`;
 
 function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo | null }) {
     
-    const {control, handleSubmit, formState: {errors}, reset, getValues} = useForm<RegisterFormType>();
+    const {control, handleSubmit, formState: {errors}, reset, getValues, setValue} = useForm<RegisterFormType>();
 
     const [regSuccess, setRegSuccess] = useState(false)
     const [formData, setFormData] = useState<RegisterFormType | null>(null)
@@ -90,8 +90,17 @@ function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo |
     })
 
     const router = useRouter()
+    const inviteEmail = Array.isArray(router.query.email)
+        ? router.query.email[0]
+        : router.query.email;
     const { promo: signupBonusPromo, ready: signupBonusReady } =
         useRegisterSignupBonus(signupBonus);
+
+    useEffect(() => {
+        if (!router.isReady) return;
+        const em = String(inviteEmail || "").trim();
+        if (em) setValue("email", em);
+    }, [inviteEmail, router.isReady, setValue]);
 
     // Load saved attempts and cooldown from localStorage
     useEffect(() => {
@@ -504,6 +513,12 @@ function RegisterForm({ signupBonus = null }: { signupBonus?: SignupBonusPromo |
                                     }}
                                     className="w-full text-xs mt-1 p-3 border rounded-md bg-white border-[#dde4f0] focus:outline-none"
                                 />
+                                {inviteEmail ? (
+                                    <p className="mt-2 text-xs text-slate-600">
+                                        Use this email so your in-store orders and chat from the store are
+                                        linked to this account.
+                                    </p>
+                                ) : null}
 
                             </div>
                             <div>

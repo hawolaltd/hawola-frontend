@@ -82,6 +82,8 @@ const ProductPage = ({
     initialSiteSettings = null,
 }: ProductPageProps) => {
     const [quantity, setQuantity] = useState(1);
+    const purchaseCtaRef = useRef<HTMLDivElement>(null);
+    const [stickyBuyVisible, setStickyBuyVisible] = useState(false);
     const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
     const [position, setPosition] = useState({x: "50%", y: "50%"});
     const [isHovered, setIsHovered] = useState(false);
@@ -407,6 +409,39 @@ const ProductPage = ({
             toast.error("Could not add to wishlist.");
         }
     };
+
+    useEffect(() => {
+        if (contactMerchantOnly || mainLoading || !product?.product?.id) {
+            setStickyBuyVisible(false);
+            return;
+        }
+        const el = purchaseCtaRef.current;
+        if (!el || typeof IntersectionObserver === "undefined") {
+            return;
+        }
+        const mq = window.matchMedia("(max-width: 1023px)");
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!mq.matches) {
+                    setStickyBuyVisible(false);
+                    return;
+                }
+                setStickyBuyVisible(!entry.isIntersecting);
+            },
+            { root: null, threshold: 0, rootMargin: "0px" }
+        );
+        const onViewportChange = () => {
+            if (!mq.matches) {
+                setStickyBuyVisible(false);
+            }
+        };
+        mq.addEventListener("change", onViewportChange);
+        observer.observe(el);
+        return () => {
+            mq.removeEventListener("change", onViewportChange);
+            observer.disconnect();
+        };
+    }, [contactMerchantOnly, mainLoading, product?.product?.id]);
 
     const handleAddToCart = async (product: ProductByIdResponse) => {
         try {
@@ -1090,6 +1125,7 @@ const ProductPage = ({
                         onAddToCart={() => handleAddToCart(product as ProductByIdResponse)}
                         onInstantOrder={handleOpenInstantOrder}
                         addToCartPendingProductId={addToCartPendingProductId}
+                        purchaseCtaRef={purchaseCtaRef}
                     />
 
                     <ProductDetailDesktopBuyBox
@@ -1140,7 +1176,7 @@ const ProductPage = ({
              )}
             </div>
         </div>
-        {!contactMerchantOnly && product?.product?.id ? (
+        {!contactMerchantOnly && product?.product?.id && stickyBuyVisible ? (
             (() => {
                 const stickyCartPid = product.product.id;
                 const stickyCartBusy =
@@ -1184,18 +1220,6 @@ const ProductPage = ({
                                     <InlineButtonSpinner className="h-4 w-4 text-white" />
                                 ) : null}
                                 {stickyCartBusy ? "Adding…" : "Add to cart"}
-                            </button>
-                            <button
-                                type="button"
-                                disabled={inventoryUnavailable || stickyCartBusy}
-                                onClick={handleOpenInstantOrder}
-                                className={`inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm ${
-                                    inventoryUnavailable || stickyCartBusy
-                                        ? "cursor-not-allowed bg-[#FD9636]/35 text-white"
-                                        : "bg-[#FD9636] text-white"
-                                }`}
-                            >
-                                Instant Order
                             </button>
                         </div>
                     </div>
@@ -1256,7 +1280,11 @@ const ProductPage = ({
                 productName={product.product.name}
                 merchantStoreName={product.product.merchant?.store_name}
                 salesNudge={product.product.merchant?.sales_nudge || product.merchant?.sales_nudge}
-                stackAboveStickyFooter={!contactMerchantOnly && Boolean(product?.product?.id)}
+                stackAboveStickyFooter={
+                    !contactMerchantOnly &&
+                    Boolean(product?.product?.id) &&
+                    stickyBuyVisible
+                }
                 launcherLabel="Chat or negotiate with Seller"
             />
         ) : null}

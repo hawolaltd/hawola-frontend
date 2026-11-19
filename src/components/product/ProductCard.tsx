@@ -217,6 +217,11 @@ function ProductCard({
                 Promoted
               </span>
             )}
+            {(product as { pay_later_available?: boolean })?.pay_later_available ? (
+              <span className="absolute bottom-2.5 left-2.5 z-20 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                Pay Later available
+              </span>
+            ) : null}
             <Link
               href={
                 promoSlug && product?.slug
@@ -272,7 +277,10 @@ function ProductCard({
             <h3 className="min-h-0 text-xs font-semibold leading-tight text-primary break-words line-clamp-2">
               {formatProductCardTitle(product.name)}
             </h3>
-            <div className="mt-2 shrink-0 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
+              {(product as { pay_later_available?: boolean })?.pay_later_available ? (
+                <p className="text-[10px] font-semibold text-emerald-700">Pay Later available</p>
+              ) : null}
+              <div className="mt-2 shrink-0 border-t border-[#dde4f0] pt-2 flex flex-col gap-0.5">
               {hasDiscount ? (
                 <>
                   <p className="text-lg font-bold text-primary leading-tight">

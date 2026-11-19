@@ -240,6 +240,7 @@ const OrderDetails: NextPage = () => {
     const canConfirmReceipt =
         Boolean(singleOrder) &&
         !lineCancelled &&
+        singleOrder?.sale_channel !== "pos" &&
         singleOrder?.user_confirm_order !== true &&
         singleOrder?.pay_later?.status !== "offered";
     const messagingClosed = lineCancelled || singleOrder?.is_reviewed === true;
@@ -555,6 +556,10 @@ const OrderDetails: NextPage = () => {
                                             <h2 className="text-xl font-semibold text-slate-900">
                                                 {singleOrder?.product?.name}
                                             </h2>
+                                            <p className="mt-1 text-sm font-semibold text-slate-700">
+                                                {singleOrder?.sale_channel_label
+                                                    || (singleOrder?.sale_channel === "pos" ? "POS Sales" : "Online Sales")}
+                                            </p>
                                             <p className="mt-1 text-sm text-slate-500">
                                                 Qty {singleOrder?.qty}
                                                 {singleOrder?.shipping_price
@@ -569,7 +574,7 @@ const OrderDetails: NextPage = () => {
                                                 )}
                                             </p>
                                             <p className="mt-3 text-sm text-slate-600">{getPaymentStatusMessage()}</p>
-                                            {singleOrder?.is_offline_payment ? (
+                                            {singleOrder?.sale_channel === "pos" ? null : singleOrder?.is_offline_payment ? (
                                                 <p className="mt-1 text-xs font-medium text-amber-800">
                                                     Direct payment order — coordinate with the seller in chat and attach proof of payment there.
                                                 </p>
@@ -770,6 +775,7 @@ const OrderDetails: NextPage = () => {
                                             merchantStoreName={merchantStoreName}
                                             disabled={messagingClosed}
                                             offlineNoticeHtml={
+                                                singleOrder?.sale_channel !== "pos" &&
                                                 singleOrder?.is_offline_payment
                                                     ? directPaymentMessagingSafe
                                                     : ""

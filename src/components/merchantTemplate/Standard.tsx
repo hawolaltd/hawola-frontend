@@ -467,7 +467,8 @@ const StandardTemplate = () => {
                   fallbackTextClassName="text-2xl font-bold"
                 />
                 {is_streaming_now && (
-                  <div
+                  <Link
+                    href={`/live/${merchant_details?.slug || merchantSlug}`}
                     className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold animate-pulse merchant-badge"
                     style={{
                       backgroundColor: primaryColor,
@@ -475,7 +476,7 @@ const StandardTemplate = () => {
                     }}
                   >
                     LIVE
-                  </div>
+                  </Link>
                 )}
               </div>
 

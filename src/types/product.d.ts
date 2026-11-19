@@ -45,6 +45,8 @@ export interface Merchant {
     slug: string;
     merchant_user: number;
     sales_nudge?: string;
+    is_verified_store?: boolean;
+    is_hawola_verified?: boolean;
 }
 
 export interface FeaturedImage {
@@ -112,6 +114,9 @@ export interface Product {
     product_reels?: ProductReel[];
     allow_price_negotiation?: boolean;
     negotiation_floor_price?: string | null;
+    allow_pay_later?: boolean;
+    pay_later_price?: string | number | null;
+    pay_later_available?: boolean;
 }
 
 export interface ProductResponse {

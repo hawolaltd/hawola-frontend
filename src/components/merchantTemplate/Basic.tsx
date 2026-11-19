@@ -216,9 +216,10 @@ const BasicTemplate = () => {
                     <HawolaVerifiedTick show={merchant_details?.is_hawola_verified === true} />
                   </h1>
                   {/* Verified Store badge — shown only after merchant KYC (is_verified_store) */}
-                  {merchant_details?.is_verified_store === true && (
+                  {(merchant_details?.is_verified_store === true ||
+                    merchant_details?.is_hawola_verified === true) && (
                     <span className="text-xs text-green-600 font-medium">
-                      ✓ Verified Store
+                      ✓ Verified store
                     </span>
                   )}
                 </div>
