@@ -12,6 +12,4 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 }(window, document, 'ttq');`;
 }
 
-export const TIKTOK_PIXEL_ID = (
-  process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "DBVVHSJC77U6LRHE1VCG"
-).trim();
+export const TIKTOK_PIXEL_ID = "DBVVHSJC77U6LRHE1VCG";
