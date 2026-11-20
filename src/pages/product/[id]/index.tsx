@@ -1259,6 +1259,12 @@ const ProductPage = ({
                 onClose={() => setInstantOrderOpen(false)}
                 productId={product.product.id}
                 productName={displayName}
+                productImage={
+                  product?.product_images?.[0]?.image_url ||
+                  (product as any)?.product?.featured_image?.[0]?.image?.full_size ||
+                  (product as any)?.product?.featured_image?.[0]?.image_url ||
+                  ""
+                }
                 unitPrice={Number(product.product.discount_price ?? product.product.price ?? 0)}
                 merchantId={product.product.merchant?.id}
                 merchantStateName={product.product.merchant?.state?.name}

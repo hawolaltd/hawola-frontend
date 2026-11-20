@@ -3,7 +3,15 @@ import type { NextConfig } from 'next';
 /** Origins allowed to embed this storefront in an iframe (hawola-admin “live preview”). Comma-separated. */
 const storefrontFrameAncestors =
     process.env.NEXT_PUBLIC_STOREFRONT_FRAME_ANCESTORS ||
-    ["'self'", 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://heyadmin.hawola.com'].join(' ');
+    [
+        "'self'",
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://heyadmin.hawola.com',
+        // TikTok Events Manager loads the site in an iframe to detect the pixel.
+        'https://ads.tiktok.com',
+        'https://business.tiktok.com',
+    ].join(' ');
 
 const nextConfig: NextConfig = {
     /* config options here */

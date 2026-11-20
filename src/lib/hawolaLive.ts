@@ -9,8 +9,12 @@ export type LiveProduct = {
   price?: string | null;
   discount_price?: string | null;
   effective_price?: string | null;
+  deal_price?: string | null;
+  deal_started_at?: string | null;
+  deal_ends_at?: string | null;
   image?: string;
   description?: string;
+  contact_merchant_only?: boolean;
 };
 
 export type LiveCoupon = {
@@ -27,6 +31,10 @@ export type LiveMerchant = {
   slug: string;
   logo?: string;
   primary_color?: string;
+  support_phone?: string;
+  support_email?: string;
+  whatsapp?: string;
+  store_address?: string;
 };
 
 export type LiveMessage = {
@@ -40,6 +48,26 @@ export type LiveMessage = {
   created_at?: string | null;
 };
 
+export type LiveSticker = {
+  id: string;
+  emoji: string;
+  label: string;
+};
+
+export type LiveOffer = {
+  id: number;
+  product_id: number;
+  product_name: string;
+  product_image?: string;
+  amount: string;
+  list_price?: string;
+  status: string;
+  buyer_name?: string;
+  buyer_user_id?: number | null;
+  coupon?: LiveCoupon | null;
+  created_at?: string | null;
+};
+
 export type LiveSession = {
   id: number;
   title: string;
@@ -49,11 +77,18 @@ export type LiveSession = {
   embed_url: string;
   viewer_count: number;
   featured_on_home?: boolean;
+  offers_enabled?: boolean;
+  share_key?: string;
+  watch_url?: string;
   started_at?: string | null;
   merchant: LiveMerchant;
   products: LiveProduct[];
   promo?: LivePromo | null;
   messages?: LiveMessage[];
+  stickers?: LiveSticker[];
+  pinned_message?: LiveMessage | null;
+  my_offers?: LiveOffer[];
+  live_offers?: LiveOffer[];
 };
 
 export type LivePromo = {
@@ -108,11 +143,28 @@ export function liveHome(preview = false, token?: string | null) {
   }>;
 }
 
-export function liveByStore(slug: string) {
-  return getJson(`/livesales/by-store/${encodeURIComponent(slug)}/`) as Promise<{
+export function liveByStore(slug: string, shareKey?: string | null, token?: string | null) {
+  const key = (shareKey || "").trim();
+  const path = key
+    ? `/livesales/by-store/${encodeURIComponent(slug)}/${encodeURIComponent(key)}/`
+    : `/livesales/by-store/${encodeURIComponent(slug)}/`;
+  return getJson(path, token) as Promise<{
     live: boolean;
     session: LiveSession | null;
   }>;
+}
+
+export function postLiveOffer(
+  sessionId: number,
+  productId: number,
+  amount: number,
+  token: string
+) {
+  return postJson(
+    `/livesales/sessions/${sessionId}/offer/`,
+    { product_id: productId, amount },
+    token
+  ) as Promise<{ offer: LiveOffer }>;
 }
 
 export function liveDeal(slug: string) {
@@ -123,8 +175,13 @@ export function liveChatHistory(sessionId: number) {
   return getJson(`/livesales/sessions/${sessionId}/chat/`) as Promise<{ results: LiveMessage[] }>;
 }
 
-export function postLiveChat(sessionId: number, body: string, token: string) {
-  return postJson(`/livesales/sessions/${sessionId}/chat/`, { body }, token);
+export function postLiveChat(
+  sessionId: number,
+  body: string,
+  token: string,
+  extra: Record<string, unknown> = {}
+) {
+  return postJson(`/livesales/sessions/${sessionId}/chat/`, { body, ...extra }, token);
 }
 
 export function postLiveLike(sessionId: number, token: string) {

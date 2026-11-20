@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { setDrawerOpen } from "@/redux/ui/uiSlice";
 import {useRouter} from "next/router";
 
-const Header = () => {
+const Header = ({ compact = false }: { compact?: boolean }) => {
     const router = useRouter()
     const dispatch = useAppDispatch();
     const isDrawerOpen = useAppSelector((state) => state.ui.isDrawerOpen);
@@ -29,13 +29,15 @@ const Header = () => {
 
 
     return (<div>
+        {compact ? null : (
         <Drawer
             isOpen={isDrawerOpen}
             onClose={() => dispatch(setDrawerOpen(false))}
             messageCount={3}
         />
-        <MiniHeader/>
-        <MainHeader isScrolled={isScrolled}/>
+        )}
+        {compact ? null : <MiniHeader/>}
+        <MainHeader isScrolled={isScrolled} compact={compact}/>
     </div>);
 }
 

@@ -49,7 +49,11 @@ export default function LiveNowStrip({
         {rows.map((row) => (
           <Link
             key={row.id}
-            href={`/live/${row.merchant.slug}`}
+            href={
+              row.share_key
+                ? `/live/${row.merchant.slug}/${row.share_key}`
+                : `/live/${row.merchant.slug}`
+            }
             className="w-28 shrink-0 text-center"
           >
             <span className="relative mx-auto block h-20 w-20">

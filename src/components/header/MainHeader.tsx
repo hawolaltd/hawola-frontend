@@ -39,7 +39,7 @@ function isAddToRoutingSubcategoryName(name: unknown): boolean {
   return /^\s*add\s+to\s*:/i.test(String(name ?? ""));
 }
 
-const Header = ({ isScrolled }: { isScrolled?: any }) => {
+const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }) => {
   type HeaderSubcategory = {
     id: number;
     name: string;
@@ -372,12 +372,12 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
 
       {/* Top Component Start*/}
       <div className="bg-white border-b border-gray-300">
-        <div className="relative mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-6 py-5 lg:py-6 xl:px-0">
+        <div className={`relative mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-6 xl:px-0 ${compact ? "py-2.5 lg:py-3" : "py-5 lg:py-6"}`}>
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
             {/* Logo */}
             <Link href="/" className="shrink-0 py-1">
               <div className="flex cursor-pointer items-center space-x-2">
-                <img src="/hawola_Logo.png" alt="Logo" className="h-12 w-auto lg:h-14" />
+                <img src="/hawola_Logo.png" alt="Logo" className={compact ? "h-9 w-auto lg:h-10" : "h-12 w-auto lg:h-14"} />
               </div>
             </Link>
 
@@ -1001,6 +1001,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               <SignupBonusHeaderCta promo={signupBonusPromo} />
             ) : null}
 
+            {compact ? null : (
             <button
               type="button"
               onClick={() => {
@@ -1011,12 +1012,13 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
             >
               <Bars3Icon className={HI_MD} aria-hidden />
             </button>
+            )}
           </div>
           {cart && <CartModal />}
         </div>
       </div>
 
-      {headerSubcategories.length > 0 && (
+      {!compact && headerSubcategories.length > 0 && (
         <div className="border-b border-[#bbf7d0] bg-[#ecfccb]">
           <div
             className="relative mx-auto w-full max-w-screen-xl px-6 xl:px-0"

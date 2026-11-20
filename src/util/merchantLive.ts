@@ -14,7 +14,11 @@ export function merchantIsLiveNow(source: unknown): boolean {
   );
 }
 
-export function merchantLiveHref(slug?: string | null): string | null {
+export function merchantLiveHref(slug?: string | null, shareKey?: string | null): string | null {
   const s = String(slug || "").trim();
-  return s ? `/live/${encodeURIComponent(s)}` : null;
+  if (!s) return null;
+  const key = String(shareKey || "").trim();
+  return key
+    ? `/live/${encodeURIComponent(s)}/${encodeURIComponent(key)}`
+    : `/live/${encodeURIComponent(s)}`;
 }

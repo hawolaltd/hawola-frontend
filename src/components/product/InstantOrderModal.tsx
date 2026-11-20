@@ -24,6 +24,7 @@ type Props = {
   onClose: () => void;
   productId: number;
   productName: string;
+  productImage?: string | null;
   unitPrice: number;
   merchantId?: number;
   merchantStateName?: string;
@@ -37,6 +38,12 @@ type Props = {
   userEmail?: string | null;
   userPhone?: string | null;
   liveSessionId?: number | null;
+  registerInterest?: boolean;
+  onRegisterInterest?: (details: {
+    fullName: string;
+    phone: string;
+    email: string;
+  }) => Promise<void> | void;
   onOrderPlaced: (order: OrderDetailsResponse) => void;
 };
 
@@ -84,6 +91,7 @@ export default function InstantOrderModal({
   onClose,
   productId,
   productName,
+  productImage,
   unitPrice,
   merchantId,
   merchantStateName,
@@ -97,6 +105,8 @@ export default function InstantOrderModal({
   userEmail,
   userPhone,
   liveSessionId,
+  registerInterest = false,
+  onRegisterInterest,
   onOrderPlaced,
 }: Props) {
   const dispatch = useAppDispatch();
@@ -203,7 +213,7 @@ export default function InstantOrderModal({
     const couponCode = couponCodes[0] || "";
     const couponMeta = readPendingCouponMeta();
     setPendingCouponCode(couponCodes.join(" + "));
-    if (!couponCodes.length || !isOpen || goodsSubtotal <= 0) {
+    if (registerInterest || !couponCodes.length || !isOpen || goodsSubtotal <= 0) {
       setAppliedCoupon(null);
       setCouponError(null);
       return;
@@ -258,7 +268,7 @@ export default function InstantOrderModal({
     } finally {
       setCouponChecking(false);
     }
-  }, [goodsSubtotal, isOpen, productId, qty, shippingCost, unitPrice]);
+  }, [goodsSubtotal, isOpen, productId, qty, registerInterest, shippingCost, unitPrice]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -316,7 +326,7 @@ export default function InstantOrderModal({
     const trimmedName = fullName.trim();
     const trimmedPhone = phone.trim();
     if (!trimmedName) {
-      toast.error("Enter your full name for delivery");
+      toast.error(registerInterest ? "Enter your full name" : "Enter your full name for delivery");
       return false;
     }
     if (!trimmedPhone) {
@@ -342,12 +352,42 @@ export default function InstantOrderModal({
     return true;
   };
 
-  const validateForm = () => validateContactStep() && validateDeliveryStep();
+  const validateForm = () =>
+    validateContactStep() && (registerInterest || validateDeliveryStep());
 
-  const submitLabel = busy ? "Processing…" : "Place order now";
+  const submitLabel = busy
+    ? "Processing…"
+    : registerInterest
+      ? "Register Interest"
+      : "Place order now";
 
   const handleSubmitForm = async () => {
     if (!validateForm()) return;
+    if (registerInterest) {
+      if (!isAuthenticated) {
+        toast.error("Sign in to register interest.");
+        return;
+      }
+      setBusy(true);
+      try {
+        await onRegisterInterest?.({
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+        });
+        setMessage(
+          "The store has your interest and can reach you from this live."
+        );
+        setStep("done");
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "Could not register your interest."
+        );
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
 
     setBusy(true);
     try {
@@ -508,16 +548,31 @@ export default function InstantOrderModal({
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
 
         <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-4 sm:px-6">
-          <div className="min-w-0">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            {productImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={productImage}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-slate-200"
+              />
+            ) : (
+              <div className="h-14 w-14 shrink-0 rounded-xl bg-slate-100 ring-1 ring-slate-200" />
+            )}
+            <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#FD9636]">
-              Skip the cart
+              {registerInterest ? "Contact the store" : "Skip the cart"}
             </p>
             <h2 id="instant-order-title" className="mt-1 text-xl font-bold tracking-tight text-slate-900">
               {step === "done"
-                ? "Order placed"
+                ? registerInterest
+                  ? "Interest registered"
+                  : "Order placed"
                 : step === "verify"
                   ? "Confirm your email"
-                  : "Instant order"}
+                  : registerInterest
+                    ? "Register interest"
+                    : "Instant order"}
             </h2>
             {step !== "done" ? (
               <p className="mt-1 truncate text-sm text-slate-500">
@@ -525,6 +580,7 @@ export default function InstantOrderModal({
                 {qty > 1 ? ` · Qty ${qty}` : ""}
               </p>
             ) : null}
+            </div>
           </div>
           <button
             type="button"
@@ -538,34 +594,42 @@ export default function InstantOrderModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {step === "form" ? (
-            <div className="grid lg:grid-cols-[minmax(0,240px)_1fr]">
-              <aside className="border-b border-slate-100 bg-[#fff8f2] px-5 py-4 sm:px-6 lg:border-b-0 lg:border-r">
+            <div className="grid lg:grid-cols-[minmax(0,15.5rem)_minmax(0,1fr)]">
+              <aside className="min-w-0 overflow-hidden border-b border-slate-100 bg-[#fff8f2] px-5 py-4 sm:px-6 lg:border-b-0 lg:border-r">
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#FD9636]">
-                  You pay
+                  {registerInterest ? "Listed price" : "You pay"}
                 </p>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+                <p className="mt-1 break-all text-2xl font-bold leading-tight tracking-tight text-slate-900 tabular-nums">
                   {formatCurrency(orderTotalAfterCoupon.toFixed(2))}
                 </p>
-                <dl className="mt-3 space-y-1.5 text-sm text-slate-600">
-                  <div className="flex justify-between gap-2">
-                    <dt>
+                <dl className="mt-3 min-w-0 space-y-1.5 text-sm text-slate-600">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <dt className="min-w-0 shrink">
                       {qty} × {formatCurrency(unitPrice.toFixed(2))}
                     </dt>
-                    <dd className="font-medium">{formatCurrency(goodsSubtotal.toFixed(2))}</dd>
+                    <dd className="shrink-0 text-right font-medium tabular-nums">
+                      {formatCurrency(goodsSubtotal.toFixed(2))}
+                    </dd>
                   </div>
-                  <div className="flex justify-between gap-2">
+                  {registerInterest ? null : (
+                  <div className="flex min-w-0 items-start justify-between gap-3">
                     <dt>Shipping</dt>
-                    <dd className="font-medium">{formatCurrency(shippingCost.toFixed(2))}</dd>
+                    <dd className="shrink-0 text-right font-medium tabular-nums">
+                      {formatCurrency(shippingCost.toFixed(2))}
+                    </dd>
                   </div>
-                  {couponChecking && pendingCouponCode ? (
+                  )}
+                  {registerInterest ? null : couponChecking && pendingCouponCode ? (
                     <div className="text-[#FD9636]">Checking coupon…</div>
                   ) : null}
-                  {appliedCoupon && appliedCoupon.amountSaved > 0 ? (
-                    <div className="flex justify-between gap-2 font-medium text-emerald-700">
-                      <dt>Coupon {couponCodesLabel}</dt>
-                      <dd>-{formatCurrency(appliedCoupon.amountSaved.toFixed(2))}</dd>
+                  {registerInterest ? null : appliedCoupon && appliedCoupon.amountSaved > 0 ? (
+                    <div className="flex min-w-0 items-start justify-between gap-3 font-medium text-emerald-700">
+                      <dt className="min-w-0 truncate">Coupon {couponCodesLabel}</dt>
+                      <dd className="shrink-0 text-right tabular-nums">
+                        -{formatCurrency(appliedCoupon.amountSaved.toFixed(2))}
+                      </dd>
                     </div>
-                  ) : couponError ? (
+                  ) : registerInterest ? null : couponError ? (
                     <div className="text-sm text-amber-700">{couponError}</div>
                   ) : pendingCouponCode && !couponChecking ? (
                     <div className="text-sm text-amber-700">
@@ -597,7 +661,7 @@ export default function InstantOrderModal({
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className={fieldClass}
-                      placeholder="Name on the delivery"
+                      placeholder={registerInterest ? "Your name" : "Name on the delivery"}
                       autoComplete="name"
                     />
                   </div>
@@ -614,6 +678,7 @@ export default function InstantOrderModal({
                   </div>
                 </section>
 
+                {registerInterest ? null : (
                 <section className="space-y-3">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900">Delivery</h3>
@@ -675,6 +740,7 @@ export default function InstantOrderModal({
                     />
                   </div>
                 </section>
+                )}
               </div>
             </div>
           ) : null}
@@ -757,7 +823,9 @@ export default function InstantOrderModal({
                 {submitLabel}
               </button>
               <p className="mt-2 text-center text-xs text-slate-500">
-                You will pay on the next screen.
+                {registerInterest
+                  ? "The store will follow up with you from this live."
+                  : "You will pay on the next screen."}
               </p>
             </>
           ) : null}
