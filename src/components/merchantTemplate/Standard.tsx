@@ -16,6 +16,7 @@ import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAbou
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 import StoreProductPagination from "@/components/merchant/StoreProductPagination";
 import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
+import { merchantIsLiveNow } from "@/util/merchantLive";
 
 const StandardTemplate = () => {
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
@@ -55,8 +56,8 @@ const StandardTemplate = () => {
     merchant_categories,
     banners,
     home_page,
-    is_streaming_now,
   } = merchantData;
+  const isStreamingNow = merchantIsLiveNow(merchantData);
 
   const merchantReels = merchant_details?.merchant_reels ?? [];
   const hasMerchantReels = merchantReels.length > 0;
@@ -466,7 +467,7 @@ const StandardTemplate = () => {
                   imgClassName="h-full w-full object-cover"
                   fallbackTextClassName="text-2xl font-bold"
                 />
-                {is_streaming_now && (
+                {isStreamingNow && (
                   <Link
                     href={`/live/${merchant_details?.slug || merchantSlug}`}
                     className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold animate-pulse merchant-badge"

@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 interface MerchantStatsProps {
   merchantLevel: string;
@@ -6,6 +7,7 @@ interface MerchantStatsProps {
   isActive: boolean;
   dateAdded: string;
   isStreaming: boolean;
+  liveHref?: string | null;
 }
 
 const MerchantStats = ({
@@ -14,6 +16,7 @@ const MerchantStats = ({
   isActive,
   dateAdded,
   isStreaming,
+  liveHref,
 }: MerchantStatsProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -83,30 +86,43 @@ const MerchantStats = ({
 
         {/* Streaming Status */}
         {isStreaming && (
-          <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-slate-50 p-3">
-            <div className="flex items-center">
-              <div className="merchant-primary mr-3 flex h-10 w-10 items-center justify-center rounded-lg merchant-icon-container">
-                <svg
-                  className="h-5 w-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Live</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  Streaming Now
-                </p>
-              </div>
-            </div>
-            <div className="merchant-live-pulse-dot h-3 w-3 animate-pulse rounded-full" />
-          </div>
+          (() => {
+            const liveCard = (
+              <>
+                <div className="flex items-center">
+                  <div className="merchant-primary mr-3 flex h-10 w-10 items-center justify-center rounded-lg merchant-icon-container">
+                    <svg
+                      className="h-5 w-5 merchant-text-on-primary merchant-text-shadow merchant-icon-strong"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-red-600">Live</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      Watch live
+                    </p>
+                  </div>
+                </div>
+                <div className="merchant-live-pulse-dot h-3 w-3 animate-pulse rounded-full bg-red-600" />
+              </>
+            );
+            const liveClass =
+              "flex items-center justify-between rounded-xl border border-red-100 bg-red-50 p-3 hover:border-red-200";
+            return liveHref ? (
+              <Link href={liveHref} className={liveClass}>
+                {liveCard}
+              </Link>
+            ) : (
+              <div className={liveClass}>{liveCard}</div>
+            );
+          })()
         )}
 
         {/* Member Since */}

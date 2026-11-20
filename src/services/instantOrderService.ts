@@ -50,6 +50,7 @@ export async function initiateInstantOrder(payload: {
   coupon_code_secondary?: string;
   qty: number;
   variant?: Array<{ variant: number; variant_value: number }>;
+  live_session_id?: number | null;
 }): Promise<InstantOrderInitiateResponse> {
   const { data } = await axiosInstance.post(`${base}/initiate/`, payload);
   persistAuthTokens(data);
@@ -67,6 +68,7 @@ export async function placeInstantOrder(payload: {
   coupon_code_secondary?: string;
   qty: number;
   variant?: Array<{ variant: number; variant_value: number }>;
+  live_session_id?: number | null;
 }): Promise<{ detail?: string; order?: OrderDetailsResponse }> {
   const { data } = await axiosInstance.post(`${base}/place/`, payload);
   return data;

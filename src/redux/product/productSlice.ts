@@ -904,6 +904,10 @@ const productSlice = createSlice({
             .addCase(REHYDRATE, (state) => {
                 ensureProductDetailLoad(state);
                 state.compareNavFlashCount = 0;
+                // Storefront profile must not come from a previous visit — it
+                // mismatches Next.js SSR HTML (loading vs AuthLayout).
+                state.merchantProfile = {} as MerchantProfile;
+                state.isLoading = false;
                 if (typeof window !== 'undefined') {
                     try {
                         const items = readGuestCartItems();

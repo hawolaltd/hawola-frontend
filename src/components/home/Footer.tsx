@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { FaFacebookF, FaInstagram, FaTelegram, FaTwitter, FaWhatsapp, FaYoutube } from "react-icons/fa";
@@ -105,7 +105,13 @@ function logoFileUrl(logo: unknown): string {
 
 const Footer = () => {
   const { pathname } = useRouter();
-  const siteSettings = useAppSelector((s) => s.general.siteSettings) as SiteSettingsData | null;
+  const persistedSettings = useAppSelector((s) => s.general.siteSettings) as SiteSettingsData | null;
+  /** Ignore redux-persist until after mount so SSR (empty settings) matches the first client paint. */
+  const [storeReady, setStoreReady] = useState(false);
+  useEffect(() => {
+    setStoreReady(true);
+  }, []);
+  const siteSettings = storeReady ? persistedSettings : null;
   /** Cart / checkout mobile order bars sit at the viewport base — lift this control above them. */
   const aboveOrderBar =
     pathname === "/carts" ||

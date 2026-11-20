@@ -19,6 +19,8 @@ import MerchantStoreReviews from "@/components/merchant/MerchantStoreReviews";
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 import StoreProductPagination from "@/components/merchant/StoreProductPagination";
 import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
+import MerchantWatchLiveLink from "@/components/merchant/MerchantWatchLiveLink";
+import { merchantIsLiveNow } from "@/util/merchantLive";
 
 export default function NormalMerchantPage() {
   const router = useRouter();
@@ -32,6 +34,7 @@ export default function NormalMerchantPage() {
   // Data is fetched by the parent page component
   const merchantData = merchantProfile || merchants;
   const storeProducts = useMerchantStoreProducts();
+  const isStreamingNow = merchantIsLiveNow(merchantData);
 
   if (isLoading) {
     return (
@@ -351,6 +354,15 @@ export default function NormalMerchantPage() {
                       </span>
                     )}
                   </h2>
+                  {isStreamingNow ? (
+                    <MerchantWatchLiveLink
+                      slug={
+                        merchantData?.merchant_details?.slug ||
+                        (typeof merchantSlug === "string" ? merchantSlug : "")
+                      }
+                      className="mb-4 inline-flex rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+                    />
+                  ) : null}
                   <p className="text-gray-600 text-sm mb-4">
                     {merchantData?.merchant_details?.market?.help_text}{" "}
                     {merchantData?.merchant_details?.market?.name}

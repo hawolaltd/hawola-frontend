@@ -7,7 +7,7 @@ import Head from "next/head";
 import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   getMerchantProfile,
   hydrateMerchantProfileFromSsr,
@@ -80,6 +80,11 @@ export default function MerchantPage({
   } = useAppSelector((state) => state.products);
 
   const fetchedSlugRef = useRef<string | null>(null);
+  /** Ignore persisted Redux until after mount so SSR HTML matches the first client paint. */
+  const [storeReady, setStoreReady] = useState(false);
+  useEffect(() => {
+    setStoreReady(true);
+  }, []);
 
   /** Hydrate Redux before paint when SSR returned profile so templates see data immediately. */
   useLayoutEffect(() => {
@@ -126,10 +131,14 @@ export default function MerchantPage({
     merchantSlugFromServer,
   ]);
 
-  /** Prefer live Redux; fall back to SSR payload before or without client fetch. */
-  const profileSource: MerchantProfile | null = data?.merchant_details
-    ? data
-    : initialMerchantProfile;
+  /** Prefer live Redux only after mount and only for this slug; else SSR snapshot. */
+  const reduxMatchesSlug = Boolean(
+    data?.merchant_details &&
+      slugStr &&
+      data.merchant_details.slug === slugStr
+  );
+  const profileSource: MerchantProfile | null =
+    storeReady && reduxMatchesSlug ? data : initialMerchantProfile;
 
   const siteSettingsForSeo =
     (initialSiteSettings as SiteSettingsData | null) ?? siteSettings;
@@ -179,7 +188,10 @@ export default function MerchantPage({
     />
   );
 
-  if (isLoading && !hasMerchantDetails) {
+  const waitingForProfile =
+    !hasMerchantDetails && (!storeReady || isLoading || !slugStr);
+
+  if (waitingForProfile) {
     return (
       <>
         {seoHead}
@@ -190,21 +202,7 @@ export default function MerchantPage({
     );
   }
 
-  if (!slugStr) {
-    return (
-      <>
-        <Head>
-          <title>Merchant not found | {siteName}</title>
-          <meta name="robots" content="noindex,nofollow" />
-        </Head>
-        <div className="flex min-h-screen items-center justify-center">
-          <p className="text-xl text-gray-600">Merchant not found</p>
-        </div>
-      </>
-    );
-  }
-
-  if (!hasMerchantDetails && !isLoading) {
+  if (!hasMerchantDetails) {
     return (
       <>
         <Head>

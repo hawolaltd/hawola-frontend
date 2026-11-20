@@ -13,5 +13,5 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 }
 
 export const TIKTOK_PIXEL_ID = (
-  process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "D9D1EOBC77U7PB56U3JG"
+  process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "DBVVHSJC77U6LRHE1VCG"
 ).trim();

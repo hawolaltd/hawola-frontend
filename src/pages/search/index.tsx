@@ -24,6 +24,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import MerchantStoreLink from "@/components/merchant/MerchantStoreLink";
 import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrInitial";
 import BuyingRequestSearchBanner from "@/components/search/BuyingRequestSearchBanner";
+import { merchantIsLiveNow } from "@/util/merchantLive";
 import { trackTikTokSearch, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 
 const SearchPage = () => {
@@ -440,8 +441,14 @@ const SearchPage = () => {
                                       fallbackTextClassName="text-lg font-bold"
                                     />
                                     <div className="flex-1">
-                                      <h3 className="font-semibold text-lg mb-1">
+                                      <h3 className="mb-1 flex flex-wrap items-center gap-2 font-semibold text-lg">
                                         {merchant.store_name}
+                                        {merchantIsLiveNow(merchant) ? (
+                                          <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold uppercase text-white">
+                                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                                            Live
+                                          </span>
+                                        ) : null}
                                       </h3>
                                       {merchant.about && (
                                         <MerchantRichHtml

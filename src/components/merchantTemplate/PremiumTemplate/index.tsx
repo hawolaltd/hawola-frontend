@@ -18,6 +18,7 @@ import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAbou
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 import StoreProductPagination from "@/components/merchant/StoreProductPagination";
 import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
+import { merchantIsLiveNow, merchantLiveHref } from "@/util/merchantLive";
 
 const DashboardTemplate = () => {
   const {
@@ -117,7 +118,10 @@ const DashboardTemplate = () => {
                   shippingDays={merchantData?.merchant_details?.shipping_number_of_days}
                   isActive={merchantData?.merchant_details?.is_active}
                   dateAdded={merchantData?.merchant_details?.date_added}
-                  isStreaming={merchantData?.is_streaming_now}
+                  isStreaming={merchantIsLiveNow(merchantData)}
+                  liveHref={merchantLiveHref(
+                    merchantData?.merchant_details?.slug
+                  )}
                 />
                 <StoreInfo
                   address={merchantData?.merchant_details?.store_address}

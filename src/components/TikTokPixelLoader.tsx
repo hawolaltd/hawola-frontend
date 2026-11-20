@@ -1,10 +1,6 @@
-import Script from "next/script";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import {
-  getTikTokPixelHeadScript,
-  TIKTOK_PIXEL_ID,
-} from "@/lib/tiktokPixelHeadScript";
+import { TIKTOK_PIXEL_ID } from "@/lib/tiktokPixelHeadScript";
 
 function fireTikTokPageView(): void {
   if (typeof window === "undefined" || !window.ttq) return;
@@ -15,7 +11,7 @@ function fireTikTokPageView(): void {
   window.ttq.push?.(["page"]);
 }
 
-/** Loads TikTok base pixel + fires ttq.page() on client route changes. */
+/** Base pixel lives in `_document` <head>. This fires ttq.page() on client route changes. */
 export default function TikTokPixelLoader() {
   const router = useRouter();
 
@@ -28,14 +24,5 @@ export default function TikTokPixelLoader() {
   }, [router.events]);
 
   if (!TIKTOK_PIXEL_ID) return null;
-
-  return (
-    <Script
-      id="tiktok-pixel-base"
-      strategy="afterInteractive"
-      dangerouslySetInnerHTML={{
-        __html: getTikTokPixelHeadScript(TIKTOK_PIXEL_ID),
-      }}
-    />
-  );
+  return null;
 }

@@ -20,7 +20,9 @@ import { StorefrontReelsGallery } from "@/components/reels/StorefrontReelsGaller
 import MerchantAboutWithSidebar from "@/components/merchantTemplate/MerchantAboutWithSidebar";
 import StorefrontCouponCards from "@/components/merchant/StorefrontCouponCards";
 import StoreProductPagination from "@/components/merchant/StoreProductPagination";
+import MerchantWatchLiveLink from "@/components/merchant/MerchantWatchLiveLink";
 import { useMerchantStoreProducts } from "@/hooks/useMerchantStoreProducts";
+import { merchantIsLiveNow } from "@/util/merchantLive";
 
 const BasicTemplate = () => {
   const [activeSection, setActiveSection] = useState<
@@ -129,9 +131,9 @@ const BasicTemplate = () => {
     merchant_categories,
     banners,
     home_page,
-    is_streaming_now,
     storefront_coupons,
   } = merchantData;
+  const isStreamingNow = merchantIsLiveNow(merchantData);
 
   const merchantReels = merchant_details?.merchant_reels ?? [];
   const hasMerchantReels = merchantReels.length > 0;
@@ -214,6 +216,13 @@ const BasicTemplate = () => {
                   <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900">
                     {merchant_details?.store_name}
                     <HawolaVerifiedTick show={merchant_details?.is_hawola_verified === true} />
+                    {isStreamingNow ? (
+                      <MerchantWatchLiveLink
+                        slug={merchant_details?.slug || (merchantSlug as string)}
+                        className="inline-flex rounded-full bg-red-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white"
+                        label="Live"
+                      />
+                    ) : null}
                   </h1>
                   {/* Verified Store badge — shown only after merchant KYC (is_verified_store) */}
                   {(merchant_details?.is_verified_store === true ||
@@ -335,6 +344,7 @@ const BasicTemplate = () => {
                         return plain.length > 150 ? `${plain.slice(0, 150)}…` : plain;
                       })()}
                     </p>
+                    <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => setActiveSection("products")}
                       className="px-8 py-3 rounded-lg font-semibold shadow-lg transition-transform hover:scale-105"
@@ -345,6 +355,13 @@ const BasicTemplate = () => {
                     >
                       Shop Now
                     </button>
+                    {isStreamingNow ? (
+                      <MerchantWatchLiveLink
+                        slug={merchant_details?.slug || (merchantSlug as string)}
+                        className="px-8 py-3 rounded-lg bg-red-600 font-semibold text-white shadow-lg transition-transform hover:scale-105"
+                      />
+                    ) : null}
+                    </div>
                   </div>
                 </div>
               </div>

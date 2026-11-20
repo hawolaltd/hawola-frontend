@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import DOMPurify from "dompurify";
+import { sanitizeHtml } from "@/util/domPurifyClient";
 
-const SANITIZE: Parameters<typeof DOMPurify.sanitize>[1] = {
+const SANITIZE = {
   ALLOWED_TAGS: [
     "p",
     "span",
@@ -52,7 +52,7 @@ export default function MerchantRichHtml({ html, className }: Props) {
       return textarea.value;
     };
     const decoded = decodeHtml(html);
-    return DOMPurify.sanitize(decoded, SANITIZE);
+    return sanitizeHtml(decoded, SANITIZE);
   }, [html]);
 
   if (!safe) return null;

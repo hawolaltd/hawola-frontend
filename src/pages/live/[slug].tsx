@@ -1,6 +1,6 @@
+import LiveSaleStudio from "@/components/live/LiveSaleStudio";
 import Header from "@/components/header";
 import Footer from "@/components/home/Footer";
-import LivePlayer from "@/components/live/LivePlayer";
 import {
   buildLiveWsUrl,
   liveByStore,
@@ -11,10 +11,10 @@ import {
   type LiveSession,
 } from "@/lib/hawolaLive";
 import { savePendingCouponCode } from "@/lib/pendingCoupon";
-import { addToCarts } from "@/redux/product/productSlice";
-import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useAppSelector } from "@/hook/useReduxTypes";
 import { API, authTokenStorageKeyName } from "@/constant";
 import Cookies from "js-cookie";
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -23,9 +23,8 @@ import { toast } from "sonner";
 export default function HawolaLivePage() {
   const router = useRouter();
   const slug = String(router.query.slug || "");
-  const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector((s) => s.auth);
-  const token = Cookies.get(authTokenStorageKeyName as string) || null;
+  const { isAuthenticated, profile } = useAppSelector((s) => s.auth);
+  const [token, setToken] = useState<string | null>(null);
   const [session, setSession] = useState<LiveSession | null>(null);
   const [live, setLive] = useState(false);
   const [messages, setMessages] = useState<LiveMessage[]>([]);
@@ -33,6 +32,10 @@ export default function HawolaLivePage() {
   const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setToken(Cookies.get(authTokenStorageKeyName as string) || null);
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -100,8 +103,6 @@ export default function HawolaLivePage() {
     };
   }, [session?.id, session?.status, token]);
 
-  const products = session?.products || [];
-
   const send = async () => {
     if (!session || !draft.trim()) return;
     if (!isAuthenticated || !token) {
@@ -133,141 +134,62 @@ export default function HawolaLivePage() {
     }
   };
 
-  const buy = async (productId: number) => {
-    try {
-      await dispatch(addToCarts({ items: [{ qty: 1, product: productId }] }) as never);
-      toast.success("Added to cart");
-    } catch {
-      toast.error("Could not add to cart.");
-    }
-  };
-
   const useCoupon = (code: string) => {
     savePendingCouponCode(code, { code });
     toast.success(`Saved ${code} for checkout`);
   };
 
-  const title = useMemo(
+  const pageTitle = useMemo(
     () => session?.title || session?.merchant?.store_name || "Live sale",
     [session]
   );
 
   return (
-    <div>
+    <div className="bg-slate-50">
+      <Head>
+        <title>{pageTitle} | Hawola Live</title>
+      </Head>
       <Header />
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        {loading ? (
-          <p className="text-sm text-slate-500">Loading live sale…</p>
-        ) : !live || !session ? (
-          <div className="rounded-3xl border border-slate-200 p-8 text-center">
-            <h1 className="text-2xl font-black">This store is not live right now</h1>
-            <p className="mt-2 text-sm text-slate-600">Check the store for products still on sale.</p>
+      {loading ? (
+        <div className="mx-auto flex min-h-[50vh] w-full max-w-screen-xl items-center justify-center px-6 py-16 text-sm text-slate-500 xl:px-0">
+          Opening the live room…
+        </div>
+      ) : !live || !session ? (
+        <div className="mx-auto w-full max-w-screen-xl px-6 py-10 xl:px-0">
+          <div className="flex min-h-[40vh] flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-red-600">
+              Hawola Live
+            </p>
+            <h1 className="mt-3 text-3xl font-black text-slate-900">This store is not live right now</h1>
+            <p className="mt-2 max-w-md text-sm text-slate-500">
+              The stream has ended. You can still shop the store.
+            </p>
             {slug ? (
-              <Link href={`/${slug}`} className="mt-4 inline-block font-semibold text-brand-600">
+              <Link
+                href={`/${slug}`}
+                className="mt-6 rounded-full bg-red-600 px-5 py-2.5 text-sm font-bold text-white"
+              >
                 Open store
               </Link>
             ) : null}
           </div>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)]">
-            <div>
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-black uppercase text-white">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-                  Live
-                </span>
-                <h1 className="text-2xl font-black text-slate-900">{title}</h1>
-                <span className="text-sm text-slate-500">{session.viewer_count} watching</span>
-              </div>
-              <LivePlayer embedUrl={session.embed_url} title={title} />
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => void like()}
-                  className={`rounded-full px-3 py-1.5 text-sm font-semibold ${
-                    liked ? "bg-red-600 text-white" : "bg-slate-100 text-slate-800"
-                  }`}
-                >
-                  Like · {likes}
-                </button>
-                {session.promo?.slug ? (
-                  <Link
-                    href={`/deal/${session.promo.slug}`}
-                    className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-semibold text-amber-950"
-                  >
-                    Open promo page
-                  </Link>
-                ) : null}
-                <Link href={`/${session.merchant.slug}`} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold">
-                  Visit store
-                </Link>
-              </div>
-              {products.length ? (
-                <div className="mt-6">
-                  <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Selling now</h2>
-                  <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
-                    {products.map((p) => (
-                      <div key={p.id} className="w-40 shrink-0 rounded-2xl border border-slate-200 p-2">
-                        {p.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.image} alt="" className="h-28 w-full rounded-xl object-cover" />
-                        ) : null}
-                        <p className="mt-2 line-clamp-2 text-sm font-semibold">{p.name}</p>
-                        <p className="text-sm font-black">₦{Number(p.effective_price || 0).toLocaleString()}</p>
-                        <button
-                          type="button"
-                          className="mt-2 w-full rounded-full bg-slate-900 py-1.5 text-xs font-bold text-white"
-                          onClick={() => void buy(p.id)}
-                        >
-                          Add to cart
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <aside className="flex h-[70vh] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-              <div className="border-b px-4 py-3 text-sm font-bold">Live chat</div>
-              <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
-                {messages.map((m) => (
-                  <div key={m.id} className="text-sm">
-                    <span className="font-semibold text-slate-700">{m.sender_name || "Shopper"}: </span>
-                    <span>{m.body}</span>
-                    {m.kind === "coupon" && (m.payload as { coupon?: { code?: string } })?.coupon?.code ? (
-                      <button
-                        type="button"
-                        className="ml-2 text-xs font-bold text-brand-600"
-                        onClick={() =>
-                          useCoupon(String((m.payload as { coupon?: { code?: string } }).coupon?.code))
-                        }
-                      >
-                        Use coupon
-                      </button>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2 border-t bg-white p-3">
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && void send()}
-                  placeholder={isAuthenticated ? "Say something…" : "Sign in to chat"}
-                  className="flex-1 rounded-full border px-3 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => void send()}
-                  className="rounded-full bg-red-600 px-4 text-sm font-bold text-white"
-                >
-                  Send
-                </button>
-              </div>
-            </aside>
-          </div>
-        )}
-      </main>
+        </div>
+      ) : (
+        <LiveSaleStudio
+          session={session}
+          messages={messages}
+          draft={draft}
+          likes={likes}
+          liked={liked}
+          isAuthenticated={isAuthenticated}
+          onDraftChange={setDraft}
+          onSend={() => void send()}
+          onLike={() => void like()}
+          onCoupon={useCoupon}
+          userEmail={profile?.email}
+          userPhone={(profile as { phone_number?: string } | null)?.phone_number}
+        />
+      )}
       <Footer />
     </div>
   );

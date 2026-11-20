@@ -36,6 +36,7 @@ type Props = {
   isAuthenticated: boolean;
   userEmail?: string | null;
   userPhone?: string | null;
+  liveSessionId?: number | null;
   onOrderPlaced: (order: OrderDetailsResponse) => void;
 };
 
@@ -95,6 +96,7 @@ export default function InstantOrderModal({
   isAuthenticated,
   userEmail,
   userPhone,
+  liveSessionId,
   onOrderPlaced,
 }: Props) {
   const dispatch = useAppDispatch();
@@ -302,6 +304,7 @@ export default function InstantOrderModal({
       : {}),
     qty,
     ...(variants?.length ? { variant: variants } : {}),
+    ...(liveSessionId ? { live_session_id: liveSessionId } : {}),
   });
 
   const orderTotalBeforeCoupon = goodsSubtotal + shippingCost;
@@ -361,6 +364,7 @@ export default function InstantOrderModal({
               : {}),
             qty,
             ...(variants?.length ? { variant: variants } : {}),
+            ...(liveSessionId ? { live_session_id: liveSessionId } : {}),
           });
           if (data.order) {
             setMessage(data.detail || "Order placed successfully.");

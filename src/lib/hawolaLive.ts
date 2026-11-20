@@ -10,6 +10,7 @@ export type LiveProduct = {
   discount_price?: string | null;
   effective_price?: string | null;
   image?: string;
+  description?: string;
 };
 
 export type LiveCoupon = {
