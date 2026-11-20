@@ -1,12 +1,7 @@
 import { Html, Head, Main, NextScript } from "next/document";
-import {
-  getTikTokPixelHeadScript,
-  TIKTOK_PIXEL_ID,
-} from "@/lib/tiktokPixelHeadScript";
+import { TIKTOK_PIXEL_HEAD_SCRIPT } from "@/lib/tiktokPixelHeadScript";
 
 export default function Document() {
-  const pixelId = TIKTOK_PIXEL_ID.trim();
-
   return (
     <Html lang="en">
       <Head>
@@ -17,12 +12,9 @@ export default function Document() {
           // @ts-expect-error value is required by Impact site verification
           value="d0cdaa9e-41b9-4ad8-afcf-c382960b189e"
         />
-        {pixelId ? (
-          <script
-            id="tiktok-pixel"
-            dangerouslySetInnerHTML={{ __html: getTikTokPixelHeadScript(pixelId) }}
-          />
-        ) : null}
+        {/* TikTok Pixel Code Start */}
+        <script dangerouslySetInnerHTML={{ __html: TIKTOK_PIXEL_HEAD_SCRIPT }} />
+        {/* TikTok Pixel Code End */}
       </Head>
       <body className="antialiased">
         <Main />
