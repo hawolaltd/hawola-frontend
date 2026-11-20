@@ -5,7 +5,7 @@ import LiveDealProgress from "@/components/live/LiveDealProgress";
 import InstantOrderModal from "@/components/product/InstantOrderModal";
 import { liveDealActive, liveProductCta, liveSellingPrice, useLiveDealClock } from "@/lib/liveDeal";
 import { LiveThemeToggle, liveThemeStyle, useLiveTheme } from "@/lib/liveTheme";
-import type { LiveMessage, LiveOffer, LiveProduct, LiveSession, LiveSticker } from "@/lib/hawolaLive";
+import { liveDealPath, type LiveMessage, type LiveOffer, type LiveProduct, type LiveSession, type LiveSticker } from "@/lib/hawolaLive";
 import { LIVE_STICKERS } from "@/lib/liveStickers";
 import type { OrderDetailsResponse } from "@/types/product";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -427,6 +427,19 @@ export default function LiveSaleStudio({
 
         <aside className="order-3 flex min-h-0 flex-col overflow-hidden border-t border-[color:var(--lv-border)] max-lg:h-[min(48vh,22rem)] max-lg:flex-none lg:h-auto lg:border-l lg:border-t-0">
           <div className="shrink-0 border-b border-[color:var(--lv-border)] px-4 py-3 font-semibold">Live chat</div>
+          {session.promo?.slug && session.promo.is_open !== false && !session.promo.expired ? (
+            <a
+              href={liveDealPath(session.merchant?.slug, session.promo.slug) || "#"}
+              className="mx-3 mt-3 block shrink-0 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 hover:bg-amber-400/15"
+            >
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-300">
+                Tonight’s deals
+              </p>
+              <p className="mt-0.5 truncate text-xs font-semibold">
+                {session.promo.title || "Open the deal page"} →
+              </p>
+            </a>
+          ) : null}
           {pinned ? (
             <div className="mx-3 mt-3 shrink-0 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-300">
@@ -477,7 +490,23 @@ export default function LiveSaleStudio({
                     >
                       {m.sender_name || "Shopper"}
                     </p>
-                    <p className={`mt-0.5 ${m.kind === "reaction" ? "text-lg" : ""}`}>{m.body}</p>
+                    <p className={`mt-0.5 break-words ${m.kind === "reaction" ? "text-lg" : ""}`}>
+                      {m.body.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                        /^https?:\/\//.test(part) ? (
+                          <a
+                            key={`${m.id}-${i}`}
+                            href={part}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold underline underline-offset-2"
+                          >
+                            {part}
+                          </a>
+                        ) : (
+                          <span key={`${m.id}-${i}`}>{part}</span>
+                        )
+                      )}
+                    </p>
                     {m.kind === "coupon" && code ? (
                       <button
                         type="button"

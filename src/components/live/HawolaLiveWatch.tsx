@@ -1,4 +1,5 @@
 import LiveSaleStudio from "@/components/live/LiveSaleStudio";
+import LiveGlasshouseStudio from "@/components/live/LiveGlasshouseStudio";
 import Header from "@/components/header";
 import {
   buildLiveWsUrl,
@@ -133,6 +134,11 @@ export default function HawolaLiveWatch({
               return { ...prev, my_offers: mine };
             });
           }
+          if (payload.type === "watch_template" && payload.watch_template) {
+            setSession((prev) =>
+              prev ? { ...prev, watch_template: String(payload.watch_template) } : prev
+            );
+          }
           if (payload.type === "session_ended") {
             setLive(false);
           }
@@ -259,23 +265,43 @@ export default function HawolaLiveWatch({
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-hidden">
-          <LiveSaleStudio
-            session={session}
-            messages={messages}
-            draft={draft}
-            likes={likes}
-            liked={liked}
-            isAuthenticated={isAuthenticated}
-            onDraftChange={setDraft}
-            onSend={() => void send()}
-            onChat={(text) => send(text)}
-            onSticker={sendSticker}
-            onLike={() => void like()}
-            onCoupon={useCoupon}
-            onOffer={sendOffer}
-            userEmail={profile?.email}
-            userPhone={(profile as { phone_number?: string } | null)?.phone_number}
-          />
+          {session.watch_template === "glasshouse" ? (
+            <LiveGlasshouseStudio
+              session={session}
+              messages={messages}
+              draft={draft}
+              likes={likes}
+              liked={liked}
+              isAuthenticated={isAuthenticated}
+              onDraftChange={setDraft}
+              onSend={() => void send()}
+              onChat={(text) => send(text)}
+              onSticker={sendSticker}
+              onLike={() => void like()}
+              onCoupon={useCoupon}
+              onOffer={sendOffer}
+              userEmail={profile?.email}
+              userPhone={(profile as { phone_number?: string } | null)?.phone_number}
+            />
+          ) : (
+            <LiveSaleStudio
+              session={session}
+              messages={messages}
+              draft={draft}
+              likes={likes}
+              liked={liked}
+              isAuthenticated={isAuthenticated}
+              onDraftChange={setDraft}
+              onSend={() => void send()}
+              onChat={(text) => send(text)}
+              onSticker={sendSticker}
+              onLike={() => void like()}
+              onCoupon={useCoupon}
+              onOffer={sendOffer}
+              userEmail={profile?.email}
+              userPhone={(profile as { phone_number?: string } | null)?.phone_number}
+            />
+          )}
         </div>
       )}
     </div>

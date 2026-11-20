@@ -78,6 +78,7 @@ export type LiveSession = {
   viewer_count: number;
   featured_on_home?: boolean;
   offers_enabled?: boolean;
+  watch_template?: "studio" | "glasshouse" | string;
   share_key?: string;
   watch_url?: string;
   started_at?: string | null;
@@ -99,6 +100,7 @@ export type LivePromo = {
   expires_at: string | null;
   is_open: boolean;
   expired?: boolean;
+  deal_url?: string;
   products: LiveProduct[];
   coupons: LiveCoupon[];
   store: LiveMerchant;
@@ -167,8 +169,20 @@ export function postLiveOffer(
   ) as Promise<{ offer: LiveOffer }>;
 }
 
-export function liveDeal(slug: string) {
-  return getJson(`/livesales/deals/${encodeURIComponent(slug)}/`) as Promise<LivePromo>;
+export function liveDealPath(merchantSlug?: string | null, promoSlug?: string | null) {
+  const store = String(merchantSlug || "").trim();
+  const deal = String(promoSlug || "").trim();
+  if (!store || !deal) return "";
+  return `/deal/${encodeURIComponent(store)}/${encodeURIComponent(deal)}`;
+}
+
+export function liveDeal(slug: string, merchantSlug?: string | null) {
+  const deal = encodeURIComponent(slug);
+  const store = String(merchantSlug || "").trim();
+  const path = store
+    ? `/livesales/deals/${encodeURIComponent(store)}/${deal}/`
+    : `/livesales/deals/${deal}/`;
+  return getJson(path) as Promise<LivePromo>;
 }
 
 export function liveChatHistory(sessionId: number) {
