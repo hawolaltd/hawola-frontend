@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useLoginRedirectPath } from '@/hook/useLoginRedirectPath';
 import {
     ArrowTopRightOnSquareIcon,
     BuildingOffice2Icon,
@@ -36,6 +37,7 @@ interface DrawerProps {
 const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _messageCount = 3 }) => {
     const dispatch = useAppDispatch();
     const router = useRouter();
+    const loginRedirectPath = useLoginRedirectPath();
     const { isAuthenticated, user, profile } = useAppSelector((state) => state.auth);
     const siteSettings = useAppSelector((state) => state.general.siteSettings);
     const carsNavLabel = getCarsCopy(siteSettings).navLabel;
@@ -207,7 +209,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, messageCount: _message
                         </div>
                         {!signedIn && (
                             <Link
-                                href={`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`}
+                                href={`/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`}
                                 onClick={onClose}
                                 className="text-xs font-semibold text-white bg-deepOrange px-3 py-1.5 rounded-md"
                             >

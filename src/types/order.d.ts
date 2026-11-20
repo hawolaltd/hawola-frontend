@@ -193,6 +193,8 @@ interface NewOrderDetailsResponse {
     payment_reference: null;
     payment_confirmed: boolean;
     is_offline_payment: boolean;
+    sale_channel?: string | null;
+    sale_channel_label?: string | null;
     paidAt: null;
     isDelivered: boolean;
     user_confirm_order: boolean;

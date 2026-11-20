@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
+import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
@@ -27,7 +28,7 @@ import BuyingRequestSearchBanner from "@/components/search/BuyingRequestSearchBa
 import { merchantIsLiveNow } from "@/util/merchantLive";
 import { trackTikTokSearch, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
 
-const SearchPage = () => {
+const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { searchResults, suggestions, isLoading, currentQuery, error } = useAppSelector(
@@ -35,7 +36,7 @@ const SearchPage = () => {
   );
   const authProfile = useAppSelector((state) => state.auth.profile);
   const tikTokIdentity = tikTokIdentityFromProfile(authProfile);
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(ssrQuery);
   const [activeTab, setActiveTab] = useState<"all" | "products" | "merchants">("all");
 
   const handleSearch = useCallback(
@@ -104,6 +105,11 @@ const SearchPage = () => {
       handleSearch(currentQuery, page);
     }
   };
+
+  const urlQuery =
+    (typeof router.query.q === "string" ? router.query.q : ssrQuery).trim();
+  const waitingOnQuery = Boolean(urlQuery) && !searchResults && !error;
+  const showLoading = isLoading || waitingOnQuery;
 
   const handleClearSearch = () => {
     setSearchInput("");
@@ -230,9 +236,7 @@ const SearchPage = () => {
     
     <AuthLayout>
       <Head>
-        <title>
-          {currentQuery ? `Search: ${currentQuery}` : "Search"} | Hawola
-        </title>
+        <title>{currentQuery ? `Search: ${currentQuery} | Hawola` : "Search | Hawola"}</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50">
@@ -275,14 +279,14 @@ const SearchPage = () => {
           </div>
 
             {/* Loading State */}
-            {isLoading && (
+            {showLoading && (
               <div className="flex justify-center items-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-deepOrange"></div>
               </div>
             )}
 
             {/* Search Results */}
-            {!isLoading && searchResults && (
+            {!showLoading && searchResults && (
               <>
                 {/* Results Summary */}
                 <div className="mb-6 flex flex-wrap items-center gap-4">
@@ -541,19 +545,25 @@ const SearchPage = () => {
               </>
             )}
 
-          {!isLoading && error && !searchResults && (
+          {!showLoading && error && !searchResults && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               Search could not be completed. Please try again.
             </div>
           )}
 
           {/* Empty State (No search yet) */}
-          {!isLoading && !searchResults && !error && renderEmptyState()}
+          {!showLoading && !searchResults && !error && renderEmptyState()}
         </div>
         
       </div>
     </AuthLayout>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const q = typeof ctx.query.q === "string" ? ctx.query.q : "";
+  const page = typeof ctx.query.page === "string" ? ctx.query.page : "1";
+  return { props: { q, page } };
 };
 
 export default SearchPage;

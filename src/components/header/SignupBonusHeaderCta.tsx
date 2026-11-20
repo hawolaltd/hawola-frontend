@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { useRouter } from "next/router";
+import { useLoginRedirectPath } from "@/hook/useLoginRedirectPath";
 import { GiftIcon } from "@heroicons/react/24/solid";
 import { formatCurrency } from "@/util";
 import { createSignupPromoPalette } from "@/lib/signupPromoPalette";
@@ -24,7 +24,7 @@ export default function SignupBonusHeaderCta({
   variant = "header",
   onNavigate,
 }: Props) {
-  const router = useRouter();
+  const loginRedirectPath = useLoginRedirectPath();
   const palette = useMemo(() => createSignupPromoPalette(), []);
 
   const amount = Number(promo.fixed_amount) || 0;
@@ -40,7 +40,7 @@ export default function SignupBonusHeaderCta({
   const drawerBadge = promo.promo_badge_text || "Welcome bonus";
   const headerBadge = "Gift";
   const hideAmount = shouldHideSignupBonusAmount(promo);
-  const registerHref = `/auth/register?redirect=${encodeURIComponent(router.asPath || "/")}`;
+  const registerHref = `/auth/register?redirect=${encodeURIComponent(loginRedirectPath)}`;
 
   if (variant === "drawer") {
     return (

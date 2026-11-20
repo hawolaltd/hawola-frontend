@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { REHYDRATE } from "redux-persist";
 import searchService from "./searchService";
 import { GeneralSearchResponse, SearchSuggestions, SearchParams } from "@/types/search";
 
@@ -104,6 +105,12 @@ const searchSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(REHYDRATE, (state) => {
+        state.searchResults = null;
+        state.currentQuery = "";
+        state.isLoading = false;
+        state.error = null;
+      })
       // Perform Search
       .addCase(performSearch.pending, (state) => {
         state.isLoading = true;

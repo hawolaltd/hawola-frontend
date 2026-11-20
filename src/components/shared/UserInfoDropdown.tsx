@@ -6,12 +6,14 @@ import { addToCartsLocal } from "@/redux/product/productSlice";
 import { logout } from "@/redux/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
 import { useRouter } from "next/router";
+import { useLoginRedirectPath } from "@/hook/useLoginRedirectPath";
 import { API, authTokenStorageKeyName } from "@/constant";
 import type { PlatformItem } from "@/lib/platformHandoff";
 
 function UserInfoDropdown() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const loginRedirectPath = useLoginRedirectPath();
   const dispatch = useAppDispatch();
   const [platforms, setPlatforms] = useState<PlatformItem[]>([]);
   const [menuQuery, setMenuQuery] = useState("");
@@ -149,7 +151,7 @@ function UserInfoDropdown() {
           <li
             onClick={() => {
               router.push(
-                `/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`
+                `/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`
               );
             }}
             className={"px-4 py-2 w-full"}

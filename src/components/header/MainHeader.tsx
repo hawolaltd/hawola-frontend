@@ -24,6 +24,7 @@ import { getCarsCopy, getRealEstateCopy } from "@/util/curatedVerticalCopy";
 import { useCompareNavBump } from "@/hook/useCompareNavBump";
 import CartModal from "@/components/shared/CartModal";
 import { useRouter } from "next/router";
+import { useLoginRedirectPath } from "@/hook/useLoginRedirectPath";
 import { CartResponse } from "@/types/product";
 import UserInfoDropdown from "@/components/shared/UserInfoDropdown";
 import SignupBonusHeaderCta from "@/components/header/SignupBonusHeaderCta";
@@ -97,6 +98,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const loginRedirectPath = useLoginRedirectPath();
   const signupBonusPromo = useSignupBonusPromo(!isAuthenticated);
   const showCouponCenterNav = useCouponCenterNavVisible();
   const hideSignupBonusCta =
@@ -891,7 +893,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                   if (isAuthenticated) {
                     setUserInfo(!userInfo);
                   } else {
-                    router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
+                    router.push(`/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`);
                   }
                 }}
                 className={`cursor-pointer ${
@@ -903,7 +905,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     if (isAuthenticated) setUserInfo(!userInfo);
-                    else router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`);
+                    else router.push(`/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`);
                   }
                 }}
                 aria-label={isAuthenticated ? "Account menu" : "Sign in"}
@@ -921,7 +923,7 @@ const Header = ({ isScrolled }: { isScrolled?: any }) => {
               href={
                 isAuthenticated
                   ? `/wishlist`
-                  : `/auth/login?redirect=${encodeURIComponent(router.asPath || "/")}`
+                  : `/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`
               }
               className={`relative flex items-center justify-center ${HI_FRAME_HEADER}`}
               aria-label="Wishlist"

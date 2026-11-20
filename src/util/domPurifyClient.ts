@@ -41,7 +41,7 @@ function unwrapPurify(mod: unknown): { sanitize: SanitizeFn } | null {
   return null;
 }
 
-export function sanitizeHtml(html: string, config?: object): string {
+export function sanitizeHtml(html: string, config?: Record<string, unknown>): string {
   if (!html) return "";
   if (typeof window === "undefined") return fallbackSanitize(html);
   const purify = unwrapPurify(DompurifyNs);
