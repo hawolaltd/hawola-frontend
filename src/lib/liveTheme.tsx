@@ -15,18 +15,34 @@ const DARK = {
   chip: "rgba(255,255,255,0.08)",
   hover: "rgba(255,255,255,0.12)",
   track: "rgba(255,255,255,0.12)",
+  accent: "#e879f9",
+  deal: "#fcd34d",
+  price: "#34d399",
+  merchantName: "#f5d0fe",
+  shopperName: "#7dd3fc",
+  embedBg: "rgba(0,0,0,0.28)",
+  embedBorder: "rgba(255,255,255,0.18)",
+  offerMeta: "rgba(250,232,255,0.85)",
 };
 
 const LIGHT = {
   bg: "#f3f5f9",
   fg: "#0f172a",
-  muted: "#64748b",
-  border: "#e2e8f0",
+  muted: "#334155",
+  border: "#cbd5e1",
   card: "#ffffff",
   input: "#ffffff",
-  chip: "#e8eef6",
-  hover: "#e2e8f0",
+  chip: "#e2e8f0",
+  hover: "#dbe3ee",
   track: "#e2e8f0",
+  accent: "#a21caf",
+  deal: "#b45309",
+  price: "#047857",
+  merchantName: "#86198f",
+  shopperName: "#0369a1",
+  embedBg: "#ffffff",
+  embedBorder: "#cbd5e1",
+  offerMeta: "#6b21a8",
 };
 
 let current: LiveTheme = "dark";
@@ -70,6 +86,14 @@ export function liveThemeStyle(isDark: boolean): CSSProperties {
     ["--lv-chip" as string]: t.chip,
     ["--lv-hover" as string]: t.hover,
     ["--lv-track" as string]: t.track,
+    ["--lv-accent" as string]: t.accent,
+    ["--lv-deal" as string]: t.deal,
+    ["--lv-price" as string]: t.price,
+    ["--lv-merchant-name" as string]: t.merchantName,
+    ["--lv-shopper-name" as string]: t.shopperName,
+    ["--lv-embed-bg" as string]: t.embedBg,
+    ["--lv-embed-border" as string]: t.embedBorder,
+    ["--lv-offer-meta" as string]: t.offerMeta,
   };
 }
 

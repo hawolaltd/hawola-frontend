@@ -3,6 +3,8 @@
 import React, { useMemo } from "react";
 import OptimizedImage from "@/components/common/OptimizedImage";
 import { useAppSelector } from "@/hook/useReduxTypes";
+import { useClientHydrated } from "@/hook/useClientHydrated";
+import type { SiteSettingsData } from "@/redux/general/generalSlice";
 import type { AdvertBanner, Banner, HeroCreativeSlide } from "@/types/home";
 import AppStoreBadges from "./hero/AppStoreBadges";
 import HeroCarousel from "./hero/HeroCarousel";

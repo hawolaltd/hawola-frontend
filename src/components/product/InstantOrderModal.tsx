@@ -16,6 +16,8 @@ import { readPendingCouponCode, readPendingCouponCodes, readPendingCouponMeta } 
 import { couponAppliesToProduct } from "@/lib/storeCouponDiscount";
 import { formatCurrency } from "@/util";
 import type { OrderDetailsResponse } from "@/types/product";
+import LiveProductOfferBox from "@/components/live/LiveProductOfferBox";
+import type { LiveOffer } from "@/lib/hawolaLive";
 
 type ShippingPlan = { shipping_cost?: string | number | null } | null | undefined;
 
@@ -45,6 +47,10 @@ type Props = {
     email: string;
   }) => Promise<void> | void;
   onOrderPlaced: (order: OrderDetailsResponse) => void;
+  allowPrivateOffer?: boolean;
+  liveOffer?: LiveOffer | null;
+  onPrivateOffer?: (amount: number) => Promise<unknown> | unknown;
+  onAcceptCounter?: () => Promise<unknown> | unknown;
 };
 
 type Step = "form" | "verify" | "done";
@@ -108,6 +114,10 @@ export default function InstantOrderModal({
   registerInterest = false,
   onRegisterInterest,
   onOrderPlaced,
+  allowPrivateOffer = false,
+  liveOffer = null,
+  onPrivateOffer,
+  onAcceptCounter,
 }: Props) {
   const dispatch = useAppDispatch();
   const { states, stateLocations, isLoading: locationsLoading } = useAppSelector(
@@ -640,6 +650,14 @@ export default function InstantOrderModal({
               </aside>
 
               <div className="space-y-5 px-5 py-5 sm:px-6">
+                {/* {allowPrivateOffer && onPrivateOffer && !registerInterest ? (
+                  <LiveProductOfferBox
+                    listPrice={unitPrice}
+                    offer={liveOffer}
+                    onSend={onPrivateOffer}
+                    onAcceptCounter={onAcceptCounter}
+                  />
+                ) : null} */}
                 <section className="space-y-3">
                   <h3 className="text-sm font-semibold text-slate-900">Your details</h3>
                   {!isAuthenticated ? (
@@ -824,8 +842,8 @@ export default function InstantOrderModal({
               </button>
               <p className="mt-2 text-center text-xs text-slate-500">
                 {registerInterest
-                  ? "The store will follow up with you from this live."
-                  : "You will pay on the next screen."}
+                  && "The store will follow up with you from this live."
+                  }
               </p>
             </>
           ) : null}

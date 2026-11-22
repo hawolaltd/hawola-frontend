@@ -15,7 +15,15 @@ export type LiveProduct = {
   image?: string;
   description?: string;
   contact_merchant_only?: boolean;
+  on_air?: boolean;
 };
+
+export function sortOnAirLiveProducts<T extends { on_air?: boolean }>(products: T[] | null | undefined): T[] {
+  const list = Array.isArray(products) ? products : [];
+  const air = list.filter((p) => p.on_air);
+  if (!air.length) return list;
+  return [...air, ...list.filter((p) => !p.on_air)];
+}
 
 export type LiveCoupon = {
   id: number;
@@ -65,6 +73,7 @@ export type LiveOffer = {
   buyer_name?: string;
   buyer_user_id?: number | null;
   coupon?: LiveCoupon | null;
+  countered_by_merchant?: boolean;
   created_at?: string | null;
 };
 
@@ -74,6 +83,7 @@ export type LiveSession = {
   status: string;
   youtube_url: string;
   video_id: string;
+  stream_platform?: "youtube" | "facebook" | "instagram" | "tiktok" | string;
   embed_url: string;
   viewer_count: number;
   featured_on_home?: boolean;
@@ -82,6 +92,7 @@ export type LiveSession = {
   share_key?: string;
   watch_url?: string;
   started_at?: string | null;
+  ends_at?: string | null;
   merchant: LiveMerchant;
   products: LiveProduct[];
   promo?: LivePromo | null;
@@ -165,6 +176,14 @@ export function postLiveOffer(
   return postJson(
     `/livesales/sessions/${sessionId}/offer/`,
     { product_id: productId, amount },
+    token
+  ) as Promise<{ offer: LiveOffer }>;
+}
+
+export function acceptLiveOfferCounter(sessionId: number, offerId: number, token: string) {
+  return postJson(
+    `/livesales/sessions/${sessionId}/offer/accept/`,
+    { offer_id: offerId },
     token
   ) as Promise<{ offer: LiveOffer }>;
 }

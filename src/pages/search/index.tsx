@@ -27,6 +27,7 @@ import { MerchantLogoOrInitial } from "@/components/merchant/MerchantLogoOrIniti
 import BuyingRequestSearchBanner from "@/components/search/BuyingRequestSearchBanner";
 import { merchantIsLiveNow } from "@/util/merchantLive";
 import { trackTikTokSearch, tikTokIdentityFromProfile } from "@/lib/tiktokPixel";
+import { useClientHydrated } from "@/hook/useClientHydrated";
 
 const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
   const router = useRouter();
@@ -197,11 +198,11 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
       {/* Spelling Suggestions */}
       {searchResults?.suggestions && searchResults.suggestions.length > 0 && (
         <div className="max-w-2xl mx-auto">
+      {results?.suggestions && results.suggestions.length > 0 && (
+        <div className="max-w-2xl mx-auto">
           <p className="text-sm text-gray-600 mb-3">Did you mean:</p>
           <div className="flex flex-wrap gap-2 justify-center">
-            {searchResults.suggestions.map((suggestion, index) => (
-              <button
-                key={index}
+            {results.suggestions.map((suggestion, index) => (
                 onClick={() => handleSuggestionClick(suggestion)}
                 className="px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-deepOrange hover:text-deepOrange transition-colors text-sm font-medium"
               >
@@ -217,15 +218,15 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
   // Calculate total results for each category
   const totalProducts = searchResults?.results.products.count || 0;
   const merchantItems = searchResults?.results?.merchants?.items || [];
+  const totalProducts = results?.results.products.count || 0;
+  const merchantItems = results?.results?.merchants?.items || [];
   const merchantItemsCount = merchantItems.length || 0;
-  const totalMerchants = searchResults?.total_merchants || merchantItemsCount;
+  const totalMerchants = results?.total_merchants || merchantItemsCount;
   const hasMerchantResults = totalMerchants > 0 || merchantItemsCount > 0;
-  const totalSearchResults = searchResults?.total_results ?? 0;
+  const totalSearchResults = results?.total_results ?? 0;
   const showBuyingBanner =
     !isLoading &&
-    !!searchResults &&
-    !!currentQuery?.trim() &&
-    totalSearchResults < 5;
+    !!results &&
   const buyingBannerVariant =
     totalSearchResults === 0 ? "noResults" : "default";
   const buyingBannerQuery = currentQuery?.trim() || searchInput.trim();
@@ -288,12 +289,12 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
             {/* Search Results */}
             {!showLoading && searchResults && (
               <>
+            {!showLoading && results && (
+              <>
                 {/* Results Summary */}
                 <div className="mb-6 flex flex-wrap items-center gap-4">
                   <div className="text-lg text-gray-700">
-                    <span className="font-semibold">{searchResults.total_results}</span> results
-                    for "<span className="font-medium">{currentQuery}</span>"
-                  </div>
+                    <span className="font-semibold">{results.total_results}</span> results
                   
                   {/* Quick Stats */}
                   <div className="flex flex-wrap gap-3 text-sm text-gray-600">
@@ -312,10 +313,10 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
                     {/* Categories quick stat hidden for now */}
                     {searchResults.total_promoted_products > 0 && (
                       <div className="flex items-center gap-1 px-3 py-1 bg-deepOrange text-white rounded-full">
-                        <ArrowTrendingUpIcon className="h-4 w-4 shrink-0" aria-hidden />
+                    {results.total_promoted_products > 0 && (
                         <span>{searchResults.total_promoted_products} Promoted</span>
                       </div>
-                    )}
+                        <span>{results.total_promoted_products} Promoted</span>
                   </div>
                 </div>
 
@@ -330,6 +331,8 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
                     }`}
                   >
                     All Results ({searchResults.total_results})
+                  </button>
+                    All Results ({results.total_results})
                   </button>
                   {totalProducts > 0 && (
                     <button
@@ -368,7 +371,7 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
                   )} */}
                 </div>
 
-                {searchResults.total_results === 0 ? (
+                {results.total_results === 0 ? (
                   renderNoResults()
                 ) : (
                   <div className="space-y-8">
@@ -382,7 +385,7 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
                           </h2>
                         )}
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                          {searchResults.results.products.items.map((product: any) => (
+                          {results.results.products.items.map((product: any) => (
                             <CompactProductTile
                               key={product.id}
                               product={product}
@@ -394,17 +397,17 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
                         </div>
 
                         {/* Pagination */}
-                        {searchResults.results.products.total_pages > 1 && (
+                        {results.results.products.total_pages > 1 && (
                           <div className="flex justify-center gap-2 mt-8">
                             {Array.from(
-                              { length: searchResults.results.products.total_pages },
+                              { length: results.results.products.total_pages },
                               (_, i) => i + 1
                             ).map((page) => (
                               <button
                                 key={page}
                                 onClick={() => handlePageChange(page)}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                  page === searchResults.results.products.page
+                                  page === results.results.products.page
                                     ? "bg-deepOrange text-white"
                                     : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                                 }`}
@@ -491,11 +494,9 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
                           )}
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {[
-                              ...searchResults.results.categories.items,
-                              ...searchResults.results.subcategories.items,
-                              ...searchResults.results.subsec_categories.items,
-                            ].map((category: any) => {
-                              const imageUrl = searchCategoryImageUrl(category);
+                              ...results.results.categories.items,
+                              ...results.results.subcategories.items,
+                              ...results.results.subsec_categories.items,
                               
                               return (
                                 <Link
@@ -547,14 +548,14 @@ const SearchPage = ({ q: ssrQuery = "" }: { q?: string }) => {
 
           {!showLoading && error && !searchResults && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              Search could not be completed. Please try again.
+          {!showLoading && error && !results && (
             </div>
           )}
 
           {/* Empty State (No search yet) */}
           {!showLoading && !searchResults && !error && renderEmptyState()}
         </div>
-        
+          {!showLoading && !results && !error && renderEmptyState()}
       </div>
     </AuthLayout>
   );

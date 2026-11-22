@@ -55,7 +55,7 @@ export default function Home({ initialSiteSettings = null }: HomePageProps) {
         twitterSite={twitterSite}
       />
       <Header />
-      <HomeTopRegion />
+      <HomeTopRegion initialSiteSettings={initialSiteSettings} />
       <HomeBodyRegion />
       <Footer />
     </div>

@@ -7,6 +7,7 @@ import {
   liveLikes,
   postLiveChat,
   postLiveLike,
+  acceptLiveOfferCounter,
   postLiveOffer,
   type LiveMessage,
   type LiveOffer,
@@ -225,6 +226,38 @@ export default function HawolaLiveWatch({
     }
   };
 
+  const mergeOffer = (offer: LiveOffer) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const mine = [...(prev.my_offers || [])];
+      const idx = mine.findIndex((row) => row.id === offer.id);
+      if (idx >= 0) mine[idx] = offer;
+      else mine.unshift(offer);
+      return { ...prev, my_offers: mine };
+    });
+  };
+
+  const acceptCounter = async (productId: number) => {
+    if (!session || !token) {
+      toast.error("Sign in to accept this price.");
+      router.push("/auth/login");
+      return null;
+    }
+    const offer = (session.my_offers || []).find((row) => row.product_id === productId);
+    if (!offer) return null;
+    try {
+      const data = await acceptLiveOfferCounter(session.id, offer.id, token);
+      if (data.offer) {
+        mergeOffer(data.offer);
+        toast.success("Price accepted. Use the coupon on instant order.");
+      }
+      return data.offer;
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Could not accept that price.");
+      return null;
+    }
+  };
+
   const pageTitle = useMemo(
     () => session?.title || session?.merchant?.store_name || "Live sale",
     [session]
@@ -280,6 +313,7 @@ export default function HawolaLiveWatch({
               onLike={() => void like()}
               onCoupon={useCoupon}
               onOffer={sendOffer}
+              onAcceptCounter={acceptCounter}
               userEmail={profile?.email}
               userPhone={(profile as { phone_number?: string } | null)?.phone_number}
             />
@@ -298,6 +332,7 @@ export default function HawolaLiveWatch({
               onLike={() => void like()}
               onCoupon={useCoupon}
               onOffer={sendOffer}
+              onAcceptCounter={acceptCounter}
               userEmail={profile?.email}
               userPhone={(profile as { phone_number?: string } | null)?.phone_number}
             />

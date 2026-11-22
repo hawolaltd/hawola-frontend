@@ -20,6 +20,7 @@ import {
   HI_MD,
 } from "@/lib/hawolaIconTheme";
 import { useAppDispatch, useAppSelector } from "@/hook/useReduxTypes";
+import { useClientHydrated } from "@/hook/useClientHydrated";
 import { getCarsCopy, getRealEstateCopy } from "@/util/curatedVerticalCopy";
 import { useCompareNavBump } from "@/hook/useCompareNavBump";
 import CartModal from "@/components/shared/CartModal";
@@ -97,9 +98,11 @@ const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }
   const [userCart, setUserCart] = useState<CartResponse>(carts);
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const authReady = useClientHydrated();
+  const signedIn = authReady && isAuthenticated;
   const router = useRouter();
   const loginRedirectPath = useLoginRedirectPath();
-  const signupBonusPromo = useSignupBonusPromo(!isAuthenticated);
+  const signupBonusPromo = useSignupBonusPromo(!signedIn);
   const showCouponCenterNav = useCouponCenterNavVisible();
   const hideSignupBonusCta =
     router.pathname === "/auth/register" ||
@@ -890,28 +893,28 @@ const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }
             <div className="relative">
               <div
                 onClick={() => {
-                  if (isAuthenticated) {
+                  if (signedIn) {
                     setUserInfo(!userInfo);
                   } else {
                     router.push(`/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`);
                   }
                 }}
                 className={`cursor-pointer ${
-                  isAuthenticated ? HI_FRAME_HEADER_ACCOUNT_ACTIVE : HI_FRAME_HEADER
+                  signedIn ? HI_FRAME_HEADER_ACCOUNT_ACTIVE : HI_FRAME_HEADER
                 }`}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    if (isAuthenticated) setUserInfo(!userInfo);
+                    if (signedIn) setUserInfo(!userInfo);
                     else router.push(`/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`);
                   }
                 }}
-                aria-label={isAuthenticated ? "Account menu" : "Sign in"}
+                aria-label={signedIn ? "Account menu" : "Sign in"}
               >
                 <UserIcon
-                  className={`${HI_MD} ${isAuthenticated ? "text-emerald-900" : "text-primary"}`}
+                  className={`${HI_MD} ${signedIn ? "text-emerald-900" : "text-primary"}`}
                   aria-hidden
                 />
               </div>
@@ -921,7 +924,7 @@ const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }
             {/* Wishlist */}
             <Link
               href={
-                isAuthenticated
+                signedIn
                   ? `/wishlist`
                   : `/auth/login?redirect=${encodeURIComponent(loginRedirectPath)}`
               }
@@ -936,13 +939,9 @@ const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }
 
             {/* Cart */}
             <div
-              onClick={() => {
-                if (isAuthenticated) {
+                onClick={() => {
                   setCart(!cart);
-                } else {
-                  setCart(!cart);
-                }
-              }}
+                }}
               className={`relative flex cursor-pointer items-center justify-center ${HI_FRAME_HEADER}`}
               role="button"
               tabIndex={0}
@@ -955,7 +954,7 @@ const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }
               aria-label="Shopping cart"
             >
               <span className="pointer-events-none absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-deepOrange text-xs text-white">
-                {!isAuthenticated && localCart !== null
+                {!signedIn && localCart !== null
                   ? localCart?.items?.length ?? 0
                   : carts?.cart_count ?? 0}
               </span>
@@ -997,7 +996,7 @@ const Header = ({ isScrolled, compact }: { isScrolled?: any; compact?: boolean }
               <span className="hidden text-sm font-medium lg:inline">Compare</span>
             </Link>
 
-            {!isAuthenticated && signupBonusPromo && !hideSignupBonusCta ? (
+            {!signedIn && signupBonusPromo && !hideSignupBonusCta ? (
               <SignupBonusHeaderCta promo={signupBonusPromo} />
             ) : null}
 
